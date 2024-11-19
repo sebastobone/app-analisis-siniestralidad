@@ -4,7 +4,6 @@ import tablas_resumen
 import guardar_traer
 import polars as pl
 import constantes as ct
-import pandas as pd
 
 import time
 

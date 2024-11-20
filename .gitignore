@@ -164,3 +164,4 @@ cython_debug/
 data/*
 !data/queries/
 !data/segmentacion.xlsx
+.DS_Store

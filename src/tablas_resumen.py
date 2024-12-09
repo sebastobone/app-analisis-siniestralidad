@@ -22,7 +22,9 @@ def tablas_resumen(
         diagonales.filter(pl.col("diagonal") == 1)
         .join(
             pl.LazyFrame(
-                periodicidades, schema=["apertura_reservas", "periodicidad_ocurrencia"]
+                periodicidades,
+                schema=["apertura_reservas", "periodicidad_ocurrencia"],
+                orient="row",
             ),
             on=["apertura_reservas", "periodicidad_ocurrencia"],
         )
@@ -51,6 +53,7 @@ def tablas_resumen(
                 pl.LazyFrame(
                     periodicidades,
                     schema=["apertura_reservas", "periodicidad_triangulo"],
+                    orient="row",
                 ),
                 on=["apertura_reservas", "periodicidad_triangulo"],
             )

@@ -10,7 +10,7 @@ def main():
     path_plantilla = ct.path_plantilla(wb)
 
     modo = wb.sheets["Modo"]["A1"].value
-    MES_CORTE = wb.sheets["Modo"]["A4"].value
+    # MES_CORTE = wb.sheets["Modo"]["A4"].value
 
     if modo == "GENERAR_ACTUARIO_RESPONSABLE":
         s = time.time()
@@ -73,9 +73,9 @@ def main():
             .fill_null(0)
             .join(periodicidades_desc, on="periodicidad_ocurrencia", how="left")
             .with_columns(
-                periodo_ocurrencia=(
-                    pl.col("periodo_ocurrencia") // pl.lit(100)
-                ).cast(pl.Int32).cast(pl.String)
+                periodo_ocurrencia=(pl.col("periodo_ocurrencia") // pl.lit(100))
+                .cast(pl.Int32)
+                .cast(pl.String)
                 + " "
                 + pl.concat_str(
                     pl.col("llave"),
@@ -102,7 +102,9 @@ def main():
             .sort(["ramo_desc", "periodo_ocurrencia"])
         )
 
-        df_ar.collect().write_excel(f"{path_plantilla}/../output/ar.xlsx", worksheet="AR")
+        df_ar.collect().write_excel(
+            f"{path_plantilla}/../output/ar.xlsx", worksheet="AR"
+        )
 
         wb.sheets["Modo"]["A2"].value = time.time() - s
 

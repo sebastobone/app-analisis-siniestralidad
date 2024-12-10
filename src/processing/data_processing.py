@@ -28,9 +28,7 @@ def aperturas() -> None:
 
 def sinis_prep():
     df_sinis = (
-        pl.scan_parquet(
-            "data/raw/siniestros.parquet",
-        )
+        pl.scan_parquet("data/raw/siniestros.parquet")
         .with_columns(ramo_desc=col_ramo_desc())
         .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
     )
@@ -313,12 +311,7 @@ def bases_primas_expuestos(qty: str, qty_cols: list[str]) -> None:
         )
 
     df_group = (
-        pl.scan_csv(
-            f"data/raw/{qty}.csv",
-            separator="\t",
-            try_parse_dates=True,
-            schema_overrides={"codigo_op": pl.String, "codigo_ramo_op": pl.String},
-        )
+        pl.scan_parquet(f"data/raw/{qty}.parquet")
         .with_columns(
             fechas_pdn(pl.col("fecha_registro")),
             ramo_desc=col_ramo_desc(),

@@ -3,6 +3,7 @@ import polars as pl
 from tqdm import tqdm
 import json
 from pandas import ExcelFile
+import constantes as ct
 
 
 def read_query(file: str) -> None:
@@ -18,21 +19,15 @@ def read_query(file: str) -> None:
         if file[:1] in segm_sheet.split("_")[1]
     ]
 
-    params_fechas = pl.read_excel(
-        "data/segmentacion.xlsx", sheet_name="Fechas", has_header=False
-    ).rows()
-
     queries = (
         open(f"data/queries/{file}.sql")
         .read()
         .format(
-            mes_primera_ocurrencia=params_fechas[0][1],
-            mes_corte=params_fechas[1][1],
-            fecha_primera_ocurrencia=f"{params_fechas[0][1][:4]}-{params_fechas[0][1][4:]}-01",
+            mes_primera_ocurrencia=ct.PARAMS_FECHAS[0][1],
+            mes_corte=ct.PARAMS_FECHAS[1][1],
+            fecha_primera_ocurrencia=f"{ct.PARAMS_FECHAS[0][1][:4]}-{ct.PARAMS_FECHAS[0][1][4:]}-01",
         )
     )
-
-    queries_list = queries.split(sep=";")
 
     credenciales = {
         "host": "teradata.suranet.com",
@@ -44,9 +39,9 @@ def read_query(file: str) -> None:
     cur = con.cursor()
 
     add_num = 0
-    for query in tqdm(queries_list):
+    for query in tqdm(queries.split(sep=";")):
         if "?" not in query:
-            if query != queries_list[-1]:
+            if query != queries.split(sep=";")[-1]:
                 cur.execute(query)
             else:
                 df = pl.read_database(query, con)

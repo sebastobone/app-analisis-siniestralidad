@@ -1,6 +1,7 @@
 import polars as pl
 from time import sleep
 import os
+import constantes as ct
 
 
 def group_tera(
@@ -273,6 +274,7 @@ def cuadre_contable(df: pl.LazyFrame, file: str, valid: pl.LazyFrame) -> pl.Lazy
     )
 
     df_cuadre.collect().write_csv(f"data/raw/{file}.csv", separator="\t")
+    df_cuadre.collect().write_parquet(f"data/raw/{file}.parquet")
 
     return df_cuadre
 
@@ -309,9 +311,7 @@ def controles_informacion(
     qtys: list[str],
     estado_cuadre: str,
 ) -> pl.LazyFrame:
-    mes_corte = (
-        df.select(pl.col("fecha_registro").max()).collect().item().strftime("%Y%m")
-    )
+    mes_corte = ct.PARAMS_FECHAS[1][1]
 
     # Consistencia historica Tera
     group_tera(df, file, group_cols, qtys).collect().write_excel(
@@ -402,9 +402,7 @@ def evidencias_parametros():
     import tkinter as tk
     from tkinter import messagebox
 
-    mes_corte = pl.read_excel(
-        "data/segmentacion.xlsx", sheet_name="Fechas", has_header=False
-    ).rows()[1][1]
+    mes_corte = ct.PARAMS_FECHAS[1][1]
 
     root = tk.Tk()
     root.attributes("-topmost", True)
@@ -466,12 +464,7 @@ def generar_controles(file: str) -> None:
         qtys = ["expuestos"]
         group_cols = ["apertura_reservas", "mes_mov"]
 
-    df = pl.scan_csv(
-        f"data/raw/{file}.csv",
-        separator="\t",
-        try_parse_dates=True,
-        schema_overrides={"codigo_ramo_op": pl.String, "codigo_op": pl.String},
-    )
+    df = pl.scan_parquet(f"data/raw/{file}.parquet")
 
     valid_pre_cuadre = controles_informacion(
         df,
@@ -483,6 +476,7 @@ def generar_controles(file: str) -> None:
 
     if file in ("siniestros", "primas"):
         df.collect().write_csv(f"data/raw/{file}_pre_cuadre.csv", separator="\t")
+        df.collect().write_parquet(f"data/raw/{file}_pre_cuadre.parquet")
         df_cuadrado = cuadre_contable(df, file, valid_pre_cuadre)
         _ = controles_informacion(
             df_cuadrado,

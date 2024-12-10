@@ -9,9 +9,7 @@ import time
 
 
 def check_plantilla(plantilla: str) -> None:
-    if plantilla is None:
-        raise Exception("Especifique una plantilla.")
-    elif plantilla not in ("frec", "seve", "plata", "entremes"):
+    if plantilla not in ("frec", "seve", "plata", "entremes"):
         raise Exception(
             """Plantilla no encontrada. Opciones disponibles: 
             frec, seve, plata, entremes"""
@@ -22,9 +20,13 @@ def modos(modo: str, plantilla: str | None = None) -> None:
     if modo == "prep":
         preparar_plantilla()
     elif modo == "gen":
+        if plantilla is None:
+            raise Exception("Especifique una plantilla.")
         check_plantilla(plantilla)
         generar_plantilla(plantilla)
     elif modo in ("guardar", "traer"):
+        if plantilla is None:
+            raise Exception("Especifique una plantilla.")
         check_plantilla(plantilla)
         guardar_traer_fn(modo, plantilla)
     elif modo == "almacenar":

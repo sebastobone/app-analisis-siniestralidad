@@ -8,9 +8,9 @@ from pandas import ExcelFile
 def read_query(file: str) -> None:
     # Tablas de segmentacion
     segm_sheets = [
-        sheet
+        str(sheet)
         for sheet in ExcelFile("data/segmentacion.xlsx").sheet_names
-        if sheet[:3] == "add"
+        if str(sheet)[:3] == "add"
     ]
     segm = [
         pl.read_excel("data/segmentacion.xlsx", sheet_name=str(segm_sheet))

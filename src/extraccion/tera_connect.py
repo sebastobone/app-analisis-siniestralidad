@@ -6,6 +6,41 @@ from pandas import ExcelFile
 import constantes as ct
 
 
+def check_adds_segmentacion(segm_sheets: list[str]) -> None:
+    for segm_sheet in segm_sheets:
+        if (len(segm_sheet.split("_")) < 3) or (
+            "s" not in segm_sheet.split("_")[1]
+            and "p" not in segm_sheet.split("_")[1]
+            and "e" not in segm_sheet.split("_")[1]
+        ):
+            raise Exception(
+                """
+                El nombre de las hojas con tablas a cargar debe seguir el
+                formato "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
+                El indicador se escribe de la siguiente forma:
+                siniestros -> s
+                primas -> p
+                expuestos -> e
+                De forma que, por ejemplo, un formato valido seria "add_spe_Canales"
+                o "add_p_Sucursales". Debe corregir el nombre de la hoja.
+                """
+            )
+        
+
+def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]):
+    num_adds = queries.count("?);")
+    if num_adds != len(segm_sheets):
+        raise Exception(
+            f"""
+            Necesita {num_adds} tablas adicionales para ejecutar el query de {file},
+            pero en el Excel "segmentacion.xlsx" solamente hay {len(segm_sheets)} hojas
+            de este tipo. Por favor, agregue las hojas que faltan o revise 
+            el nombre de las hojas existentes de modo que sigan el formato
+            "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
+            """
+        )
+        
+
 def read_query(file: str) -> None:
     # Tablas de segmentacion
     segm_sheets = [
@@ -13,6 +48,9 @@ def read_query(file: str) -> None:
         for sheet in ExcelFile("data/segmentacion.xlsx").sheet_names
         if str(sheet)[:3] == "add"
     ]
+    if len(segm_sheets) > 0:
+        check_adds_segmentacion(segm_sheets)
+
     segm = [
         pl.read_excel("data/segmentacion.xlsx", sheet_name=str(segm_sheet))
         for segm_sheet in segm_sheets
@@ -48,20 +86,22 @@ def read_query(file: str) -> None:
                 for column in df.collect_schema().names():
                     df = df.rename({column: column.lower()})
 
-                for column in ["codigo_op", "codigo_ramo_op", "ramo_desc"]:
-                    if column in df.collect_schema().names():
-                        raise Exception(f"""¡Falta la columna {column}! 
-                                        Es necesaria para las validaciones 
-                                        contables. Agregarla a la salida del query.""")
+                for column in ct.cols_tera(file):
+                    if column not in df.collect_schema().names():
+                        raise Exception(f"""¡Falta la columna {column}!""")
 
                 if (
                     file == "siniestros"
-                    and "atipico" not in df.collect_schema().names()
+                    and df.get_column("fecha_siniestro").dtype != pl.Date
                 ):
-                    raise Exception("""¡Falta la columna atipico! Si no 
-                                    tiene atipicos, agregue una columna 
-                                    con ceros a la salida del query.
-                                    """)
+                    raise Exception(
+                        """La columna fecha_siniestro debe estar en formato fecha."""
+                    )
+
+                if df.get_column("fecha_registro").dtype != pl.Date:
+                    raise Exception(
+                        """La columna fecha_registro debe estar en formato fecha."""
+                    )
 
                 df = df.select(
                     pl.concat_str(

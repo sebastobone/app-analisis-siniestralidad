@@ -1,7 +1,7 @@
 import xlwings as xw
-from methods_plantilla import base_plantillas
-from methods_plantilla import tablas_resumen
-from methods_plantilla import guardar_traer
+from metodos_plantilla import base_plantillas
+from metodos_plantilla import tablas_resumen
+from metodos_plantilla import guardar_traer
 import polars as pl
 import constantes as ct
 import os

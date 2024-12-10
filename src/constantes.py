@@ -5,6 +5,51 @@ from math import ceil, floor
 from datetime import date
 
 
+def cols_tera(file: str) -> list[str]:
+    if file == "siniestros":
+        return [
+            "codigo_op",
+            "codigo_ramo_op",
+            "ramo_desc",
+            "atipico",
+            "apertura_canal_desc",
+            "apertura_amparo_desc",
+            "fecha_siniestro",
+            "fecha_registro",
+            "conteo_pago",
+            "conteo_incurrido",
+            "conteo_desistido",
+            "pago_bruto",
+            "pago_retenido",
+            "aviso_bruto",
+            "aviso_retenido",
+        ]
+    elif file == "primas":
+        return [
+            "codigo_op",
+            "codigo_ramo_op",
+            "ramo_desc",
+            "fecha_registro",
+            "apertura_canal_desc",
+            "apertura_amparo_desc",
+            "prima_bruta",
+            "prima_bruta_devengada",
+            "prima_retenida",
+            "prima_retenida_devengada",
+        ]
+    elif file == "expuestos":
+        return [
+            "codigo_op",
+            "codigo_ramo_op",
+            "ramo_desc",
+            "fecha_registro",
+            "apertura_canal_desc",
+            "apertura_amparo_desc",
+            "expuestos",
+            "vigentes",
+        ]
+
+
 APERT_COLS = [
     "codigo_op",
     "codigo_ramo_op",

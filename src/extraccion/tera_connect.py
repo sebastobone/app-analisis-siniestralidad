@@ -49,9 +49,19 @@ def read_query(file: str) -> None:
                     df = df.rename({column: column.lower()})
 
                 for column in ["codigo_op", "codigo_ramo_op", "ramo_desc"]:
-                    assert (
-                        column in df.collect_schema().names()
-                    ), f"¡Falta la columna {column}! Es necesaria para las validaciones contables."
+                    if column in df.collect_schema().names():
+                        raise Exception(f"""¡Falta la columna {column}! 
+                                        Es necesaria para las validaciones 
+                                        contables. Agregarla a la salida del query.""")
+
+                if (
+                    file == "siniestros"
+                    and "atipico" not in df.collect_schema().names()
+                ):
+                    raise Exception("""¡Falta la columna atipico! Si no 
+                                    tiene atipicos, agregue una columna 
+                                    con ceros a la salida del query.
+                                    """)
 
                 df = df.select(
                     pl.concat_str(
@@ -72,7 +82,9 @@ def read_query(file: str) -> None:
             add_num += 1
 
     # Segmentaciones faltantes
-    for apertura in ["apertura_canal_desc", "apertura_amparo_desc"]:
-        assert (
-            "-1" not in df.select(apertura).unique()
-        ), f"Alerta! -1 en {apertura}, añadir nueva segmentacion"
+    df_faltante = df.filter(
+        pl.any_horizontal([pl.col(col).is_null() for col in ct.APERT_COLS])
+    )
+    if len(df_faltante) != 0:
+        print(df_faltante)
+        raise Exception("""¡Alerta! Revise las segmentaciones faltantes.""")

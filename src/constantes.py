@@ -5,6 +5,12 @@ from math import ceil, floor
 from datetime import date
 
 
+APERT_COLS = [
+    "codigo_op",
+    "codigo_ramo_op",
+    "apertura_canal_desc",
+    "apertura_amparo_desc",
+]
 BASE_COLS = ["ramo_desc", "apertura_canal_desc", "apertura_amparo_desc"]
 
 PARAMS_FECHAS = pl.read_excel(

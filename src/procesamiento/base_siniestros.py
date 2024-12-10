@@ -2,21 +2,13 @@ import polars as pl
 from datetime import date
 from math import floor, ceil
 import constantes as ct
-
-
-def col_ramo_desc() -> pl.Expr:
-    return pl.concat_str(
-        pl.col("codigo_op"),
-        pl.col("codigo_ramo_op"),
-        pl.col("ramo_desc"),
-        separator=" - ",
-    )
+from procesamiento import utils
 
 
 def aperturas() -> None:
     return (
         pl.scan_parquet("data/raw/siniestros.parquet")
-        .with_columns(ramo_desc=col_ramo_desc())
+        .with_columns(ramo_desc=utils.col_ramo_desc())
         .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
         .select(["apertura_reservas"] + ct.BASE_COLS)
         .unique()
@@ -29,7 +21,7 @@ def aperturas() -> None:
 def sinis_prep():
     df_sinis = (
         pl.scan_parquet("data/raw/siniestros.parquet")
-        .with_columns(ramo_desc=col_ramo_desc())
+        .with_columns(ramo_desc=utils.col_ramo_desc())
         .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
     )
 
@@ -298,53 +290,4 @@ def bases_siniestros() -> None:
     base_triangulos.collect().write_parquet("data/processed/base_triangulos.parquet")
     diagonales(df_sinis_atipicos, "Mensual").collect().write_parquet(
         "data/processed/base_atipicos.parquet"
-    )
-
-
-def bases_primas_expuestos(qty: str, qty_cols: list[str]) -> None:
-    def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
-        return (
-            (col.dt.year() * 100 + col.dt.month()).alias("Mensual"),
-            (col.dt.year() * 100 + (col.dt.month() / 3).ceil() * 3).alias("Trimestral"),
-            (col.dt.year() * 100 + (col.dt.month() / 6).ceil() * 6).alias("Semestral"),
-            col.dt.year().alias("Anual"),
-        )
-
-    df_group = (
-        pl.scan_parquet(f"data/raw/{qty}.parquet")
-        .with_columns(
-            fechas_pdn(pl.col("fecha_registro")),
-            ramo_desc=col_ramo_desc(),
-        )
-        .drop(["apertura_reservas", "codigo_op", "codigo_ramo_op", "fecha_registro"])
-        .unpivot(
-            index=ct.BASE_COLS + qty_cols,
-            variable_name="periodicidad_ocurrencia",
-            value_name="periodo_ocurrencia",
-        )
-        .with_columns(pl.col("periodo_ocurrencia").cast(pl.Int32))
-        .group_by(
-            ct.BASE_COLS
-            + [
-                "periodicidad_ocurrencia",
-                "periodo_ocurrencia",
-            ]
-        )
-    )
-
-    if qty == "primas":
-        df = df_group.sum()
-    elif qty == "expuestos":
-        df = df_group.mean()
-
-    return (
-        df.sort(
-            ct.BASE_COLS
-            + [
-                "periodicidad_ocurrencia",
-                "periodo_ocurrencia",
-            ]
-        )
-        .collect()
-        .write_parquet(f"data/processed/{qty}.parquet")
     )

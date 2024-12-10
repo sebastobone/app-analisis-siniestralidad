@@ -394,13 +394,17 @@ def set_permissions(directory, permission="write"):
                 )
 
 
-def evidencias_parametros(mes_corte: str):
+def evidencias_parametros():
     from datetime import datetime
     import openpyxl as xl
     import pyautogui
     import shutil
     import tkinter as tk
     from tkinter import messagebox
+
+    mes_corte = pl.read_excel(
+        "data/segmentacion.xlsx", sheet_name="Fechas", has_header=False
+    ).rows()[1][1]
 
     root = tk.Tk()
     root.attributes("-topmost", True)

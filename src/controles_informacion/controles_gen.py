@@ -50,13 +50,9 @@ def generar_controles(file: str) -> None:
         )
 
 
-# generar_controles("siniestros")
-# generar_controles("primas")
-# generar_controles("expuestos")
+generar_controles("siniestros")
+generar_controles("primas")
+generar_controles("expuestos")
 
-mes_corte = pl.read_excel(
-    "data/segmentacion.xlsx", sheet_name="Fechas", has_header=False
-).rows()[1][1]
-
-ctrl.evidencias_parametros(mes_corte)
+ctrl.evidencias_parametros()
 ctrl.set_permissions("data/controles_informacion", "read")

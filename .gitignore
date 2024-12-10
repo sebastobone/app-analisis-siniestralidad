@@ -195,4 +195,6 @@ data/raw/*
 output/*
 !output/.gitkeep
 
+backups/*
+
 .DS_Store

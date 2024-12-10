@@ -161,7 +161,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-data/*
+data
 
 !data/afo
 data/afo/*
@@ -192,9 +192,9 @@ data/raw/*
 
 !data/segmentacion.xlsx
 
-output/*
+output
 !output/.gitkeep
 
-backups/*
+backups
 
 .DS_Store

@@ -5,9 +5,7 @@ import json
 from pandas import ExcelFile
 
 
-def read_query(
-    file: str,
-) -> pl.DataFrame:
+def read_query(file: str) -> None:
     # Tablas de segmentacion
     segm_sheets = [
         sheet
@@ -60,7 +58,7 @@ def read_query(
                         column in df.collect_schema().names()
                     ), f"¡Falta la columna {column}! Es necesaria para las validaciones contables."
 
-                df = df.select(
+                df.select(
                     pl.concat_str(
                         [
                             pl.col("codigo_op"),
@@ -71,9 +69,7 @@ def read_query(
                         separator="_",
                     ).alias("apertura_reservas"),
                     pl.all(),
-                )
-
-                df.write_csv(f"data/raw/{file}.csv", separator="\t")
+                ).write_csv(f"data/raw/{file}.csv", separator="\t")
         else:
             cur.executemany(query, segm[add_num].rows())
             add_num += 1
@@ -84,7 +80,7 @@ def read_query(
             "-1" not in df.select(apertura).unique()
         ), f"Alerta! -1 en {apertura}, añadir nueva segmentacion"
 
-    return df
+    return None
 
 
 read_query("siniestros")

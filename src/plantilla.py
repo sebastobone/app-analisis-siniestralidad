@@ -1,7 +1,7 @@
 import xlwings as xw
-import base_plantillas
-import tablas_resumen
-import guardar_traer
+from methods_plantilla import base_plantillas
+from methods_plantilla import tablas_resumen
+from methods_plantilla import guardar_traer
 import polars as pl
 import constantes as ct
 import os
@@ -223,9 +223,8 @@ def almacenar_analisis() -> None:
     wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-def abrir_plantilla() -> None:
-    xw.Book(f"{os.getcwd()}/src/plantilla.xlsm").set_mock_caller()
-    wb = xw.Book.caller()
+xw.Book(f"{os.getcwd()}/src/plantilla.xlsm").set_mock_caller()
+wb = xw.Book.caller()
 
-    wb.macro("eliminar_modulos")
-    wb.macro("crear_modulos")
+wb.macro("eliminar_modulos")
+wb.macro("crear_modulos")

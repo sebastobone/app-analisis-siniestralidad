@@ -13,6 +13,19 @@ def col_ramo_desc() -> pl.Expr:
     )
 
 
+def aperturas() -> None:
+    return (
+        pl.scan_parquet("data/raw/siniestros.parquet")
+        .with_columns(ramo_desc=col_ramo_desc())
+        .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
+        .select(["apertura_reservas"] + ct.BASE_COLS)
+        .unique()
+        .sort("apertura_reservas")
+        .collect()
+        .write_csv("data/processed/aperturas.csv", separator="\t")
+    )
+
+
 def sinis_prep():
     df_sinis = (
         pl.scan_parquet(
@@ -20,19 +33,6 @@ def sinis_prep():
         )
         .with_columns(ramo_desc=col_ramo_desc())
         .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
-    )
-
-    (
-        df_sinis.select(
-            [
-                "apertura_reservas",
-            ]
-            + ct.BASE_COLS
-        )
-        .unique()
-        .sort("apertura_reservas")
-        .collect()
-        .write_csv("data/processed/aperturas.csv", separator="\t")
     )
 
     df_sinis = df_sinis.with_columns(

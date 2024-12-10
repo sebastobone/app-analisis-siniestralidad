@@ -2,16 +2,27 @@ import teradatasql as td
 import polars as pl
 from tqdm import tqdm
 import json
+from pandas import ExcelFile
 
 
 def read_query(
     file: str,
-    credenciales: dict[str, str],
-    adds: dict[str, list[str]],
-    params_fechas: list[tuple[str, str]],
 ) -> pl.DataFrame:
-    con = td.connect(json.dumps(credenciales))
-    cur = con.cursor()
+    # Tablas de segmentacion
+    segm_sheets = [
+        sheet
+        for sheet in ExcelFile("data/segmentacion.xlsx").sheet_names
+        if sheet[:3] == "add"
+    ]
+    segm = [
+        pl.read_excel("data/segmentacion.xlsx", sheet_name=str(segm_sheet))
+        for segm_sheet in segm_sheets
+        if file[:1] in segm_sheet.split("_")[1]
+    ]
+
+    params_fechas = pl.read_excel(
+        "data/segmentacion.xlsx", sheet_name="Fechas", has_header=False
+    ).rows()
 
     queries = (
         open(f"data/queries/{file}.sql")
@@ -24,6 +35,15 @@ def read_query(
     )
 
     queries_list = queries.split(sep=";")
+
+    credenciales = {
+        "host": "teradata.suranet.com",
+        "user": "sebatoec",
+        "password": "47^07Ghia0+b",
+    }
+
+    con = td.connect(json.dumps(credenciales))
+    cur = con.cursor()
 
     add_num = 0
     for query in tqdm(queries_list):
@@ -55,17 +75,7 @@ def read_query(
 
                 df.write_csv(f"data/raw/{file}.csv", separator="\t")
         else:
-            if "xlsx" in adds[f"{file}_{add_num}"][0]:
-                add = pl.read_excel(
-                    adds[f"{file}_{add_num}"][0],
-                    sheet_name=adds[f"{file}_{add_num}"][1],
-                )
-            else:
-                add = pl.read_csv(
-                    adds[f"{file}_{add_num}"][0],
-                    separator="\t",
-                )
-            cur.executemany(query, add.rows())
+            cur.executemany(query, segm[add_num].rows())
             add_num += 1
 
     # Segmentaciones faltantes
@@ -77,30 +87,6 @@ def read_query(
     return df
 
 
-credenciales = {
-    "host": "teradata.suranet.com",
-    "user": "sebatoec",
-    "password": "47^07Ghia0+b",
-}
-
-params_fechas = pl.read_excel(
-    "data/segmentacion.xlsx", sheet_name="Fechas", has_header=False
-).rows()
-
-# Tablas de segmentacion
-adds = {
-    "siniestros_0": ["data/segmentacion.xlsx", "Polizas"],
-    "siniestros_1": ["data/segmentacion.xlsx", "Canales"],
-    "siniestros_2": ["data/segmentacion.xlsx", "Amparos"],
-    "siniestros_3": ["data/segmentacion.xlsx", "Atipicos"],
-    "primas_0": ["data/segmentacion.xlsx", "Polizas"],
-    "primas_1": ["data/segmentacion.xlsx", "Canales"],
-    "primas_2": ["data/segmentacion.xlsx", "Amparos"],
-    "expuestos_0": ["data/segmentacion.xlsx", "Polizas"],
-    "expuestos_1": ["data/segmentacion.xlsx", "Canales"],
-    "expuestos_2": ["data/segmentacion.xlsx", "Amparos"],
-}
-
-df_sinis = read_query("siniestros", credenciales, adds, params_fechas)
-df_primas = read_query("primas", credenciales, adds, params_fechas)
-df_expuestos = read_query("expuestos", credenciales, adds, params_fechas)
+read_query("siniestros")
+read_query("primas")
+read_query("expuestos")

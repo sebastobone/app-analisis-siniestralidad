@@ -78,9 +78,9 @@ def read_query(
 
 
 credenciales = {
-    "host": "teradata.suranet.com",  # andrrepe' Sebandre2025$
-    "user": "sebatoec",  #'user':'laurzare',#sebatoec
-    "password": "48N!BLHvJ#i8",  # 'password':'Sura2021'#48N!BLHvJ#i8
+    "host": "teradata.suranet.com",
+    "user": "sebatoec",
+    "password": "47^07Ghia0+b",
 }
 
 params_fechas = pl.read_excel(
@@ -101,6 +101,6 @@ adds = {
     "expuestos_2": ["data/segmentacion.xlsx", "Amparos"],
 }
 
-# df_sinis = read_query("siniestros", credenciales, adds, params_fechas)
+df_sinis = read_query("siniestros", credenciales, adds, params_fechas)
 df_primas = read_query("primas", credenciales, adds, params_fechas)
-# df_expuestos = read_query("expuestos", credenciales, adds, params_fechas)
+df_expuestos = read_query("expuestos", credenciales, adds, params_fechas)

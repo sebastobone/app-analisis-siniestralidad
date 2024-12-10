@@ -58,7 +58,7 @@ def read_query(file: str) -> None:
                         column in df.collect_schema().names()
                     ), f"¡Falta la columna {column}! Es necesaria para las validaciones contables."
 
-                df.select(
+                df = df.select(
                     pl.concat_str(
                         [
                             pl.col("codigo_op"),
@@ -69,7 +69,9 @@ def read_query(file: str) -> None:
                         separator="_",
                     ).alias("apertura_reservas"),
                     pl.all(),
-                ).write_csv(f"data/raw/{file}.csv", separator="\t")
+                )
+                df.write_csv(f"data/raw/{file}.csv", separator="\t")
+                df.write_parquet(f"data/raw/{file}.parquet")
         else:
             cur.executemany(query, segm[add_num].rows())
             add_num += 1
@@ -79,10 +81,3 @@ def read_query(file: str) -> None:
         assert (
             "-1" not in df.select(apertura).unique()
         ), f"Alerta! -1 en {apertura}, añadir nueva segmentacion"
-
-    return None
-
-
-read_query("siniestros")
-read_query("primas")
-read_query("expuestos")

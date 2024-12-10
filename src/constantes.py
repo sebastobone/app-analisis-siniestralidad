@@ -2,6 +2,21 @@ import xlwings as xw
 import polars as pl
 import pandas as pd
 from math import ceil, floor
+from datetime import date
+
+
+BASE_COLS = ["ramo_desc", "apertura_canal_desc", "apertura_amparo_desc"]
+
+PARAMS_FECHAS = pl.read_excel(
+    "data/segmentacion.xlsx", sheet_name="Fechas", has_header=False
+).rows()
+
+INI_DATE = date(int(PARAMS_FECHAS[0][1]) // 100, int(PARAMS_FECHAS[0][1]) % 100, 1)
+END_DATE = date(int(PARAMS_FECHAS[1][1]) // 100, int(PARAMS_FECHAS[1][1]) % 100, 1)
+MES_CORTE = int(PARAMS_FECHAS[1][1])
+TIPO_ANALISIS = PARAMS_FECHAS[2][1]
+
+PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 
 
 HEADER_TRIANGULOS = 2

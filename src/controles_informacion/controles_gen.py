@@ -1,9 +1,6 @@
 import polars as pl
 import metodos_controles as ctrl
 
-# Descomentar la siguiente fila si se necesita volver a correr la info, permite sobrescribir los archivos de controles
-ctrl.set_permissions("data/controles_informacion", "write")
-
 
 def generar_controles(file: str) -> None:
     if file == "siniestros":
@@ -48,11 +45,3 @@ def generar_controles(file: str) -> None:
             qtys,
             estado_cuadre="post_cuadre_contable",
         )
-
-
-generar_controles("siniestros")
-generar_controles("primas")
-generar_controles("expuestos")
-
-ctrl.evidencias_parametros()
-ctrl.set_permissions("data/controles_informacion", "read")

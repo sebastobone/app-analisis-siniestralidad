@@ -5,7 +5,7 @@ CREATE MULTISET VOLATILE TABLE polizas
     , numero_poliza VARCHAR(20) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (codigo_ramo_op, numero_poliza) ON COMMIT PRESERVE ROWS;
-INSERT INTO POLIZAS VALUES (?, ?, ?, ?); -- noqa: 
+INSERT INTO POLIZAS VALUES (?, ?, ?, ?); -- noqa:
 
 
 CREATE MULTISET VOLATILE TABLE sucursales
@@ -19,7 +19,7 @@ CREATE MULTISET VOLATILE TABLE sucursales
 ) PRIMARY INDEX (
     codigo_op, codigo_ramo_op, sucursal_id
 ) ON COMMIT PRESERVE ROWS;
-INSERT INTO SUCURSALES VALUES (?, ?, ?, ?, ?, ?); -- noqa: 
+INSERT INTO SUCURSALES VALUES (?, ?, ?, ?, ?, ?); -- noqa:
 
 
 CREATE MULTISET VOLATILE TABLE amparos
@@ -32,7 +32,7 @@ CREATE MULTISET VOLATILE TABLE amparos
     , amparo_desc VARCHAR(100) NOT NULL
     , apertura_amparo_desc VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (amparo_desc) ON COMMIT PRESERVE ROWS;
-INSERT INTO AMPAROS VALUES (?, ?, ?, ?, ?, ?, ?); -- noqa: 
+INSERT INTO AMPAROS VALUES (?, ?, ?, ?, ?, ?, ?); -- noqa:
 
 
 CREATE MULTISET VOLATILE TABLE atipicos
@@ -43,7 +43,7 @@ CREATE MULTISET VOLATILE TABLE atipicos
     , siniestro_id VARCHAR(100) NOT NULL
     , atipico INTEGER NOT NULL
 ) PRIMARY INDEX (siniestro_id, apertura_amparo_desc) ON COMMIT PRESERVE ROWS;
-INSERT INTO ATIPICOS VALUES (?, ?, ?, ?, ?); -- noqa: 
+INSERT INTO ATIPICOS VALUES (?, ?, ?, ?, ?); -- noqa:
 
 
 CREATE MULTISET VOLATILE TABLE base_cedido AS

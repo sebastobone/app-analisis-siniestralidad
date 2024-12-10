@@ -1,19 +1,7 @@
 import polars as pl
 from datetime import date
 from math import floor, ceil
-
-
-BASE_COLS = ["ramo_desc", "apertura_canal_desc", "apertura_amparo_desc"]
-
-params_fechas = pl.read_excel(
-    "data/segmentacion.xlsx", sheet_name="Fechas", has_header=False
-).rows()
-
-INI_DATE = date(int(params_fechas[0][1]) // 100, int(params_fechas[0][1]) % 100, 1)
-END_DATE = date(int(params_fechas[1][1]) // 100, int(params_fechas[1][1]) % 100, 1)
-TIPO_ANALISIS = params_fechas[2][1]
-
-PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
+import constantes as ct
 
 
 def col_ramo_desc() -> pl.Expr:
@@ -25,91 +13,92 @@ def col_ramo_desc() -> pl.Expr:
     )
 
 
-df_sinis = (
-    pl.scan_csv(
-        "data/raw/siniestros.csv",
-        separator="\t",
-        try_parse_dates=True,
-        schema_overrides={"codigo_op": pl.String, "codigo_ramo_op": pl.String},
+def sinis_prep():
+    df_sinis = (
+        pl.scan_parquet(
+            "data/raw/siniestros.parquet",
+        )
+        .with_columns(ramo_desc=col_ramo_desc())
+        .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
     )
-    .with_columns(ramo_desc=col_ramo_desc())
-    .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
-)
 
-(
-    df_sinis.select(
+    (
+        df_sinis.select(
+            [
+                "apertura_reservas",
+            ]
+            + ct.BASE_COLS
+        )
+        .unique()
+        .sort("apertura_reservas")
+        .collect()
+        .write_csv("data/processed/aperturas.csv", separator="\t")
+    )
+
+    df_sinis = df_sinis.with_columns(
+        [
+            (pl.col(f"pago_{attr}") + pl.col(f"aviso_{attr}")).alias(
+                f"incurrido_{attr}"
+            )
+            for attr in ["bruto", "retenido"]
+        ],
+        conteo_incurrido=pl.col("conteo_incurrido") - pl.col("conteo_desistido"),
+    ).select(
         [
             "apertura_reservas",
+            "atipico",
+            "fecha_siniestro",
+            "fecha_registro",
+            "pago_bruto",
+            "pago_retenido",
+            "incurrido_bruto",
+            "incurrido_retenido",
+            "conteo_pago",
+            "conteo_incurrido",
+            "conteo_desistido",
         ]
-        + BASE_COLS
     )
-    .unique()
-    .sort("apertura_reservas")
-    .collect()
-    .write_csv("data/processed/aperturas.csv", separator="\t")
-)
 
+    df_sinis_tipicos = df_sinis.filter(pl.col("atipico") == 0).drop("atipico")
+    df_sinis_atipicos = df_sinis.filter(pl.col("atipico") == 1).drop("atipico")
 
-df_sinis = df_sinis.with_columns(
-    [
-        (pl.col(f"pago_{attr}") + pl.col(f"aviso_{attr}")).alias(f"incurrido_{attr}")
-        for attr in ["bruto", "retenido"]
-    ],
-    conteo_incurrido=pl.col("conteo_incurrido") - pl.col("conteo_desistido"),
-).select(
-    [
-        "apertura_reservas",
-        "atipico",
-        "fecha_siniestro",
-        "fecha_registro",
-        "pago_bruto",
-        "pago_retenido",
-        "incurrido_bruto",
-        "incurrido_retenido",
-        "conteo_pago",
-        "conteo_incurrido",
-        "conteo_desistido",
-    ]
-)
-
-df_sinis_tipicos = df_sinis.filter(pl.col("atipico") == 0).drop("atipico")
-df_sinis_atipicos = df_sinis.filter(pl.col("atipico") == 1).drop("atipico")
-
-bases_fechas = []
-for tipo_fecha in ["fecha_siniestro", "fecha_registro"]:
-    bases_fechas.append(
-        pl.LazyFrame(
-            pl.date_range(
-                INI_DATE,
-                END_DATE,
-                interval="1mo",
-                eager=True,
-            ).alias(tipo_fecha)
+    bases_fechas = []
+    for tipo_fecha in ["fecha_siniestro", "fecha_registro"]:
+        bases_fechas.append(
+            pl.LazyFrame(
+                pl.date_range(
+                    ct.INI_DATE,
+                    ct.END_DATE,
+                    interval="1mo",
+                    eager=True,
+                ).alias(tipo_fecha)
+            )
         )
+
+    base = (
+        df_sinis_tipicos.select("apertura_reservas")
+        .unique()
+        .join(bases_fechas[0], how="cross")
+        .join(bases_fechas[1], how="cross")
+        .filter(pl.col("fecha_siniestro") <= pl.col("fecha_registro"))
     )
 
-base = (
-    df_sinis_tipicos.select("apertura_reservas")
-    .unique()
-    .join(bases_fechas[0], how="cross")
-    .join(bases_fechas[1], how="cross")
-    .filter(pl.col("fecha_siniestro") <= pl.col("fecha_registro"))
-)
+    df_sinis_tipicos = df_sinis_tipicos.join(
+        base,
+        on=["apertura_reservas", "fecha_siniestro", "fecha_registro"],
+        how="full",
+        coalesce=True,
+    ).fill_null(0)
 
-df_sinis_tipicos = df_sinis_tipicos.join(
-    base,
-    on=["apertura_reservas", "fecha_siniestro", "fecha_registro"],
-    how="full",
-    coalesce=True,
-).fill_null(0)
+    return df_sinis_tipicos, df_sinis_atipicos
 
 
 def date_to_yyyymm(column: pl.Expr, grain: str) -> tuple[pl.Expr]:
     return (
         (
             column.dt.year() * 100
-            + (column.dt.month() / pl.lit(PERIODICIDADES[grain])).ceil()
-            * pl.lit(PERIODICIDADES[grain])
+            + (column.dt.month() / pl.lit(ct.PERIODICIDADES[grain])).ceil()
+            * pl.lit(ct.PERIODICIDADES[grain])
         ).cast(pl.Int32),
     )
 
@@ -119,9 +108,9 @@ def triangulos(
     origin_grain: str,
     development_grain: str,
 ) -> pl.LazyFrame:
-    anno = END_DATE.year
-    mes = END_DATE.month
-    periodicidad = PERIODICIDADES[origin_grain]
+    anno = ct.END_DATE.year
+    mes = ct.END_DATE.month
+    periodicidad = ct.PERIODICIDADES[origin_grain]
 
     mes_ult_ocurr_triangulos = (
         date(anno - 1, 12, 1)
@@ -132,7 +121,11 @@ def triangulos(
     df_tri = (
         df_tri.filter(
             pl.col("fecha_registro")
-            <= (END_DATE if TIPO_ANALISIS == "Entremes" else mes_ult_ocurr_triangulos)
+            <= (
+                ct.END_DATE
+                if ct.TIPO_ANALISIS == "Entremes"
+                else mes_ult_ocurr_triangulos
+            )
         )
         .with_columns(
             periodo_ocurrencia=date_to_yyyymm(pl.col("fecha_siniestro"), origin_grain)[
@@ -215,9 +208,9 @@ def triangulos(
 def diagonales(
     df_tri: pl.LazyFrame, origin_grain: str, ultima_ocurr: bool = False
 ) -> pl.LazyFrame:
-    anno = END_DATE.year
-    mes = END_DATE.month
-    periodicidad = PERIODICIDADES[origin_grain]
+    anno = ct.END_DATE.year
+    mes = ct.END_DATE.month
+    periodicidad = ct.PERIODICIDADES[origin_grain]
 
     mes_prim_ocurr_periodo_act = date(
         anno, ceil(mes / periodicidad) * periodicidad - (periodicidad - 1), 1
@@ -226,7 +219,7 @@ def diagonales(
     df_diagonales = (
         df_tri.filter(
             pl.col("fecha_siniestro")
-            >= (mes_prim_ocurr_periodo_act if ultima_ocurr else INI_DATE)
+            >= (mes_prim_ocurr_periodo_act if ultima_ocurr else ct.INI_DATE)
         )
         .with_columns(
             periodo_ocurrencia=date_to_yyyymm(pl.col("fecha_siniestro"), "Mensual")[0],
@@ -273,41 +266,44 @@ def diagonales(
     return df_diagonales
 
 
-if TIPO_ANALISIS == "Triangulos":
-    base_triangulos = pl.concat(
-        [
-            triangulos(df_sinis_tipicos, "Mensual", "Mensual"),
-            triangulos(df_sinis_tipicos, "Trimestral", "Trimestral"),
-            triangulos(df_sinis_tipicos, "Semestral", "Semestral"),
-            triangulos(df_sinis_tipicos, "Anual", "Anual"),
-        ]
-    )
-else:
-    base_triangulos = pl.concat(
-        [
-            triangulos(df_sinis_tipicos, "Trimestral", "Mensual"),
-            triangulos(df_sinis_tipicos, "Semestral", "Mensual"),
-            triangulos(df_sinis_tipicos, "Anual", "Mensual"),
-        ]
-    )
-    base_ult_ocurr = pl.concat(
-        [
-            diagonales(df_sinis_tipicos, "Trimestral", True),
-            diagonales(df_sinis_tipicos, "Semestral", True),
-            diagonales(df_sinis_tipicos, "Anual", True),
-        ]
-    )
-    base_ult_ocurr.collect().write_parquet(
-        "data/processed/base_ultima_ocurrencia.parquet"
+def bases_siniestros() -> None:
+    df_sinis_tipicos, df_sinis_atipicos = sinis_prep()
+
+    if ct.TIPO_ANALISIS == "Triangulos":
+        base_triangulos = pl.concat(
+            [
+                triangulos(df_sinis_tipicos, "Mensual", "Mensual"),
+                triangulos(df_sinis_tipicos, "Trimestral", "Trimestral"),
+                triangulos(df_sinis_tipicos, "Semestral", "Semestral"),
+                triangulos(df_sinis_tipicos, "Anual", "Anual"),
+            ]
+        )
+    else:
+        base_triangulos = pl.concat(
+            [
+                triangulos(df_sinis_tipicos, "Trimestral", "Mensual"),
+                triangulos(df_sinis_tipicos, "Semestral", "Mensual"),
+                triangulos(df_sinis_tipicos, "Anual", "Mensual"),
+            ]
+        )
+        base_ult_ocurr = pl.concat(
+            [
+                diagonales(df_sinis_tipicos, "Trimestral", True),
+                diagonales(df_sinis_tipicos, "Semestral", True),
+                diagonales(df_sinis_tipicos, "Anual", True),
+            ]
+        )
+        base_ult_ocurr.collect().write_parquet(
+            "data/processed/base_ultima_ocurrencia.parquet"
+        )
+
+    base_triangulos.collect().write_parquet("data/processed/base_triangulos.parquet")
+    diagonales(df_sinis_atipicos, "Mensual").collect().write_parquet(
+        "data/processed/base_atipicos.parquet"
     )
 
-base_triangulos.collect().write_parquet("data/processed/base_triangulos.parquet")
-diagonales(df_sinis_atipicos, "Mensual").collect().write_parquet(
-    "data/processed/base_atipicos.parquet"
-)
 
-
-def primas_expuestos(qty: str, qty_cols: list[str]) -> None:
+def bases_primas_expuestos(qty: str, qty_cols: list[str]) -> None:
     def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
         return (
             (col.dt.year() * 100 + col.dt.month()).alias("Mensual"),
@@ -329,13 +325,13 @@ def primas_expuestos(qty: str, qty_cols: list[str]) -> None:
         )
         .drop(["apertura_reservas", "codigo_op", "codigo_ramo_op", "fecha_registro"])
         .unpivot(
-            index=BASE_COLS + qty_cols,
+            index=ct.BASE_COLS + qty_cols,
             variable_name="periodicidad_ocurrencia",
             value_name="periodo_ocurrencia",
         )
         .with_columns(pl.col("periodo_ocurrencia").cast(pl.Int32))
         .group_by(
-            BASE_COLS
+            ct.BASE_COLS
             + [
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
@@ -350,7 +346,7 @@ def primas_expuestos(qty: str, qty_cols: list[str]) -> None:
 
     return (
         df.sort(
-            BASE_COLS
+            ct.BASE_COLS
             + [
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
@@ -359,15 +355,3 @@ def primas_expuestos(qty: str, qty_cols: list[str]) -> None:
         .collect()
         .write_parquet(f"data/processed/{qty}.parquet")
     )
-
-
-primas_expuestos("expuestos", ["expuestos", "vigentes"])
-primas_expuestos(
-    "primas",
-    [
-        "prima_bruta",
-        "prima_bruta_devengada",
-        "prima_retenida",
-        "prima_retenida_devengada",
-    ],
-)

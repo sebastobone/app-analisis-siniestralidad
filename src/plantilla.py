@@ -42,20 +42,20 @@ def modos(modo: str, plantilla: str | None = None) -> None:
 
 def preparar_plantilla() -> None:
     wb.sheets["Modo"]["A4"].value = "Mes corte"
-    wb.sheets["Modo"]["B4"].value = MES_CORTE
+    wb.sheets["Modo"]["B4"].value = ct.MES_CORTE
     wb.sheets["Modo"]["A5"].value = "Mes anterior"
     wb.sheets["Modo"]["B5"].value = (
-        MES_CORTE - 1 if MES_CORTE % 100 != 1 else ((MES_CORTE // 100) - 1) * 100 + 12
+        ct.MES_CORTE - 1
+        if ct.MES_CORTE % 100 != 1
+        else ((ct.MES_CORTE // 100) - 1) * 100 + 12
     )
 
-    TIPO_ANALISIS = params_fechas[2][1]
-
-    if TIPO_ANALISIS == "Triangulos":
+    if ct.TIPO_ANALISIS == "Triangulos":
         wb.sheets["Plantilla_Entremes"].visible = False
         wb.sheets["Plantilla_Frec"].visible = True
         wb.sheets["Plantilla_Seve"].visible = True
         wb.sheets["Plantilla_Plata"].visible = True
-    elif TIPO_ANALISIS == "Entremes":
+    elif ct.TIPO_ANALISIS == "Entremes":
         wb.sheets["Plantilla_Entremes"].visible = True
         wb.sheets["Plantilla_Frec"].visible = False
         wb.sheets["Plantilla_Seve"].visible = False
@@ -71,7 +71,7 @@ def preparar_plantilla() -> None:
     )
 
     diagonales, expuestos, primas, atipicos = tablas_resumen.tablas_resumen(
-        ct.path_plantilla(wb), periodicidades, TIPO_ANALISIS
+        ct.path_plantilla(wb), periodicidades, ct.TIPO_ANALISIS
     )
 
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
@@ -109,7 +109,7 @@ def generar_plantilla(plantilla: str) -> None:
 
     NUM_OCURRENCIAS = df.shape[0]
     NUM_ALTURAS = df.shape[1] // 2
-    MES_DEL_PERIODO = ct.mes_del_periodo(MES_CORTE, NUM_OCURRENCIAS, NUM_ALTURAS)
+    MES_DEL_PERIODO = ct.mes_del_periodo(ct.MES_CORTE, NUM_OCURRENCIAS, NUM_ALTURAS)
 
     wb.sheets["Modo"]["B6"].value = MES_DEL_PERIODO
 
@@ -144,7 +144,7 @@ def guardar_traer_fn(modo: str, plantilla: str) -> None:
     NUM_ALTURAS = ct.num_alturas(wb.sheets[plantilla])
 
     if plantilla == "Plantilla_Entremes":
-        MES_DEL_PERIODO = ct.mes_del_periodo(MES_CORTE, NUM_OCURRENCIAS, NUM_ALTURAS)
+        MES_DEL_PERIODO = ct.mes_del_periodo(ct.MES_CORTE, NUM_OCURRENCIAS, NUM_ALTURAS)
     else:
         MES_DEL_PERIODO = 1
 
@@ -195,18 +195,20 @@ def almacenar_analisis() -> None:
 
     df_tips = ct.sheet_to_dataframe(wb, "Aux_Totales").with_columns(atipico=0)
     df_atips = ct.sheet_to_dataframe(wb, "Atipicos").with_columns(atipico=1)
-    df_new = pl.concat([df_tips, df_atips]).with_columns(mes_corte=MES_CORTE)
+    df_new = pl.concat([df_tips, df_atips]).with_columns(MES_CORTE=ct.MES_CORTE)
 
     wb_res = xw.Book(f"{ct.path_plantilla(wb)}/resultados.xlsx")
     df_hist = ct.sheet_to_dataframe(wb_res, "BD", df_new.collect_schema())
 
     # Quitar versiones anteriores del analisis del mes actual para la apertura-reserva
-    info_eliminar = df_new.select(["apertura_reservas", "mes_corte"]).with_columns(
+    info_eliminar = df_new.select(["apertura_reservas", "ct.MES_CORTE"]).with_columns(
         eliminar=1
     )
 
     df_hist = (
-        df_hist.join(info_eliminar, on=["apertura_reservas", "mes_corte"], how="left")
+        df_hist.join(
+            info_eliminar, on=["apertura_reservas", "ct.MES_CORTE"], how="left"
+        )
         .filter(pl.col("eliminar").is_null())
         .drop("eliminar")
     )
@@ -221,16 +223,9 @@ def almacenar_analisis() -> None:
     wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-xw.Book(f"{os.getcwd()}/src/plantilla.xlsm").set_mock_caller()
-wb = xw.Book.caller()
+def abrir_plantilla() -> None:
+    xw.Book(f"{os.getcwd()}/src/plantilla.xlsm").set_mock_caller()
+    wb = xw.Book.caller()
 
-wb.macro("eliminar_modulos")
-wb.macro("crear_modulos")
-
-params_fechas = pl.read_excel(
-    f"{ct.path_plantilla(wb)}/../data/segmentacion.xlsx",
-    sheet_name="Fechas",
-    has_header=False,
-).rows()
-
-MES_CORTE = int(params_fechas[1][1])
+    wb.macro("eliminar_modulos")
+    wb.macro("crear_modulos")

@@ -108,13 +108,7 @@ def read_query(file: str) -> None:
 
     check_suficiencia_adds(file, queries, segm_sheets)
 
-    credenciales = {
-        "host": "teradata.suranet.com",
-        "user": "sebatoec",
-        "password": "47^07Ghia0+b",
-    }
-
-    con = td.connect(json.dumps(credenciales))
+    con = td.connect(json.dumps(ct.CREDENCIALES_TERADATA))
     cur = con.cursor()
 
     # Limites para correr queries pesados por partes
@@ -194,7 +188,10 @@ def read_query(file: str) -> None:
         # Segmentaciones faltantes
         df_faltante = df.filter(
             pl.any_horizontal(
-                [(pl.col(col).is_null() | pl.col(col).eq("-1")) for col in ct.APERT_COLS]
+                [
+                    (pl.col(col).is_null() | pl.col(col).eq("-1"))
+                    for col in ct.APERT_COLS
+                ]
             )
         )
         if len(df_faltante) != 0:

@@ -1,11 +1,12 @@
-from procesamiento.autonomia import adds
+# from procesamiento.autonomia import adds
 from extraccion.tera_connect import read_query
 from controles_informacion import controles_informacion as ctrl
 from procesamiento import base_siniestros as bsin
 from procesamiento import base_primas_expuestos as bpdn
 # import plantilla
 
-read_query("siniestros_cedidos")
+read_query("data/queries/catalogos/planes.sql")
+# read_query("siniestros_cedidos")
 # read_query("primas")
 # read_query("expuestos")
 

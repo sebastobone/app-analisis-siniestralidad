@@ -179,7 +179,12 @@ data/processed/*
 !data/processed/.gitkeep
 
 data/raw/*
-!data/raw/.gitkeep
+!data/raw/catalogos
+data/raw/catalogos/*
+!data/raw/catalogos/.gitkeep
+!data/raw/autonomia
+data/raw/autonomia/*
+!data/raw/autonomia/.gitkeep
 
 !data/segmentacion.xlsx
 

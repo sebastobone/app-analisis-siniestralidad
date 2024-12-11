@@ -36,7 +36,7 @@ def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]) -> N
     if num_adds != len(segm_sheets_file):
         raise Exception(
             f"""
-            Necesita {num_adds} tablas adicionales para ejecutar el query de {file},
+            Necesita {num_adds} tablas adicionales para ejecutar el query {file},
             pero en el Excel "segmentacion.xlsx" hay {len(segm_sheets_file)} hojas
             de este tipo. Por favor, revise las hojas que tiene o revise que el 
             nombre de las hojas siga el formato
@@ -51,7 +51,7 @@ def check_numero_columnas_add(file: str, query: str, add: pl.DataFrame) -> None:
     if num_cols != num_cols_add:
         raise Exception(
             f"""
-            Error en query de {file} -> {query}:
+            Error en {file} -> {query}:
             La tabla creada en Teradata recibe {num_cols} columnas, pero la
             tabla que esta intentando ingresar tiene {num_cols_add} columnas:
             {add}
@@ -81,11 +81,59 @@ def check_nulls(add: pl.DataFrame) -> None:
             Corrija estos valores antes de ejecutar el proceso.
             """
         )
+    
+
+def checks_final_info(file: str, df: pl.DataFrame) -> None:
+    """
+    Esta funcion se usa cuando se ejecuta un query de siniestros,
+    primas, o expuestos que consolida la informacion necesaria para
+    pasar a las transformaciones de la plantilla, sin necesidad de
+    hacer procesamiento extra.
+    """
+    for column in ct.cols_tera(file):
+        if column not in df.collect_schema().names():
+            raise Exception(f"""¡Falta la columna {column}!""")
+
+    if (
+        "fecha_siniestro" in df.collect_schema().names()
+        and df.get_column("fecha_siniestro").dtype != pl.Date
+    ):
+        raise Exception(
+            """La columna fecha_siniestro debe estar en formato fecha."""
+        )
+
+    if df.get_column("fecha_registro").dtype != pl.Date:
+        raise Exception(
+            """La columna fecha_registro debe estar en formato fecha."""
+        )
+
+    df = df.select(
+        pl.concat_str(
+            [
+                pl.col("codigo_op"),
+                pl.col("codigo_ramo_op"),
+                pl.col("apertura_canal_desc"),
+                pl.col("apertura_amparo_desc"),
+            ],
+            separator="_",
+        ).alias("apertura_reservas"),
+        pl.all(),
+    )
+    df.write_csv(file.replace("queries", "raw").replace(".sql", ".csv"), separator="\t")
+
+    return df
 
 
 def read_query(file: str) -> None:
     if ct.NEGOCIO == "autonomia" and "siniestros" in file:
         extra_processing = True
+    else:
+        extra_processing = False
+
+    if "siniestros" in file or "primas" in file or "expuestos" in file:
+        query_negocio = True
+    else:
+        query_negocio = False
 
     # Tablas de segmentacion
     segm_sheets = [
@@ -104,7 +152,7 @@ def read_query(file: str) -> None:
         if file[:1] in segm_sheet.split("_")[1]
     ]
 
-    queries = open(f"data/queries/{file}_{ct.NEGOCIO}.sql").read()
+    queries = open(file).read()
 
     check_suficiencia_adds(file, queries, segm_sheets)
 
@@ -145,38 +193,10 @@ def read_query(file: str) -> None:
                 for column in df.collect_schema().names():
                     df = df.rename({column: column.lower()})
 
-                if not extra_processing:
-                    for column in ct.cols_tera(file):
-                        if column not in df.collect_schema().names():
-                            raise Exception(f"""¡Falta la columna {column}!""")
+                if not extra_processing and query_negocio:
+                    checks_final_info(file, df)
 
-                    if (
-                        file == "siniestros"
-                        and df.get_column("fecha_siniestro").dtype != pl.Date
-                    ):
-                        raise Exception(
-                            """La columna fecha_siniestro debe estar en formato fecha."""
-                        )
-
-                    if df.get_column("fecha_registro").dtype != pl.Date:
-                        raise Exception(
-                            """La columna fecha_registro debe estar en formato fecha."""
-                        )
-
-                    df = df.select(
-                        pl.concat_str(
-                            [
-                                pl.col("codigo_op"),
-                                pl.col("codigo_ramo_op"),
-                                pl.col("apertura_canal_desc"),
-                                pl.col("apertura_amparo_desc"),
-                            ],
-                            separator="_",
-                        ).alias("apertura_reservas"),
-                        pl.all(),
-                    )
-                df.write_csv(f"data/raw/{file}_{ct.NEGOCIO}.csv", separator="\t")
-                df.write_parquet(f"data/raw/{file}_{ct.NEGOCIO}.parquet")
+                df.write_parquet(file.replace("queries", "raw").replace(".sql", ".parquet"))
         else:
             check_numero_columnas_add(file, query, segm[add_num])
             add = check_duplicados(segm[add_num])
@@ -184,7 +204,7 @@ def read_query(file: str) -> None:
             cur.executemany(query, add.rows())
             add_num += 1
 
-    if not extra_processing:
+    if not extra_processing and query_negocio:
         # Segmentaciones faltantes
         df_faltante = df.filter(
             pl.any_horizontal(

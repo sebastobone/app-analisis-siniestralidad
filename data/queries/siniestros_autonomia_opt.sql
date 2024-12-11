@@ -103,20 +103,15 @@ EXPLAIN
     SELECT
         ersc.fecha_registro
         , poli.poliza_id
-        , poli.numero_poliza
-        , pcetl.asegurado_id
-        , pind.nombre_tecnico
-        , cia.compania_id
-        , cia.codigo_op
+        , pc.asegurado_id
+        , ersc.plan_individual_id
+        , pro.compania_id
         , pro.ramo_id
-        , ramo.codigo_ramo_op
         , ersc.amparo_id
         , ersc.siniestro_id
         , sini.tipo_estado_siniestro_cd
-        , canal.canal_comercial_id
-        , canal.nombre_canal_comercial
+        , sucu.canal_comercial_id
         , sucu.sucursal_id
-        , sucu.nombre_sucursal
         , sini.fecha_siniestro
         , SUM(
             CASE
@@ -148,14 +143,8 @@ EXPLAIN
         mdb_seguros_colombia.v_producto AS pro
         ON (pind.producto_id = pro.producto_id)
     INNER JOIN
-        mdb_seguros_colombia.v_ramo AS ramo
-        ON pro.ramo_id = ramo.ramo_id
-    INNER JOIN
         mdb_seguros_colombia.v_siniestro AS sini
         ON (ersc.siniestro_id = sini.siniestro_id)
-    INNER JOIN
-        mdb_seguros_colombia.v_compania AS cia
-        ON (pro.compania_id = cia.compania_id)
     INNER JOIN
         mdb_seguros_colombia.v_poliza AS poli
         ON (ersc.poliza_id = poli.poliza_id)
@@ -163,21 +152,18 @@ EXPLAIN
         mdb_seguros_colombia.v_sucursal AS sucu
         ON (poli.sucursal_id = sucu.sucursal_id)
     INNER JOIN
-        mdb_seguros_colombia.v_canal_comercial AS canal
-        ON (sucu.canal_comercial_id = canal.canal_comercial_id)
-    INNER JOIN
-        mdb_seguros_colombia.v_poliza_certificado_etl AS pcetl
-        ON (ersc.poliza_certificado_id = pcetl.poliza_certificado_id)
+        mdb_seguros_colombia.v_poliza_certificado AS pc
+        ON (ersc.poliza_certificado_id = pc.poliza_certificado_id AND ersc.plan_individual_id = pc.plan_individual_id)
 
     WHERE
         pro.ramo_id IN (
-            54835, 140, 107, 78, 274, 57074, 140, 107, 271, 297, 204
+            54835, 78, 274, 57074, 140, 107, 271, 297, 204
         )
         AND pro.compania_id IN (3, 4)
         AND ersc.valor_siniestro_cedido <> 0
         AND ersc.mes_id BETWEEN 201401 AND 202411
 
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 -- )
 
 -- SELECT

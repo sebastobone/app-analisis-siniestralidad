@@ -81,7 +81,7 @@ def check_nulls(add: pl.DataFrame) -> None:
             Corrija estos valores antes de ejecutar el proceso.
             """
         )
-    
+
 
 def checks_final_info(file: str, df: pl.DataFrame) -> None:
     """
@@ -98,14 +98,10 @@ def checks_final_info(file: str, df: pl.DataFrame) -> None:
         "fecha_siniestro" in df.collect_schema().names()
         and df.get_column("fecha_siniestro").dtype != pl.Date
     ):
-        raise Exception(
-            """La columna fecha_siniestro debe estar en formato fecha."""
-        )
+        raise Exception("""La columna fecha_siniestro debe estar en formato fecha.""")
 
     if df.get_column("fecha_registro").dtype != pl.Date:
-        raise Exception(
-            """La columna fecha_registro debe estar en formato fecha."""
-        )
+        raise Exception("""La columna fecha_registro debe estar en formato fecha.""")
 
     df = df.select(
         pl.concat_str(
@@ -196,7 +192,9 @@ def read_query(file: str) -> None:
                 if not extra_processing and query_negocio:
                     checks_final_info(file, df)
 
-                df.write_parquet(file.replace("queries", "raw").replace(".sql", ".parquet"))
+                df.write_parquet(
+                    file.replace("queries", "raw").replace(".sql", ".parquet")
+                )
         else:
             check_numero_columnas_add(file, query, segm[add_num])
             add = check_duplicados(segm[add_num])

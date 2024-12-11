@@ -4,10 +4,10 @@ SELECT
     , pro.producto_id
     , pro.producto_desc
     , ramo.ramo_id
-    , ramo.codigo_ramo_op
     , ramo.ramo_desc
     , cia.compania_id
     , cia.codigo_op
+    , TRIM(ramo.codigo_ramo_op) AS codigo_ramo_op
 FROM mdb_seguros_colombia.v_plan_individual AS pind
 INNER JOIN
     mdb_seguros_colombia.v_producto AS pro

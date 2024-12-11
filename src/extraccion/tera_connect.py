@@ -18,28 +18,31 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
                 El nombre de las hojas con tablas a cargar debe seguir el
                 formato "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
                 El indicador se escribe de la siguiente forma:
-                siniestros -> s
-                primas -> p
-                expuestos -> e
+                    siniestros -> s
+                    primas -> p
+                    expuestos -> e
                 De forma que, por ejemplo, un formato valido seria "add_spe_Canales"
                 o "add_p_Sucursales". Debe corregir el nombre de la hoja.
                 """
             )
-        
+
 
 def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]):
+    segm_sheets_file = [
+        segm_sheet for segm_sheet in segm_sheets if file[:1] in segm_sheet.split("_")[1]
+    ]
     num_adds = queries.count("?);")
-    if num_adds != len(segm_sheets):
+    if num_adds != len(segm_sheets_file):
         raise Exception(
             f"""
             Necesita {num_adds} tablas adicionales para ejecutar el query de {file},
-            pero en el Excel "segmentacion.xlsx" solamente hay {len(segm_sheets)} hojas
-            de este tipo. Por favor, agregue las hojas que faltan o revise 
-            el nombre de las hojas existentes de modo que sigan el formato
+            pero en el Excel "segmentacion.xlsx" hay {len(segm_sheets_file)} hojas
+            de este tipo. Por favor, revise las hojas que tiene o revise que el 
+            nombre de las hojas siga el formato
             "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
             """
         )
-        
+
 
 def read_query(file: str) -> None:
     # Tablas de segmentacion
@@ -66,6 +69,8 @@ def read_query(file: str) -> None:
             fecha_primera_ocurrencia=f"{ct.PARAMS_FECHAS[0][1][:4]}-{ct.PARAMS_FECHAS[0][1][4:]}-01",
         )
     )
+
+    check_suficiencia_adds(file, queries, segm_sheets)
 
     credenciales = {
         "host": "teradata.suranet.com",

@@ -10,6 +10,7 @@ dependencies = [
     "pandas>=2.2.3",
     "polars>=1.14.0",
     "pyautogui>=0.9.54",
+    "pytest>=8.3.4",
     "teradatasql>=20.0.0.20",
     "tqdm>=4.67.1",
     "xlwings>=0.33.3",

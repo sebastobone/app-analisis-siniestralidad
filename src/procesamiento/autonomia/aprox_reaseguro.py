@@ -329,6 +329,10 @@ df_incurrido_2 = (
         ]
     )
     .with_columns(
+        incurrido_bruto=pl.col("pago_bruto") + pl.col("aviso_bruto"),
+        incurrido_bruto_acum=pl.col("pago_bruto_acum") + pl.col("aviso_bruto_acum"),
+    )
+    .with_columns(
         pago_retenido_aprox=pl.when(
             (pl.col("fecha_registro").dt.month_end() != ct.END_DATE_PL.dt.month_end())
             | (
@@ -417,9 +421,7 @@ df_incurrido_2 = (
             .then(pl.col("aviso_bruto") * 0.1)
             .when(
                 (
-                    pl.col("pago_bruto_acum")
-                    + pl.col("aviso_bruto_acum")
-                    - (pl.col("pago_bruto") + pl.col("aviso_bruto"))
+                    pl.col("incurrido_bruto_acum") - pl.col("incurrido_bruto")
                     < pl.col("prioridad")
                 )
                 & (pl.col("aviso_bruto") >= 0)
@@ -427,18 +429,12 @@ df_incurrido_2 = (
             .then(
                 pl.col("aviso_bruto").clip(
                     upper_bound=pl.col("prioridad")
-                    - (
-                        pl.col("pago_bruto_acum")
-                        + pl.col("aviso_bruto_acum")
-                        - (pl.col("pago_bruto") + pl.col("pago_bruto_acum"))
-                    )
+                    - (pl.col("incurrido_bruto_acum") - pl.col("incurrido_bruto"))
                 )
             )
             .when(
                 (
-                    pl.col("pago_bruto_acum")
-                    + pl.col("aviso_bruto_acum")
-                    - (pl.col("pago_bruto") + pl.col("aviso_bruto"))
+                    pl.col("incurrido_bruto_acum") - pl.col("incurrido_bruto")
                     < pl.col("prioridad")
                 )
                 & (pl.col("aviso_bruto") < 0)
@@ -446,9 +442,7 @@ df_incurrido_2 = (
             .then(pl.col("aviso_bruto"))
             .when(
                 (
-                    pl.col("pago_bruto_acum")
-                    + pl.col("aviso_bruto_acum")
-                    - (pl.col("pago_bruto") + pl.col("aviso_bruto"))
+                    pl.col("incurrido_bruto_acum") - pl.col("incurrido_bruto")
                     >= pl.col("prioridad")
                 )
                 & (pl.col("aviso_bruto") >= 0)
@@ -456,9 +450,7 @@ df_incurrido_2 = (
             .then(0)
             .when(
                 (
-                    pl.col("pago_bruto_acum")
-                    + pl.col("aviso_bruto_acum")
-                    - (pl.col("pago_bruto") + pl.col("aviso_bruto"))
+                    pl.col("incurrido_bruto_acum") - pl.col("incurrido_bruto")
                     >= pl.col("prioridad")
                 )
                 & (pl.col("aviso_bruto") < 0)
@@ -468,9 +460,8 @@ df_incurrido_2 = (
                         - (
                             pl.col("prioridad")
                             - (
-                                pl.col("pago_bruto_acum")
-                                + pl.col("aviso_bruto_acum")
-                                - (pl.col("pago_bruto") + pl.col("aviso_bruto"))
+                                pl.col("incurrido_bruto_acum")
+                                - pl.col("incurrido_bruto")
                             )
                         )
                     ).clip(upper_bound=0)
@@ -479,12 +470,7 @@ df_incurrido_2 = (
             )
             .then(-pl.col("pago_retenido_aprox"))
             .when(
-                (
-                    pl.col("pago_bruto_acum")
-                    + pl.col("aviso_bruto_acum")
-                    - (pl.col("pago_bruto") - pl.col("aviso_bruto"))
-                    >= 0
-                )
+                (pl.col("incurrido_bruto_acum") - pl.col("incurrido_bruto") >= 0)
                 & (pl.col("aviso_bruto") < 0)
             )
             .then(
@@ -492,11 +478,7 @@ df_incurrido_2 = (
                     pl.col("aviso_bruto")
                     - (
                         pl.col("prioridad")
-                        - (
-                            pl.col("pago_bruto_acum")
-                            + pl.col("aviso_bruto_acum")
-                            - (pl.col("pago_bruto") + pl.col("aviso_bruto"))
-                        )
+                        - (pl.col("incurrido_bruto_acum") - pl.col("incurrido_bruto"))
                     )
                 ).clip(upper_bound=0)
             )

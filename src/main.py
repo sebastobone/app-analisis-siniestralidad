@@ -2,7 +2,7 @@ from extraccion.tera_connect import read_query
 from controles_informacion import controles_informacion as ctrl
 from procesamiento import base_siniestros as bsin
 from procesamiento import base_primas_expuestos as bpdn
-import plantilla
+# import plantilla
 
 read_query("siniestros")
 read_query("primas")
@@ -31,4 +31,4 @@ bpdn.bases_primas_expuestos(
     ],
 )
 
-plantilla.modos("prep")
+# plantilla.modos("prep")

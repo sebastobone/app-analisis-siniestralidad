@@ -2,8 +2,9 @@ import teradatasql as td
 import polars as pl
 from tqdm import tqdm
 import json
-from pandas import ExcelFile
+import pandas as pd
 import constantes as ct
+from datetime import date
 
 
 def check_adds_segmentacion(segm_sheets: list[str]) -> None:
@@ -44,6 +45,22 @@ def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]) -> N
         )
 
 
+def check_numero_columnas_add(file: str, query: str, add: pl.DataFrame) -> None:
+    num_cols = query.count("?")
+    num_cols_add = len(add.collect_schema().names())
+    if num_cols != num_cols_add:
+        raise Exception(
+            f"""
+            Error en query de {file} -> {query}:
+            La tabla creada en Teradata recibe {num_cols} columnas, pero la
+            tabla que esta intentando ingresar tiene {num_cols_add} columnas:
+            {add}
+            Revise que el orden de las tablas en el Excel (de izquierda a derecha)
+            sea el mismo que el del query.
+            """
+        )
+
+
 def check_duplicados(add: pl.DataFrame) -> None:
     if len(add) != len(add.unique()):
         raise Exception(
@@ -55,27 +72,21 @@ def read_query(file: str) -> None:
     # Tablas de segmentacion
     segm_sheets = [
         str(sheet)
-        for sheet in ExcelFile("data/segmentacion.xlsx").sheet_names
+        for sheet in pd.ExcelFile(f"data/segmentacion_{ct.NEGOCIO}.xlsx").sheet_names
         if str(sheet)[:3] == "add"
     ]
     if len(segm_sheets) > 0:
         check_adds_segmentacion(segm_sheets)
 
     segm = [
-        pl.read_excel("data/segmentacion.xlsx", sheet_name=str(segm_sheet))
+        pl.read_excel(
+            f"data/segmentacion_{ct.NEGOCIO}.xlsx", sheet_name=str(segm_sheet)
+        )
         for segm_sheet in segm_sheets
         if file[:1] in segm_sheet.split("_")[1]
     ]
 
-    queries = (
-        open(f"data/queries/{file}.sql")
-        .read()
-        .format(
-            mes_primera_ocurrencia=ct.PARAMS_FECHAS[0][1],
-            mes_corte=ct.PARAMS_FECHAS[1][1],
-            fecha_primera_ocurrencia=f"{ct.PARAMS_FECHAS[0][1][:4]}-{ct.PARAMS_FECHAS[0][1][4:]}-01",
-        )
-    )
+    queries = open(f"data/queries/{file}_{ct.NEGOCIO}.sql").read()
 
     check_suficiencia_adds(file, queries, segm_sheets)
 
@@ -88,10 +99,32 @@ def read_query(file: str) -> None:
     con = td.connect(json.dumps(credenciales))
     cur = con.cursor()
 
+    # Limites para correr queries pesados por partes
+    chunk_lim_1 = date(ct.PARAMS_FECHAS[0][1] // 100, ct.PARAMS_FECHAS[0][1] % 100, 1)
+    chunk_lim_2 = date(ct.PARAMS_FECHAS[1][1] // 100, ct.PARAMS_FECHAS[1][1] % 100, 1)
+
+    fechas_chunks = pl.date_range(chunk_lim_1, chunk_lim_2, interval="1mo", eager=True)
+    fechas_chunks = list(zip(fechas_chunks, fechas_chunks.dt.month_end()))
+
     add_num = 0
-    for query in tqdm(queries.split(sep=";")):
+    for n_query, query in enumerate(tqdm(queries.split(sep=";"))):
         if "?" not in query:
-            if query != queries.split(sep=";")[-1]:
+            if "{chunk_ini}" not in query:
+                query = query.format(
+                    mes_primera_ocurrencia=ct.PARAMS_FECHAS[0][1],
+                    mes_corte=ct.PARAMS_FECHAS[1][1],
+                    fecha_primera_ocurrencia=f"{ct.PARAMS_FECHAS[0][1] // 100}-{ct.PARAMS_FECHAS[0][1] % 100}-01",
+                    fecha_mes_corte=f"{ct.PARAMS_FECHAS[1][1] // 100}-{ct.PARAMS_FECHAS[1][1] % 100}-01",
+                )
+            elif "{chunk_ini}" in query:
+                for fecha_chunk in tqdm(fechas_chunks):
+                    query_chunk = query.format(
+                        chunk_ini=fecha_chunk[0].strftime(format="%Y%m"),
+                        chunk_fin=fecha_chunk[1].strftime(format="%Y%m"),
+                    )
+                    cur.execute(query_chunk)
+
+            if n_query != len(queries.split(sep=";")) - 1:
                 cur.execute(query)
             else:
                 df = pl.read_database(query, con)
@@ -127,9 +160,10 @@ def read_query(file: str) -> None:
                     ).alias("apertura_reservas"),
                     pl.all(),
                 )
-                df.write_csv(f"data/raw/{file}.csv", separator="\t")
-                df.write_parquet(f"data/raw/{file}.parquet")
+                df.write_csv(f"data/raw/{file}_{ct.NEGOCIO}.csv", separator="\t")
+                df.write_parquet(f"data/raw/{file}_{ct.NEGOCIO}.parquet")
         else:
+            check_numero_columnas_add(file, query, segm[add_num])
             check_duplicados(segm[add_num])
             cur.executemany(query, segm[add_num].rows())
             add_num += 1

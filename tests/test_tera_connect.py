@@ -12,7 +12,7 @@ def test_check_adds_segmentacion():
         tera_connect.check_adds_segmentacion(["add_Siniestros"])
     print(exc_info.value)
 
-    assert tera_connect.check_adds_segmentacion(["add_s_Siniestros"]) == None
+    assert tera_connect.check_adds_segmentacion(["add_s_Siniestros"]) is None
 
 
 def test_check_suficiencia_adds():
@@ -48,7 +48,7 @@ def test_check_suficiencia_adds():
             mock_query,
             ["add_s_Polizas", "add_s_Sucursales", "add_s_Canales"],
         )
-        == None
+        is None
     )
 
 

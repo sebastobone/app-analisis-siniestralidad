@@ -52,6 +52,14 @@ def test_check_suficiencia_adds():
     )
 
 
+def test_check_numero_columnas_add():
+    mock_df = pl.DataFrame({"datos": [1, 1, 2, 3, 4, 5]})
+    mock_query = "INSERT INTO table VALUES (?, ?)"
+    with pytest.raises(Exception) as exc_info:
+        tera_connect.check_numero_columnas_add("siniestros", mock_query, mock_df)
+    print(exc_info.value)
+
+
 def test_check_duplicados():
     mock_df = pl.DataFrame({"datos": [1, 1, 2, 3, 4, 5]})
     with pytest.raises(Exception) as exc_info:

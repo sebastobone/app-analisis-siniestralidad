@@ -61,10 +61,25 @@ def check_numero_columnas_add(file: str, query: str, add: pl.DataFrame) -> None:
         )
 
 
-def check_duplicados(add: pl.DataFrame) -> None:
+def check_duplicados(add: pl.DataFrame) -> pl.DataFrame:
     if len(add) != len(add.unique()):
+        print(
+            f"""
+            Alerta -> tiene registros duplicados en la siguiente tabla: {add}
+            El proceso los elimina y va a continuar, pero se recomienda
+            revisar la tabla en el Excel.
+            """
+        )
+    return add.unique()
+
+
+def check_nulls(add: pl.DataFrame) -> None:
+    if add.null_count().max_horizontal().max() > 0:
         raise Exception(
-            f"""¡Error! Tiene registros duplicados en la siguiente tabla: {add}."""
+            f"""
+            Error -> tiene valores nulos en la siguiente tabla: {add}
+            Corrija estos valores antes de ejecutar el proceso.
+            """
         )
 
 
@@ -100,8 +115,10 @@ def read_query(file: str) -> None:
     cur = con.cursor()
 
     # Limites para correr queries pesados por partes
-    chunk_lim_1 = date(ct.PARAMS_FECHAS[0][1] // 100, ct.PARAMS_FECHAS[0][1] % 100, 1)
-    chunk_lim_2 = date(ct.PARAMS_FECHAS[1][1] // 100, ct.PARAMS_FECHAS[1][1] % 100, 1)
+    chunk_lim_1 = date(
+        ct.MES_PRIMERA_OCURRENCIA // 100, ct.MES_PRIMERA_OCURRENCIA % 100, 1
+    )
+    chunk_lim_2 = date(ct.MES_CORTE // 100, ct.MES_CORTE % 100, 1)
 
     fechas_chunks = pl.date_range(chunk_lim_1, chunk_lim_2, interval="1mo", eager=True)
     fechas_chunks = list(zip(fechas_chunks, fechas_chunks.dt.month_end()))
@@ -111,10 +128,10 @@ def read_query(file: str) -> None:
         if "?" not in query:
             if "{chunk_ini}" not in query:
                 query = query.format(
-                    mes_primera_ocurrencia=ct.PARAMS_FECHAS[0][1],
-                    mes_corte=ct.PARAMS_FECHAS[1][1],
-                    fecha_primera_ocurrencia=f"{ct.PARAMS_FECHAS[0][1] // 100}-{ct.PARAMS_FECHAS[0][1] % 100}-01",
-                    fecha_mes_corte=f"{ct.PARAMS_FECHAS[1][1] // 100}-{ct.PARAMS_FECHAS[1][1] % 100}-01",
+                    mes_primera_ocurrencia=ct.MES_PRIMERA_OCURRENCIA,
+                    mes_corte=ct.MES_CORTE,
+                    fecha_primera_ocurrencia=f"{ct.MES_PRIMERA_OCURRENCIA // 100}-{ct.MES_PRIMERA_OCURRENCIA % 100}-01",
+                    fecha_mes_corte=f"{ct.MES_CORTE // 100}-{ct.MES_CORTE % 100}-01",
                 )
             elif "{chunk_ini}" in query:
                 for fecha_chunk in tqdm(fechas_chunks):
@@ -164,8 +181,9 @@ def read_query(file: str) -> None:
                 df.write_parquet(f"data/raw/{file}_{ct.NEGOCIO}.parquet")
         else:
             check_numero_columnas_add(file, query, segm[add_num])
-            check_duplicados(segm[add_num])
-            cur.executemany(query, segm[add_num].rows())
+            add = check_duplicados(segm[add_num])
+            check_nulls(add)
+            cur.executemany(query, add.rows())
             add_num += 1
 
     # Segmentaciones faltantes

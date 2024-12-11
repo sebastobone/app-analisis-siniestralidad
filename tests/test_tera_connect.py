@@ -58,10 +58,3 @@ def test_check_numero_columnas_add():
     with pytest.raises(Exception) as exc_info:
         tera_connect.check_numero_columnas_add("siniestros", mock_query, mock_df)
     print(exc_info.value)
-
-
-def test_check_duplicados():
-    mock_df = pl.DataFrame({"datos": [1, 1, 2, 3, 4, 5]})
-    with pytest.raises(Exception) as exc_info:
-        tera_connect.check_duplicados(mock_df)
-    print(exc_info.value)

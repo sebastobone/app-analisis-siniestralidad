@@ -1,658 +1,1074 @@
-CREATE MULTISET VOLATILE TABLE CANAL_POLIZA
+CREATE MULTISET VOLATILE TABLE canal_poliza
 (
-	Compania_Id SMALLINT NOT NULL
-	,Codigo_Op VARCHAR(100) NOT NULL
-	,Ramo_Id INTEGER NOT NULL
-	,Codigo_Ramo_Op VARCHAR(100) NOT NULL
-	,Poliza_Id BIGINT NOT NULL
-	,Numero_Poliza VARCHAR(100) NOT NULL
-	,Apertura_Canal_Desc VARCHAR(100) NOT NULL
-	,Apertura_Canal_Cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (Numero_Poliza) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_POLIZA VALUES (?,?,?,?,?,?,?,?);
+    compania_id SMALLINT NOT NULL
+    , codigo_op VARCHAR(100) NOT NULL
+    , ramo_id INTEGER NOT NULL
+    , codigo_ramo_op VARCHAR(100) NOT NULL
+    , poliza_id BIGINT NOT NULL
+    , numero_poliza VARCHAR(100) NOT NULL
+    , apertura_canal_desc VARCHAR(100) NOT NULL
+    , apertura_canal_cd VARCHAR(100) NOT NULL
+) PRIMARY INDEX (numero_poliza) ON COMMIT PRESERVE ROWS;
+INSERT INTO CANAL_POLIZA VALUES (?,?,?,?,?,?,?,?);  -- noqa:
 
 
-CREATE MULTISET VOLATILE TABLE CANAL_CANAL
+
+CREATE MULTISET VOLATILE TABLE canal_canal
 (
-	Compania_Id SMALLINT NOT NULL
-	,Codigo_Op VARCHAR(100) NOT NULL
-	,Codigo_Ramo_Op VARCHAR(100) NOT NULL
-	,Canal_Comercial_Id BIGINT NOT NULL
-	,Codigo_Canal_Comercial_Op VARCHAR(20) NOT NULL
-	,Nombre_Canal_Comercial VARCHAR(100) NOT NULL
-	,Apertura_Canal_Desc VARCHAR(100) NOT NULL
-	,Apertura_Canal_Cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (Canal_Comercial_Id) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_CANAL VALUES (?,?,?,?,?,?,?,?);
+    compania_id SMALLINT NOT NULL
+    , codigo_op VARCHAR(100) NOT NULL
+    , codigo_ramo_op VARCHAR(100) NOT NULL
+    , canal_comercial_id BIGINT NOT NULL
+    , codigo_canal_comercial_op VARCHAR(20) NOT NULL
+    , nombre_canal_comercial VARCHAR(100) NOT NULL
+    , apertura_canal_desc VARCHAR(100) NOT NULL
+    , apertura_canal_cd VARCHAR(100) NOT NULL
+) PRIMARY INDEX (canal_comercial_id) ON COMMIT PRESERVE ROWS;
+INSERT INTO CANAL_CANAL VALUES (?,?,?,?,?,?,?,?);  -- noqa:
 
 
-CREATE MULTISET VOLATILE TABLE CANAL_SUCURSAL
+
+CREATE MULTISET VOLATILE TABLE canal_sucursal
 (
-	Compania_Id SMALLINT NOT NULL
-	,Codigo_Op VARCHAR(100) NOT NULL
-	,Codigo_Ramo_Op VARCHAR(100) NOT NULL
-	,Sucursal_Id BIGINT NOT NULL
-	,Codigo_Sucural_Op VARCHAR(10) NOT NULL
-	,Nombre_Sucursal VARCHAR(100) NOT NULL
-	,Apertura_Canal_Desc VARCHAR(100) NOT NULL
-	,Apertura_Canal_Cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (Sucursal_Id) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_SUCURSAL VALUES (?,?,?,?,?,?,?,?);
+    compania_id SMALLINT NOT NULL
+    , codigo_op VARCHAR(100) NOT NULL
+    , codigo_ramo_op VARCHAR(100) NOT NULL
+    , sucursal_id BIGINT NOT NULL
+    , codigo_sucural_op VARCHAR(10) NOT NULL
+    , nombre_sucursal VARCHAR(100) NOT NULL
+    , apertura_canal_desc VARCHAR(100) NOT NULL
+    , apertura_canal_cd VARCHAR(100) NOT NULL
+) PRIMARY INDEX (sucursal_id) ON COMMIT PRESERVE ROWS;
+INSERT INTO CANAL_SUCURSAL VALUES (?,?,?,?,?,?,?,?);  -- noqa:
 
 
-CREATE MULTISET VOLATILE TABLE FECHAS AS
+
+CREATE MULTISET VOLATILE TABLE fechas AS
 (
-	SELECT DISTINCT
-		Mes_Id
-		,MIN(Dia_Dt) OVER (PARTITION BY Mes_Id) AS Primer_dia_mes
-		,MAX(Dia_Dt) OVER (PARTITION BY Mes_Id) AS Ultimo_dia_mes
-		,CAST((Ultimo_dia_mes - Primer_dia_mes + 1)*1.00 AS DECIMAL(18,0)) Num_dias_mes
-	FROM MDB_SEGUROS_COLOMBIA.V_DIA
-	WHERE Mes_Id BETWEEN {mes_primera_ocurrencia} AND {mes_corte}
-) WITH DATA PRIMARY INDEX (Mes_Id) ON COMMIT PRESERVE ROWS;
+    SELECT DISTINCT
+        mes_id
+        , MIN(dia_dt) AS primer_dia_mes
+        , MAX(dia_dt) AS ultimo_dia_mes
+        , CAST(ultimo_dia_mes - primer_dia_mes + 1 AS FLOAT) AS num_dias_mes
+    FROM mdb_seguros_colombia.v_dia
+    WHERE
+        mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER) AND CAST(
+            '{mes_corte}' AS INTEGER
+        )
+) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 
 
-CREATE MULTISET VOLATILE TABLE MESES_DEVENGUE AS
+
+CREATE MULTISET VOLATILE TABLE meses_devengue AS
 (
-	SELECT DISTINCT
-		Mes_Id
-		,MIN(Dia_Dt) OVER (PARTITION BY Mes_Id) AS Primer_Dia_Mes
-		,MAX(Dia_Dt) OVER (PARTITION BY Mes_Id) AS Ultimo_Dia_Mes
-		,Ultimo_Dia_Mes - Primer_Dia_Mes + 1 AS Num_Dias_Mes
-	FROM MDB_SEGUROS_COLOMBIA.V_DIA
-	WHERE Mes_Id BETWEEN {mes_corte} - 300 AND {mes_corte} + 200
-) WITH DATA PRIMARY INDEX (Mes_Id) ON COMMIT PRESERVE ROWS;
+    SELECT DISTINCT
+        mes_id
+        , MIN(dia_dt) OVER (PARTITION BY mes_id) AS primer_dia_mes
+        , MAX(dia_dt) OVER (PARTITION BY mes_id) AS ultimo_dia_mes
+        , ultimo_dia_mes - primer_dia_mes + 1 AS num_dias_mes
+    FROM mdb_seguros_colombia.v_dia
+    WHERE
+        mes_id BETWEEN CAST('{mes_corte}' AS INTEGER)
+        - 300 AND CAST('{mes_corte}' AS INTEGER)
+        + 200
+) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 
 
-CREATE MULTISET VOLATILE TABLE PRIMAS_CEDIDAS_RPND_SAP
+CREATE MULTISET VOLATILE TABLE primas_cedidas_rpnd_sap
 (
-	Codigo_Op VARCHAR(2) NOT NULL
-	,Codigo_Ramo_Op VARCHAR(3) NOT NULL
-	,Mes_Id INTEGER NOT NULL
-	,Prima_Bruta FLOAT NOT NULL
-	,Prima_Retenida FLOAT NOT NULL
-	,Prima_Bruta_Devengada FLOAT NOT NULL
-	,Prima_Retenida_Devengada FLOAT NOT NULL
-	,Mov_RPND_Bruto FLOAT NOT NULL
-	,Mov_RPND_Cedido FLOAT NOT NULL
-	,Mov_RPND_Retenido FLOAT NOT NULL
-	,Prima_Cedida FLOAT NOT NULL
-	,Prima_Devengada_Cedida FLOAT NOT NULL
-) PRIMARY INDEX (Codigo_Op, Codigo_Ramo_Op, Mes_Id) ON COMMIT PRESERVE ROWS;
-INSERT INTO PRIMAS_CEDIDAS_RPND_SAP VALUES (?,?,?,?,?,?,?,?,?,?,?,?);
+    codigo_op VARCHAR(2) NOT NULL
+    , codigo_ramo_op VARCHAR(3) NOT NULL
+    , mes_id INTEGER NOT NULL
+    , prima_bruta FLOAT NOT NULL
+    , prima_retenida FLOAT NOT NULL
+    , prima_bruta_devengada FLOAT NOT NULL
+    , prima_retenida_devengada FLOAT NOT NULL
+    , mov_rpnd_bruto FLOAT NOT NULL
+    , mov_rpnd_cedido FLOAT NOT NULL
+    , mov_rpnd_retenido FLOAT NOT NULL
+    , prima_cedida FLOAT NOT NULL
+    , prima_devengada_cedida FLOAT NOT NULL
+) PRIMARY INDEX (codigo_op, codigo_ramo_op, mes_id) ON COMMIT PRESERVE ROWS;
+INSERT INTO PRIMAS_CEDIDAS_RPND_SAP VALUES (?,?,?,?,?,?,?,?,?,?,?,?);  -- noqa:
 
 
-CREATE MULTISET VOLATILE TABLE GASTOS_EXPEDICION
+
+CREATE MULTISET VOLATILE TABLE gastos_expedicion
 (
-	Codigo_Op VARCHAR(2) NOT NULL
-	,Codigo_Ramo_Op VARCHAR(3) NOT NULL
-	,Ano_Id INTEGER NOT NULL
-	,Porcentaje_Gastos FLOAT NOT NULL
-) PRIMARY INDEX (Codigo_Op, Codigo_Ramo_Op, Ano_Id) ON COMMIT PRESERVE ROWS;
-INSERT INTO GASTOS_EXPEDICION VALUES (?,?,?,?);
+    codigo_op VARCHAR(2) NOT NULL
+    , codigo_ramo_op VARCHAR(3) NOT NULL
+    , ano_id INTEGER NOT NULL
+    , porcentaje_gastos FLOAT NOT NULL
+) PRIMARY INDEX (codigo_op, codigo_ramo_op, ano_id) ON COMMIT PRESERVE ROWS;
+INSERT INTO GASTOS_EXPEDICION VALUES (?,?,?,?);  -- noqa:
 
 
 
-CREATE MULTISET VOLATILE TABLE PRIMAS_RTDC
+CREATE MULTISET VOLATILE TABLE primas_rtdc
 (
-	Mes_Id INTEGER NOT NULL
-	,Codigo_Op VARCHAR(2) NOT NULL
-	,Codigo_Ramo_Op VARCHAR(3) NOT NULL
-	,Apertura_Canal_Desc VARCHAR(100) NOT NULL
-	,Tipo_Produccion VARCHAR(20) NOT NULL
-	,Prima_Bruta FLOAT NOT NULL
-	,Prima_Bruta_Devengada FLOAT NOT NULL
-	,Prima_Retenida FLOAT NOT NULL
-	,Prima_Retenida_Devengada FLOAT NOT NULL
-) PRIMARY INDEX (Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc, Tipo_Produccion) ON COMMIT PRESERVE ROWS;
-COLLECT STATISTICS ON PRIMAS_RTDC COLUMN (Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc, Tipo_Produccion);
+    mes_id INTEGER NOT NULL
+    , codigo_op VARCHAR(2) NOT NULL
+    , codigo_ramo_op VARCHAR(3) NOT NULL
+    , apertura_canal_desc VARCHAR(100) NOT NULL
+    , tipo_produccion VARCHAR(20) NOT NULL
+    , prima_bruta FLOAT NOT NULL
+    , prima_bruta_devengada FLOAT NOT NULL
+    , prima_retenida FLOAT NOT NULL
+    , prima_retenida_devengada FLOAT NOT NULL
+) PRIMARY INDEX (
+    mes_id, codigo_op, codigo_ramo_op, apertura_canal_desc, tipo_produccion
+) ON COMMIT PRESERVE ROWS;
+COLLECT STATISTICS ON PRIMAS_RTDC COLUMN (Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc, Tipo_Produccion);  -- noqa:
 
 INSERT INTO PRIMAS_RTDC
 SELECT
-	Mes_Id
-	,Codigo_Op
-	,Codigo_Ramo_Aux AS Codigo_Ramo_Op
-	,Apertura_Canal_Aux AS Apertura_Canal_Desc
-	,Tipo_Produccion
-	,SUM(Prima_Bruta) AS Prima_Bruta
-	,SUM(Prima_Bruta_Devengada) AS Prima_Bruta_Devengada
-	,SUM(Prima_Retenida) AS Prima_Retenida
-	,SUM(Prima_Retenida_Devengada) AS Prima_Retenida_Devengada
+    mes_id
+    , codigo_op
+    , codigo_ramo_aux AS codigo_ramo_op
+    , apertura_canal_aux AS apertura_canal_desc
+    , tipo_produccion
+    , SUM(prima_bruta) AS prima_bruta
+    , SUM(prima_bruta_devengada) AS prima_bruta_devengada
+    , SUM(prima_retenida) AS prima_retenida
+    , SUM(prima_retenida_devengada) AS prima_retenida_devengada
 
 FROM (
-	SELECT 
-		fechas.Mes_Id
-		,cia.Codigo_Op
-		,CASE
-			WHEN ramo.Ramo_Desc = 'VIDA INDIVIDUAL' AND rtdc.Amparo_Id NOT IN (18647, 641, 930, 64082, 61296, -1)
-			THEN 'AAV'
-			ELSE ramo.Codigo_Ramo_Op
-		END AS Codigo_Ramo_Aux
-		,COALESCE(p.Apertura_Canal_Desc, c.Apertura_Canal_Desc, s.Apertura_Canal_Desc, 
-			CASE 
-				WHEN ramo.Codigo_Ramo_Op IN ('081','083') AND cia.Codigo_Op = '02' THEN 'Otros Banca'
-				WHEN ramo.Codigo_Ramo_Op IN ('083') AND cia.Codigo_Op = '01' THEN 'Otros'
-				ELSE 'Resto'
-			END
-		) AS Apertura_Canal_Aux
-		,CASE WHEN n1.Nivel_Indicador_Uno_Id = 1 AND rtdc.Valor_Indicador < 0 THEN 'NEGATIVA' ELSE 'POSITIVA' END AS Tipo_Produccion
-		,SUM(CASE WHEN n1.Nivel_Indicador_Uno_Id IN (1) THEN rtdc.Valor_Indicador ELSE 0 END) Prima_Bruta
-		,SUM(CASE WHEN n1.Nivel_Indicador_Uno_Id IN (1,5) THEN rtdc.Valor_Indicador ELSE 0 END) Prima_Bruta_Devengada
-		,SUM(CASE WHEN n1.Nivel_Indicador_Uno_Id IN (1,2) THEN rtdc.Valor_Indicador ELSE 0 END) Prima_Retenida
-		,SUM(CASE WHEN n1.Nivel_Indicador_Uno_Id IN (1,2,5) THEN rtdc.Valor_Indicador ELSE 0 END) Prima_Retenida_Devengada
+    SELECT
+        fechas.mes_id
+        , cia.codigo_op
+        , CASE
+            WHEN
+                rtdc.ramo_id = 78
+                AND rtdc.amparo_id NOT IN (18647, 641, 930, 64082, 61296, -1)
+                THEN 'AAV'
+            ELSE ramo.codigo_ramo_op
+        END AS codigo_ramo_aux
+        , COALESCE(
+            p.apertura_canal_desc, c.apertura_canal_desc, s.apertura_canal_desc
+            , CASE
+                WHEN
+                    rtdc.ramo_id IN (78, 274)
+                    AND pro.compania_id = 3
+                    THEN 'Otros Banca'
+                WHEN
+                    rtdc.ramo_id = 274 AND pro.compania_id = 4
+                    THEN 'Otros'
+                ELSE 'Resto'
+            END
+        ) AS apertura_canal_aux
+        , CASE
+            WHEN
+                n1.nivel_indicador_uno_id = 1 AND rtdc.valor_indicador < 0
+                THEN 'NEGATIVA'
+            ELSE 'POSITIVA'
+        END AS tipo_produccion
+        , SUM(
+            CASE
+                WHEN
+                    n1.nivel_indicador_uno_id IN (1)
+                    THEN rtdc.valor_indicador
+                ELSE 0
+            END
+        ) AS prima_bruta
+        , SUM(
+            CASE
+                WHEN
+                    n1.nivel_indicador_uno_id IN (1, 5)
+                    THEN rtdc.valor_indicador
+                ELSE 0
+            END
+        ) AS prima_bruta_devengada
+        , SUM(
+            CASE
+                WHEN
+                    n1.nivel_indicador_uno_id IN (1, 2)
+                    THEN rtdc.valor_indicador
+                ELSE 0
+            END
+        ) AS prima_retenida
+        , SUM(
+            CASE
+                WHEN
+                    n1.nivel_indicador_uno_id IN (1, 2, 5)
+                    THEN rtdc.valor_indicador
+                ELSE 0
+            END
+        ) AS prima_retenida_devengada
 
-FROM MDB_SEGUROS_COLOMBIA.V_RT_DETALLE_COBERTURA rtdc
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_RT_NIVEL_INDICADOR_CINCO n5 ON (rtdc.Nivel_Indicador_cinco_Id = n5.Nivel_Indicador_cinco_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_RT_Nivel_Indicador_uno n1 ON (n5.Nivel_Indicador_uno_Id = n1.Nivel_Indicador_uno_Id AND n5.compania_origen_Id = n1.compania_origen_Id )
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_PLAN_INDIVIDUAL plan ON (rtdc.Plan_Individual_Id = plan.Plan_Individual_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_PRODUCTO pro ON (pro.producto_Id = plan.producto_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_RAMO ramo ON (pro.Ramo_Id = ramo.Ramo_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_POLIZA poli ON (poli.poliza_Id = rtdc.poliza_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_COMPANIA cia ON (pro.compania_Id = cia.compania_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_SUCURSAL sucu ON (poli.Sucursal_Id = sucu.Sucursal_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_CANAL_COMERCIAL canal ON (sucu.Canal_Comercial_Id = canal.Canal_Comercial_Id)
-		LEFT JOIN CANAL_POLIZA p ON (rtdc.Poliza_Id = p.Poliza_Id AND Codigo_Ramo_Aux = p.Codigo_Ramo_Op AND p.Compania_Id = cia.Compania_Id)
-		LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Canal_Comercial_Id, Apertura_Canal_Desc FROM CANAL_CANAL) c
-			ON (Codigo_Ramo_Aux = c.Codigo_Ramo_Op
-			AND sucu.Canal_Comercial_Id = c.Canal_Comercial_Id
-			AND cia.Compania_Id = c.Compania_Id)
-		LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Sucursal_Id, Apertura_Canal_Desc FROM CANAL_SUCURSAL) s
-			ON (Codigo_Ramo_Aux = s.Codigo_Ramo_Op
-			AND sucu.Sucursal_Id = s.Sucursal_Id
-			AND cia.Compania_Id = s.Compania_Id)
-		INNER JOIN FECHAS ON (fechas.Mes_Id = rtdc.Mes_Id)
+    FROM mdb_seguros_colombia.v_rt_detalle_cobertura AS rtdc
+    INNER JOIN
+        mdb_seguros_colombia.v_rt_nivel_indicador_cinco AS n5
+        ON (rtdc.nivel_indicador_cinco_id = n5.nivel_indicador_cinco_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_rt_nivel_indicador_uno AS n1
+        ON
+            n5.nivel_indicador_uno_id = n1.nivel_indicador_uno_id
+            AND n5.compania_origen_id = n1.compania_origen_id
+    INNER JOIN
+        mdb_seguros_colombia.v_plan_individual AS plan
+        ON (rtdc.plan_individual_id = plan.plan_individual_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_producto AS pro
+        ON (plan.producto_id = pro.producto_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_ramo AS ramo
+        ON (pro.ramo_id = ramo.ramo_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_poliza AS poli
+        ON (rtdc.poliza_id = poli.poliza_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_compania AS cia
+        ON (pro.compania_id = cia.compania_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_sucursal AS sucu
+        ON (poli.sucursal_id = sucu.sucursal_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_canal_comercial AS canal
+        ON (sucu.canal_comercial_id = canal.canal_comercial_id)
+    LEFT JOIN
+        canal_poliza AS p
+        ON
+            (
+                rtdc.poliza_id = p.poliza_id
+                AND codigo_ramo_aux = p.codigo_ramo_op
+                AND cia.compania_id = p.compania_id
+            )
+    LEFT JOIN
+        canal_canal AS c
+        ON (
+            codigo_ramo_aux = c.codigo_ramo_op
+            AND sucu.canal_comercial_id = c.canal_comercial_id
+            AND cia.compania_id = c.compania_id
+        )
+    LEFT JOIN
+        canal_sucursal AS s
+        ON (
+            codigo_ramo_aux = s.codigo_ramo_op
+            AND sucu.sucursal_id = s.sucursal_id
+            AND cia.compania_id = s.compania_id
+        )
+    INNER JOIN fechas ON (rtdc.mes_id = fechas.mes_id)
 
-	WHERE ((rtdc.Ramo_Id IN (78, 274, 57074, 140, 107, 271, 297, 204) AND pro.Compania_Id = 3)
-		OR (rtdc.Ramo_Id IN (54835, 274, 140, 107) AND pro.Compania_Id = 4))
-		AND n1.Nivel_Indicador_Uno_Id iN (1,2,5)
+    WHERE rtdc.ramo_id IN (54835, 274, 78, 57074, 140, 107, 271, 297, 204)
+    AND pro.compania_id IN (3, 4)
+    AND n1.nivel_indicador_uno_id IN (1, 2, 5)
 
-	GROUP BY 1,2,3,4,5
+    GROUP BY 1, 2, 3, 4, 5
 
-	UNION ALL
+    UNION ALL
 
-	SELECT 
-		fechas.Mes_Id
-		,CASE WHEN ramo.Codigo_Ramo_Op < '069' THEN '01' ELSE '02' END AS Codigo_Op
-		,CASE
-			WHEN ramo.Ramo_Desc = 'VIDA INDIVIDUAL' AND rtdc.Amparo_Id NOT IN (18647, 641, 930, 64082, 61296, -1)
-			THEN 'AAV'
-			ELSE ramo.Codigo_Ramo_Op
-		END AS Codigo_Ramo_Aux
-		,COALESCE(p.Apertura_Canal_Desc, c.Apertura_Canal_Desc, s.Apertura_Canal_Desc, 
-			CASE 
-				WHEN ramo.Codigo_Ramo_Op IN ('081','083') AND cia.Codigo_Op = '02' THEN 'Otros Banca'
-				WHEN ramo.Codigo_Ramo_Op IN ('083') AND cia.Codigo_Op = '01' THEN 'Otros'
-				ELSE 'Resto'
-			END
-		) AS Apertura_Canal_Aux
-		,CASE WHEN n1.Nivel_Indicador_Uno_Id = 1 AND rtdc.Valor_Indicador < 0 THEN 'NEGATIVA' ELSE 'POSITIVA' END AS Tipo_Produccion
-		,SUM(CASE WHEN n1.Nivel_Indicador_Uno_Id IN (1) THEN rtdc.Valor_Indicador ELSE 0 END) Prima_Bruta
-		,SUM(CASE WHEN n1.Nivel_Indicador_Uno_Id IN (1,5) THEN rtdc.Valor_Indicador ELSE 0 END) Prima_Bruta_Devengada
-		,SUM(CASE WHEN n1.Nivel_Indicador_Uno_Id IN (1,2) THEN rtdc.Valor_Indicador ELSE 0 END) Prima_Retenida
-		,SUM(CASE WHEN n1.Nivel_Indicador_Uno_Id IN (1,2,5) THEN rtdc.Valor_Indicador ELSE 0 END) Prima_Retenida_Devengada
+    SELECT
+        fechas.mes_id
+        , cia.codigo_op
+        , CASE
+            WHEN
+                rtdc.ramo_id = 78
+                AND rtdc.amparo_id NOT IN (18647, 641, 930, 64082, 61296, -1)
+                THEN 'AAV'
+            ELSE ramo.codigo_ramo_op
+        END AS codigo_ramo_aux
+        , COALESCE(
+            p.apertura_canal_desc, c.apertura_canal_desc, s.apertura_canal_desc
+            , CASE
+                WHEN
+                    rtdc.ramo_id IN (78, 274)
+                    AND rtdc.compania_origen_id = 3
+                    THEN 'Otros Banca'
+                WHEN
+                    rtdc.ramo_id = 274 AND rtdc.compania_origen_id = 4
+                    THEN 'Otros'
+                ELSE 'Resto'
+            END
+        ) AS apertura_canal_aux
+        , CASE
+            WHEN
+                n1.nivel_indicador_uno_id = 1 AND rtdc.valor_indicador < 0
+                THEN 'NEGATIVA'
+            ELSE 'POSITIVA'
+        END AS tipo_produccion
+        , SUM(
+            CASE
+                WHEN
+                    n1.nivel_indicador_uno_id IN (1)
+                    THEN rtdc.valor_indicador
+                ELSE 0
+            END
+        ) AS prima_bruta
+        , SUM(
+            CASE
+                WHEN
+                    n1.nivel_indicador_uno_id IN (1, 5)
+                    THEN rtdc.valor_indicador
+                ELSE 0
+            END
+        ) AS prima_bruta_devengada
+        , SUM(
+            CASE
+                WHEN
+                    n1.nivel_indicador_uno_id IN (1, 2)
+                    THEN rtdc.valor_indicador
+                ELSE 0
+            END
+        ) AS prima_retenida
+        , SUM(
+            CASE
+                WHEN
+                    n1.nivel_indicador_uno_id IN (1, 2, 5)
+                    THEN rtdc.valor_indicador
+                ELSE 0
+            END
+        ) AS prima_retenida_devengada
 
-	FROM MDB_SEGUROS_COLOMBIA.V_RT_RAMO_SUCURSAL rtdc
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_RT_NIVEL_INDICADOR_CINCO n5 ON (rtdc.Nivel_Indicador_cinco_Id = n5.Nivel_Indicador_cinco_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_RT_Nivel_Indicador_uno n1 ON (n5.Nivel_Indicador_uno_Id = n1.Nivel_Indicador_uno_Id AND n5.compania_origen_Id = n1.compania_origen_Id ) 
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_RAMO ramo ON (rtdc.Ramo_Id = ramo.Ramo_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_POLIZA poli ON (rtdc.Poliza_Id = poli.Poliza_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_SUCURSAL sucu ON (rtdc.Sucursal_Id = sucu.Sucursal_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_CANAL_COMERCIAL canal ON (sucu.Canal_Comercial_Id = canal.Canal_Comercial_Id)
-		LEFT JOIN MDB_SEGUROS_COLOMBIA.V_COMPANIA cia ON (rtdc.Compania_Origen_Id = cia.compania_Id)
-		LEFT JOIN CANAL_POLIZA p ON (rtdc.Poliza_Id = p.Poliza_Id AND Codigo_Ramo_Aux = p.Codigo_Ramo_Op AND p.Compania_Id = cia.Compania_Id)
-		LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Canal_Comercial_Id, Apertura_Canal_Desc FROM CANAL_CANAL) c
-			ON (Codigo_Ramo_Aux = c.Codigo_Ramo_Op
-			AND sucu.Canal_Comercial_Id = c.Canal_Comercial_Id
-			AND cia.Compania_Id = c.Compania_Id)
-		LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Sucursal_Id, Apertura_Canal_Desc FROM CANAL_SUCURSAL) s
-			ON (Codigo_Ramo_Aux = s.Codigo_Ramo_Op
-			AND rtdc.Sucursal_Id = s.Sucursal_Id
-			AND cia.Compania_Id = s.Compania_Id)
-		INNER JOIN FECHAS ON (fechas.Mes_Id = rtdc.Mes_Id)
+    FROM mdb_seguros_colombia.v_rt_ramo_sucursal AS rtdc
+    INNER JOIN
+        mdb_seguros_colombia.v_rt_nivel_indicador_cinco AS n5
+        ON (rtdc.nivel_indicador_cinco_id = n5.nivel_indicador_cinco_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_rt_nivel_indicador_uno AS n1
+        ON
+            n5.nivel_indicador_uno_id = n1.nivel_indicador_uno_id
+            AND n5.compania_origen_id = n1.compania_origen_id
+    INNER JOIN
+        mdb_seguros_colombia.v_ramo AS ramo
+        ON (rtdc.ramo_id = ramo.ramo_id)
+	INNER JOIN
+		mdb_seguros_colombia.v_compania AS cia
+		ON rtdc.compania_origen_id = cia.compania_id
+    INNER JOIN
+        mdb_seguros_colombia.v_poliza AS poli
+        ON (rtdc.poliza_id = poli.poliza_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_sucursal AS sucu
+        ON (rtdc.sucursal_id = sucu.sucursal_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_canal_comercial AS canal
+        ON (sucu.canal_comercial_id = canal.canal_comercial_id)
+    LEFT JOIN
+        mdb_seguros_colombia.v_compania AS cia
+        ON (rtdc.compania_origen_id = cia.compania_id)
+    LEFT JOIN
+        canal_poliza AS p
+        ON
+			rtdc.poliza_id = p.poliza_id
+			AND codigo_ramo_aux = p.codigo_ramo_op
+			AND cia.compania_id = p.compania_id
+    LEFT JOIN
+        canal_canal AS c
+        ON (
+            codigo_ramo_aux = c.codigo_ramo_op
+            AND sucu.canal_comercial_id = c.canal_comercial_id
+            AND cia.compania_id = c.compania_id
+        )
+    LEFT JOIN
+        canal_sucursal AS s
+        ON (
+            codigo_ramo_aux = s.codigo_ramo_op
+            AND rtdc.sucursal_id = s.sucursal_id
+            AND cia.compania_id = s.compania_id
+        )
+    INNER JOIN fechas ON (rtdc.mes_id = fechas.mes_id)
 
-	WHERE ((rtdc.Ramo_Id IN (78, 274, 57074, 140, 107, 271, 297, 204) AND rtdc.Compania_Origen_Id = 3)
-		OR (rtdc.Ramo_Id IN (54835, 274, 140, 107) AND rtdc.Compania_Origen_Id = 4))
-		AND n1.Nivel_Indicador_Uno_Id iN (1,2,5)
+    WHERE rtdc.ramo_id IN (54835, 274, 78, 57074, 140, 107, 271, 297, 204)
+    AND rtdc.compania_origen_id IN (3, 4)
+    AND n1.nivel_indicador_uno_id IN (1, 2, 5)
 
-	GROUP BY 1,2,3,4,5
-) base
+    GROUP BY 1, 2, 3, 4, 5
+) AS base
 
-GROUP BY 1,2,3,4,5;
+GROUP BY 1, 2, 3, 4, 5;
 
 
 
-CREATE MULTISET VOLATILE TABLE PRIMAS_EVPRO AS
+CREATE MULTISET VOLATILE TABLE primas_evpro AS
 (
-	SELECT
-		evpro_cob.Mes_Id
-		,cia.Codigo_Op
-		,CASE
-			WHEN ramo.Ramo_Desc = 'VIDA INDIVIDUAL' AND evpro_cob.Amparo_Id NOT IN (18647, 641, 930, 64082, 61296, -1)
-			THEN 'AAV'
-			ELSE ramo.Codigo_Ramo_Op
-		END AS Codigo_Ramo_Aux
-		,COALESCE(p.Apertura_Canal_Desc, c.Apertura_Canal_Desc, s.Apertura_Canal_Desc, 
-			CASE 
-				WHEN ramo.Codigo_Ramo_Op IN ('081','083') AND cia.Codigo_Op = '02' THEN 'Otros Banca'
-				WHEN ramo.Codigo_Ramo_Op IN ('083') AND cia.Codigo_Op = '01' THEN 'Otros'
-				ELSE 'Resto'
-			END
-		) AS Apertura_Canal_Desc
-		,CASE WHEN evpro_cob.Valor_Prima < 0 THEN 'NEGATIVA' ELSE 'POSITIVA' END AS Tipo_Produccion
-		,SUM(CAST((evpro_cob.Valor_Prima * evpro_cob.Valor_Tasa) AS DECIMAL(18,6))) Prima_Bruta
-		
-	FROM MDB_SEGUROS_COLOMBIA.V_EVENTO_PROD_COBERTURA evpro_cob
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_POLIZA poli ON (evpro_cob.Poliza_Id = poli.Poliza_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_POLIZA_CERTIFICADO_ETL pcetl ON (evpro_cob.Poliza_Certificado_Id = pcetl.Poliza_Certificado_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_PLAN_INDIVIDUAL pind ON (evpro_cob.Plan_Individual_Id = pind.Plan_Individual_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_PRODUCTO pro ON (pro.Producto_Id = pind.Producto_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_RAMO ramo ON (pro.Ramo_Id = ramo.Ramo_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_COMPANIA cia ON (pro.Compania_Id = cia.Compania_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_SUCURSAL sucu ON (poli.Sucursal_Id = sucu.Sucursal_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_CANAL_COMERCIAL canal ON (sucu.Canal_Comercial_Id = canal.Canal_Comercial_Id)
-		LEFT JOIN CANAL_POLIZA p ON (evpro_cob.Poliza_Id = p.Poliza_Id AND Codigo_Ramo_Aux = p.Codigo_Ramo_Op AND p.Compania_Id = cia.Compania_Id)
-		LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Canal_Comercial_Id, Apertura_Canal_Desc FROM CANAL_CANAL) c
-			ON (Codigo_Ramo_Aux = c.Codigo_Ramo_Op
-			AND sucu.Canal_Comercial_Id = c.Canal_Comercial_Id
-			AND cia.Compania_Id = c.Compania_Id)
-		LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Sucursal_Id, Apertura_Canal_Desc FROM CANAL_SUCURSAL) s
-			ON (Codigo_Ramo_Aux = s.Codigo_Ramo_Op
-			AND sucu.Sucursal_Id = s.Sucursal_Id
-			AND cia.Compania_Id = s.Compania_Id)
-		
-	WHERE ((pro.Ramo_Id IN (78, 274, 57074, 140, 107, 271, 297, 204) AND pro.Compania_Id = 3)
-		OR (pro.Ramo_Id IN (54835, 274, 140, 107) AND pro.Compania_Id = 4))
-		AND evpro_cob.Mes_Id = {mes_corte}
-		
-	GROUP BY 1,2,3,4,5
+    SELECT
+        evpro_cob.mes_id
+        , cia.codigo_op
+        , CASE
+            WHEN
+                pro.ramo_id = 78
+                AND evpro_cob.amparo_id NOT IN (
+                    18647, 641, 930, 64082, 61296, -1
+                )
+                THEN 'AAV'
+            ELSE ramo.codigo_ramo_op
+        END AS codigo_ramo_aux
+        , COALESCE(
+            p.apertura_canal_desc, c.apertura_canal_desc, s.apertura_canal_desc
+            , CASE
+                WHEN
+                    pro.ramo_id IN (78, 274)
+                    AND pro.compania_id = 3
+                    THEN 'Otros Banca'
+                WHEN
+                    pro.ramo_id = 274 AND pro.compania_id = 4
+                    THEN 'Otros'
+                ELSE 'Resto'
+            END
+        ) AS apertura_canal_desc
+        , CASE
+            WHEN evpro_cob.valor_prima < 0 THEN 'NEGATIVA' ELSE 'POSITIVA'
+        END AS tipo_produccion
+        , SUM(
+            CAST(
+                evpro_cob.valor_prima * evpro_cob.valor_tasa AS FLOAT
+            )
+        ) AS prima_bruta
 
-) WITH DATA PRIMARY INDEX (Mes_Id, Codigo_Op, Codigo_Ramo_Aux, Apertura_Canal_Desc, Tipo_Produccion) ON COMMIT PRESERVE ROWS;
+    FROM mdb_seguros_colombia.v_evento_prod_cobertura AS evpro_cob
+    INNER JOIN
+        mdb_seguros_colombia.v_poliza AS poli
+        ON (evpro_cob.poliza_id = poli.poliza_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_poliza_certificado_etl AS pcetl
+        ON (evpro_cob.poliza_certificado_id = pcetl.poliza_certificado_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_plan_individual AS pind
+        ON (evpro_cob.plan_individual_id = pind.plan_individual_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_producto AS pro
+        ON (pind.producto_id = pro.producto_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_ramo AS ramo
+        ON (pro.ramo_id = ramo.ramo_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_compania AS cia
+        ON (pro.compania_id = cia.compania_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_sucursal AS sucu
+        ON (poli.sucursal_id = sucu.sucursal_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_canal_comercial AS canal
+        ON (sucu.canal_comercial_id = canal.canal_comercial_id)
+    LEFT JOIN
+        canal_poliza AS p
+        ON
+			evpro_cob.poliza_id = p.poliza_id
+			AND codigo_ramo_aux = p.codigo_ramo_op
+			AND cia.compania_id = p.compania_id
+    LEFT JOIN
+        canal_canal AS c
+        ON (
+            codigo_ramo_aux = c.codigo_ramo_op
+            AND sucu.canal_comercial_id = c.canal_comercial_id
+            AND cia.compania_id = c.compania_id
+        )
+    LEFT JOIN
+        canal_sucursal AS s
+        ON (
+            codigo_ramo_aux = s.codigo_ramo_op
+            AND sucu.sucursal_id = s.sucursal_id
+            AND cia.compania_id = s.compania_id
+        )
+
+    WHERE
+        pro.ramo_id IN (54835, 274, 78, 57074, 140, 107, 271, 297, 204)
+        AND pro.compania_id IN (3, 4)
+        AND evpro_cob.mes_id = CAST('{mes_corte}' AS INTEGER)
+
+    GROUP BY 1, 2, 3, 4, 5
+
+) WITH DATA PRIMARY INDEX (
+    mes_id, codigo_op, codigo_ramo_aux, apertura_canal_desc, tipo_produccion
+) ON COMMIT PRESERVE ROWS;
 
 
 
-CREATE MULTISET VOLATILE TABLE BASE_PRIMAS AS
+CREATE MULTISET VOLATILE TABLE base_primas AS
 (
-	SELECT
-		COALESCE(rtdc.Mes_Id, evpro.Mes_Id) AS Mes_Id
-		,COALESCE(rtdc.Codigo_Op, evpro.Codigo_Op) AS Codigo_Op
-		,COALESCE(rtdc.Codigo_Ramo_Op, evpro.Codigo_Ramo_Aux) AS Codigo_Ramo_Op
-		,COALESCE(rtdc.Apertura_Canal_Desc, evpro.Apertura_Canal_Desc) AS Apertura_Canal_Desc
-		,COALESCE(rtdc.Tipo_Produccion, evpro.Tipo_Produccion) AS Tipo_Produccion
-		,SUM(CASE WHEN COALESCE(rtdc.Mes_Id, evpro.Mes_Id) = {mes_corte} AND CURRENT_DATE <= LAST_DAY((DATE {fecha_mes_corte})) + INTERVAL '15' DAY THEN evpro.Prima_Bruta ELSE rtdc.Prima_Bruta END) AS Prima_Bruta
-		,SUM(CASE WHEN COALESCE(rtdc.Mes_Id, evpro.Mes_Id) = {mes_corte} AND CURRENT_DATE <= LAST_DAY((DATE {fecha_mes_corte})) + INTERVAL '15' DAY THEN evpro.Prima_Bruta - ZEROIFNULL(sap.Prima_Cedida) ELSE rtdc.Prima_Retenida END) AS Prima_Retenida
-		,SUM(rtdc.Prima_Bruta_Devengada) AS Prima_Bruta_Devengada
-		,SUM(rtdc.Prima_Retenida_Devengada) AS Prima_Retenida_Devengada
+    WITH sap AS (
+        SELECT
+            mes_id
+            , codigo_op
+            , codigo_ramo_op
+            , 'POSITIVA' AS tipo_produccion
+            , prima_cedida
+            , CASE
+                WHEN
+                    codigo_op = '02' AND codigo_ramo_op IN ('081', 'AAV', '083')
+                    THEN 'No Banca'
+                ELSE 'Resto'
+            END AS apertura_canal_desc
+        FROM primas_cedidas_rpnd_sap
+    )
 
-	FROM PRIMAS_RTDC rtdc
-		FULL OUTER JOIN PRIMAS_EVPRO evpro
-			ON (rtdc.Mes_Id = evpro.Mes_Id
-			AND rtdc.Codigo_Op = evpro.Codigo_Op
-			AND rtdc.Codigo_Ramo_Op = evpro.Codigo_Ramo_Aux
-			AND rtdc.Apertura_Canal_Desc = evpro.Apertura_Canal_Desc
-			AND rtdc.Tipo_Produccion = evpro.Tipo_Produccion)
-		LEFT JOIN (
-			SELECT 
-				Mes_Id
-				,Codigo_Op
-				,Codigo_Ramo_Op
-				,CASE
-					WHEN Codigo_Op = '02' AND Codigo_Ramo_Op IN ('081','AAV','083') THEN 'No Banca'
-					ELSE 'Resto'
-				END AS Apertura_Canal_Desc
-				,'POSITIVA' AS Tipo_Produccion
-				,Prima_Cedida
-			FROM PRIMAS_CEDIDAS_RPND_SAP
-			) sap
-			ON (sap.Mes_Id = COALESCE(rtdc.Mes_Id, evpro.Mes_Id)
-			AND sap.Codigo_Op = COALESCE(rtdc.Codigo_Op, evpro.Codigo_Op)
-			AND sap.Codigo_Ramo_Op = COALESCE(rtdc.Codigo_Ramo_Op, evpro.Codigo_Ramo_Aux)
-			AND sap.Apertura_Canal_Desc = COALESCE(rtdc.Apertura_Canal_Desc, evpro.Apertura_Canal_Desc)
-			AND sap.Tipo_Produccion = COALESCE(rtdc.Tipo_Produccion, evpro.Tipo_Produccion))
+    SELECT
+        COALESCE(rtdc.mes_id, evpro.mes_id) AS mes_id
+        , COALESCE(rtdc.codigo_op, evpro.codigo_op) AS codigo_op
+        , COALESCE(rtdc.codigo_ramo_op, evpro.codigo_ramo_aux) AS codigo_ramo_op
+        , COALESCE(rtdc.apertura_canal_desc, evpro.apertura_canal_desc)
+            AS apertura_canal_desc
+        , COALESCE(rtdc.tipo_produccion, evpro.tipo_produccion)
+            AS tipo_produccion
+        , SUM(
+            CASE
+                WHEN
+                    COALESCE(rtdc.mes_id, evpro.mes_id)
+                    = CAST('{mes_corte}' AS INTEGER)
+                    AND CURRENT_DATE
+                    <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '15' DAY
+                    THEN evpro.prima_bruta
+                ELSE rtdc.prima_bruta
+            END
+        ) AS prima_bruta
+        , SUM(
+            CASE
+                WHEN
+                    COALESCE(rtdc.mes_id, evpro.mes_id)
+                    = CAST('{mes_corte}' AS INTEGER)
+                    AND CURRENT_DATE
+                    <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '15' DAY
+                    THEN evpro.prima_bruta - ZEROIFNULL(sap.prima_cedida)
+                ELSE rtdc.prima_retenida
+            END
+        ) AS prima_retenida
+        , SUM(rtdc.prima_bruta_devengada) AS prima_bruta_devengada
+        , SUM(rtdc.prima_retenida_devengada) AS prima_retenida_devengada
 
-	GROUP BY 1,2,3,4,5
+    FROM primas_rtdc AS rtdc
+    FULL OUTER JOIN primas_evpro AS evpro
+        ON (
+            rtdc.mes_id = evpro.mes_id
+            AND rtdc.codigo_op = evpro.codigo_op
+            AND rtdc.codigo_ramo_op = evpro.codigo_ramo_aux
+            AND rtdc.apertura_canal_desc = evpro.apertura_canal_desc
+            AND rtdc.tipo_produccion = evpro.tipo_produccion
+        )
+    LEFT JOIN sap
+        ON (
+            sap.mes_id = COALESCE(rtdc.mes_id, evpro.mes_id)
+            AND sap.codigo_op = COALESCE(rtdc.codigo_op, evpro.codigo_op)
+            AND sap.codigo_ramo_op
+            = COALESCE(rtdc.codigo_ramo_op, evpro.codigo_ramo_aux)
+            AND sap.apertura_canal_desc
+            = COALESCE(rtdc.apertura_canal_desc, evpro.apertura_canal_desc)
+            AND sap.tipo_produccion
+            = COALESCE(rtdc.tipo_produccion, evpro.tipo_produccion)
+        )
 
-) WITH DATA PRIMARY INDEX (Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc, Tipo_Produccion) ON COMMIT PRESERVE ROWS;
+    GROUP BY 1, 2, 3, 4, 5
+
+) WITH DATA PRIMARY INDEX (
+    mes_id, codigo_op, codigo_ramo_op, apertura_canal_desc, tipo_produccion
+) ON COMMIT PRESERVE ROWS;
 
 
 
-CREATE MULTISET VOLATILE TABLE BASE_PERFILES_DEVENGUE AS
+CREATE MULTISET VOLATILE TABLE base_perfiles_devengue AS
 (
-	SELECT
-		evpro.Mes_Id
-		,cia.Codigo_Op
-		,CASE WHEN ramo.Ramo_Desc = 'VIDA INDIVIDUAL' THEN 'AAV' ELSE ramo.Codigo_Ramo_Op END AS Codigo_Ramo_Aux
-		,COALESCE(p.Apertura_Canal_Desc, c.Apertura_Canal_Desc, s.Apertura_Canal_Desc, 
-			CASE 
-				WHEN ramo.Codigo_Ramo_Op IN ('081','083') AND cia.Codigo_Op = '02' THEN 'Otros Banca'
-				WHEN ramo.Codigo_Ramo_Op IN ('083') AND cia.Codigo_Op = '01' THEN 'Otros'
-				ELSE 'Resto'
-			END
-		) AS Apertura_Canal_Desc
+    SELECT
+        evpro.mes_id
+        , cia.codigo_op
+        , CASE
+            WHEN ramo.ramo_desc = 'VIDA INDIVIDUAL' THEN 'AAV' ELSE
+                ramo.codigo_ramo_op
+        END AS codigo_ramo_aux
+        , COALESCE(
+            p.apertura_canal_desc, c.apertura_canal_desc, s.apertura_canal_desc
+            , CASE
+                WHEN
+                    ramo.codigo_ramo_op IN ('081', '083')
+                    AND cia.codigo_op = '02'
+                    THEN 'Otros Banca'
+                WHEN
+                    ramo.codigo_ramo_op IN ('083') AND cia.codigo_op = '01'
+                    THEN 'Otros'
+                ELSE 'Resto'
+            END
+        ) AS apertura_canal_desc
 
-		,CASE
-			WHEN evpro.Fecha_Fin_Vigencia_Dcto < evpro.Fecha_Registro THEN 'MV'
-			WHEN evpro.Fecha_Fin_Vigencia_Dcto - evpro.Fecha_Inicio_Vigencia_Dcto + 1 <= 32 THEN 'PC'
-			ELSE 'Anualizada'
-		END Tipo_Vigencia
-		,evpro.Fecha_Fin_Vigencia_Dcto - evpro.Fecha_Inicio_Vigencia_Dcto + 1 AS Dias_Vigencia
-		,evpro.Fecha_Fin_Vigencia_Dcto - evpro.Fecha_Registro + 1 AS Dias_Constitucion
-		,EXTRACT(DAY FROM
-			COALESCE(
-				evpro.Fecha_Registro,
-				CAST(TO_CHAR(evpro.Ano_Id)||'/'||SUBSTR(evpro.Mes_Id, 5, 2)||'/'||EXTRACT(DAY FROM pcetl.Fecha_Inicio_Ultima_Vigencia) AS DATE)
-			) 
-		) AS Dia_Contabilizacion
+        , CASE
+            WHEN evpro.fecha_fin_vigencia_dcto < evpro.fecha_registro THEN 'MV'
+            WHEN
+                evpro.fecha_fin_vigencia_dcto
+                - evpro.fecha_inicio_vigencia_dcto
+                + 1
+                <= 32
+                THEN 'PC'
+            ELSE 'Anualizada'
+        END AS tipo_vigencia
+        , evpro.fecha_fin_vigencia_dcto
+        - evpro.fecha_inicio_vigencia_dcto
+        + 1 AS dias_vigencia
+        , evpro.fecha_fin_vigencia_dcto
+        - evpro.fecha_registro
+        + 1 AS dias_constitucion
+        , EXTRACT(DAY FROM evpro.fecha_registro) AS dia_contabilizacion
 
-		,CASE WHEN evpro.Valor_Prima < 0 THEN 'NEGATIVA' ELSE 'POSITIVA' END AS Tipo_Produccion
-		,SUM(CAST((evpro.Valor_Prima * evpro.Valor_Tasa) AS DECIMAL(18,6)) - COALESCE(evpro_cob.Valor_Pdn, 0)) Prima_Bruta_Devengable
-		
-	FROM MDB_SEGUROS_COLOMBIA.V_EVENTO_PRODUCCION evpro
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_POLIZA poli ON (evpro.Poliza_Id = poli.Poliza_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_POLIZA_CERTIFICADO_ETL pcetl ON (evpro.Poliza_Certificado_Id = pcetl.Poliza_Certificado_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_PLAN_INDIVIDUAL pind ON (evpro.Plan_Individual_Id = pind.Plan_Individual_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_PRODUCTO pro ON (pro.Producto_Id = pind.Producto_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_RAMO ramo ON (pro.Ramo_Id = ramo.Ramo_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_COMPANIA cia ON (pro.Compania_Id = cia.Compania_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_SUCURSAL sucu ON (poli.Sucursal_Id = sucu.Sucursal_Id)
-		INNER JOIN MDB_SEGUROS_COLOMBIA.V_CANAL_COMERCIAL canal ON (sucu.Canal_Comercial_Id = canal.Canal_Comercial_Id)
+        , CASE WHEN evpro.valor_prima < 0 THEN 'NEGATIVA' ELSE 'POSITIVA' END
+            AS tipo_produccion
+        , SUM(
+            CAST((evpro.valor_prima * evpro.valor_tasa) AS DECIMAL(18, 6))
+            - COALESCE(evpro_cob.valor_pdn, 0)
+        ) AS prima_bruta_devengable
 
-		LEFT JOIN ( -- Subquery que filtra los movimientos de amparos excluidos de reserva
-			SELECT
-				Evento_Id
-				,CAST(((SUM(evpro_cob.valor_prima * evpro_cob.valor_tasa))) AS DECIMAL(18,6)) Valor_Pdn
+    FROM mdb_seguros_colombia.v_evento_produccion AS evpro
+    INNER JOIN
+        mdb_seguros_colombia.v_poliza AS poli
+        ON (evpro.poliza_id = poli.poliza_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_poliza_certificado_etl AS pcetl
+        ON (evpro.poliza_certificado_id = pcetl.poliza_certificado_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_plan_individual AS pind
+        ON (evpro.plan_individual_id = pind.plan_individual_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_producto AS pro
+        ON (pind.producto_id = pro.producto_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_ramo AS ramo
+        ON (pro.ramo_id = ramo.ramo_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_compania AS cia
+        ON (pro.compania_id = cia.compania_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_sucursal AS sucu
+        ON (poli.sucursal_id = sucu.sucursal_id)
+    INNER JOIN
+        mdb_seguros_colombia.v_canal_comercial AS canal
+        ON (sucu.canal_comercial_id = canal.canal_comercial_id)
 
-			FROM MDB_SEGUROS_COLOMBIA.V_EVENTO_PROD_COBERTURA evpro_cob
-				INNER JOIN MDB_SEGUROS_COLOMBIA.V_PLAN_INDIVIDUAL pind ON (evpro_cob.Plan_Individual_Id = pind.Plan_Individual_Id)
-				INNER JOIN MDB_SEGUROS_COLOMBIA.V_PRODUCTO pro ON (pro.Producto_Id = pind.Producto_Id)
-				INNER JOIN MDB_SEGUROS_COLOMBIA.V_RAMO ramo ON (pro.Ramo_Id = ramo.Ramo_Id)
-			
-			WHERE evpro_cob.Amparo_Id IN (63717,18647,64082,641,930,-1)
-				AND ramo.Codigo_Ramo_Op = '081'
-			
-			GROUP BY 1
-			) evpro_cob ON (evpro_cob.Evento_Id = evpro.Evento_Id)
+    -- Subquery que filtra los movimientos de amparos excluidos de reserva
+    LEFT JOIN (
+        SELECT
+            evento_id
+            , CAST(
+                SUM(evpro_cob.valor_prima * evpro_cob.valor_tasa)
+                AS FLOAT
+            ) AS valor_pdn
 
-		LEFT JOIN CANAL_POLIZA p ON (evpro.Poliza_Id = p.Poliza_Id AND Codigo_Ramo_Aux = p.Codigo_Ramo_Op AND p.Compania_Id = cia.Compania_Id)
-		LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Canal_Comercial_Id, Apertura_Canal_Desc FROM CANAL_CANAL) c
-			ON (Codigo_Ramo_Aux = c.Codigo_Ramo_Op
-			AND sucu.Canal_Comercial_Id = c.Canal_Comercial_Id
-			AND cia.Compania_Id = c.Compania_Id)
-		LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Sucursal_Id, Apertura_Canal_Desc FROM CANAL_SUCURSAL) s
-			ON (Codigo_Ramo_Aux = s.Codigo_Ramo_Op
-			AND sucu.Sucursal_Id = s.Sucursal_Id
-			AND cia.Compania_Id = s.Compania_Id)
+        FROM mdb_seguros_colombia.v_evento_prod_cobertura AS evpro_cob
+        INNER JOIN
+            mdb_seguros_colombia.v_plan_individual AS pind
+            ON (evpro_cob.plan_individual_id = pind.plan_individual_id)
+        INNER JOIN
+            mdb_seguros_colombia.v_producto AS pro
+            ON (pind.producto_id = pro.producto_id)
 
-	WHERE ((pro.Ramo_Id IN (78, 274, 57074, 140, 107, 271, 297, 204) AND pro.Compania_Id = 3)
-		OR (pro.Ramo_Id IN (54835, 274, 140, 107) AND pro.Compania_Id = 4))
-		AND evpro.Mes_Id BETWEEN {mes_corte} - 200 AND {mes_corte}
-		
-	GROUP BY 1,2,3,4,5,6,7,8,9
-	HAVING Prima_Bruta_Devengable <> 0
+        WHERE
+            evpro_cob.amparo_id IN (63717, 18647, 64082, 641, 930, -1)
+            AND pro.ramo_id = 78
 
-) WITH DATA PRIMARY INDEX (Mes_Id, Codigo_Op, Codigo_Ramo_Aux, Apertura_Canal_Desc, Tipo_Produccion) ON COMMIT PRESERVE ROWS;
+        GROUP BY 1
+    ) AS evpro_cob ON (evpro.evento_id = evpro_cob.evento_id)
+
+    LEFT JOIN
+        canal_poliza AS p
+        ON
+            evpro.poliza_id = p.poliza_id
+            AND codigo_ramo_aux = p.codigo_ramo_op
+            AND cia.compania_id = p.compania_id
+    LEFT JOIN
+        canal_canal AS c
+        ON (
+            codigo_ramo_aux = c.codigo_ramo_op
+            AND sucu.canal_comercial_id = c.canal_comercial_id
+            AND cia.compania_id = c.compania_id
+        )
+    LEFT JOIN
+        canal_sucursal AS s
+        ON (
+            codigo_ramo_aux = s.codigo_ramo_op
+            AND sucu.sucursal_id = s.sucursal_id
+            AND cia.compania_id = s.compania_id
+        )
+
+    WHERE
+        pro.ramo_id IN (54835, 78, 274, 57074, 140, 107, 271, 297, 204)
+        AND pro.compania_id IN (3, 4)
+        AND evpro.mes_id BETWEEN CAST('{mes_corte}' AS INTEGER)
+        - 200 AND CAST('{mes_corte}' AS INTEGER)
+
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
+    HAVING prima_bruta_devengable <> 0
+
+) WITH DATA PRIMARY INDEX (
+    mes_id, codigo_op, codigo_ramo_aux, apertura_canal_desc, tipo_produccion
+) ON COMMIT PRESERVE ROWS;
+
 
 
 
 CREATE MULTISET VOLATILE TABLE PERFILES_DEVENGUE AS
 (
+	WITH perfil1 AS (
+		SELECT
+				-- base.*
+			base.mes_id
+			,SUM(Prima_Bruta_Devengable) OVER (PARTITION BY Mes_Id, Codigo_Op, Codigo_Ramo_Aux, Apertura_Canal_Desc, Tipo_Vigencia, Tipo_Produccion) AS Total_Pdn
+			,CAST(CAST(Prima_Bruta_Devengable AS FLOAT) / CASE WHEN Total_Pdn = 0 THEN 1E9 ELSE Total_Pdn END AS DECIMAL(18,6)) AS Peso
+		FROM BASE_PERFILES_DEVENGUE AS base
+	),
+
+	perfil2 AS (
+		SELECT
+			apertura_canal_desc
+			, codigo_ramo_aux AS codigo_ramo_op
+			, codigo_op
+			, mes_id
+			, tipo_vigencia
+			, tipo_produccion
+			, SUM(dia_contabilizacion * peso) AS dia_contabilizacion
+			, SUM(dias_vigencia * peso) AS dias_vigencia
+			, SUM(dias_constitucion * peso) AS dias_constitucion
+			, SUM(prima_bruta_devengable) AS prima_bruta_devengable
+		FROM perfil1
+		GROUP BY 1, 2, 3, 4, 5, 6
+	)
+
 	SELECT
 		perfil2.*
 		,SUM(Prima_Bruta_Devengable) OVER (PARTITION BY Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc, Tipo_Produccion) AS Total_Pdn
 		,CAST(CAST(perfil2.Prima_Bruta_Devengable AS FLOAT) / CASE WHEN Total_Pdn = 0 THEN 1E9 ELSE Total_Pdn END AS DECIMAL(18,6)) AS Porcentaje_Produccion
 		
-	FROM (
-		SELECT
-			Apertura_Canal_Desc
-			,Codigo_Ramo_Aux AS Codigo_Ramo_Op
-			,Codigo_Op
-			,Mes_Id
-			,Tipo_Vigencia
-			,Tipo_Produccion
-			,SUM(Dia_Contabilizacion * Peso) AS Dia_Contabilizacion
-			,SUM(Dias_Vigencia * Peso) AS Dias_Vigencia
-			,SUM(Dias_Constitucion * Peso) AS Dias_Constitucion
-			,SUM(Prima_Bruta_Devengable) AS Prima_Bruta_Devengable
-
-		FROM (
-			SELECT
-				base.*
-				,SUM(Prima_Bruta_Devengable) OVER (PARTITION BY Mes_Id, Codigo_Op, Codigo_Ramo_Aux, Apertura_Canal_Desc, Tipo_Vigencia, Tipo_Produccion) AS Total_Pdn
-				,CAST(CAST(Prima_Bruta_Devengable AS FLOAT) / CASE WHEN Total_Pdn = 0 THEN 1E9 ELSE Total_Pdn END AS DECIMAL(18,6)) AS Peso
-			FROM BASE_PERFILES_DEVENGUE base
-			) perfil1
-			
-		GROUP BY 1,2,3,4,5,6
-		) perfil2
+	FROM perfil2
 	
 ) WITH DATA PRIMARY INDEX (Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc, Tipo_Produccion) ON COMMIT PRESERVE ROWS;
 
 
 
-CREATE MULTISET VOLATILE TABLE INPUT_DEVENGUE AS
+CREATE MULTISET VOLATILE TABLE input_devengue AS
 (
-	SELECT
-		perf.Apertura_Canal_Desc
-		,perf.Codigo_Ramo_Op
-		,perf.Codigo_Op
-		,perf.Mes_Id
-		,perf.Tipo_Vigencia
-		,perf.Tipo_Produccion
-		,ROUND(perf.Dias_Vigencia) Dias_Vigencia
-		,ROUND(perf.Dias_Constitucion) Dias_Constitucion
-		,ROUND(perf.Dia_Contabilizacion) Dia_Contabilizacion
-		,pdn_real.Prima_Bruta * perf.Porcentaje_Produccion AS Prima_Bruta_Devengable
-		,pdn_real.Prima_Retenida * perf.Porcentaje_Produccion AS Prima_Retenida_Devengable
+    SELECT
+        perf.apertura_canal_desc
+        , perf.codigo_ramo_op
+        , perf.codigo_op
+        , perf.mes_id
+        , perf.tipo_vigencia
+        , perf.tipo_produccion
+        , ROUND(perf.dias_vigencia) AS dias_vigencia
+        , ROUND(perf.dias_constitucion) AS dias_constitucion
+        , ROUND(perf.dia_contabilizacion) AS dia_contabilizacion
+        , pdn_real.prima_bruta
+        * perf.porcentaje_produccion AS prima_bruta_devengable
+        , pdn_real.prima_retenida
+        * perf.porcentaje_produccion AS prima_retenida_devengable
 
-	FROM BASE_PRIMAS pdn_real
-		INNER JOIN PERFILES_DEVENGUE perf ON (pdn_real.Apertura_Canal_Desc = perf.Apertura_Canal_Desc)
-									AND (pdn_real.Codigo_Ramo_Op = perf.Codigo_Ramo_Op)
-									AND (pdn_real.Codigo_Op = perf.Codigo_Op)
-									AND (pdn_real.Mes_Id = perf.Mes_Id)
-									AND (pdn_real.Tipo_Produccion = perf.Tipo_Produccion)
-								
-) WITH DATA PRIMARY INDEX (Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc, Tipo_Produccion) ON COMMIT PRESERVE ROWS;
+    FROM base_primas AS pdn_real
+    INNER JOIN perfiles_devengue
+        AS perf ON (pdn_real.apertura_canal_desc = perf.apertura_canal_desc)
+    AND (pdn_real.codigo_ramo_op = perf.codigo_ramo_op)
+    AND (pdn_real.codigo_op = perf.codigo_op)
+    AND (pdn_real.mes_id = perf.mes_id)
+    AND (pdn_real.tipo_produccion = perf.tipo_produccion)
+
+) WITH DATA PRIMARY INDEX (
+    mes_id, codigo_op, codigo_ramo_op, apertura_canal_desc, tipo_produccion
+) ON COMMIT PRESERVE ROWS;
 
 
 
-CREATE MULTISET VOLATILE TABLE DEVENGUE AS
+CREATE MULTISET VOLATILE TABLE devengue AS
 (
-	SELECT
-		dev.Codigo_Op
-		,dev.Codigo_Ramo_Op
-		,Apertura_Canal_Desc
-		,Mes_Pdn
-		,Mes_Id
-		,Tipo_Vigencia
-		,SUM(Prima_Bruta_Devengable) AS Prima_Bruta_Devengable
-		,SUM(Prima_Retenida_Devengable) AS Prima_Retenida_Devengable
-		,SUM(Constitucion_Bruta * (1 - gexp.Porcentaje_Gastos)) AS Constitucion_RPND_Bruta
-		,SUM(Constitucion_Retenida * (1 - gexp.Porcentaje_Gastos)) AS Constitucion_RPND_Retenida
-		,SUM(Liberacion_Bruta * (1 - gexp.Porcentaje_Gastos)) AS Liberacion_RPND_Bruta
-		,SUM(Liberacion_Retenida * (1 - gexp.Porcentaje_Gastos)) AS Liberacion_RPND_Retenida
-		,Constitucion_RPND_Bruta + Liberacion_RPND_Bruta AS Mov_RPND_Bruto
-		,Constitucion_RPND_Retenida + Liberacion_RPND_Retenida AS Mov_RPND_Retenido
-		
-	FROM (
-		SELECT
-			base.Codigo_Op
-			,base.Codigo_Ramo_Op
-			,base.Apertura_Canal_Desc
-			,base.Mes_Id AS Mes_Pdn
+    WITH dev AS (
+        SELECT
+            base.codigo_op
+            , base.codigo_ramo_op
+            , base.apertura_canal_desc
+            , base.mes_id AS mes_pdn
 
-			,base.Tipo_Vigencia
-			,base.Tipo_Produccion
-			,base.Dias_Vigencia
-			,base.Dias_Constitucion
-			,base.Dia_Contabilizacion
-			,CAST((base.Mes_Id - 190000) * 100 + 1 AS DATE) + GREATEST(base.Dia_Contabilizacion, 1) - 1 AS Fecha_Contabilizacion
-			
-			,CASE
-				WHEN Tipo_Vigencia = 'PC' AND MOD(base.Mes_Id, 100) = 1 AND Dia_Contabilizacion > 25 THEN LAST_DAY(Fecha_Contabilizacion + 15) -- En esta fecha se estaban creando 3 filas para el riego, no debe ocurrir
-				WHEN Tipo_Vigencia = 'PC' AND Tipo_Produccion = 'POSITIVA' AND EXTRACT(MONTH FROM Fecha_Contabilizacion + base.Dias_Constitucion) = EXTRACT(MONTH FROM Fecha_Contabilizacion) THEN LAST_DAY(Fecha_Contabilizacion + 15) -- La pdn positiva siempre debe hacer el 50/50, entonces tiene que tener dos lineas
-				ELSE Fecha_Contabilizacion + GREATEST(ROUND(base.Dias_Constitucion), 1) 
-			END AS Fecha_Fin_Vigencia
-			,Fecha_Fin_Vigencia - GREATEST(ROUND(base.Dias_Vigencia), 1) AS Fecha_Inicio_Vigencia
+            , base.tipo_vigencia
+            , base.tipo_produccion
+            , base.dias_vigencia
+            , base.dias_constitucion
+            , base.dia_contabilizacion
+            , base.prima_bruta_devengable
 
-			,EXTRACT(YEAR FROM Fecha_Inicio_Vigencia) * 100 + EXTRACT(MONTH FROM Fecha_Inicio_Vigencia) AS Mes_Inicio_Vigencia
-			,EXTRACT(YEAR FROM Fecha_Fin_Vigencia) * 100 + EXTRACT(MONTH FROM Fecha_Fin_Vigencia) AS Mes_Fin_Vigencia
-			
-			,base.Prima_Bruta_Devengable
-			,base.Prima_Retenida_Devengable
-			,base.Prima_Bruta_Devengable / GREATEST(base.Dias_Vigencia, 1) AS Prima_Bruta_Devengable_Diaria
-			,base.Prima_Retenida_Devengable / GREATEST(base.Dias_Vigencia, 1) AS Prima_Retenida_Devengable_Diaria
+            , base.prima_retenida_devengable
+            , riego.mes_id
 
-			,riego.Mes_Id
-			,riego.Primer_Dia_Mes
-			,riego.Ultimo_Dia_Mes
-			,CASE 
-				WHEN riego.Mes_Id = GREATEST(base.Mes_Id, Mes_Inicio_Vigencia) THEN EXTRACT(DAY FROM LEAST(riego.Ultimo_Dia_Mes, Fecha_Fin_Vigencia)) - EXTRACT(DAY FROM GREATEST(Fecha_Contabilizacion, Fecha_Inicio_Vigencia))
-				WHEN riego.Mes_Id = Mes_Fin_Vigencia THEN EXTRACT(DAY FROM Fecha_Fin_Vigencia)
-				ELSE riego.Num_Dias_Mes
-			END AS Dias_Mes
-			
-			,CASE
-				WHEN base.Mes_Id = riego.Mes_Id AND base.Tipo_Vigencia = 'PC' THEN -base.Prima_Bruta_Devengable * 0.5
-				WHEN base.Mes_Id = riego.Mes_Id THEN -Prima_Bruta_Devengable_Diaria * base.Dias_Constitucion 
-				ELSE 0 
-			END AS Constitucion_Bruta
-			
-			,CASE
-				WHEN riego.Mes_Id < Mes_Inicio_Vigencia THEN 0
-				WHEN riego.Mes_Id = Mes_Fin_Vigencia AND base.Tipo_Vigencia = 'PC' THEN base.Prima_Bruta_Devengable * 0.5
-				WHEN base.Tipo_Vigencia <> 'PC' THEN Prima_Bruta_Devengable_Diaria * Dias_Mes
-				ELSE 0
-			END AS Liberacion_Bruta
+            , riego.primer_dia_mes
+            , riego.ultimo_dia_mes
 
-			,CASE
-				WHEN base.Mes_Id = riego.Mes_Id AND base.Tipo_Vigencia = 'PC' THEN -base.Prima_Retenida_Devengable * 0.5
-				WHEN base.Mes_Id = riego.Mes_Id THEN -Prima_Retenida_Devengable_Diaria * base.Dias_Constitucion 
-				ELSE 0 
-			END AS Constitucion_Retenida
-			
-			,CASE
-				WHEN riego.Mes_Id < Mes_Inicio_Vigencia THEN 0
-				WHEN riego.Mes_Id = Mes_Fin_Vigencia AND base.Tipo_Vigencia = 'PC' THEN base.Prima_Retenida_Devengable * 0.5
-				WHEN base.Tipo_Vigencia <> 'PC' THEN Prima_Retenida_Devengable_Diaria * Dias_Mes
-				ELSE 0
-			END AS Liberacion_Retenida
-			
-		FROM INPUT_DEVENGUE base
-			INNER JOIN MESES_DEVENGUE riego ON (
-				riego.Ultimo_Dia_Mes >= Fecha_Contabilizacion
-				AND	riego.Primer_Dia_Mes <= Fecha_Fin_Vigencia
-				)
+            , CAST((base.mes_id - 190000) * 100 + 1 AS DATE)
+            + GREATEST(base.dia_contabilizacion, 1)
+            - 1 AS fecha_contabilizacion
+            , CASE
+                WHEN tipo_vigencia = 'PC' AND MOD(base.mes_id, 100) = 1 AND dia_contabilizacion > 25 THEN LAST_DAY(fecha_contabilizacion + 15) -- En esta fecha se estaban creando 3 filas para el riego, no debe ocurrir
+                WHEN tipo_vigencia = 'PC' AND tipo_produccion = 'POSITIVA' AND EXTRACT(MONTH FROM fecha_contabilizacion + base.dias_constitucion) = EXTRACT(MONTH FROM fecha_contabilizacion) THEN LAST_DAY(fecha_contabilizacion + 15) -- La pdn positiva siempre debe hacer el 50/50, entonces tiene que tener dos lineas
+                ELSE
+                    fecha_contabilizacion
+                    + GREATEST(ROUND(base.dias_constitucion), 1)
+            END AS fecha_fin_vigencia
+            , fecha_fin_vigencia
+            - GREATEST(ROUND(base.dias_vigencia), 1) AS fecha_inicio_vigencia
+            , EXTRACT(YEAR FROM fecha_inicio_vigencia) * 100
+            + EXTRACT(MONTH FROM fecha_inicio_vigencia) AS mes_inicio_vigencia
 
-		WHERE base.Tipo_Vigencia <> 'MV'
-			AND base.Dias_Constitucion > 0
-		
-		) dev
-	
-		INNER JOIN GASTOS_EXPEDICION gexp 
-			ON (dev.Codigo_Ramo_Op = gexp.Codigo_Ramo_Op
-			AND dev.Codigo_Op = gexp.Codigo_Op
-			AND CAST(dev.Mes_Pdn / 100 AS INTEGER) = gexp.Ano_Id)
+            , EXTRACT(YEAR FROM fecha_fin_vigencia) * 100
+            + EXTRACT(MONTH FROM fecha_fin_vigencia) AS mes_fin_vigencia
+            , base.prima_bruta_devengable
+            / GREATEST(base.dias_vigencia, 1) AS prima_bruta_devengable_diaria
+            , base.prima_retenida_devengable
+            / GREATEST(base.dias_vigencia, 1)
+                AS prima_retenida_devengable_diaria
+            , CASE
+                WHEN
+                    riego.mes_id = GREATEST(base.mes_id, mes_inicio_vigencia)
+                    THEN
+                        EXTRACT(
+                            DAY FROM LEAST(
+                                riego.ultimo_dia_mes, fecha_fin_vigencia
+                            )
+                        )
+                        - EXTRACT(
+                            DAY FROM GREATEST(
+                                fecha_contabilizacion, fecha_inicio_vigencia
+                            )
+                        )
+                WHEN
+                    riego.mes_id = mes_fin_vigencia
+                    THEN EXTRACT(DAY FROM fecha_fin_vigencia)
+                ELSE riego.num_dias_mes
+            END AS dias_mes
 
-	GROUP BY 1,2,3,4,5,6
+            , CASE
+                WHEN
+                    base.mes_id = riego.mes_id AND base.tipo_vigencia = 'PC'
+                    THEN -base.prima_bruta_devengable * 0.5
+                WHEN
+                    base.mes_id = riego.mes_id
+                    THEN -prima_bruta_devengable_diaria * base.dias_constitucion
+                ELSE 0
+            END AS constitucion_bruta
 
-) WITH DATA PRIMARY INDEX (Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc) ON COMMIT PRESERVE ROWS;
+            , CASE
+                WHEN riego.mes_id < mes_inicio_vigencia THEN 0
+                WHEN
+                    riego.mes_id = mes_fin_vigencia
+                    AND base.tipo_vigencia = 'PC'
+                    THEN base.prima_bruta_devengable * 0.5
+                WHEN
+                    base.tipo_vigencia <> 'PC'
+                    THEN prima_bruta_devengable_diaria * dias_mes
+                ELSE 0
+            END AS liberacion_bruta
+
+            , CASE
+                WHEN
+                    base.mes_id = riego.mes_id AND base.tipo_vigencia = 'PC'
+                    THEN -base.prima_retenida_devengable * 0.5
+                WHEN
+                    base.mes_id = riego.mes_id
+                    THEN
+                        -prima_retenida_devengable_diaria
+                        * base.dias_constitucion
+                ELSE 0
+            END AS constitucion_retenida
+
+            , CASE
+                WHEN riego.mes_id < mes_inicio_vigencia THEN 0
+                WHEN
+                    riego.mes_id = mes_fin_vigencia
+                    AND base.tipo_vigencia = 'PC'
+                    THEN base.prima_retenida_devengable * 0.5
+                WHEN
+                    base.tipo_vigencia <> 'PC'
+                    THEN prima_retenida_devengable_diaria * dias_mes
+                ELSE 0
+            END AS liberacion_retenida
+
+        FROM input_devengue AS base
+        INNER JOIN meses_devengue AS riego
+            ON (
+                riego.ultimo_dia_mes >= fecha_contabilizacion
+                AND riego.primer_dia_mes <= fecha_fin_vigencia
+            )
+
+        WHERE
+            base.tipo_vigencia <> 'MV'
+            AND base.dias_constitucion > 0
+    )
+
+    SELECT
+        dev.codigo_op
+        , dev.codigo_ramo_op
+        , apertura_canal_desc
+        , mes_pdn
+        , mes_id
+        , tipo_vigencia
+        , SUM(prima_bruta_devengable) AS prima_bruta_devengable
+        , SUM(prima_retenida_devengable) AS prima_retenida_devengable
+        , SUM(constitucion_bruta * (1 - gexp.porcentaje_gastos))
+            AS constitucion_rpnd_bruta
+        , SUM(constitucion_retenida * (1 - gexp.porcentaje_gastos))
+            AS constitucion_rpnd_retenida
+        , SUM(liberacion_bruta * (1 - gexp.porcentaje_gastos))
+            AS liberacion_rpnd_bruta
+        , SUM(liberacion_retenida * (1 - gexp.porcentaje_gastos))
+            AS liberacion_rpnd_retenida
+        , constitucion_rpnd_bruta + liberacion_rpnd_bruta AS mov_rpnd_bruto
+        , constitucion_rpnd_retenida
+        + liberacion_rpnd_retenida AS mov_rpnd_retenido
+
+    FROM dev
+
+    INNER JOIN gastos_expedicion AS gexp
+        ON (
+            dev.codigo_ramo_op = gexp.codigo_ramo_op
+            AND dev.codigo_op = gexp.codigo_op
+            AND CAST(dev.mes_pdn / 100 AS INTEGER) = gexp.ano_id
+        )
+
+    GROUP BY 1, 2, 3, 4, 5, 6
+
+) WITH DATA PRIMARY INDEX (
+    mes_id, codigo_op, codigo_ramo_op, apertura_canal_desc
+) ON COMMIT PRESERVE ROWS;
 
 
 
-CREATE MULTISET VOLATILE TABLE REPARTICION_DIFS_RPND_SAP AS
+CREATE MULTISET VOLATILE TABLE reparticion_difs_rpnd_sap AS
 (
-	SELECT
-		pond.Codigo_Op
-		,pond.Codigo_Ramo_Op
-		,pond.Apertura_Canal_Desc
-		,(dev.Mov_RPND_Bruto - sap.Mov_RPND_Bruto) * pond.Peso AS Diferencia_Mov_RPND_Bruto
-        ,(dev.Mov_RPND_Retenido - sap.Mov_RPND_Retenido) * pond.Peso AS Diferencia_Mov_RPND_Retenido
-        
-    FROM (
-		SELECT DISTINCT
-			Codigo_Op
-			,Codigo_Ramo_Aux AS Codigo_Ramo_Op
-			,Apertura_Canal_Desc
-			,SUM(Prima_Bruta_Devengable) OVER (PARTITION BY Codigo_Op, Codigo_Ramo_Aux, Apertura_Canal_Desc) AS Prima_Bruta_Devengable_Ramo_Canal
-			,SUM(Prima_Bruta_Devengable) OVER (PARTITION BY Codigo_Op, Codigo_Ramo_Aux) AS Prima_Bruta_Devengable_Ramo
-			,Prima_Bruta_Devengable_Ramo_Canal / Prima_Bruta_Devengable_Ramo AS Peso
-		FROM BASE_PERFILES_DEVENGUE
-		WHERE Mes_Id = {mes_corte}
-			AND Tipo_Vigencia <> 'MV'
-		) pond
+    WITH pond AS (
+        SELECT DISTINCT
+            codigo_op
+            , codigo_ramo_aux AS codigo_ramo_op
+            , apertura_canal_desc
+            , SUM(prima_bruta_devengable)
+                OVER (
+                    PARTITION BY codigo_op, codigo_ramo_aux, apertura_canal_desc
+                )
+                AS prima_bruta_devengable_ramo_canal
+            , SUM(prima_bruta_devengable)
+                OVER (PARTITION BY codigo_op, codigo_ramo_aux)
+                AS prima_bruta_devengable_ramo
+            , prima_bruta_devengable_ramo_canal
+            / prima_bruta_devengable_ramo AS peso
+        FROM base_perfiles_devengue
+        WHERE
+            mes_id = CAST('{mes_corte}' AS INTEGER)
+            AND tipo_vigencia <> 'MV'
+    )
 
-		INNER JOIN (
-			SELECT
-				Codigo_Op
-				,Codigo_Ramo_Op
-				,SUM(Mov_RPND_Bruto) AS Mov_RPND_Bruto
-				,SUM(Mov_RPND_Retenido) AS Mov_RPND_Retenido
-			FROM DEVENGUE
-			WHERE Mes_Id = {mes_corte}
-			GROUP BY 1,2
-			) dev
-			ON (pond.Codigo_Op = dev.Codigo_Op
-			AND pond.Codigo_Ramo_Op = dev.Codigo_Ramo_Op)
+    , deg AS (
+        SELECT
+            codigo_op
+            , codigo_ramo_op
+            , SUM(mov_rpnd_bruto) AS mov_rpnd_bruto
+            , SUM(mov_rpnd_retenido) AS mov_rpnd_retenido
+        FROM devengue
+        WHERE mes_id = CAST('{mes_corte}' AS INTEGER)
+        GROUP BY 1, 2
+    )
 
-		INNER JOIN PRIMAS_CEDIDAS_RPND_SAP sap ON (pond.Codigo_Op = sap.Codigo_Op AND pond.Codigo_Ramo_Op = sap.Codigo_Ramo_Op)
+    SELECT
+        pond.codigo_op
+        , pond.codigo_ramo_op
+        , pond.apertura_canal_desc
+        , (dev.mov_rpnd_bruto - sap.mov_rpnd_bruto)
+        * pond.peso AS diferencia_mov_rpnd_bruto
+        , (dev.mov_rpnd_retenido - sap.mov_rpnd_retenido)
+        * pond.peso AS diferencia_mov_rpnd_retenido
 
-) WITH DATA PRIMARY INDEX (Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc) ON COMMIT PRESERVE ROWS;
+    FROM pond
+
+    INNER JOIN dev
+        ON (
+            pond.codigo_op = dev.codigo_op
+            AND pond.codigo_ramo_op = dev.codigo_ramo_op
+        )
+
+    INNER JOIN
+        primas_cedidas_rpnd_sap AS sap
+        ON
+            pond.codigo_op = sap.codigo_op
+            AND pond.codigo_ramo_op = sap.codigo_ramo_op
+
+) WITH DATA PRIMARY INDEX (
+    codigo_op, codigo_ramo_op, apertura_canal_desc
+) ON COMMIT PRESERVE ROWS;
 
 
 
-CREATE MULTISET VOLATILE TABLE PRIMAS_FINAL AS
+CREATE MULTISET VOLATILE TABLE primas_final AS
 (
-	SELECT
-		base.Codigo_Op
-		,base.Codigo_Ramo_Op
-		,base.Apertura_Canal_Desc
-		,base.Mes_Id
-		,base.Prima_Bruta
-		,base.Prima_Retenida
-		,SUM(dev.Mov_RPND_Bruto) OVER (PARTITION BY base.Codigo_Op, base.Codigo_Ramo_Op, base.Apertura_Canal_Desc) AS Mov_RPND_Bruto_Ramo
-		,SUM(dev.Mov_RPND_Retenido) OVER (PARTITION BY base.Codigo_Op, base.Codigo_Ramo_Op, base.Apertura_Canal_Desc) AS Mov_RPND_Retenido_Ramo
-		,CASE 
-			WHEN base.Mes_Id = {mes_corte} AND CURRENT_DATE <= LAST_DAY((DATE {fecha_mes_corte})) + INTERVAL '15' DAY 
-			THEN base.Prima_Bruta + ZEROIFNULL(dev.Mov_RPND_Bruto) - ZEROIFNULL(difs.Diferencia_Mov_RPND_Bruto)
-			ELSE base.Prima_Bruta_Devengada
-		END AS Prima_Bruta_Devengada
-		,CASE 
-			WHEN base.Mes_Id = {mes_corte} AND CURRENT_DATE <= LAST_DAY((DATE {fecha_mes_corte})) + INTERVAL '15' DAY 
-			THEN base.Prima_Retenida + ZEROIFNULL(dev.Mov_RPND_Retenido) - ZEROIFNULL(difs.Diferencia_Mov_RPND_Retenido)
-			ELSE base.Prima_Retenida_Devengada
-		END AS Prima_Retenida_Devengada
-	
-	FROM (
-		SELECT 
-			Codigo_Op
-			,Codigo_Ramo_Op
-			,Apertura_Canal_Desc
-			,Mes_Id
-			,SUM(Prima_Bruta) AS Prima_Bruta
-			,SUM(Prima_Retenida) AS Prima_Retenida
-			,SUM(Prima_Bruta_Devengada) AS Prima_Bruta_Devengada
-			,SUM(Prima_Retenida_Devengada) AS Prima_Retenida_Devengada
-		FROM BASE_PRIMAS GROUP BY 1,2,3,4
-		) base
-		LEFT JOIN (
-			SELECT 
-				Codigo_Op
-				,Codigo_Ramo_Op
-				,Apertura_Canal_Desc
-				,Mes_Id
-				,SUM(Mov_RPND_Bruto) AS Mov_RPND_Bruto
-				,SUM(Mov_RPND_Retenido) AS Mov_RPND_Retenido
-			FROM DEVENGUE GROUP BY 1,2,3,4
-			) dev
-				ON (base.Apertura_Canal_Desc = dev.Apertura_Canal_Desc)
-				AND (base.Codigo_Ramo_Op = dev.Codigo_Ramo_Op)
-				AND (base.Codigo_Op = dev.Codigo_Op)
-				AND (base.Mes_Id = dev.Mes_Id)
-		LEFT JOIN REPARTICION_DIFS_RPND_SAP difs
-			ON (base.Apertura_Canal_Desc = difs.Apertura_Canal_Desc)
-			AND (base.Codigo_Ramo_Op = difs.Codigo_Ramo_Op)
-			AND (base.Codigo_Op = difs.Codigo_Op)
+    WITH base AS (
+        SELECT
+            codigo_op
+            , codigo_ramo_op
+            , apertura_canal_desc
+            , mes_id
+            , SUM(prima_bruta) AS prima_bruta
+            , SUM(prima_retenida) AS prima_retenida
+            , SUM(prima_bruta_devengada) AS prima_bruta_devengada
+            , SUM(prima_retenida_devengada) AS prima_retenida_devengada
+        FROM base_primas GROUP BY 1, 2, 3, 4
+    )
 
-) WITH DATA PRIMARY INDEX (Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc) ON COMMIT PRESERVE ROWS;
+    , dev AS (
+        SELECT
+            codigo_op
+            , codigo_ramo_op
+            , apertura_canal_desc
+            , mes_id
+            , SUM(mov_rpnd_bruto) AS mov_rpnd_bruto
+            , SUM(mov_rpnd_retenido) AS mov_rpnd_retenido
+        FROM devengue GROUP BY 1, 2, 3, 4
+    )
+
+    SELECT
+        base.codigo_op
+        , base.codigo_ramo_op
+        , base.apertura_canal_desc
+        , base.mes_id
+        , base.prima_bruta
+        , base.prima_retenida
+        , SUM(dev.mov_rpnd_bruto)
+            OVER (
+                PARTITION BY
+                    base.codigo_op
+                    , base.codigo_ramo_op
+                    , base.apertura_canal_desc
+            )
+            AS mov_rpnd_bruto_ramo
+        , SUM(dev.mov_rpnd_retenido)
+            OVER (
+                PARTITION BY
+                    base.codigo_op
+                    , base.codigo_ramo_op
+                    , base.apertura_canal_desc
+            )
+            AS mov_rpnd_retenido_ramo
+        , CASE
+            WHEN
+                base.mes_id = CAST('{mes_corte}' AS INTEGER)
+                AND CURRENT_DATE
+                <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '15' DAY
+                THEN
+                    base.prima_bruta
+                    + ZEROIFNULL(dev.mov_rpnd_bruto)
+                    - ZEROIFNULL(difs.diferencia_mov_rpnd_bruto)
+            ELSE base.prima_bruta_devengada
+        END AS prima_bruta_devengada
+        , CASE
+            WHEN
+                base.mes_id = CAST('{mes_corte}' AS INTEGER)
+                AND CURRENT_DATE
+                <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '15' DAY
+                THEN
+                    base.prima_retenida
+                    + ZEROIFNULL(dev.mov_rpnd_retenido)
+                    - ZEROIFNULL(difs.diferencia_mov_rpnd_retenido)
+            ELSE base.prima_retenida_devengada
+        END AS prima_retenida_devengada
+
+    FROM base
+    LEFT JOIN dev
+        ON
+            (base.apertura_canal_desc = dev.apertura_canal_desc)
+            AND (base.codigo_ramo_op = dev.codigo_ramo_op)
+            AND (base.codigo_op = dev.codigo_op)
+            AND (base.mes_id = dev.mes_id)
+    LEFT JOIN reparticion_difs_rpnd_sap AS difs
+        ON
+            (base.apertura_canal_desc = difs.apertura_canal_desc)
+            AND (base.codigo_ramo_op = difs.codigo_ramo_op)
+            AND (base.codigo_op = difs.codigo_op)
+
+) WITH DATA PRIMARY INDEX (
+    mes_id, codigo_op, codigo_ramo_op, apertura_canal_desc
+) ON COMMIT PRESERVE ROWS;
 
 
 

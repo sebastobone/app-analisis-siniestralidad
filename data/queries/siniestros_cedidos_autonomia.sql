@@ -31,7 +31,7 @@ SELECT
     , pc.asegurado_id
     , pro.compania_id
     , esc.plan_individual_id
-    , esc.ramo_id
+    , pro.ramo_id
     , esc.siniestro_id
     , sini.tipo_estado_siniestro_cd
     , esc.amparo_id
@@ -80,7 +80,7 @@ INNER JOIN
         AND esc.plan_individual_id = pc.plan_individual_id
 
 WHERE
-    esc.ramo_id IN (
+    pro.ramo_id IN (
         54835, 78, 274, 57074, 140, 107, 271, 297, 204
     )
     AND pro.compania_id IN (3, 4)

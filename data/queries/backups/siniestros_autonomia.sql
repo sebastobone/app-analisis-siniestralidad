@@ -148,8 +148,8 @@ COLLECT STATISTICS ON base_cedido INDEX (  -- noqa:
     , apertura_amparo_desc
 );
 
--- INSERT INTO base_cedido
--- WITH base AS (
+INSERT INTO base_cedido
+WITH base AS (
     SELECT
         ersc.fecha_registro
         , poli.poliza_id
@@ -237,79 +237,79 @@ COLLECT STATISTICS ON base_cedido INDEX (  -- noqa:
         AND ersc.mes_id BETWEEN CAST('{chunk_ini}' AS INTEGER) AND CAST('{chunk_fin}' AS INTEGER)
 
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
--- )
+)
 
--- SELECT
---     base.fecha_siniestro
---     , base.fecha_registro
---     , base.numero_poliza
---     , base.asegurado_id
---     , base.nombre_tecnico
---     , base.codigo_op
---     , base.codigo_ramo_aux
---     , base.siniestro_id
---     , ZEROIFNULL(atip.atipico) AS atipico
---     , base.tipo_estado_siniestro_cd
---     , base.nombre_canal_comercial
---     , base.nombre_sucursal
---     , COALESCE(
---         p.apertura_canal_desc, c.apertura_canal_desc, s.apertura_canal_desc
---         , CASE
---             WHEN
---                 base.ramo_id IN (78, 274) AND base.compania_id = 3
---                 THEN 'Otros Banca'
---             WHEN
---                 base.ramo_id IN (274) AND base.compania_id = 4
---                 THEN 'Otros'
---             ELSE 'Resto'
---         END
---     ) AS apertura_canal_aux
---     , COALESCE(amparo.apertura_amparo_desc, 'RESTO') AS apertura_amparo_desc
---     , SUM(base.pago_cedido) AS pago_cedido
---     , SUM(base.aviso_cedido) AS aviso_cedido
+SELECT
+    base.fecha_siniestro
+    , base.fecha_registro
+    , base.numero_poliza
+    , base.asegurado_id
+    , base.nombre_tecnico
+    , base.codigo_op
+    , base.codigo_ramo_aux
+    , base.siniestro_id
+    , ZEROIFNULL(atip.atipico) AS atipico
+    , base.tipo_estado_siniestro_cd
+    , base.nombre_canal_comercial
+    , base.nombre_sucursal
+    , COALESCE(
+        p.apertura_canal_desc, c.apertura_canal_desc, s.apertura_canal_desc
+        , CASE
+            WHEN
+                base.ramo_id IN (78, 274) AND base.compania_id = 3
+                THEN 'Otros Banca'
+            WHEN
+                base.ramo_id IN (274) AND base.compania_id = 4
+                THEN 'Otros'
+            ELSE 'Resto'
+        END
+    ) AS apertura_canal_aux
+    , COALESCE(amparo.apertura_amparo_desc, 'RESTO') AS apertura_amparo_desc
+    , SUM(base.pago_cedido) AS pago_cedido
+    , SUM(base.aviso_cedido) AS aviso_cedido
 
--- FROM base
--- LEFT JOIN
---     canal_poliza AS p
---     ON
---         (
---             base.poliza_id = p.poliza_id
---             AND base.codigo_ramo_aux = p.codigo_ramo_op
---             AND base.compania_id = p.compania_id
---         )
--- LEFT JOIN
---     canal_canal AS c
---     ON (
---         base.codigo_ramo_aux = c.codigo_ramo_op
---         AND base.canal_comercial_id = c.canal_comercial_id
---         AND base.compania_id = c.compania_id
---     )
--- LEFT JOIN
---     canal_sucursal AS s
---     ON (
---         base.codigo_ramo_aux = s.codigo_ramo_op
---         AND base.sucursal_id = s.sucursal_id
---         AND base.compania_id = s.compania_id
---     )
--- LEFT JOIN
---     amparos AS amparo
---     ON (
---         base.codigo_ramo_aux = amparo.codigo_ramo_op
---         AND base.amparo_id = amparo.amparo_id
---         AND apertura_canal_aux = amparo.apertura_canal_desc
---         AND base.compania_id = amparo.compania_id
---     )
--- LEFT JOIN
---     atipicos AS atip
---     ON (
---         base.compania_id = atip.compania_id
---         AND base.codigo_ramo_aux = atip.codigo_ramo_op
---         AND base.siniestro_id = atip.siniestro_id
---         AND COALESCE(amparo.apertura_amparo_desc, 'RESTO')
---         = atip.apertura_amparo_desc
---     )
+FROM base
+LEFT JOIN
+    canal_poliza AS p
+    ON
+        (
+            base.poliza_id = p.poliza_id
+            AND base.codigo_ramo_aux = p.codigo_ramo_op
+            AND base.compania_id = p.compania_id
+        )
+LEFT JOIN
+    canal_canal AS c
+    ON (
+        base.codigo_ramo_aux = c.codigo_ramo_op
+        AND base.canal_comercial_id = c.canal_comercial_id
+        AND base.compania_id = c.compania_id
+    )
+LEFT JOIN
+    canal_sucursal AS s
+    ON (
+        base.codigo_ramo_aux = s.codigo_ramo_op
+        AND base.sucursal_id = s.sucursal_id
+        AND base.compania_id = s.compania_id
+    )
+LEFT JOIN
+    amparos AS amparo
+    ON (
+        base.codigo_ramo_aux = amparo.codigo_ramo_op
+        AND base.amparo_id = amparo.amparo_id
+        AND apertura_canal_aux = amparo.apertura_canal_desc
+        AND base.compania_id = amparo.compania_id
+    )
+LEFT JOIN
+    atipicos AS atip
+    ON (
+        base.compania_id = atip.compania_id
+        AND base.codigo_ramo_aux = atip.codigo_ramo_op
+        AND base.siniestro_id = atip.siniestro_id
+        AND COALESCE(amparo.apertura_amparo_desc, 'RESTO')
+        = atip.apertura_amparo_desc
+    )
 
--- GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14;
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14;
 
 
 

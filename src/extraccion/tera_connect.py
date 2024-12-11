@@ -84,6 +84,9 @@ def check_nulls(add: pl.DataFrame) -> None:
 
 
 def read_query(file: str) -> None:
+    if ct.NEGOCIO == "autonomia" and "siniestros" in file:
+        extra_processing = True
+
     # Tablas de segmentacion
     segm_sheets = [
         str(sheet)
@@ -148,35 +151,36 @@ def read_query(file: str) -> None:
                 for column in df.collect_schema().names():
                     df = df.rename({column: column.lower()})
 
-                for column in ct.cols_tera(file):
-                    if column not in df.collect_schema().names():
-                        raise Exception(f"""¡Falta la columna {column}!""")
+                if not extra_processing:
+                    for column in ct.cols_tera(file):
+                        if column not in df.collect_schema().names():
+                            raise Exception(f"""¡Falta la columna {column}!""")
 
-                if (
-                    file == "siniestros"
-                    and df.get_column("fecha_siniestro").dtype != pl.Date
-                ):
-                    raise Exception(
-                        """La columna fecha_siniestro debe estar en formato fecha."""
+                    if (
+                        file == "siniestros"
+                        and df.get_column("fecha_siniestro").dtype != pl.Date
+                    ):
+                        raise Exception(
+                            """La columna fecha_siniestro debe estar en formato fecha."""
+                        )
+
+                    if df.get_column("fecha_registro").dtype != pl.Date:
+                        raise Exception(
+                            """La columna fecha_registro debe estar en formato fecha."""
+                        )
+
+                    df = df.select(
+                        pl.concat_str(
+                            [
+                                pl.col("codigo_op"),
+                                pl.col("codigo_ramo_op"),
+                                pl.col("apertura_canal_desc"),
+                                pl.col("apertura_amparo_desc"),
+                            ],
+                            separator="_",
+                        ).alias("apertura_reservas"),
+                        pl.all(),
                     )
-
-                if df.get_column("fecha_registro").dtype != pl.Date:
-                    raise Exception(
-                        """La columna fecha_registro debe estar en formato fecha."""
-                    )
-
-                df = df.select(
-                    pl.concat_str(
-                        [
-                            pl.col("codigo_op"),
-                            pl.col("codigo_ramo_op"),
-                            pl.col("apertura_canal_desc"),
-                            pl.col("apertura_amparo_desc"),
-                        ],
-                        separator="_",
-                    ).alias("apertura_reservas"),
-                    pl.all(),
-                )
                 df.write_csv(f"data/raw/{file}_{ct.NEGOCIO}.csv", separator="\t")
                 df.write_parquet(f"data/raw/{file}_{ct.NEGOCIO}.parquet")
         else:
@@ -186,12 +190,13 @@ def read_query(file: str) -> None:
             cur.executemany(query, add.rows())
             add_num += 1
 
-    # Segmentaciones faltantes
-    df_faltante = df.filter(
-        pl.any_horizontal(
-            [(pl.col(col).is_null() | pl.col(col).eq("-1")) for col in ct.APERT_COLS]
+    if not extra_processing:
+        # Segmentaciones faltantes
+        df_faltante = df.filter(
+            pl.any_horizontal(
+                [(pl.col(col).is_null() | pl.col(col).eq("-1")) for col in ct.APERT_COLS]
+            )
         )
-    )
-    if len(df_faltante) != 0:
-        print(df_faltante)
-        raise Exception("""¡Alerta! Revise las segmentaciones faltantes.""")
+        if len(df_faltante) != 0:
+            print(df_faltante)
+            raise Exception("""¡Alerta! Revise las segmentaciones faltantes.""")

@@ -13,6 +13,5 @@ dependencies = [
     "pytest>=8.3.4",
     "teradatasql>=20.0.0.20",
     "tqdm>=4.67.1",
-    "xlsxwriter>=3.2.0",
     "xlwings>=0.33.3",
 ]

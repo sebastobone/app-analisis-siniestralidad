@@ -188,7 +188,6 @@ dependencies = [
     { name = "pytest" },
     { name = "teradatasql" },
     { name = "tqdm" },
-    { name = "xlsxwriter" },
     { name = "xlwings" },
 ]
 
@@ -202,7 +201,6 @@ requires-dist = [
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "teradatasql", specifier = ">=20.0.0.20" },
     { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "xlsxwriter", specifier = ">=3.2.0" },
     { name = "xlwings", specifier = ">=0.33.3" },
 ]
 
@@ -484,15 +482,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e1/34/943888654477a574a86a98e9896bae89c7aa15078ec29f490fef2f1e5384/tzdata-2024.2.tar.gz", hash = "sha256:7d85cc416e9382e69095b7bdf4afd9e3880418a2413feec7069d533d6b4e31cc", size = 193282 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a6/ab/7e5f53c3b9d14972843a647d8d7a853969a58aecc7559cb3267302c94774/tzdata-2024.2-py2.py3-none-any.whl", hash = "sha256:a48093786cdcde33cad18c2555e8532f34422074448fbc874186f0abd79565cd", size = 346586 },
-]
-
-[[package]]
-name = "xlsxwriter"
-version = "3.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a6/c3/b36fa44a0610a0f65d2e65ba6a262cbe2554b819f1449731971f7c16ea3c/XlsxWriter-3.2.0.tar.gz", hash = "sha256:9977d0c661a72866a61f9f7a809e25ebbb0fb7036baa3b9fe74afcfca6b3cb8c", size = 198732 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a7/ea/53d1fe468e63e092cf16e2c18d16f50c29851242f9dd12d6a66e0d7f0d02/XlsxWriter-3.2.0-py3-none-any.whl", hash = "sha256:ecfd5405b3e0e228219bcaf24c2ca0915e012ca9464a14048021d21a995d490e", size = 159925 },
 ]
 
 [[package]]

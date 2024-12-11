@@ -265,7 +265,10 @@ COLLECT STATISTICS ON EXPUESTOS COLUMN (Primer_dia_mes, Codigo_Ramo_Op, Apertura
 SELECT
     base.codigo_op
     , base.codigo_ramo_op
-    , base.ramo_desc
+    , CASE
+        WHEN base.codigo_ramo_op = 'AAV' THEN 'ANEXOS VI'
+        ELSE ramo.ramo_desc
+    END AS ramo_desc
     , base.primer_dia_mes AS fecha_registro
     , COALESCE(base.apertura_canal_desc, '-1') AS apertura_canal_desc
     , COALESCE(base.apertura_amparo_desc, '-1') AS apertura_amparo_desc
@@ -273,6 +276,9 @@ SELECT
     , ZEROIFNULL(SUM(base.vigentes)) AS vigentes
 
 FROM expuestos AS base
+LEFT JOIN
+    mdb_seguros_colombia.v_ramo AS ramo
+    ON base.codigo_ramo_op = ramo.codigo_ramo_op
 
 GROUP BY 1, 2, 3, 4, 5, 6
 ORDER BY 1, 2, 3, 4, 5, 6

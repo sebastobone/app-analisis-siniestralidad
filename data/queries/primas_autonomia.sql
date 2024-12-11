@@ -1063,8 +1063,11 @@ CREATE MULTISET VOLATILE TABLE primas_final AS
 SELECT
     base.codigo_op
     , base.codigo_ramo_op
-    , base.ramo_desc
-    , base.primer_dia_mes AS fecha_registro
+    , CASE
+        WHEN base.codigo_ramo_op = 'AAV' THEN 'ANEXOS VI'
+        ELSE ramo.ramo_desc
+    END AS ramo_desc
+    , fechas.primer_dia_mes AS fecha_registro
     , COALESCE(base.apertura_canal_desc, '-1') AS apertura_canal_desc
     , COALESCE(base.apertura_amparo_desc, '-1') AS apertura_amparo_desc
     , ZEROIFNULL(SUM(base.prima_bruta)) AS prima_bruta
@@ -1073,6 +1076,10 @@ SELECT
     , ZEROIFNULL(SUM(base.prima_retenida_devengada)) AS prima_retenida_devengada
 
 FROM primas_final AS base
+INNER JOIN fechas ON base.mes_id = fechas.mes_id
+LEFT JOIN
+    mdb_seguros_colombia.v_ramo AS ramo
+    ON base.codigo_ramo_op = ramo.codigo_ramo_op
 
 GROUP BY 1, 2, 3, 4, 5, 6
 ORDER BY 1, 2, 3, 4, 5, 6

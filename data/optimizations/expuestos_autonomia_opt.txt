@@ -2,187 +2,67 @@ Explanation
  This request is eligible for incremental planning and execution (IPE).
  The following is the static plan for the request.
 "  1) First, we lock Sura_Consultas.sucursal_dd in TD_MAP1 for access,"
-     we lock sura_consultas.ramo_dd in view mdb_seguros_colombia.v_ramo
-"     in TD_MAP1 for access, we lock"
-     sura_consultas.POLIZA_CERTIFICADO_DD in view
-"     mdb_seguros_colombia.v_poliza_certificado in TD_MAP1 for access,"
-     we lock SURA_CONSULTAS.INSURANCE_COVERAGE_HIST in view
-     mdb_seguros_colombia.v_hist_polcert_cobertura in TD_MAP1 for
-"     access, we lock sura_consultas.a in view"
-"     mdb_seguros_colombia.v_canal_comercial in TD_MAP1 for access, we"
-     lock sura_consultas.a in view
-"     mdb_seguros_colombia.v_canal_comercial in TD_MAP1 for access, we"
-     lock SURA_CONSULTAS.a in view mdb_seguros_colombia.v_poliza in
-"     TD_MAP1 for access, we lock SURA_CONSULTAS.FEATURE in view"
-"     mdb_seguros_colombia.v_amparo in TD_MAP1 for access, we lock"
-     sura_consultas.underwriting_class in view
-"     mdb_seguros_colombia.v_sucursal in TD_MAP1 for access, we lock"
+"     we lock sura_consultas.ramo_dd in TD_MAP1 for access, we lock"
+"     sura_consultas.POLIZA_CERTIFICADO_DD in TD_MAP1 for access, we"
+"     lock SURA_CONSULTAS.INSURANCE_COVERAGE_HIST in TD_MAP1 for access,"
+"     we lock SURA_CONSULTAS.a in TD_MAP1 for access, we lock"
+"     sura_consultas.underwriting_class in TD_MAP1 for access, we lock"
 "     SURA_CONSULTAS.PRODUCT_GROUP in TD_MAP1 for access, we lock"
 "     SURA_CONSULTAS.PRODUCT in TD_MAP1 for access, and we lock"
      SURA_CONSULTAS.PROD_GROUP_ASSOCIATION in TD_MAP1 for access.
 "  2) Next, we do an all-AMPs RETRIEVE step in TD_MAP1 from"
-     Sura_Consultas.sucursal_dd in view mdb_seguros_colombia.v_sucursal
-     by way of an all-rows scan with no residual conditions locking for
-"     access into Spool 3 (all_amps), which is built locally on the AMPs."
-"     The size of Spool 3 is estimated with high confidence to be 2,502"
-"     rows (72,558 bytes).  The estimated time for this step is 0.01"
-     seconds.
+     Sura_Consultas.sucursal_dd by way of an all-rows scan with no
+"     residual conditions locking for access into Spool 2 (all_amps),"
+     which is built locally on the AMPs.  The size of Spool 2 is
+"     estimated with high confidence to be 2,502 rows (72,558 bytes)."
+     The estimated time for this step is 0.01 seconds.
   3) We execute the following steps in parallel.
        1) We do an all-AMPs RETRIEVE step in TD_MAP1 from
-          sura_consultas.underwriting_class in view
-          mdb_seguros_colombia.v_sucursal by way of an all-rows scan
-"          with no residual conditions into Spool 3 (all_amps), which is"
-          built locally on the AMPs.  The size of Spool 3 is estimated
+          sura_consultas.underwriting_class by way of an all-rows scan
+"          with no residual conditions into Spool 2 (all_amps), which is"
+          built locally on the AMPs.  The size of Spool 2 is estimated
 "          with high confidence to be 2,503 rows (72,587 bytes).  The"
           estimated time for this step is 0.01 seconds.
-       2) We do an all-AMPs SUM step in TD_MAP1 to aggregate from
-          sura_consultas.a in view
-          mdb_seguros_colombia.v_canal_comercial by way of an all-rows
-"          scan with a condition of (""sura_consultas.a in view"
-          mdb_seguros_colombia.v_canal_comercial.Relates_Org_Relation_Role_Cd
-"          = 42""), grouping by field1 ("
-          sura_consultas.a.Relates_Internal_Org_Party_Id).  Aggregate
-"          intermediate results are computed locally, then placed in"
-          Spool 5 in TD_Map1.  The size of Spool 5 is estimated with
-          low confidence to be 7 rows (175 bytes).  The estimated time
-          for this step is 0.01 seconds.
-  4) We do an all-AMPs RETRIEVE step in TD_Map1 from Spool 5 (Last Use)
-     by way of an all-rows scan into Spool 11 (all_amps) (compressed
-"     columns allowed), which is redistributed by the hash code of ("
-     sura_consultas.a.Relates_Internal_Org_Party_Id) to all AMPs in
-     TD_Map1.  Then we do a SORT to order Spool 11 by row hash.  The
-     size of Spool 11 is estimated with low confidence to be 7 rows (
-     147 bytes).  The estimated time for this step is 0.00 seconds.
-  5) We do an all-AMPs JOIN step in TD_MAP1 from sura_consultas.b in
-     view mdb_seguros_colombia.v_canal_comercial by way of an all-rows
-"     scan with a condition of (""(sura_consultas.b in view"
-     mdb_seguros_colombia.v_canal_comercial.Org_Org_Relationship_End_Dt
-     IS NULL) AND (sura_consultas.b in view
-     mdb_seguros_colombia.v_canal_comercial.Party_Structure_Type_Cd =
-"     15)""), which is joined to Spool 11 (Last Use) by way of an"
-     all-rows scan locking sura_consultas.b for access.
-     sura_consultas.b and Spool 11 are joined using an inclusion merge
-"     join, with a join condition of ("
-"     ""(sura_consultas.b.Relates_Internal_Org_Party_Id ="
-     Relates_Internal_Org_Party_Id) AND
-"     (sura_consultas.b.Org_Org_Relationship_Start_Dt = Field_3)"").  The"
-"     result goes into Spool 12 (all_amps) (compressed columns allowed),"
-     which is built locally on the AMPs.  Then we do a SORT to order
-     Spool 12 by the hash code of (
-     sura_consultas.b.Relates_Internal_Org_Party_Id).  The size of
-     Spool 12 is estimated with low confidence to be 7 rows (175 bytes).
-     The estimated time for this step is 0.01 seconds.
-  6) We do an all-AMPs JOIN step in TD_MAP1 from sura_consultas.a in
-     view mdb_seguros_colombia.v_canal_comercial by way of a RowHash
-"     match scan with no residual conditions, which is joined to Spool"
-     12 (Last Use) by way of a RowHash match scan.  sura_consultas.a
-"     and Spool 12 are joined using a merge join, with a join condition"
-"     of (""Relates_Internal_Org_Party_Id ="
-"     sura_consultas.a.Internal_Org_Party_Id"").  The result goes into"
-"     Spool 2 (all_amps), which is redistributed by the hash code of ("
-"     sura_consultas.a.Codigo_Compania_Matriz_Op,"
-"     sura_consultas.a.Compania_Matriz_Id, (CASE WHEN"
-     (sura_consultas.b.Org_Org_Relationship_End_Dt IS NULL) THEN
-     ('ACTIVO') WHEN (sura_consultas.b.Org_Org_Relationship_End_Dt >=
-"     DATE) THEN ('ACTIVO') ELSE ('INACTIVO') END),"
-"     sura_consultas.b.Related_Internal_Org_Party_Id,"
-"     sura_consultas.a.Internal_Org_Party_Host_Cd,"
-"     sura_consultas.a.Internal_Organization_Name,"
-     sura_consultas.a.Internal_Org_Party_Id) to all AMPs in TD_Map1.
-     The size of Spool 2 is estimated with low confidence to be 7 rows
-"     (1,757 bytes).  The estimated time for this step is 0.01 seconds."
-  7) We do a single-AMP RETRIEVE step from SURA_CONSULTAS.c in view
-     mdb_seguros_colombia.v_canal_comercial by way of the unique
-"     primary index ""SURA_CONSULTAS.c in view"
-"     mdb_seguros_colombia.v_canal_comercial.Internal_Org_Party_Id = -4"""
-     with no residual conditions locking row for access into Spool 2
-"     (all_amps), which is redistributed by the hash code of ('00', 1,"
-"     'ACTIVO', -1, SURA_CONSULTAS.c.Internal_Org_Party_Host_Cd,"
-"     SURA_CONSULTAS.c.Internal_Organization_Name,"
-     SURA_CONSULTAS.c.Internal_Org_Party_Id) to all AMPs in TD_Map1.
-     The size of Spool 2 is estimated with high confidence to be 1 row
-     (251 bytes).  The estimated time for this step is 0.00 seconds.
-  8) We do a single-AMP RETRIEVE step from SURA_CONSULTAS.c in view
-     mdb_seguros_colombia.v_canal_comercial by way of the unique
-"     primary index ""SURA_CONSULTAS.c in view"
-"     mdb_seguros_colombia.v_canal_comercial.Internal_Org_Party_Id = -2"""
-     with no residual conditions locking row for access into Spool 2
-"     (all_amps), which is redistributed by the hash code of ('00', 1,"
-"     'ACTIVO', -1, SURA_CONSULTAS.c.Internal_Org_Party_Host_Cd,"
-"     SURA_CONSULTAS.c.Internal_Organization_Name,"
-     SURA_CONSULTAS.c.Internal_Org_Party_Id) to all AMPs in TD_Map1.
-     The size of Spool 2 is estimated with high confidence to be 2 rows
-     (502 bytes).  The estimated time for this step is 0.00 seconds.
-  9) We execute the following steps in parallel.
-       1) We do a single-AMP RETRIEVE step from SURA_CONSULTAS.c in
-          view mdb_seguros_colombia.v_canal_comercial by way of the
-"          unique primary index ""SURA_CONSULTAS.c in view"
-          mdb_seguros_colombia.v_canal_comercial.Internal_Org_Party_Id
-"          = -1"" with no residual conditions locking row for access into"
-"          Spool 2 (all_amps), which is redistributed by the hash code"
-"          of ('00', 1, 'ACTIVO', -1,"
-"          SURA_CONSULTAS.c.Internal_Org_Party_Host_Cd,"
-"          SURA_CONSULTAS.c.Internal_Organization_Name,"
-          SURA_CONSULTAS.c.Internal_Org_Party_Id) to all AMPs in
-          TD_Map1.  Then we do a SORT to order Spool 2 by the sort key
-          in spool field1 eliminating duplicate rows.  The size of
-"          Spool 2 is estimated with low confidence to be 8 rows (2,008"
-          bytes).  The estimated time for this step is 0.00 seconds.
        2) We do an all-AMPs RETRIEVE step in TD_MAP1 from
-          SURA_CONSULTAS.c in view
-          mdb_seguros_colombia.v_plan_individual by way of an all-rows
-"          scan with a condition of (""SURA_CONSULTAS.c in view"
-          mdb_seguros_colombia.v_plan_individual.Product_Group_Level_Num
-"          IN (3 ,-2 TO -1)"") locking for access into Spool 14"
-"          (all_amps) (compressed columns allowed), which is duplicated"
-          on all AMPs in TD_Map1.  Then we do a SORT to order Spool 14
-          by the hash code of (SURA_CONSULTAS.c.Product_Group_Id).  The
-          size of Spool 14 is estimated with high confidence to be
-"          462,080 rows (7,855,360 bytes).  The estimated time for this"
-          step is 0.01 seconds.
-       3) We do an all-AMPs JOIN step in TD_MAP1 from SURA_CONSULTAS.a
-          in view mdb_seguros_colombia.v_plan_individual by way of a
-"          RowHash match scan with a condition of (""(SURA_CONSULTAS.a in"
-          view mdb_seguros_colombia.v_plan_individual.Package_Ind IN (1
-"          ,-2 TO -1 )) AND ((SURA_CONSULTAS.a in view"
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-          '-07200') AND ((SURA_CONSULTAS.a in view
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-          '-07230') AND ((SURA_CONSULTAS.a in view
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-          '-07300') AND ((SURA_CONSULTAS.a in view
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-          '-07330') AND ((SURA_CONSULTAS.a in view
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-          '-07400') AND ((SURA_CONSULTAS.a in view
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-          '-07430') AND ((SURA_CONSULTAS.a in view
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-          '-07500') AND ((SURA_CONSULTAS.a in view
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-          '-07530') AND ((SURA_CONSULTAS.a in view
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-          '-08200') AND (SURA_CONSULTAS.a in view
-          mdb_seguros_colombia.v_plan_individual.Host_Prod_Cd <>
-"          '-08230'))))))))))""), which is joined to SURA_CONSULTAS.b in"
-          view mdb_seguros_colombia.v_plan_individual by way of a
-          RowHash match scan with no residual conditions locking
-          SURA_CONSULTAS.a for access and SURA_CONSULTAS.b for access.
-          SURA_CONSULTAS.a and SURA_CONSULTAS.b are joined using a
-"          merge join, with a join condition of ("
-"          ""SURA_CONSULTAS.a.Product_Id = SURA_CONSULTAS.b.Product_Id"")."
-          The result goes into Spool 15 (all_amps) (compressed columns
-"          allowed), which is built locally on the AMPs.  Then we do a"
-          SORT to order Spool 15 by the hash code of (
-          SURA_CONSULTAS.b.Product_Group_Id).  The size of Spool 15 is
-"          estimated with low confidence to be 58,022 rows (4,003,518"
+          SURA_CONSULTAS.c by way of an all-rows scan with a condition
+"          of (""SURA_CONSULTAS.c.Product_Group_Level_Num IN (3 ,-2 TO -1)"")"
+          locking for access into Spool 7 (all_amps) (compressed
+"          columns allowed), which is duplicated on all AMPs in TD_Map1."
+          Then we do a SORT to order Spool 7 by the hash code of (
+          SURA_CONSULTAS.c.Product_Group_Id).  The size of Spool 7 is
+"          estimated with high confidence to be 462,080 rows (7,855,360"
           bytes).  The estimated time for this step is 0.01 seconds.
- 10) We do an all-AMPs JOIN step in TD_Map1 from Spool 14 (Last Use) by
-"     way of a RowHash match scan, which is joined to Spool 15 (Last"
-     Use) by way of a RowHash match scan.  Spool 14 and Spool 15 are
-"     joined using a merge join, with a join condition of ("
-"     ""Product_Group_Id = Product_Group_Id"").  The result goes into"
-"     Spool 1 (all_amps), which is redistributed by the hash code of ("
+       3) We do an all-AMPs JOIN step in TD_MAP1 from SURA_CONSULTAS.a
+          by way of a RowHash match scan with a condition of (
+"          ""(SURA_CONSULTAS.a.Package_Ind IN (1 ,-2 TO -1 )) AND"
+          ((SURA_CONSULTAS.a.Host_Prod_Cd <> '-07200') AND
+          ((SURA_CONSULTAS.a.Host_Prod_Cd <> '-07230') AND
+          ((SURA_CONSULTAS.a.Host_Prod_Cd <> '-07300') AND
+          ((SURA_CONSULTAS.a.Host_Prod_Cd <> '-07330') AND
+          ((SURA_CONSULTAS.a.Host_Prod_Cd <> '-07400') AND
+          ((SURA_CONSULTAS.a.Host_Prod_Cd <> '-07430') AND
+          ((SURA_CONSULTAS.a.Host_Prod_Cd <> '-07500') AND
+          ((SURA_CONSULTAS.a.Host_Prod_Cd <> '-07530') AND
+          ((SURA_CONSULTAS.a.Host_Prod_Cd <> '-08200') AND
+"          (SURA_CONSULTAS.a.Host_Prod_Cd <> '-08230'))))))))))""), which"
+          is joined to SURA_CONSULTAS.b by way of a RowHash match scan
+          with no residual conditions locking SURA_CONSULTAS.a for
+          access and SURA_CONSULTAS.b for access.  SURA_CONSULTAS.a and
+"          SURA_CONSULTAS.b are joined using a merge join, with a join"
+"          condition of (""SURA_CONSULTAS.a.Product_Id ="
+"          SURA_CONSULTAS.b.Product_Id"").  The result goes into Spool 8"
+"          (all_amps) (compressed columns allowed), which is built"
+          locally on the AMPs.  Then we do a SORT to order Spool 8 by
+          the hash code of (SURA_CONSULTAS.b.Product_Group_Id).  The
+"          size of Spool 8 is estimated with low confidence to be 58,022"
+"          rows (4,003,518 bytes).  The estimated time for this step is"
+          0.01 seconds.
+  4) We do an all-AMPs JOIN step in TD_Map1 from Spool 7 (Last Use) by
+"     way of a RowHash match scan, which is joined to Spool 8 (Last Use)"
+     by way of a RowHash match scan.  Spool 7 and Spool 8 are joined
+"     using a merge join, with a join condition of (""Product_Group_Id ="
+"     Product_Group_Id"").  The result goes into Spool 1 (all_amps),"
+     which is redistributed by the hash code of (
 "     SURA_CONSULTAS.a.Host_Prod_Cd, SURA_CONSULTAS.a.Product_End_Dt,"
 "     SURA_CONSULTAS.a.Product_Start_Dt, SURA_CONSULTAS.a.Product_Name,"
 "     SURA_CONSULTAS.a.Product_Desc, SURA_CONSULTAS.b.Product_Group_Id,"
@@ -190,444 +70,394 @@ Explanation
 "     Spool 1 is estimated with low confidence to be 57,671 rows ("
 "     11,707,213 bytes).  The estimated time for this step is 0.03"
      seconds.
- 11) We execute the following steps in parallel.
-      1) We do an all-AMPs RETRIEVE step in TD_MAP1 from
-         SURA_CONSULTAS.underwriting_Class in view
-         mdb_seguros_colombia.v_plan_individual by way of an all-rows
-         scan with no residual conditions locking for access into Spool
-"         1 (all_amps), which is redistributed by the hash code of ('-3"
-"         ', NULL, NULL, 'Sin Informacion desde Fuente', 'Sin"
-"         Informacion desde Fuente', -3, -3) to all AMPs in TD_Map1."
-         Then we do a SORT to order Spool 1 by the sort key in spool
-         field1 eliminating duplicate rows.  The size of Spool 1 is
-"         estimated with low confidence to be 43,255 rows (8,780,765"
-         bytes).  The estimated time for this step is 0.01 seconds.
-      2) We do an all-AMPs SUM step in TD_MAP1 to aggregate from
-         SURA_CONSULTAS.FEATURE in view mdb_seguros_colombia.v_amparo
-         by way of an all-rows scan with a condition of (
-"         ""(SURA_CONSULTAS.FEATURE in view"
-         mdb_seguros_colombia.v_amparo.Feature_End_dt IS NULL) AND
-         (SURA_CONSULTAS.FEATURE in view
-         mdb_seguros_colombia.v_amparo.Feature_Category_Type_Cd IN (1
-"         ,-1 ))""), grouping by field1 ("
-         SURA_CONSULTAS.FEATURE.Feature_Id) locking for access.
-"         Aggregate intermediate results are computed locally, then"
-         placed in Spool 6 in TD_Map1.  The size of Spool 6 is
-"         estimated with low confidence to be 2,959 rows (73,975 bytes)."
-         The estimated time for this step is 0.01 seconds.
-      3) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd
-         in view mdb_seguros_colombia.v_ramo by way of the primary
-"         index ""sura_consultas.ramo_dd in view"
-"         mdb_seguros_colombia.v_ramo.Ramo_Id = 78"" extracting row ids"
-"         only with no residual conditions into Spool 20 (group_amps),"
-         which is built locally on that AMP.  The size of Spool 20 is
-         estimated with high confidence to be 1 row.  The estimated
-         time for this step is 0.00 seconds.
- 12) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd in
-     view mdb_seguros_colombia.v_ramo by way of the primary index
-"     ""sura_consultas.ramo_dd in view"
-"     mdb_seguros_colombia.v_ramo.Ramo_Id = 107"" extracting row ids only"
-"     with no residual conditions into Spool 20 (group_amps), which is"
-     built locally on that AMP.  The size of Spool 20 is estimated with
-     high confidence to be 2 rows.  The estimated time for this step is
-     0.00 seconds.
- 13) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd in
-     view mdb_seguros_colombia.v_ramo by way of the primary index
-"     ""sura_consultas.ramo_dd in view"
-"     mdb_seguros_colombia.v_ramo.Ramo_Id = 140"" extracting row ids only"
-"     with no residual conditions into Spool 20 (group_amps), which is"
-     built locally on that AMP.  The size of Spool 20 is estimated with
-     high confidence to be 3 rows.  The estimated time for this step is
-     0.00 seconds.
- 14) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd in
-     view mdb_seguros_colombia.v_ramo by way of the primary index
-"     ""sura_consultas.ramo_dd in view"
-"     mdb_seguros_colombia.v_ramo.Ramo_Id = 204"" extracting row ids only"
-"     with no residual conditions into Spool 20 (group_amps), which is"
-     built locally on that AMP.  The size of Spool 20 is estimated with
-     high confidence to be 4 rows.  The estimated time for this step is
-     0.00 seconds.
- 15) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd in
-     view mdb_seguros_colombia.v_ramo by way of the primary index
-"     ""sura_consultas.ramo_dd in view"
-"     mdb_seguros_colombia.v_ramo.Ramo_Id = 271"" extracting row ids only"
-"     with no residual conditions into Spool 20 (group_amps), which is"
-     built locally on that AMP.  The size of Spool 20 is estimated with
-     high confidence to be 5 rows.  The estimated time for this step is
-     0.00 seconds.
- 16) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd in
-     view mdb_seguros_colombia.v_ramo by way of the primary index
-"     ""sura_consultas.ramo_dd in view"
-"     mdb_seguros_colombia.v_ramo.Ramo_Id = 274"" extracting row ids only"
-"     with no residual conditions into Spool 20 (group_amps), which is"
-     built locally on that AMP.  The size of Spool 20 is estimated with
-     high confidence to be 6 rows.  The estimated time for this step is
-     0.00 seconds.
- 17) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd in
-     view mdb_seguros_colombia.v_ramo by way of the primary index
-"     ""sura_consultas.ramo_dd in view"
-"     mdb_seguros_colombia.v_ramo.Ramo_Id = 297"" extracting row ids only"
-"     with no residual conditions into Spool 20 (group_amps), which is"
-     built locally on that AMP.  The size of Spool 20 is estimated with
-     high confidence to be 7 rows.  The estimated time for this step is
-     0.00 seconds.
- 18) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd in
-     view mdb_seguros_colombia.v_ramo by way of the primary index
-"     ""sura_consultas.ramo_dd in view"
-"     mdb_seguros_colombia.v_ramo.Ramo_Id = 54835"" extracting row ids"
-"     only with no residual conditions into Spool 20 (group_amps), which"
-     is built locally on that AMP.  The size of Spool 20 is estimated
-     with high confidence to be 8 rows.  The estimated time for this
-     step is 0.00 seconds.
- 19) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd in
-     view mdb_seguros_colombia.v_ramo by way of the primary index
-"     ""sura_consultas.ramo_dd in view"
-"     mdb_seguros_colombia.v_ramo.Ramo_Id = 57074"" extracting row ids"
-"     only with no residual conditions into Spool 20 (group_amps), which"
-     is built locally on that AMP.  The size of Spool 20 is estimated
-     with high confidence to be 9 rows.  The estimated time for this
-     step is 0.00 seconds.
- 20) We do a group-AMP SORT to order Spool 20 (group_amps) by row id
+  5) We execute the following steps in parallel.
+       1) We do an all-AMPs RETRIEVE step in TD_MAP1 from
+          SURA_CONSULTAS.underwriting_Class by way of an all-rows scan
+          with no residual conditions locking for access into Spool 1
+"          (all_amps), which is redistributed by the hash code of ('-3 ',"
+"          NULL, NULL, 'Sin Informacion desde Fuente', 'Sin Informacion"
+"          desde Fuente', -3, -3) to all AMPs in TD_Map1.  Then we do a"
+          SORT to order Spool 1 by the sort key in spool field1
+          eliminating duplicate rows.  The size of Spool 1 is estimated
+"          with low confidence to be 43,255 rows (8,780,765 bytes).  The"
+          estimated time for this step is 0.01 seconds.
+       2) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd
+"          by way of the primary index ""sura_consultas.ramo_dd.Ramo_Id ="
+"          78"" extracting row ids only with no residual conditions into"
+"          Spool 9 (group_amps), which is built locally on that AMP."
+          The size of Spool 9 is estimated with high confidence to be 1
+          row.  The estimated time for this step is 0.00 seconds.
+  6) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd by
+"     way of the primary index ""sura_consultas.ramo_dd.Ramo_Id = 107"""
+     extracting row ids only with no residual conditions into Spool 9
+"     (group_amps), which is built locally on that AMP.  The size of"
+     Spool 9 is estimated with high confidence to be 2 rows.  The
+     estimated time for this step is 0.00 seconds.
+  7) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd by
+"     way of the primary index ""sura_consultas.ramo_dd.Ramo_Id = 140"""
+     extracting row ids only with no residual conditions into Spool 9
+"     (group_amps), which is built locally on that AMP.  The size of"
+     Spool 9 is estimated with high confidence to be 3 rows.  The
+     estimated time for this step is 0.00 seconds.
+  8) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd by
+"     way of the primary index ""sura_consultas.ramo_dd.Ramo_Id = 204"""
+     extracting row ids only with no residual conditions into Spool 9
+"     (group_amps), which is built locally on that AMP.  The size of"
+     Spool 9 is estimated with high confidence to be 4 rows.  The
+     estimated time for this step is 0.00 seconds.
+  9) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd by
+"     way of the primary index ""sura_consultas.ramo_dd.Ramo_Id = 271"""
+     extracting row ids only with no residual conditions into Spool 9
+"     (group_amps), which is built locally on that AMP.  The size of"
+     Spool 9 is estimated with high confidence to be 5 rows.  The
+     estimated time for this step is 0.00 seconds.
+ 10) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd by
+"     way of the primary index ""sura_consultas.ramo_dd.Ramo_Id = 274"""
+     extracting row ids only with no residual conditions into Spool 9
+"     (group_amps), which is built locally on that AMP.  The size of"
+     Spool 9 is estimated with high confidence to be 6 rows.  The
+     estimated time for this step is 0.00 seconds.
+ 11) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd by
+"     way of the primary index ""sura_consultas.ramo_dd.Ramo_Id = 297"""
+     extracting row ids only with no residual conditions into Spool 9
+"     (group_amps), which is built locally on that AMP.  The size of"
+     Spool 9 is estimated with high confidence to be 7 rows.  The
+     estimated time for this step is 0.00 seconds.
+ 12) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd by
+"     way of the primary index ""sura_consultas.ramo_dd.Ramo_Id = 54835"""
+     extracting row ids only with no residual conditions into Spool 9
+"     (group_amps), which is built locally on that AMP.  The size of"
+     Spool 9 is estimated with high confidence to be 8 rows.  The
+     estimated time for this step is 0.00 seconds.
+ 13) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd by
+"     way of the primary index ""sura_consultas.ramo_dd.Ramo_Id = 57074"""
+     extracting row ids only with no residual conditions into Spool 9
+"     (group_amps), which is built locally on that AMP.  The size of"
+     Spool 9 is estimated with high confidence to be 9 rows.  The
+     estimated time for this step is 0.00 seconds.
+ 14) We do a group-AMP SORT to order Spool 9 (group_amps) by row id
      eliminating duplicate rows.  The estimated time for this step is
      0.00 seconds.
- 21) We do a group-AMP RETRIEVE step in TD_MAP1 from
-     sura_consultas.ramo_dd in view mdb_seguros_colombia.v_ramo by way
-     of row ids from Spool 20 (Last Use) with no residual conditions
-"     into Spool 21 (all_amps) (compressed columns allowed), which is"
-     duplicated on all AMPs in TD_Map1.  The size of Spool 21 is
-"     estimated with high confidence to be 2,304 rows (57,600 bytes)."
-     The estimated time for this step is 0.01 seconds.
- 22) We execute the following steps in parallel.
+ 15) We do a group-AMP RETRIEVE step in TD_MAP1 from
+     sura_consultas.ramo_dd by way of row ids from Spool 9 (Last Use)
+     with no residual conditions into Spool 11 (all_amps) (compressed
+"     columns allowed), which is duplicated on all AMPs in TD_Map1.  The"
+"     size of Spool 11 is estimated with high confidence to be 2,304"
+"     rows (57,600 bytes).  The estimated time for this step is 0.01"
+     seconds.
+ 16) We execute the following steps in parallel.
       1) We do an all-AMPs JOIN step in TD_MAP1 from SURA_CONSULTAS.a
-         in view mdb_seguros_colombia.v_producto by way of an all-rows
-"         scan with a condition of (""(SURA_CONSULTAS.a in view"
-         mdb_seguros_colombia.v_producto.Compania_Id >= 3) AND
-         ((SURA_CONSULTAS.a in view
-         mdb_seguros_colombia.v_producto.Product_Group_Level_Num IN (3
-"         ,-2 TO -1 )) AND ((SURA_CONSULTAS.a in view"
-         mdb_seguros_colombia.v_producto.Parent_Prod_Group_Id IN (78
-"         ,140 ,274 ,107 ,57074 ,271 ,204 ,54835 ,297 )) AND"
-         (SURA_CONSULTAS.a in view
-"         mdb_seguros_colombia.v_producto.Compania_Id <= 4 )))""), which"
-         is joined to Spool 21 (Last Use) by way of an all-rows scan
-         locking SURA_CONSULTAS.a for access.  SURA_CONSULTAS.a and
-"         Spool 21 are left outer joined using a product join, with a"
-"         join condition of (""SURA_CONSULTAS.a.Parent_Prod_Group_Id ="
-"         Ramo_Id"").  The result goes into Spool 22 (all_amps)"
-"         (compressed columns allowed), which is duplicated on all AMPs"
-         in TD_Map1.  The size of Spool 22 is estimated with low
-"         confidence to be 127,488 rows (4,207,104 bytes).  The"
-         estimated time for this step is 0.02 seconds.
+         by way of an all-rows scan with a condition of (
+"         ""(SURA_CONSULTAS.a.Compania_Id >= 3) AND"
+"         ((SURA_CONSULTAS.a.Product_Group_Level_Num IN (3 ,-2 TO -1 ))"
+"         AND ((SURA_CONSULTAS.a.Parent_Prod_Group_Id IN (78 ,140 ,274"
+"         ,107 ,57074 ,271 ,204 ,54835 ,297 )) AND"
+"         (SURA_CONSULTAS.a.Compania_Id <= 4 )))""), which is joined to"
+         Spool 11 (Last Use) by way of an all-rows scan locking
+         SURA_CONSULTAS.a for access.  SURA_CONSULTAS.a and Spool 11
+"         are left outer joined using a product join, with a join"
+"         condition of (""SURA_CONSULTAS.a.Parent_Prod_Group_Id = Ramo_Id"")."
+         The result goes into Spool 12 (all_amps) (compressed columns
+"         allowed), which is built locally on the AMPs.  Then we do a"
+         SORT to order Spool 12 by the hash code of (
+         SURA_CONSULTAS.a.Compania_Id).  The size of Spool 12 is
+"         estimated with low confidence to be 498 rows (16,434 bytes)."
+         The estimated time for this step is 0.01 seconds.
       2) We do a single-AMP RETRIEVE step from
-         SURA_CONSULTAS.compania_dd in view
-         mdb_seguros_colombia.v_compania by way of the primary index
-"         ""SURA_CONSULTAS.compania_dd in view"
-"         mdb_seguros_colombia.v_compania.Compania_Id = 3"" extracting"
-         row ids only with no residual conditions locking row for
-"         access into Spool 19 (group_amps), which is built locally on"
-         that AMP.  The size of Spool 19 is estimated with high
-         confidence to be 1 row.  The estimated time for this step is
-         0.00 seconds.
- 23) We do a single-AMP RETRIEVE step from SURA_CONSULTAS.compania_dd
-     in view mdb_seguros_colombia.v_compania by way of the primary
-"     index ""SURA_CONSULTAS.compania_dd in view"
-"     mdb_seguros_colombia.v_compania.Compania_Id = 4"" extracting row"
-     ids only with no residual conditions locking row for access into
-"     Spool 19 (group_amps), which is built locally on that AMP.  The"
-     size of Spool 19 is estimated with high confidence to be 2 rows.
-     The estimated time for this step is 0.00 seconds.
- 24) We do a group-AMP SORT to order Spool 19 (group_amps) by row id
+         SURA_CONSULTAS.compania_dd by way of the primary index
+"         ""SURA_CONSULTAS.compania_dd.Compania_Id = 3"" extracting row"
+         ids only with no residual conditions locking row for access
+"         into Spool 10 (group_amps), which is built locally on that AMP."
+         The size of Spool 10 is estimated with high confidence to be 1
+         row.  The estimated time for this step is 0.00 seconds.
+ 17) We do a single-AMP RETRIEVE step from SURA_CONSULTAS.compania_dd
+     by way of the primary index
+"     ""SURA_CONSULTAS.compania_dd.Compania_Id = 4"" extracting row ids"
+     only with no residual conditions locking row for access into Spool
+"     10 (group_amps), which is built locally on that AMP.  The size of"
+     Spool 10 is estimated with high confidence to be 2 rows.  The
+     estimated time for this step is 0.00 seconds.
+ 18) We do a group-AMP SORT to order Spool 10 (group_amps) by row id
      eliminating duplicate rows.  The estimated time for this step is
      0.00 seconds.
- 25) We do a group-AMP RETRIEVE step in TD_MAP1 from
-     SURA_CONSULTAS.compania_dd in view mdb_seguros_colombia.v_compania
-     by way of row ids from Spool 19 (Last Use) with no residual
-"     conditions into Spool 23 (all_amps) (compressed columns allowed),"
-     which is duplicated on all AMPs in TD_Map1.  Then we do a SORT to
-     order Spool 23 by the hash code of (
-     SURA_CONSULTAS.compania_dd.Compania_Id).  The size of Spool 23 is
+ 19) We do a group-AMP RETRIEVE step in TD_MAP1 from
+     SURA_CONSULTAS.compania_dd by way of row ids from Spool 10 (Last
+     Use) with no residual conditions into Spool 13 (all_amps)
+"     (compressed columns allowed), which is duplicated on all AMPs in"
+     TD_Map1.  Then we do a SORT to order Spool 13 by the hash code of
+     (SURA_CONSULTAS.compania_dd.Compania_Id).  The size of Spool 13 is
 "     estimated with high confidence to be 512 rows (11,776 bytes).  The"
      estimated time for this step is 0.00 seconds.
- 26) We do an all-AMPs JOIN step in TD_Map1 from Spool 22 (Last Use) by
-"     way of an all-rows scan, which is joined to Spool 1 (Last Use) by"
-     way of an all-rows scan.  Spool 22 and Spool 1 are joined using a
-"     dynamic hash join, with a join condition of (""PRODUCTO_ID ="
-"     Product_Group_Id"").  The result goes into Spool 24 (all_amps)"
-"     (compressed columns allowed), which is built locally on the AMPs."
-     Then we do a SORT to order Spool 24 by the hash code of (
-     SURA_CONSULTAS.a.Compania_Id).  The size of Spool 24 is estimated
-"     with low confidence to be 11,928 rows (393,624 bytes).  The"
-     estimated time for this step is 0.01 seconds.
- 27) We do an all-AMPs RETRIEVE step in TD_Map1 from Spool 2 (Last Use)
-     by way of an all-rows scan into Spool 25 (all_amps) (compressed
-"     columns allowed), which is duplicated on all AMPs in TD_Map1.  The"
-"     size of Spool 25 is estimated with low confidence to be 2,048 rows"
-"     (34,816 bytes).  The estimated time for this step is 0.01 seconds."
- 28) We do an all-AMPs JOIN step in TD_Map1 from Spool 25 (Last Use) by
-"     way of an all-rows scan, which is joined to Spool 3 (Last Use) by"
-"     way of an all-rows scan with a condition of (""NOT"
-"     (sucu.SUCURSAL_ID IS NULL)"").  Spool 25 and Spool 3 are joined"
-"     using a dynamic hash join, with a join condition of ("
-"     ""CANAL_COMERCIAL_ID = CANAL_COMERCIAL_ID"").  The result goes into"
-"     Spool 26 (all_amps) (compressed columns allowed), which is"
-     duplicated on all AMPs in TD_Map1.  The size of Spool 26 is
-"     estimated with low confidence to be 116,736 rows (2,451,456 bytes)."
-     The estimated time for this step is 0.02 seconds.
- 29) We do an all-AMPs RETRIEVE step in TD_MAP1 from sura_consultas.a
-     in view mdb_seguros_colombia.v_poliza_certificado by way of an
-     all-rows scan with no residual conditions locking for access split
-"     into Spool 27 (all_amps) with a condition of (""Poliza_Id IN (:*,"
-"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
-"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
-"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
-"     :*)"") to qualify skewed rows (compressed columns allowed) and"
-     Spool 28 (all_amps) with remaining rows (compressed columns
-     allowed).  Spool 27 is built locally on the AMPs.  The size of
-"     Spool 27 is estimated with high confidence to be 88,177,852 rows."
-     Spool 28 is redistributed by hash code to all AMPs in TD_Map1.
-     The size of Spool 28 is estimated with high confidence to be
-"     122,551,345 rows.  The estimated time for this step is 5.11"
-     seconds.
- 30) We do an all-AMPs JOIN step in TD_Map1 from Spool 26 (Last Use) by
-"     way of an all-rows scan, which is joined to SURA_CONSULTAS.a in"
-     view mdb_seguros_colombia.v_poliza by way of an all-rows scan with
-"     a condition of (""SURA_CONSULTAS.a in view"
-"     mdb_seguros_colombia.v_poliza.Agreement_Type_Cd IN (1 ,-3 TO -1)"")."
-"     Spool 26 and SURA_CONSULTAS.a are joined using a dynamic hash join,"
-"     with a join condition of (""SURA_CONSULTAS.a.Sucursal_Id ="
-"     SUCURSAL_ID"").  The result is split into Spool 29 (all_amps) with"
-"     a condition of (""Account_Id IN (:*, :*, :*, :*, :*, :*, :*, :*,"
-"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
-"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
-"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*)"") to qualify rows"
-     matching skewed rows of the skewed relation and Spool 30
-     (all_amps) with remaining rows.  Spool 29 is duplicated on all
-     AMPs in TD_Map1.  The size of Spool 29 is estimated with low
-"     confidence to be 12,800 rows (320,000 bytes).  Spool 30 is built"
-     locally on the AMPs.  The size of Spool 30 is estimated with low
-"     confidence to be 10,174,195 rows (254,354,875 bytes).  The"
-     estimated time for this step is 4.80 seconds.
- 31) We do an all-AMPs RETRIEVE step in TD_Map1 from Spool 6 (Last Use)
-     by way of an all-rows scan into Spool 31 (all_amps) (compressed
-"     columns allowed), which is redistributed by the hash code of ("
-     SURA_CONSULTAS.FEATURE.Feature_Id) to all AMPs in TD_Map1.  Then
-     we do a SORT to order Spool 31 by row hash.  The size of Spool 31
-"     is estimated with low confidence to be 2,959 rows (62,139 bytes)."
-     The estimated time for this step is 0.00 seconds.
- 32) We do an all-AMPs JOIN step in TD_Map1 from Spool 29 (Last Use) by
-"     way of an all-rows scan, which is joined to Spool 27 (Last Use) by"
-     way of an all-rows scan.  Spool 29 and Spool 27 are joined using a
-"     single partition hash join, with a join condition of (""Poliza_Id ="
-"     Account_Id"").  The result goes into Spool 32 (all_amps), which is"
-     redistributed by the hash code of (
-     sura_consultas.a.Poliza_Certificado_Id) to all AMPs in TD_Map1.
-     The size of Spool 32 is estimated with low confidence to be
-"     88,177,852 rows (3,086,224,820 bytes).  The estimated time for"
-     this step is 0.34 seconds.
- 33) We do an all-AMPs JOIN step in TD_Map1 from Spool 30 (Last Use) by
-"     way of an all-rows scan, which is joined to Spool 28 (Last Use) by"
-     way of an all-rows scan.  Spool 30 and Spool 28 are joined using a
-"     single partition hash join, with a join condition of (""Poliza_Id ="
-"     Account_Id"").  The result goes into Spool 32 (all_amps), which is"
-     redistributed by the hash code of (
-     sura_consultas.a.Poliza_Certificado_Id) to all AMPs in TD_Map1.
-     Then we do a SORT to order Spool 32 by row hash.  The size of
-"     Spool 32 is estimated with low confidence to be 25,849,938 rows ("
-"     904,747,830 bytes).  The estimated time for this step is 1.55"
-     seconds.
- 34) We execute the following steps in parallel.
-      1) We do an all-AMPs JOIN step in TD_MAP1 from SURA_CONSULTAS.a
-         in view mdb_seguros_colombia.v_amparo by way of an all-rows
-"         scan with a condition of (""(SURA_CONSULTAS.a in view"
-         mdb_seguros_colombia.v_amparo.Feature_End_dt IS NULL) AND
-         (SURA_CONSULTAS.a in view
-         mdb_seguros_colombia.v_amparo.Feature_Category_Type_Cd IN (1
-"         ,-1 ))""), which is joined to Spool 31 (Last Use) by way of an"
-         all-rows scan locking SURA_CONSULTAS.a for access.
-         SURA_CONSULTAS.a and Spool 31 are joined using an inclusion
-"         merge join, with a join condition of ("
-"         ""(SURA_CONSULTAS.a.Feature_Id = Feature_Id) AND"
-"         (SURA_CONSULTAS.a.Feature_Start_Dt = Field_3)"").  The result"
-"         goes into Spool 33 (all_amps) (compressed columns allowed),"
-         which is duplicated on all AMPs in TD_Map1.  The size of Spool
-"         33 is estimated with low confidence to be 162,816 rows ("
-"         2,767,872 bytes).  The estimated time for this step is 0.02"
-         seconds.
-      2) We do an all-AMPs JOIN step in TD_Map1 from Spool 32 (Last
-"         Use) by way of a RowHash match scan, which is joined to"
-         SURA_CONSULTAS.a in view
-         mdb_seguros_colombia.v_hist_polcert_cobertura by way of a
-         RowHash match scan with no residual conditions locking
-         SURA_CONSULTAS.a for access.  Spool 32 and SURA_CONSULTAS.a
-"         are joined using a merge join, with a join condition of ("
-"         ""(SURA_CONSULTAS.a.Product_Id = Plan_Individual_Id) AND"
-"         (SURA_CONSULTAS.a.Account_Id = Poliza_Certificado_Id)"").  The"
-         input table SURA_CONSULTAS.a will not be cached in memory.
-         The result goes into Spool 34 (all_amps) (compressed columns
-"         allowed), which is built locally on the AMPs.  The size of"
-"         Spool 34 is estimated with low confidence to be 116,331,686"
-"         rows (6,398,242,730 bytes).  The estimated time for this step"
-         is 42.93 seconds.
-      3) We do an all-AMPs JOIN step in TD_Map1 from Spool 23 (Last
+ 20) We execute the following steps in parallel.
+      1) We do an all-AMPs JOIN step in TD_Map1 from Spool 12 (Last
 "         Use) by way of a RowHash match scan, which is joined to Spool"
-         24 (Last Use) by way of a RowHash match scan.  Spool 23 and
-"         Spool 24 are right outer joined using a merge join, with a"
-"         join condition of (""Compania_Id = Compania_Id"").  The result"
-"         goes into Spool 35 (all_amps) (compressed columns allowed),"
-         which is duplicated on all AMPs in TD_Map1.  The size of Spool
-"         35 is estimated with low confidence to be 3,053,568 rows ("
-"         134,356,992 bytes).  The estimated time for this step is 0.04"
-         seconds.
- 35) We do an all-AMPs JOIN step in TD_Map1 from Spool 33 (Last Use) by
-"     way of an all-rows scan, which is joined to Spool 34 (Last Use) by"
-     way of an all-rows scan.  Spool 33 and Spool 34 are right outer
+         13 (Last Use) by way of a RowHash match scan.  Spool 12 and
+"         Spool 13 are left outer joined using a merge join, with a join"
+"         condition of (""Compania_Id = Compania_Id"").  The result goes"
+"         into Spool 14 (all_amps) (compressed columns allowed), which"
+         is duplicated on all AMPs in TD_Map1.  The size of Spool 14 is
+"         estimated with low confidence to be 127,488 rows (4,972,032"
+         bytes).  The estimated time for this step is 0.02 seconds.
+      2) We do an all-AMPs RETRIEVE step in TD_Map1 from Spool 2 (Last
+"         Use) by way of an all-rows scan with a condition of (""NOT"
+"         (sucu.SUCURSAL_ID IS NULL)"") into Spool 15 (all_amps)"
+"         (compressed columns allowed), which is duplicated on all AMPs"
+         in TD_Map1.  The size of Spool 15 is estimated with high
+"         confidence to be 640,768 rows (13,456,128 bytes).  The"
+         estimated time for this step is 0.01 seconds.
+ 21) We do an all-AMPs JOIN step in TD_Map1 from Spool 15 (Last Use) by
+"     way of an all-rows scan, which is joined to SURA_CONSULTAS.a by"
+     way of an all-rows scan with a condition of (
+"     ""SURA_CONSULTAS.a.Agreement_Type_Cd IN (-3 TO -1 ,1)"").  Spool 15"
+     and SURA_CONSULTAS.a are right outer joined using a dynamic hash
+"     join, with condition(s) used for non-matching on right table ("
+"     ""NOT (SURA_CONSULTAS.a.Sucursal_Id IS NULL)""), with a join"
+"     condition of (""SURA_CONSULTAS.a.Sucursal_Id = SUCURSAL_ID"").  The"
+     result is split into Spool 16 (all_amps) with a condition of (
+"     ""Account_Id IN (:*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
+"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
+"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
+"     :*, :*, :*, :*, :*, :*)"") to qualify rows matching skewed rows of"
+     the skewed relation and Spool 19 (all_amps) with remaining rows
+     fanned out into 4 hash join partitions.  Spool 16 is duplicated on
+     all AMPs in TD_Map1.  The size of Spool 16 is estimated with low
+"     confidence to be 12,800 rows (320,000 bytes).  Spool 19 is built"
+     locally on the AMPs.  The size of Spool 19 is estimated with low
+"     confidence to be 52,401,341 rows (1,310,033,525 bytes).  The"
+     estimated time for this step is 5.06 seconds.
+ 22) We do an all-AMPs RETRIEVE step in TD_MAP1 from sura_consultas.a
+     by way of an all-rows scan with no residual conditions locking for
+     access split into Spool 20 (all_amps) with a condition of (
+"     ""Poliza_Id IN (:*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
+"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
+"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
+"     :*, :*, :*, :*, :*, :*)"") to qualify skewed rows (compressed"
+     columns allowed) and Spool 21 (all_amps) with remaining rows
+     (compressed columns allowed) fanned out into 4 hash join
+     partitions.  Spool 20 is built locally on the AMPs.  The size of
+"     Spool 20 is estimated with high confidence to be 88,177,852 rows."
+     Spool 21 is redistributed by hash code to all AMPs in TD_Map1.
+     The size of Spool 21 is estimated with high confidence to be
+"     122,551,345 rows.  The estimated time for this step is 5.88"
+     seconds.
+ 23) We do an all-AMPs JOIN step in TD_Map1 from Spool 16 (Last Use) by
+"     way of an all-rows scan, which is joined to Spool 20 (Last Use) by"
+     way of an all-rows scan.  Spool 16 and Spool 20 are right outer
 "     joined using a single partition hash join, with condition(s) used"
-"     for non-matching on right table (""NOT (Feature_Id IS NULL)""), with"
-"     a join condition of (""Feature_Id = Feature_Id"").  The result goes"
-"     into Spool 38 (all_amps) (compressed columns allowed), which is"
-     built locally on the AMPs.  The size of Spool 38 is estimated with
-"     low confidence to be 116,331,687 rows (6,398,242,785 bytes).  The"
-     estimated time for this step is 1.51 seconds.
- 36) We do an all-AMPs JOIN step in TD_Map1 from Spool 35 (Last Use) by
-"     way of an all-rows scan, which is joined to Spool 38 (Last Use) by"
-     way of an all-rows scan.  Spool 35 and Spool 38 are joined using a
-"     single partition hash join, with a join condition of ("
-"     ""(Product_Id = PLAN_INDIVIDUAL_ID) AND (PLAN_INDIVIDUAL_ID ="
-"     Plan_Individual_Id)"").  The result goes into Spool 41 (all_amps)"
-"     (compressed columns allowed), which is built locally on the AMPs."
-     The size of Spool 41 is estimated with low confidence to be
-"     272,346,293 rows (19,881,279,389 bytes).  The estimated time for"
-     this step is 3.39 seconds.
- 37) We do an all-AMPs RETRIEVE step in TD_MAP1 from SEBATOEC.s by way
-     of an all-rows scan with no residual conditions into Spool 42
-"     (all_amps) (compressed columns allowed), which is duplicated on"
-     all AMPs in TD_Map1.  The size of Spool 42 is estimated with high
-"     confidence to be 4,352 rows (404,736 bytes).  The estimated time"
-     for this step is 0.01 seconds.
- 38) We execute the following steps in parallel.
-      1) We do an all-AMPs JOIN step in TD_Map1 from Spool 41 (Last
-"         Use) by way of an all-rows scan, which is joined to Spool 42"
-         (Last Use) by way of an all-rows scan.  Spool 41 and Spool 42
-"         are left outer joined using a product join, with condition(s)"
-"         used for non-matching on left table (""(NOT (Compania_Id IS"
-"         NULL )) AND (NOT (SUCURSAL_ID IS NULL ))""), with a join"
-"         condition of (""((( CASE WHEN ((Feature_Id NOT IN (-1 ,641 ,930"
-"         ,18647 ,61296 ,64082 )) AND (Parent_Prod_Group_Id = 78 ))"
-         THEN ('AAV') ELSE (Codigo_Ramo_Op) END ))= codigo_ramo_op) AND
-"         ((SUCURSAL_ID = sucursal_id) AND (Compania_Id = compania_id ))"")."
-         The result goes into Spool 43 (all_amps) (compressed columns
-"         allowed), which is built locally on the AMPs.  The size of"
-"         Spool 43 is estimated with low confidence to be 272,479,017"
-"         rows (28,337,817,768 bytes).  The estimated time for this step"
-         is 8.00 seconds.
+"     for non-matching on right table (""NOT (Poliza_Id IS NULL)""), with"
+"     a join condition of (""Poliza_Id = Account_Id"").  The result goes"
+"     into Spool 22 (all_amps), which is redistributed by the hash code"
+     of (sura_consultas.a.Poliza_Certificado_Id) to all AMPs in TD_Map1.
+     The size of Spool 22 is estimated with low confidence to be
+"     88,177,852 rows (3,968,003,340 bytes).  The estimated time for"
+     this step is 0.41 seconds.
+ 24) We do an all-AMPs JOIN step in TD_Map1 from Spool 19 (Last Use) by
+"     way of an all-rows scan, which is joined to Spool 21 (Last Use) by"
+     way of an all-rows scan.  Spool 19 and Spool 21 are right outer
+"     joined using a hash join of 4 partitions, with condition(s) used"
+"     for non-matching on right table (""NOT (Poliza_Id IS NULL)""), with"
+"     a join condition of (""Poliza_Id = Account_Id"").  The result goes"
+"     into Spool 22 (all_amps), which is redistributed by the hash code"
+     of (sura_consultas.a.Poliza_Certificado_Id) to all AMPs in TD_Map1.
+     Then we do a SORT to order Spool 22 by row hash.  The size of
+"     Spool 22 is estimated with low confidence to be 122,551,345 rows ("
+"     5,514,810,525 bytes).  The estimated time for this step is 6.96"
+     seconds.
+ 25) We do an all-AMPs JOIN step in TD_Map1 from Spool 14 (Last Use) by
+"     way of an all-rows scan, which is joined to Spool 1 (Last Use) by"
+     way of an all-rows scan.  Spool 14 and Spool 1 are joined using a
+"     dynamic hash join, with a join condition of (""PRODUCTO_ID ="
+"     Product_Group_Id"").  The result is split into Spool 27 (all_amps)"
+"     with a condition of (""PLAN_INDIVIDUAL_ID IN (:*, :*, :*, :*, :*,"
+"     :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
+"     :*, :*, :*, :*, :*)"") to qualify rows matching skewed rows of the"
+     skewed relation and Spool 28 (all_amps) with remaining rows.
+     Spool 27 is built locally on the AMPs.  The size of Spool 27 is
+"     estimated with low confidence to be 60 rows (2,340 bytes).  Spool"
+     28 is duplicated on all AMPs in TD_Map1.  The size of Spool 28 is
+"     estimated with low confidence to be 3,038,208 rows (118,490,112"
+     bytes).  The estimated time for this step is 0.04 seconds.
+ 26) We execute the following steps in parallel.
+      1) We do an all-AMPs JOIN step in TD_Map1 from Spool 22 (Last
+"         Use) by way of a RowHash match scan, which is joined to"
+         SURA_CONSULTAS.a by way of a RowHash match scan with no
+         residual conditions locking SURA_CONSULTAS.a for access.
+         Spool 22 and SURA_CONSULTAS.a are right outer joined using a
+"         merge join, with condition(s) used for non-matching on right"
+"         table (""(NOT (SURA_CONSULTAS.a.Account_Id IS NULL )) AND (NOT"
+"         (SURA_CONSULTAS.a.Product_Id IS NULL ))""), with a join"
+"         condition of (""(SURA_CONSULTAS.a.Account_Id ="
+         Poliza_Certificado_Id) AND (SURA_CONSULTAS.a.Product_Id =
+"         Plan_Individual_Id)"").  The input table SURA_CONSULTAS.a will"
+         not be cached in memory.  The result is split into Spool 29
+"         (all_amps) with a condition of (""Product_Id IN (:*, :*, :*,"
+"         :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*, :*,"
+"         :*, :*, :*, :*, :*, :*, :*, :*)"") to qualify skewed rows"
+         fanned out into 50 hash join partitions and Spool 32
+         (all_amps) with remaining rows.  Spool 29 is built locally on
+         the AMPs.  The size of Spool 29 is estimated with low
+"         confidence to be 1,808,511,381 rows (110,319,194,241 bytes)."
+         Spool 32 is built locally on the AMPs.  The size of Spool 32
+"         is estimated with low confidence to be 431,279,603 rows ("
+"         26,308,055,783 bytes).  The estimated time for this step is 1"
+         minute and 2 seconds.
+      2) We do an all-AMPs RETRIEVE step in TD_Map1 from Spool 27 (Last
+         Use) by way of an all-rows scan into Spool 33 (all_amps)
+         (compressed columns allowed) fanned out into 50 hash join
+"         partitions, which is duplicated on all AMPs in TD_Map1.  The"
+"         size of Spool 33 is estimated with low confidence to be 15,360"
+"         rows (599,040 bytes).  The estimated time for this step is"
+         0.01 seconds.
+ 27) We do an all-AMPs JOIN step in TD_Map1 from Spool 33 (Last Use) by
+"     way of an all-rows scan, which is joined to Spool 29 (Last Use) by"
+     way of an all-rows scan.  Spool 33 and Spool 29 are joined using a
+"     hash join of 50 partitions, with a join condition of (""Product_Id"
+"     = PLAN_INDIVIDUAL_ID"").  The result goes into Spool 6 (all_amps),"
+     which is built locally on the AMPs.  The result spool file will
+     not be cached in memory.  The size of Spool 6 is estimated with
+"     low confidence to be 4,173,487,803 rows (338,052,512,043 bytes)."
+     The estimated time for this step is 7.70 seconds.
+ 28) We do an all-AMPs JOIN step in TD_Map1 from Spool 28 (Last Use) by
+"     way of an all-rows scan, which is joined to Spool 32 (Last Use) by"
+     way of an all-rows scan.  Spool 28 and Spool 32 are joined using a
+"     single partition hash join, with a join condition of (""Product_Id"
+"     = PLAN_INDIVIDUAL_ID"").  The result goes into Spool 6 (all_amps),"
+     which is built locally on the AMPs.  The result spool file will
+     not be cached in memory.  The size of Spool 6 is estimated with
+"     low confidence to be 1,009,750,706 rows (81,789,807,186 bytes)."
+     The estimated time for this step is 51.19 seconds.
+ 29) We do an all-AMPs SUM step in TD_Map1 to aggregate from Spool 6
+"     (Last Use) by way of an all-rows scan, grouping by field1 ("
+"     Poliza_Id ,Account_Id ,( CASE WHEN ((Parent_Prod_Group_Id = 78)"
+"     AND (Feature_Id NOT IN (-1 ,641 ,930 ,18647 ,61296 ,64082 )))"
+"     THEN ('AAV') ELSE (Codigo_Ramo_Op) END ),Parent_Prod_Group_Id"
+"     ,Compania_Id ,Codigo_Op ,SUCURSAL_ID ,CANAL_COMERCIAL_ID"
+"     ,Feature_Id ,( CASE WHEN (Field_11 IS NULL) THEN (NULL) ELSE (("
+     CASE WHEN (Estado_Certificado_Cd = 2) THEN (Fecha_Ultimo_Estado)
+     ELSE (NULL) END )) END)).  Aggregate intermediate results are
+"     computed globally, then placed in Spool 35 in TD_Map1.  The"
+     aggregate spool file will not be cached in memory.  The size of
+"     Spool 35 is estimated with low confidence to be 3,932,712,492 rows"
+"     (593,839,586,292 bytes).  The estimated time for this step is 11"
+     minutes and 40 seconds.
+ 30) We execute the following steps in parallel.
+      1) We do an all-AMPs RETRIEVE step in TD_Map1 from Spool 35 (Last
+         Use) by way of an all-rows scan with a condition of (
+"         ""Field_13 >= DATE '2014-01-01'"") into Spool 3 (used to"
+"         materialize view, derived table, table function or table"
+"         operator base) (all_amps) (compressed columns allowed), which"
+         is built locally on the AMPs.  The size of Spool 3 is
+"         estimated with low confidence to be 3,932,712,492 rows ("
+"         279,222,586,932 bytes).  The estimated time for this step is"
+         53.12 seconds.
       2) We do an all-AMPs RETRIEVE step in TD_MAP1 from SEBATOEC.c by
          way of an all-rows scan with no residual conditions into Spool
-"         44 (all_amps) (compressed columns allowed), which is"
-         duplicated on all AMPs in TD_Map1.  The size of Spool 44 is
+"         37 (all_amps) (compressed columns allowed), which is"
+         duplicated on all AMPs in TD_Map1.  The size of Spool 37 is
 "         estimated with high confidence to be 4,864 rows (452,352"
          bytes).  The estimated time for this step is 0.01 seconds.
-      3) We do an all-AMPs RETRIEVE step in TD_MAP1 from SEBATOEC.p by
+ 31) We do an all-AMPs JOIN step in TD_Map1 from Spool 37 (Last Use) by
+"     way of an all-rows scan, which is joined to Spool 3 (Last Use) by"
+     way of an all-rows scan.  Spool 37 and Spool 3 are right outer
+"     joined using a dynamic hash join, with condition(s) used for"
+"     non-matching on right table (""(NOT (CODIGO_RAMO_AUX IS NULL )) AND"
+     ((NOT (CANAL_COMERCIAL_ID IS NULL )) AND (NOT (COMPANIA_ID IS NULL
+"     )))""), with a join condition of (""(CODIGO_RAMO_AUX ="
+     codigo_ramo_op) AND ((CANAL_COMERCIAL_ID = canal_comercial_id) AND
+"     (COMPANIA_ID = compania_id ))"").  The result goes into Spool 38"
+"     (all_amps) (compressed columns allowed), which is built locally on"
+     the AMPs.  The result spool file will not be cached in memory.
+     The size of Spool 38 is estimated with low confidence to be
+"     3,936,405,870 rows (370,022,151,780 bytes).  The estimated time"
+     for this step is 1 minute and 12 seconds.
+ 32) We execute the following steps in parallel.
+      1) We do an all-AMPs RETRIEVE step in TD_MAP1 from SEBATOEC.s by
          way of an all-rows scan with no residual conditions into Spool
-"         45 (all_amps) (compressed columns allowed), which is"
-         duplicated on all AMPs in TD_Map1.  The size of Spool 45 is
+"         41 (all_amps) (compressed columns allowed), which is"
+         duplicated on all AMPs in TD_Map1.  The size of Spool 41 is
+"         estimated with high confidence to be 4,352 rows (404,736"
+         bytes).  The estimated time for this step is 0.01 seconds.
+      2) We do an all-AMPs RETRIEVE step in TD_MAP1 from SEBATOEC.p by
+         way of an all-rows scan with no residual conditions into Spool
+"         42 (all_amps) (compressed columns allowed), which is"
+         duplicated on all AMPs in TD_Map1.  The size of Spool 42 is
 "         estimated with high confidence to be 10,752 rows (999,936"
          bytes).  The estimated time for this step is 0.01 seconds.
- 39) We execute the following steps in parallel.
-      1) We do an all-AMPs JOIN step in TD_Map1 from Spool 43 (Last
-"         Use) by way of an all-rows scan, which is joined to Spool 44"
-         (Last Use) by way of an all-rows scan.  Spool 43 and Spool 44
+ 33) We execute the following steps in parallel.
+      1) We do an all-AMPs JOIN step in TD_Map1 from Spool 38 (Last
+"         Use) by way of an all-rows scan, which is joined to Spool 41"
+         (Last Use) by way of an all-rows scan.  Spool 38 and Spool 41
 "         are left outer joined using a product join, with condition(s)"
-"         used for non-matching on left table (""(NOT (Compania_Id IS"
-"         NULL )) AND (NOT (CANAL_COMERCIAL_ID IS NULL ))""), with a join"
-"         condition of (""((( CASE WHEN ((Feature_Id NOT IN (-1 ,641 ,930"
-"         ,18647 ,61296 ,64082 )) AND (Parent_Prod_Group_Id = 78 ))"
-         THEN ('AAV') ELSE (Codigo_Ramo_Op) END ))= codigo_ramo_op) AND
-         ((CANAL_COMERCIAL_ID = canal_comercial_id) AND (Compania_Id =
-"         compania_id ))"").  The result goes into Spool 46 (all_amps)"
-"         (compressed columns allowed), which is built locally on the"
-         AMPs.  The size of Spool 46 is estimated with low confidence
-"         to be 281,129,145 rows (38,233,563,720 bytes).  The estimated"
-         time for this step is 10.29 seconds.
+"         used for non-matching on left table (""(NOT (CODIGO_RAMO_AUX IS"
+         NULL )) AND ((NOT (SUCURSAL_ID IS NULL )) AND (NOT
+"         (COMPANIA_ID IS NULL )))""), with a join condition of ("
+"         ""(CODIGO_RAMO_AUX = codigo_ramo_op) AND ((SUCURSAL_ID ="
+"         sucursal_id) AND (COMPANIA_ID = compania_id ))"").  The result"
+"         goes into Spool 43 (all_amps) (compressed columns allowed),"
+         which is built locally on the AMPs.  The result spool file
+         will not be cached in memory.  The size of Spool 43 is
+"         estimated with low confidence to be 3,936,479,574 rows ("
+"         492,059,946,750 bytes).  The estimated time for this step is 2"
+         minutes and 16 seconds.
       2) We do an all-AMPs RETRIEVE step in TD_MAP1 from
          SEBATOEC.amparo by way of an all-rows scan with no residual
-         conditions into Spool 47 (all_amps) (compressed columns
+         conditions into Spool 44 (all_amps) (compressed columns
 "         allowed), which is duplicated on all AMPs in TD_Map1.  The"
-         size of Spool 47 is estimated with high confidence to be
+         size of Spool 44 is estimated with high confidence to be
 "         56,832 rows (7,274,496 bytes).  The estimated time for this"
          step is 0.01 seconds.
- 40) We do an all-AMPs JOIN step in TD_Map1 from Spool 45 (Last Use) by
-"     way of an all-rows scan, which is joined to Spool 46 (Last Use) by"
-     way of an all-rows scan.  Spool 45 and Spool 46 are right outer
+ 34) We do an all-AMPs JOIN step in TD_Map1 from Spool 42 (Last Use) by
+"     way of an all-rows scan, which is joined to Spool 43 (Last Use) by"
+     way of an all-rows scan.  Spool 42 and Spool 43 are right outer
 "     joined using a single partition hash join, with condition(s) used"
-"     for non-matching on right table (""(NOT (Poliza_Id IS NULL )) AND"
-"     (NOT (Compania_Id IS NULL ))""), with a join condition of ("
-"     ""(Poliza_Id = poliza_id) AND (((( CASE WHEN ((Feature_Id NOT IN"
-"     (-1 ,641 ,930 ,18647 ,61296 ,64082 )) AND (Parent_Prod_Group_Id ="
-     78 )) THEN ('AAV') ELSE (Codigo_Ramo_Op) END ))= codigo_ramo_op)
-"     AND (Compania_Id = compania_id ))"").  The result goes into Spool"
-"     48 (all_amps) (compressed columns allowed), which is built locally"
-     on the AMPs.  The size of Spool 48 is estimated with index join
-"     confidence to be 281,129,149 rows (46,948,567,883 bytes).  The"
-     estimated time for this step is 8.69 seconds.
- 41) We do an all-AMPs JOIN step in TD_Map1 from Spool 47 (Last Use) by
-"     way of an all-rows scan, which is joined to Spool 48 (Last Use) by"
-     way of an all-rows scan.  Spool 47 and Spool 48 are right outer
+"     for non-matching on right table (""(NOT (POLIZA_ID IS NULL )) AND"
+     ((NOT (CODIGO_RAMO_AUX IS NULL )) AND (NOT (COMPANIA_ID IS NULL
+"     )))""), with a join condition of (""(POLIZA_ID = poliza_id) AND"
+     ((CODIGO_RAMO_AUX = codigo_ramo_op) AND (COMPANIA_ID = compania_id
+"     ))"").  The result goes into Spool 45 (all_amps) (compressed"
+"     columns allowed), which is built locally on the AMPs.  The result"
+     spool file will not be cached in memory.  The size of Spool 45 is
+"     estimated with index join confidence to be 3,936,479,718 rows ("
+"     618,027,315,726 bytes).  The estimated time for this step is 1"
+     minute and 55 seconds.
+ 35) We do an all-AMPs JOIN step in TD_Map1 from Spool 44 (Last Use) by
+"     way of an all-rows scan, which is joined to Spool 45 (Last Use) by"
+     way of an all-rows scan.  Spool 44 and Spool 45 are right outer
 "     joined using a single partition hash join, with condition(s) used"
-"     for non-matching on right table (""(NOT (Feature_Id IS NULL )) AND"
-"     (NOT (Compania_Id IS NULL ))""), with a join condition of (""((("
-"     CASE WHEN ((Feature_Id NOT IN (-1 ,641 ,930 ,18647 ,61296 ,64082"
-     )) AND (Parent_Prod_Group_Id = 78 )) THEN ('AAV') ELSE
-     (Codigo_Ramo_Op) END ))= codigo_ramo_op) AND ((Feature_Id =
-     amparo_id) AND (((TRANSLATE((( CASE WHEN (NOT (apertura_canal_desc
-     IS NULL )) THEN (TRANSLATE((apertura_canal_desc )USING
-     LATIN_TO_UNICODE)) WHEN (NOT (apertura_canal_desc IS NULL )) THEN
+"     for non-matching on right table (""(NOT (CODIGO_RAMO_AUX IS NULL ))"
+"     AND ((NOT (AMPARO_ID IS NULL )) AND (NOT (COMPANIA_ID IS NULL )))""),"
+"     with a join condition of (""(CODIGO_RAMO_AUX = codigo_ramo_op) AND"
+     ((AMPARO_ID = amparo_id) AND ((COMPANIA_ID = compania_id) AND
+     ((TRANSLATE((( CASE WHEN (NOT (apertura_canal_desc IS NULL )) THEN
+     (TRANSLATE((apertura_canal_desc )USING LATIN_TO_UNICODE)) WHEN
+     (NOT (apertura_canal_desc IS NULL )) THEN
      (TRANSLATE((apertura_canal_desc )USING LATIN_TO_UNICODE)) WHEN
      (NOT (apertura_canal_desc IS NULL )) THEN
      (TRANSLATE((apertura_canal_desc )USING LATIN_TO_UNICODE)) ELSE ((
-"     CASE WHEN ((Parent_Prod_Group_Id IN (78 ,274 )) AND (Compania_Id"
-     = 3 )) THEN ('Otros Banca') WHEN ((Parent_Prod_Group_Id = 78) AND
-     (Compania_Id = 4 )) THEN ('Otros') ELSE ('Resto') END)) END
-     ))USING UNICODE_TO_LATIN))= apertura_canal_desc) AND (Compania_Id
-"     = compania_id )))"").  The result goes into Spool 7 (all_amps)"
-"     (compressed columns allowed), which is built locally on the AMPs."
-     The size of Spool 7 is estimated with index join confidence to be
-"     282,763,656 rows (56,269,967,544 bytes).  The estimated time for"
-     this step is 10.36 seconds.
- 42) We do an all-AMPs SUM step in TD_Map1 to aggregate from Spool 7
-"     (Last Use) by way of an all-rows scan, grouping by field1 ("
-"     sura_consultas.a.Poliza_Certificado_Id ,( CASE WHEN"
-     ((SURA_CONSULTAS.a.Parent_Prod_Group_Id = 78) AND
-"     (SURA_CONSULTAS.a.Feature_Id NOT IN (-1 ,641 ,930 ,18647 ,61296"
-"     ,64082 ))) THEN ('AAV') ELSE"
-     (sura_consultas.ramo_dd.Codigo_Ramo_Op) END
-"     ),SURA_CONSULTAS.compania_dd.Codigo_Op ,( CASE WHEN (NOT"
-     (SEBATOEC.p.apertura_canal_desc IS NULL )) THEN
-     (TRANSLATE((SEBATOEC.p.apertura_canal_desc )USING
-     LATIN_TO_UNICODE)) WHEN (NOT (SEBATOEC.c.apertura_canal_desc IS
-     NULL )) THEN (TRANSLATE((SEBATOEC.c.apertura_canal_desc )USING
-     LATIN_TO_UNICODE)) WHEN (NOT (SEBATOEC.s.apertura_canal_desc IS
-     NULL )) THEN (TRANSLATE((SEBATOEC.s.apertura_canal_desc )USING
-     LATIN_TO_UNICODE)) ELSE (( CASE WHEN
-"     ((SURA_CONSULTAS.a.Parent_Prod_Group_Id IN (78 ,274 )) AND"
-     (SURA_CONSULTAS.a.Compania_Id = 3 )) THEN ('Otros Banca') WHEN
-     ((SURA_CONSULTAS.a.Parent_Prod_Group_Id = 78) AND
-     (SURA_CONSULTAS.a.Compania_Id = 4 )) THEN ('Otros') ELSE ('Resto')
-"     END)) END ),( CASE WHEN (NOT (SEBATOEC.amparo.apertura_amparo_desc"
-     IS NULL )) THEN (SEBATOEC.amparo.apertura_amparo_desc) ELSE
-"     ('RESTO') END ),( CASE WHEN"
-     (sura_consultas.a.Estado_Certificado_Cd = 2) THEN
-     (sura_consultas.a.Fecha_Ultimo_Estado) ELSE (NULL) END)).
-"     Aggregate intermediate results are computed globally, then placed"
-     in Spool 54 in TD_Map1.  The size of Spool 54 is estimated with
-"     low confidence to be 212,072,742 rows (103,067,352,612 bytes)."
-     The estimated time for this step is 2 minutes and 14 seconds.
- 43) We do an all-AMPs RETRIEVE step in TD_Map1 from Spool 54 (Last
-"     Use) by way of an all-rows scan with a condition of (""Field_9 >="
-"     DATE '2014-01-01'"") into Spool 4 (group_amps), which is built"
-     locally on the AMPs.  The size of Spool 4 is estimated with low
-"     confidence to be 212,072,742 rows (51,321,603,564 bytes).  The"
-     estimated time for this step is 5.83 seconds.
-" 44) Finally, we send out an END TRANSACTION step to all AMPs involved"
+"     CASE WHEN ((RAMO_ID IN (78 ,274 )) AND (COMPANIA_ID = 3 )) THEN"
+     ('Otros Banca') WHEN ((RAMO_ID = 78) AND (COMPANIA_ID = 4 )) THEN
+     ('Otros') ELSE ('Resto') END)) END ))USING UNICODE_TO_LATIN))=
+"     apertura_canal_desc )))"").  The result goes into Spool 5"
+"     (all_amps) (compressed columns allowed), which is built locally on"
+     the AMPs.  The result spool file will not be cached in memory.
+     The size of Spool 5 is estimated with index join confidence to be
+"     3,959,369,603 rows (748,320,854,967 bytes).  The estimated time"
+     for this step is 2 minutes and 19 seconds.
+ 36) We do an all-AMPs SUM step in TD_Map1 to aggregate from Spool 5
+"     (Last Use) by way of an all-rows scan, and the grouping identifier"
+"     in field 1.  Aggregate intermediate results are computed globally,"
+     then placed in Spool 51 in TD_Map1.  The aggregate spool file will
+     not be cached in memory.  The size of Spool 51 is estimated with
+"     low confidence to be 2,969,527,203 rows (1,443,190,220,658 bytes)."
+     The estimated time for this step is 31 minutes and 49 seconds.
+ 37) We do an all-AMPs RETRIEVE step in TD_Map1 from Spool 51 (Last
+"     Use) by way of an all-rows scan into Spool 4 (group_amps), which"
+     is built locally on the AMPs.  The result spool file will not be
+     cached in memory.  The size of Spool 4 is estimated with low
+"     confidence to be 2,969,527,203 rows (718,625,583,126 bytes).  The"
+     estimated time for this step is 1 minute and 22 seconds.
+" 38) Finally, we send out an END TRANSACTION step to all AMPs involved"
      in processing the request.
   -> The contents of Spool 4 are sent back to the user as the result of
-     statement 1.  The total estimated time is 3 minutes and 57 seconds.
+     statement 1.  The total estimated time is 55 minutes and 45
+     seconds.

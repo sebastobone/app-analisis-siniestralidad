@@ -8,7 +8,9 @@ CREATE MULTISET VOLATILE TABLE canal_poliza
     , numero_poliza VARCHAR(100) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
     , apertura_canal_cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (numero_poliza) ON COMMIT PRESERVE ROWS;
+) PRIMARY INDEX (
+    poliza_id, codigo_ramo_op, compania_id
+) ON COMMIT PRESERVE ROWS;
 INSERT INTO CANAL_POLIZA VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
 
 
@@ -22,7 +24,9 @@ CREATE MULTISET VOLATILE TABLE canal_canal
     , nombre_canal_comercial VARCHAR(100) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
     , apertura_canal_cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (canal_comercial_id) ON COMMIT PRESERVE ROWS;
+) PRIMARY INDEX (
+    canal_comercial_id, codigo_ramo_op, compania_id
+) ON COMMIT PRESERVE ROWS;
 INSERT INTO CANAL_CANAL VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
 
 
@@ -36,7 +40,9 @@ CREATE MULTISET VOLATILE TABLE canal_sucursal
     , nombre_sucursal VARCHAR(100) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
     , apertura_canal_cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (sucursal_id) ON COMMIT PRESERVE ROWS;
+) PRIMARY INDEX (
+    sucursal_id, codigo_ramo_op, compania_id
+) ON COMMIT PRESERVE ROWS;
 INSERT INTO CANAL_SUCURSAL VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
 
 
@@ -49,7 +55,9 @@ CREATE MULTISET VOLATILE TABLE amparos
     , amparo_id BIGINT NOT NULL
     , amparo_desc VARCHAR(100) NOT NULL
     , apertura_amparo_desc VARCHAR(100) NOT NULL
-) PRIMARY INDEX (amparo_desc) ON COMMIT PRESERVE ROWS;
+) PRIMARY INDEX (
+    amparo_id, codigo_ramo_op, compania_id, apertura_canal_desc
+) ON COMMIT PRESERVE ROWS;
 INSERT INTO AMPAROS VALUES (?, ?, ?, ?, ?, ?, ?);  -- noqa:
 
 
@@ -69,6 +77,11 @@ CREATE MULTISET VOLATILE TABLE fechas AS
     GROUP BY 1
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 COLLECT STATISTICS ON FECHAS COLUMN (Mes_Id);  -- noqa:
+
+COLLECT STATISTICS ON canal_poliza INDEX (poliza_id, codigo_ramo_op, compania_id);
+COLLECT STATISTICS ON canal_canal INDEX (canal_comercial_id, codigo_ramo_op, compania_id);
+COLLECT STATISTICS ON canal_sucursal INDEX (sucursal_id, codigo_ramo_op, compania_id);
+COLLECT STATISTICS ON amparos INDEX (amparo_id, codigo_ramo_op, compania_id, apertura_canal_desc);
 
 
 
@@ -92,100 +105,108 @@ CREATE MULTISET VOLATILE TABLE base_expuestos
 COLLECT STATISTICS ON BASE_EXPUESTOS COLUMN (Poliza_Certificado_Id, Apertura_Amparo_Desc, Fecha_Inclusion_Cobertura, Fecha_Exclusion_Cobertura, Fecha_Cancelacion);
 
 INSERT INTO BASE_EXPUESTOS
+WITH base AS (
+    SELECT
+        vpc.poliza_id
+        , vpc.poliza_certificado_id
+        , CASE
+            WHEN
+                pro.ramo_id = 78
+                AND vpc.amparo_id NOT IN (18647, 641, 930, 64082, 61296, -1)
+                THEN 'AAV'
+            ELSE ramo.codigo_ramo_op
+        END AS codigo_ramo_aux
+        , pro.ramo_id
+        , pro.compania_id
+        , cia.codigo_op
+        , sucu.sucursal_id
+        , sucu.canal_comercial_id
+        , vpc.amparo_id
+        , pc.fecha_cancelacion
+        , vpc.fecha_inclusion_cobertura
+        , vpc.fecha_exclusion_cobertura
+
+    FROM mdb_seguros_colombia.v_hist_polcert_cobertura AS vpc
+    INNER JOIN
+        mdb_seguros_colombia.v_poliza_certificado AS pc
+        ON
+            vpc.poliza_certificado_id = pc.poliza_certificado_id
+            AND vpc.plan_individual_id = pc.plan_individual_id
+    INNER JOIN
+        mdb_seguros_colombia.v_plan_individual AS plan
+        ON vpc.plan_individual_id = plan.plan_individual_id
+    INNER JOIN
+        mdb_seguros_colombia.v_producto AS pro
+        ON plan.producto_id = pro.producto_id
+    INNER JOIN
+        mdb_seguros_colombia.v_compania AS cia
+        ON pro.compania_id = cia.compania_id
+    INNER JOIN mdb_seguros_colombia.v_ramo AS ramo ON pro.ramo_id = ramo.ramo_id
+    INNER JOIN
+        mdb_seguros_colombia.v_poliza AS poli
+        ON vpc.poliza_id = poli.poliza_id
+    INNER JOIN
+        mdb_seguros_colombia.v_sucursal AS sucu
+        ON poli.sucursal_id = sucu.sucursal_id
+
+    WHERE pro.ramo_id IN (54835, 78, 274, 57074, 140, 107, 271, 297, 204)
+        AND pro.compania_id IN (3, 4)
+        AND vpc.fecha_exclusion_cobertura >= (DATE '{fecha_primera_ocurrencia}')     
+)
+
 SELECT
-    pc.poliza_certificado_id
-    , CASE
-        WHEN
-            pro.ramo_id = 78
-            AND vpc.amparo_id NOT IN (18647, 641, 930, 64082, 61296, -1)
-            THEN 'AAV'
-        ELSE ramo.codigo_ramo_op
-    END AS codigo_ramo_aux
-    , cia.codigo_op
+    base.poliza_certificado_id
+    , base.codigo_ramo_aux
+    , base.codigo_op
     , COALESCE(
         p.apertura_canal_desc, c.apertura_canal_desc, s.apertura_canal_desc
         , CASE
             WHEN
-                pro.ramo_id IN (78, 274)
-                AND pro.compania_id = 3
+                base.ramo_id IN (78, 274)
+                AND base.compania_id = 3
                 THEN 'Otros Banca'
             WHEN
-                pro.ramo_id = 78 AND pro.compania_id = 4
+                base.ramo_id = 78 AND base.compania_id = 4
                 THEN 'Otros'
             ELSE 'Resto'
         END
     ) AS apertura_canal_aux
     , COALESCE(amparo.apertura_amparo_desc, 'RESTO') AS apertura_amparo_desc
-    , pc.fecha_cancelacion
-    , MIN(vpc.fecha_inclusion_cobertura) AS fecha_inclusion_cobertura
-    , MAX(vpc.fecha_exclusion_cobertura) AS fecha_exclusion_cobertura
+    , base.fecha_cancelacion
+    , MIN(base.fecha_inclusion_cobertura) AS fecha_inclusion_cobertura
+    , MAX(base.fecha_exclusion_cobertura) AS fecha_exclusion_cobertura
 
-FROM mdb_seguros_colombia.v_hist_polcert_cobertura AS vpc
-LEFT JOIN
-    mdb_seguros_colombia.v_poliza_certificado AS pc
-    ON
-        (
-            vpc.poliza_certificado_id = pc.poliza_certificado_id
-            AND vpc.plan_individual_id = pc.plan_individual_id
-        )
-LEFT JOIN
-    mdb_seguros_colombia.v_plan_individual AS plan
-    ON (vpc.plan_individual_id = plan.plan_individual_id)
-LEFT JOIN
-    mdb_seguros_colombia.v_producto AS pro
-    ON (plan.producto_id = pro.producto_id)
-LEFT JOIN
-    mdb_seguros_colombia.v_compania AS cia
-    ON (pro.compania_id = cia.compania_id)
-LEFT JOIN mdb_seguros_colombia.v_ramo AS ramo ON (pro.ramo_id = ramo.ramo_id)
-LEFT JOIN
-    mdb_seguros_colombia.v_poliza AS poli
-    ON (pc.poliza_id = poli.poliza_id)
-LEFT JOIN
-    mdb_seguros_colombia.v_amparo AS ampa
-    ON (vpc.amparo_id = ampa.amparo_id)
-LEFT JOIN
-    mdb_seguros_colombia.v_sucursal AS sucu
-    ON (poli.sucursal_id = sucu.sucursal_id)
-INNER JOIN
-    mdb_seguros_colombia.v_canal_comercial AS canal
-    ON (sucu.canal_comercial_id = canal.canal_comercial_id)
+FROM base
 LEFT JOIN
     canal_poliza AS p
     ON
-        vpc.poliza_id = p.poliza_id
-        AND codigo_ramo_aux = p.codigo_ramo_op
-        AND cia.compania_id = p.compania_id
+        base.poliza_id = p.poliza_id
+        AND base.codigo_ramo_aux = p.codigo_ramo_op
+        AND base.compania_id = p.compania_id
 LEFT JOIN
     canal_canal AS c
     ON (
-        codigo_ramo_aux = c.codigo_ramo_op
-        AND sucu.canal_comercial_id = c.canal_comercial_id
-        AND cia.compania_id = c.compania_id
+        base.codigo_ramo_aux = c.codigo_ramo_op
+        AND base.canal_comercial_id = c.canal_comercial_id
+        AND base.compania_id = c.compania_id
     )
 LEFT JOIN
     canal_sucursal AS s
     ON (
-        codigo_ramo_aux = s.codigo_ramo_op
-        AND sucu.sucursal_id = s.sucursal_id
-        AND cia.compania_id = s.compania_id
+        base.codigo_ramo_aux = s.codigo_ramo_op
+        AND base.sucursal_id = s.sucursal_id
+        AND base.compania_id = s.compania_id
     )
 LEFT JOIN
-    amparo
+    amparos AS amparo
     ON (
-        codigo_ramo_aux = amparo.codigo_ramo_op
-        AND vpc.amparo_id = amparo.amparo_id
+        base.codigo_ramo_aux = amparo.codigo_ramo_op
+        AND base.amparo_id = amparo.amparo_id
         AND apertura_canal_aux = amparo.apertura_canal_desc
-        AND cia.compania_id = amparo.compania_id
+        AND base.compania_id = amparo.compania_id
     )
 
-WHERE
-    pro.ramo_id IN (54835, 78, 274, 57074, 140, 107, 271, 297, 204)
-    AND pro.compania_id IN (3, 4)
-
-GROUP BY 1, 2, 3, 4, 5, 6
-HAVING
-    MAX(vpc.fecha_exclusion_cobertura) >= (DATE '{fecha_primera_ocurrencia}');
+GROUP BY 1, 2, 3, 4, 5, 6;
 
 
 

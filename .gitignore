@@ -187,5 +187,6 @@ output
 !output/.gitkeep
 
 backups
+!data/queries/backups
 
 .DS_Store

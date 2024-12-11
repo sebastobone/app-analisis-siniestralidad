@@ -5,7 +5,7 @@ from procesamiento import base_siniestros as bsin
 from procesamiento import base_primas_expuestos as bpdn
 # import plantilla
 
-read_query("siniestros")
+read_query("siniestros_brutos")
 # read_query("primas")
 # read_query("expuestos")
 

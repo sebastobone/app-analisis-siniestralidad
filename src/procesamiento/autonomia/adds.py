@@ -19,14 +19,14 @@ xw.Book(f"{os.getcwd()}/data/segmentacion_autonomia.xlsx").set_mock_caller()
 wb = xw.Book.caller()
 
 try:
-    wb.sheets.add(name="add_s_SAP_Sinis_Ced", after="Fechas")
+    wb.sheets.add(name="SAP_Sinis_Ced", after="Fechas")
 except ValueError:
-    wb.sheets["add_s_SAP_Sinis_Ced"].delete()
-    wb.sheets.add(name="add_s_SAP_Sinis_Ced", after="Fechas")
+    wb.sheets["SAP_Sinis_Ced"].delete()
+    wb.sheets.add(name="SAP_Sinis_Ced", after="Fechas")
 
-wb.sheets["add_s_SAP_Sinis_Ced"].range("A1:A500").number_format = "@"
-wb.sheets["add_s_SAP_Sinis_Ced"].range("B1:B500").number_format = "@"
-wb.sheets["add_s_SAP_Sinis_Ced"]["A1"].options(index=False).value = df.to_pandas()
+wb.sheets["SAP_Sinis_Ced"].range("A1:A500").number_format = "@"
+wb.sheets["SAP_Sinis_Ced"].range("B1:B500").number_format = "@"
+wb.sheets["SAP_Sinis_Ced"]["A1"].options(index=False).value = df.to_pandas()
 
 # sap_primas = ctrl.read_sap(['Generales', 'Vida'], ['PRIMAS_EMI', 'PRIMAS_DEV', 'RPND'], ['BRUTO', 'RETENIDO', 'CEDIDO'], int(mes_corte))
 # sap_primas = sap_primas[sap_primas['Mes_Mov'] == int(mes_corte)]

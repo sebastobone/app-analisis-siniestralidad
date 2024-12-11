@@ -5,9 +5,7 @@ CREATE MULTISET VOLATILE TABLE base_cedido
     , sucursal_id BIGINT
     , poliza_id BIGINT
     , asegurado_id BIGINT
-    , compania_id SMALLINT
     , plan_individual_id INTEGER
-    , ramo_id INTEGER
     , siniestro_id VARCHAR(15)
     , tipo_estado_siniestro_cd VARCHAR(5) NOT NULL
     , amparo_id INTEGER NOT NULL
@@ -29,9 +27,7 @@ SELECT
     , sucu.sucursal_id
     , poli.poliza_id
     , pc.asegurado_id
-    , pro.compania_id
     , esc.plan_individual_id
-    , pro.ramo_id
     , esc.siniestro_id
     , sini.tipo_estado_siniestro_cd
     , esc.amparo_id
@@ -89,6 +85,6 @@ WHERE
         '{mes_corte}' AS INTEGER
     )
 
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11;
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9;
 
 SELECT * FROM base_cedido  -- noqa:

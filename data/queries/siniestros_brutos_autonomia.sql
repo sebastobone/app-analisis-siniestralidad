@@ -82,8 +82,10 @@ WHERE
     )
     AND pro.compania_id IN (3, 4)
     AND esc.valor_siniestro <> 0
-    AND esc.mes_id BETWEEN CAST('{chunk_ini}' AS INTEGER) AND CAST(
-        '{chunk_fin}' AS INTEGER
+    AND esc.mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER) AND CAST(
+        '{mes_corte}' AS INTEGER
     )
 
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11;
+
+SELECT * FROM base_bruto  -- noqa:

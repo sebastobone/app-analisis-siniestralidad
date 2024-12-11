@@ -70,28 +70,7 @@ CREATE MULTISET VOLATILE TABLE fechas AS
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 COLLECT STATISTICS ON FECHAS COLUMN (Mes_Id);  -- noqa:
 
-
-
-CREATE MULTISET VOLATILE TABLE base_expuestos
-(
-    poliza_certificado_id INTEGER NOT NULL
-    , codigo_ramo_aux VARCHAR(3) NOT NULL
-    , codigo_op VARCHAR(2) NOT NULL
-    , apertura_canal_aux VARCHAR(100) NOT NULL
-    , apertura_amparo_desc VARCHAR(100) NOT NULL
-    , fecha_cancelacion DATE
-    , fecha_inclusion_cobertura DATE
-    , fecha_exclusion_cobertura DATE
-) PRIMARY INDEX (
-    poliza_certificado_id
-    , apertura_amparo_desc
-    , fecha_inclusion_cobertura
-    , fecha_exclusion_cobertura
-    , fecha_cancelacion
-) ON COMMIT PRESERVE ROWS;
-COLLECT STATISTICS ON BASE_EXPUESTOS COLUMN (Poliza_Certificado_Id, Apertura_Amparo_Desc, Fecha_Inclusion_Cobertura, Fecha_Exclusion_Cobertura, Fecha_Cancelacion);
-
-INSERT INTO BASE_EXPUESTOS
+EXPLAIN
 SELECT
     pc.poliza_certificado_id
     , CASE
@@ -171,7 +150,7 @@ LEFT JOIN
         AND cia.compania_id = s.compania_id
     )
 LEFT JOIN
-    amparo
+    amparos AS amparo
     ON (
         codigo_ramo_aux = amparo.codigo_ramo_op
         AND vpc.amparo_id = amparo.amparo_id
@@ -185,73 +164,4 @@ WHERE
 
 GROUP BY 1, 2, 3, 4, 5, 6
 HAVING
-    MAX(vpc.fecha_exclusion_cobertura) >= (DATE '{fecha_primera_ocurrencia}');
-
-
-
-CREATE MULTISET VOLATILE TABLE expuestos AS
-(
-    WITH base AS (
-        SELECT
-            fechas.primer_dia_mes
-            , vpc.codigo_op
-            , vpc.codigo_ramo_aux AS codigo_ramo_op
-            , vpc.apertura_canal_aux AS apertura_canal_desc
-            , vpc.apertura_amparo_desc
-            , GREATEST(vpc.fecha_inclusion_cobertura, fechas.primer_dia_mes)
-                AS fecha_inicio
-            , LEAST(
-                vpc.fecha_exclusion_cobertura
-                , fechas.ultimo_dia_mes
-                , COALESCE(vpc.fecha_cancelacion, (DATE '3000-01-01'))
-            ) AS fecha_fin
-            , SUM(
-                CAST(fecha_fin - fecha_inicio + 1 AS FLOAT)
-                / fechas.num_dias_mes
-            ) AS expuestos
-            , SUM(1) AS vigentes
-
-        FROM fechas
-        INNER JOIN base_expuestos AS vpc
-            ON (
-                fechas.ultimo_dia_mes >= vpc.fecha_inclusion_cobertura
-                AND COALESCE(vpc.fecha_cancelacion, (DATE '3000-01-01'))
-                >= fechas.primer_dia_mes
-                AND COALESCE(vpc.fecha_exclusion_cobertura, (DATE '3000-01-01'))
-                >= fechas.primer_dia_mes
-            )
-
-        GROUP BY 1, 2, 3, 4, 5, 6, 7
-    )
-
-    SELECT
-        primer_dia_mes
-        , codigo_op
-        , codigo_ramo_op
-        , apertura_canal_desc
-        , apertura_amparo_desc
-        , SUM(expuestos) AS expuestos
-        , SUM(vigentes) AS vigentes
-    FROM base
-    GROUP BY 1, 2, 3, 4, 5
-
-) WITH DATA PRIMARY INDEX (
-    primer_dia_mes, codigo_ramo_op, apertura_amparo_desc
-) ON COMMIT PRESERVE ROWS;
-COLLECT STATISTICS ON EXPUESTOS COLUMN (Primer_dia_mes, Codigo_Ramo_Op, Apertura_Amparo_Desc);
-
-
-SELECT
-    base.codigo_op
-    , base.codigo_ramo_op
-    , base.ramo_desc
-    , base.primer_dia_mes AS fecha_registro
-    , COALESCE(base.apertura_canal_desc, '-1') AS apertura_canal_desc
-    , COALESCE(base.apertura_amparo_desc, '-1') AS apertura_amparo_desc
-    , ZEROIFNULL(SUM(base.expuestos)) AS expuestos
-    , ZEROIFNULL(SUM(base.vigentes)) AS vigentes
-
-FROM expuestos AS base
-
-GROUP BY 1, 2, 3, 4, 5, 6
-ORDER BY 1, 2, 3, 4, 5, 6
+    MAX(vpc.fecha_exclusion_cobertura) >= (DATE '{fecha_primera_ocurrencia}')

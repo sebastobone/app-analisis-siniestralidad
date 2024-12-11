@@ -58,4 +58,4 @@ def read_query(file: str) -> None:
             add_num += 1
 
 
-read_query("siniestros_autonomia_opt")
+read_query("expuestos_autonomia_opt")

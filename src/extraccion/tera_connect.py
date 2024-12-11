@@ -27,7 +27,7 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
             )
 
 
-def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]):
+def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]) -> None:
     segm_sheets_file = [
         segm_sheet for segm_sheet in segm_sheets if file[:1] in segm_sheet.split("_")[1]
     ]
@@ -41,6 +41,13 @@ def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]):
             nombre de las hojas siga el formato
             "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
             """
+        )
+
+
+def check_duplicados(add: pl.DataFrame) -> None:
+    if len(add) != len(add.unique()):
+        raise Exception(
+            f"""¡Error! Tiene registros duplicados en la siguiente tabla: {add}."""
         )
 
 
@@ -123,12 +130,15 @@ def read_query(file: str) -> None:
                 df.write_csv(f"data/raw/{file}.csv", separator="\t")
                 df.write_parquet(f"data/raw/{file}.parquet")
         else:
+            check_duplicados(segm[add_num])
             cur.executemany(query, segm[add_num].rows())
             add_num += 1
 
     # Segmentaciones faltantes
     df_faltante = df.filter(
-        pl.any_horizontal([pl.col(col).is_null() for col in ct.APERT_COLS])
+        pl.any_horizontal(
+            [(pl.col(col).is_null() | pl.col(col).eq("-1")) for col in ct.APERT_COLS]
+        )
     )
     if len(df_faltante) != 0:
         print(df_faltante)

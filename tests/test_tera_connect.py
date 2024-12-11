@@ -1,5 +1,18 @@
 import pytest
-from src.extraccion.tera_connect import check_suficiencia_adds
+import polars as pl
+from src.extraccion import tera_connect
+
+
+def test_check_adds_segmentacion():
+    with pytest.raises(Exception) as exc_info:
+        tera_connect.check_adds_segmentacion(["add_d_Siniestros"])
+    print(exc_info.value)
+
+    with pytest.raises(Exception) as exc_info:
+        tera_connect.check_adds_segmentacion(["add_Siniestros"])
+    print(exc_info.value)
+
+    assert tera_connect.check_adds_segmentacion(["add_s_Siniestros"]) == None
 
 
 def test_check_suficiencia_adds():
@@ -12,17 +25,17 @@ def test_check_suficiencia_adds():
     """
 
     with pytest.raises(Exception) as exc_info:
-        check_suficiencia_adds("siniestros", mock_query, ["add_d_Polizas"])
+        tera_connect.check_suficiencia_adds("siniestros", mock_query, ["add_d_Polizas"])
     print(exc_info.value)
 
     with pytest.raises(Exception) as exc_info:
-        check_suficiencia_adds(
+        tera_connect.check_suficiencia_adds(
             "siniestros", mock_query, ["add_s_Polizas", "add_s_Sucursales"]
         )
     print(exc_info.value)
 
     with pytest.raises(Exception) as exc_info:
-        check_suficiencia_adds(
+        tera_connect.check_suficiencia_adds(
             "siniestros",
             mock_query,
             ["add_s_Polizas", "add_s_Sucursales", "add_s_Canales", "add_s_Random"],
@@ -30,11 +43,17 @@ def test_check_suficiencia_adds():
     print(exc_info.value)
 
     assert (
-        check_suficiencia_adds(
+        tera_connect.check_suficiencia_adds(
             "siniestros",
             mock_query,
             ["add_s_Polizas", "add_s_Sucursales", "add_s_Canales"],
         )
         == None
     )
-    # check_suficiencia_adds("siniestros", mock_query, ["add_s_Polizas", "add_s_Sucursales", "add_s_Canales"])
+
+
+def test_check_duplicados():
+    mock_df = pl.DataFrame({"datos": [1, 1, 2, 3, 4, 5]})
+    with pytest.raises(Exception) as exc_info:
+        tera_connect.check_duplicados(mock_df)
+    print(exc_info.value)

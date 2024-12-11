@@ -222,9 +222,6 @@ FROM (
     INNER JOIN
         mdb_seguros_colombia.v_sucursal AS sucu
         ON (poli.sucursal_id = sucu.sucursal_id)
-    INNER JOIN
-        mdb_seguros_colombia.v_canal_comercial AS canal
-        ON (sucu.canal_comercial_id = canal.canal_comercial_id)
     LEFT JOIN
         canal_poliza AS p
         ON
@@ -340,9 +337,6 @@ FROM (
     INNER JOIN
         mdb_seguros_colombia.v_sucursal AS sucu
         ON (rtdc.sucursal_id = sucu.sucursal_id)
-    INNER JOIN
-        mdb_seguros_colombia.v_canal_comercial AS canal
-        ON (sucu.canal_comercial_id = canal.canal_comercial_id)
     LEFT JOIN
         mdb_seguros_colombia.v_compania AS cia
         ON (rtdc.compania_origen_id = cia.compania_id)
@@ -437,9 +431,6 @@ CREATE MULTISET VOLATILE TABLE primas_evpro AS
     INNER JOIN
         mdb_seguros_colombia.v_sucursal AS sucu
         ON (poli.sucursal_id = sucu.sucursal_id)
-    INNER JOIN
-        mdb_seguros_colombia.v_canal_comercial AS canal
-        ON (sucu.canal_comercial_id = canal.canal_comercial_id)
     LEFT JOIN
         canal_poliza AS p
         ON
@@ -624,9 +615,6 @@ CREATE MULTISET VOLATILE TABLE base_perfiles_devengue AS
     INNER JOIN
         mdb_seguros_colombia.v_sucursal AS sucu
         ON (poli.sucursal_id = sucu.sucursal_id)
-    INNER JOIN
-        mdb_seguros_colombia.v_canal_comercial AS canal
-        ON (sucu.canal_comercial_id = canal.canal_comercial_id)
 
     -- Subquery que filtra los movimientos de amparos excluidos de reserva
     LEFT JOIN (

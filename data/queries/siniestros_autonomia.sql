@@ -102,7 +102,7 @@ CREATE MULTISET VOLATILE TABLE base_cedido
     fecha_siniestro DATE
     , fecha_registro DATE
     , numero_poliza VARCHAR(20)
-    , cliente_id INTEGER
+    , asegurado_id INTEGER
     , nombre_tecnico VARCHAR(100)
     , codigo_op VARCHAR(2)
     , codigo_ramo_aux VARCHAR(3)
@@ -120,7 +120,7 @@ CREATE MULTISET VOLATILE TABLE base_cedido
     fecha_siniestro
     , fecha_registro
     , numero_poliza
-    , cliente_id
+    , asegurado_id
     , nombre_tecnico
     , codigo_op
     , codigo_ramo_aux
@@ -136,7 +136,7 @@ COLLECT STATISTICS ON base_cedido INDEX (  -- noqa:
     fecha_siniestro
     , fecha_registro
     , numero_poliza
-    , cliente_id
+    , asegurado_id
     , nombre_tecnico
     , codigo_op
     , codigo_ramo_aux
@@ -155,7 +155,7 @@ WITH base AS (
         ersc.fecha_registro
         , poli.poliza_id
         , poli.numero_poliza
-        , cli.cliente_id
+        , pcetl.asegurado_id
         , pind.nombre_tecnico
         , cia.compania_id
         , cia.codigo_op
@@ -229,9 +229,6 @@ WITH base AS (
     INNER JOIN
         mdb_seguros_colombia.v_poliza_certificado_etl AS pcetl
         ON (ersc.poliza_certificado_id = pcetl.poliza_certificado_id)
-    LEFT JOIN
-        mdb_seguros_colombia.v_cliente AS cli
-        ON (pcetl.asegurado_id = cli.cliente_id)
 
     WHERE
         pro.ramo_id IN (
@@ -248,7 +245,7 @@ SELECT
     base.fecha_siniestro
     , base.fecha_registro
     , base.numero_poliza
-    , base.cliente_id
+    , base.asegurado_id
     , base.nombre_tecnico
     , base.codigo_op
     , base.codigo_ramo_aux
@@ -326,7 +323,7 @@ CREATE MULTISET VOLATILE TABLE base_bruto
     fecha_siniestro DATE
     , fecha_registro DATE
     , numero_poliza VARCHAR(20)
-    , cliente_id INTEGER
+    , asegurado_id INTEGER
     , nombre_tecnico VARCHAR(100)
     , codigo_op VARCHAR(2)
     , codigo_ramo_aux VARCHAR(3)
@@ -344,7 +341,7 @@ CREATE MULTISET VOLATILE TABLE base_bruto
     fecha_siniestro
     , fecha_registro
     , numero_poliza
-    , cliente_id
+    , asegurado_id
     , nombre_tecnico
     , codigo_op
     , codigo_ramo_aux
@@ -360,7 +357,7 @@ COLLECT STATISTICS ON base_bruto INDEX (
     fecha_siniestro
     , fecha_registro
     , numero_poliza
-    , cliente_id
+    , asegurado_id
     , nombre_tecnico
     , codigo_op
     , codigo_ramo_aux
@@ -379,7 +376,7 @@ WITH base AS (
         esc.fecha_registro
         , poli.poliza_id
         , poli.numero_poliza
-        , cli.cliente_id
+        , pcetl.asegurado_id
         , pind.nombre_tecnico
         , cia.compania_id
         , cia.codigo_op
@@ -450,9 +447,6 @@ WITH base AS (
     INNER JOIN
         mdb_seguros_colombia.v_poliza_certificado_etl AS pcetl
         ON (esc.poliza_certificado_id = pcetl.poliza_certificado_id)
-    LEFT JOIN
-        mdb_seguros_colombia.v_cliente AS cli
-        ON (pcetl.asegurado_id = cli.cliente_id)
 
     WHERE
         esc.ramo_id IN (
@@ -471,7 +465,7 @@ SELECT
     base.fecha_siniestro
     , base.fecha_registro
     , base.numero_poliza
-    , base.cliente_id
+    , base.asegurado_id
     , base.nombre_tecnico
     , base.codigo_op
     , base.codigo_ramo_aux
@@ -550,7 +544,7 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_prelim AS
         SELECT
             fecha_siniestro
             , fecha_registro
-            , cliente_id
+            , asegurado_id
             , numero_poliza
             , nombre_tecnico
             , codigo_op
@@ -574,7 +568,7 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_prelim AS
         SELECT
             fecha_siniestro
             , fecha_registro
-            , cliente_id
+            , asegurado_id
             , numero_poliza
             , nombre_tecnico
             , codigo_op
@@ -597,7 +591,7 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_prelim AS
     SELECT
         fecha_siniestro
         , fecha_registro
-        , cliente_id
+        , asegurado_id
         , numero_poliza
         , nombre_tecnico
         , codigo_op
@@ -641,8 +635,8 @@ CREATE MULTISET VOLATILE TABLE porcentajes_retencion AS
         NOT (codigo_ramo_op = '083' AND codigo_op = '02')
         AND atipico = 0
         AND fecha_registro BETWEEN 
-            ADD_MONTHS(LAST_DAY((DATE '{fecha'{fecha_mes_corte}'}')), -13) 
-            AND ADD_MONTHS(LAST_DAY((DATE '{fecha'{fecha_mes_corte}'}')), -1)
+            ADD_MONTHS(LAST_DAY((DATE '{fecha_mes_corte}')), -13) 
+            AND ADD_MONTHS(LAST_DAY((DATE '{fecha_mes_corte}')), -1)
 
     GROUP BY 1, 2, 3, 4, 5
 
@@ -737,7 +731,7 @@ CREATE MULTISET VOLATILE TABLE BASE_INCURRIDO_PRELIM_2 AS
 		, SUM(pago_bruto)
             OVER (
                 PARTITION BY
-                    base.cliente_id
+                    base.asegurado_id
                     , vig.vigencia_contrato
                     , base.codigo_ramo_op
                     , base.codigo_op
@@ -747,7 +741,7 @@ CREATE MULTISET VOLATILE TABLE BASE_INCURRIDO_PRELIM_2 AS
         , SUM(aviso_bruto)
             OVER (
                 PARTITION BY
-                    base.cliente_id
+                    base.asegurado_id
                     , vig.vigencia_contrato
                     , base.codigo_ramo_op
                     , base.codigo_op
@@ -757,7 +751,7 @@ CREATE MULTISET VOLATILE TABLE BASE_INCURRIDO_PRELIM_2 AS
         , SUM(pago_retenido)
             OVER (
                 PARTITION BY
-                    base.cliente_id
+                    base.asegurado_id
                     , vig.vigencia_contrato
                     , base.codigo_ramo_op
                     , base.codigo_op
@@ -767,7 +761,7 @@ CREATE MULTISET VOLATILE TABLE BASE_INCURRIDO_PRELIM_2 AS
         , SUM(aviso_retenido)
             OVER (
                 PARTITION BY
-                    base.cliente_id
+                    base.asegurado_id
                     , vig.vigencia_contrato
                     , base.codigo_ramo_op
                     , base.codigo_op

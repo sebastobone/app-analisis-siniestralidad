@@ -567,11 +567,11 @@ CREATE MULTISET VOLATILE TABLE base_perfiles_devengue AS
             p.apertura_canal_desc, c.apertura_canal_desc, s.apertura_canal_desc
             , CASE
                 WHEN
-                    ramo.codigo_ramo_op IN ('081', '083')
-                    AND cia.codigo_op = '02'
+                    pro.ramo_id IN (78, 274)
+                    AND pro.compania_id = 3
                     THEN 'Otros Banca'
                 WHEN
-                    ramo.codigo_ramo_op IN ('083') AND cia.codigo_op = '01'
+                    pro.ramo_id = 78 AND pro.compania_id = 4
                     THEN 'Otros'
                 ELSE 'Resto'
             END
@@ -1073,40 +1073,18 @@ CREATE MULTISET VOLATILE TABLE primas_final AS
 
 
 SELECT
-	CASE
-		WHEN base.Codigo_Op = '01'
-		THEN CONCAT(TRIM(base.Codigo_Ramo_Op), 'G - ', ramo.Ramo_Desc, ' GENERALES')
-		ELSE CONCAT(TRIM(base.Codigo_Ramo_Op), ' - ', CASE WHEN base.Codigo_Ramo_Op = 'AAV' THEN 'ANEXOS VI' ELSE ramo.Ramo_Desc END)
-	END AS Ramo_Desc
-	,COALESCE(base.Apertura_Canal_Desc, '-1') AS Apertura_Canal_Desc
-	,'NO APLICA' AS Apertura_Amparo_Desc
-	
-	,CASE
-		WHEN base.Codigo_Ramo_Op IN ('081','AAV','083') AND base.Codigo_Op = '02'
-			THEN CONCAT(
-				base.Codigo_Ramo_Op, '_',
-				agrcanal.Apertura_Canal_Cd
-			)
-		WHEN base.Codigo_Ramo_Op IN ('083') AND base.Codigo_Op = '01'
-			THEN CONCAT(
-				CONCAT(TRIM(base.Codigo_Ramo_Op), 'G'), '_',
-				agrcanal.Apertura_Canal_Cd
-			)
-		WHEN base.Codigo_Op = '01' AND base.Codigo_Ramo_Op NOT IN ('083') THEN CONCAT(TRIM(base.Codigo_Ramo_Op), 'G')
-		ELSE base.Codigo_Ramo_Op
-	END AS Agrupacion_Reservas
+    base.codigo_op
+    , base.codigo_ramo_op
+    , base.ramo_desc
+    , base.primer_dia_mes AS fecha_registro
+    , COALESCE(base.apertura_canal_desc, '-1') AS apertura_canal_desc
+    , COALESCE(base.apertura_amparo_desc, '-1') AS apertura_amparo_desc
+    , ZEROIFNULL(SUM(base.prima_bruta)) AS prima_bruta
+    , ZEROIFNULL(SUM(base.prima_bruta_devengada)) AS prima_bruta_devengada
+    , ZEROIFNULL(SUM(base.prima_retenida)) AS prima_retenida
+    , ZEROIFNULL(SUM(base.prima_retenida_devengada)) AS prima_retenida_devengada
 
-	,fechas.Primer_dia_mes AS Fecha_Registro
+FROM primas_final AS base
 
-	,ZEROIFNULL(SUM(base.Prima_Bruta)) AS Prima_Bruta
-	,ZEROIFNULL(SUM(base.Prima_Bruta_Devengada)) AS Prima_Bruta_Devengada
-	,ZEROIFNULL(SUM(base.Prima_Retenida)) AS Prima_Retenida
-	,ZEROIFNULL(SUM(base.Prima_Retenida_Devengada)) AS Prima_Retenida_Devengada
-
-FROM PRIMAS_FINAL base
-	LEFT JOIN (SELECT DISTINCT Apertura_Canal_Desc, Apertura_Canal_Cd FROM CANAL_CANAL UNION SELECT DISTINCT Apertura_Canal_Desc, Apertura_Canal_Cd FROM CANAL_SUCURSAL UNION SELECT DISTINCT Apertura_Canal_Desc, Apertura_Canal_Cd FROM CANAL_POLIZA) agrcanal ON (base.Apertura_Canal_Desc = agrcanal.Apertura_Canal_Desc)
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_RAMO ramo ON (base.Codigo_Ramo_Op = ramo.Codigo_Ramo_Op)
-	INNER JOIN FECHAS fechas ON (fechas.Mes_Id = base.Mes_Id)
-
-GROUP BY 1,2,3,4,5
-ORDER BY 1,2,3,4,5
+GROUP BY 1, 2, 3, 4, 5, 6
+ORDER BY 1, 2, 3, 4, 5, 6

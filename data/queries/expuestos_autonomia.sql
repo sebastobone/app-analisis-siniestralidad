@@ -1,217 +1,257 @@
-CREATE MULTISET VOLATILE TABLE CANAL_POLIZA
+CREATE MULTISET VOLATILE TABLE canal_poliza
 (
-	Compania_Id SMALLINT NOT NULL
-	,Codigo_Op VARCHAR(100) NOT NULL
-	,Ramo_Id INTEGER NOT NULL
-	,Codigo_Ramo_Op VARCHAR(100) NOT NULL
-	,Poliza_Id BIGINT NOT NULL
-	,Numero_Poliza VARCHAR(100) NOT NULL
-	,Apertura_Canal_Desc VARCHAR(100) NOT NULL
-	,Apertura_Canal_Cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (Numero_Poliza) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_POLIZA VALUES (?,?,?,?,?,?,?,?);
+    compania_id SMALLINT NOT NULL
+    , codigo_op VARCHAR(100) NOT NULL
+    , ramo_id INTEGER NOT NULL
+    , codigo_ramo_op VARCHAR(100) NOT NULL
+    , poliza_id BIGINT NOT NULL
+    , numero_poliza VARCHAR(100) NOT NULL
+    , apertura_canal_desc VARCHAR(100) NOT NULL
+    , apertura_canal_cd VARCHAR(100) NOT NULL
+) PRIMARY INDEX (numero_poliza) ON COMMIT PRESERVE ROWS;
+INSERT INTO CANAL_POLIZA VALUES (?,?,?,?,?,?,?,?);  -- noqa:
 
 
-CREATE MULTISET VOLATILE TABLE CANAL_CANAL
+CREATE MULTISET VOLATILE TABLE canal_canal
 (
-	Compania_Id SMALLINT NOT NULL
-	,Codigo_Op VARCHAR(100) NOT NULL
-	,Codigo_Ramo_Op VARCHAR(100) NOT NULL
-	,Canal_Comercial_Id BIGINT NOT NULL
-	,Codigo_Canal_Comercial_Op VARCHAR(20) NOT NULL
-	,Nombre_Canal_Comercial VARCHAR(100) NOT NULL
-	,Apertura_Canal_Desc VARCHAR(100) NOT NULL
-	,Apertura_Canal_Cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (Canal_Comercial_Id) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_CANAL VALUES (?,?,?,?,?,?,?,?);
+    compania_id SMALLINT NOT NULL
+    , codigo_op VARCHAR(100) NOT NULL
+    , codigo_ramo_op VARCHAR(100) NOT NULL
+    , canal_comercial_id BIGINT NOT NULL
+    , codigo_canal_comercial_op VARCHAR(20) NOT NULL
+    , nombre_canal_comercial VARCHAR(100) NOT NULL
+    , apertura_canal_desc VARCHAR(100) NOT NULL
+    , apertura_canal_cd VARCHAR(100) NOT NULL
+) PRIMARY INDEX (canal_comercial_id) ON COMMIT PRESERVE ROWS;
+INSERT INTO CANAL_CANAL VALUES (?,?,?,?,?,?,?,?);  -- noqa:
 
 
-CREATE MULTISET VOLATILE TABLE CANAL_SUCURSAL
+CREATE MULTISET VOLATILE TABLE canal_sucursal
 (
-	Compania_Id SMALLINT NOT NULL
-	,Codigo_Op VARCHAR(100) NOT NULL
-	,Codigo_Ramo_Op VARCHAR(100) NOT NULL
-	,Sucursal_Id BIGINT NOT NULL
-	,Codigo_Sucural_Op VARCHAR(10) NOT NULL
-	,Nombre_Sucursal VARCHAR(100) NOT NULL
-	,Apertura_Canal_Desc VARCHAR(100) NOT NULL
-	,Apertura_Canal_Cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (Sucursal_Id) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_SUCURSAL VALUES (?,?,?,?,?,?,?,?);
+    compania_id SMALLINT NOT NULL
+    , codigo_op VARCHAR(100) NOT NULL
+    , codigo_ramo_op VARCHAR(100) NOT NULL
+    , sucursal_id BIGINT NOT NULL
+    , codigo_sucural_op VARCHAR(10) NOT NULL
+    , nombre_sucursal VARCHAR(100) NOT NULL
+    , apertura_canal_desc VARCHAR(100) NOT NULL
+    , apertura_canal_cd VARCHAR(100) NOT NULL
+) PRIMARY INDEX (sucursal_id) ON COMMIT PRESERVE ROWS;
+INSERT INTO CANAL_SUCURSAL VALUES (?,?,?,?,?,?,?,?);  -- noqa:
 
 
-CREATE MULTISET VOLATILE TABLE AMPAROS
+CREATE MULTISET VOLATILE TABLE amparos
 (
-	Compania_Id SMALLINT NOT NULL
-	,Codigo_Op VARCHAR(100) NOT NULL
-	,Codigo_Ramo_Op VARCHAR(100) NOT NULL
-	,Apertura_Canal_Desc VARCHAR(100) NOT NULL
-	,Amparo_Id BIGINT NOT NULL
-	,Amparo_Desc VARCHAR(100) NOT NULL
-	,Apertura_Amparo_Desc VARCHAR(100) NOT NULL
-) PRIMARY INDEX (Amparo_Desc) ON COMMIT PRESERVE ROWS;
-INSERT INTO AMPAROS VALUES (?,?,?,?,?,?,?);
+    compania_id SMALLINT NOT NULL
+    , codigo_op VARCHAR(100) NOT NULL
+    , codigo_ramo_op VARCHAR(100) NOT NULL
+    , apertura_canal_desc VARCHAR(100) NOT NULL
+    , amparo_id BIGINT NOT NULL
+    , amparo_desc VARCHAR(100) NOT NULL
+    , apertura_amparo_desc VARCHAR(100) NOT NULL
+) PRIMARY INDEX (amparo_desc) ON COMMIT PRESERVE ROWS;
+INSERT INTO AMPAROS VALUES (?,?,?,?,?,?,?);  -- noqa:
 
 
-CREATE MULTISET VOLATILE TABLE FECHAS AS
+CREATE MULTISET VOLATILE TABLE fechas AS
 (
-	SELECT DISTINCT
-		Mes_Id
-		,MIN(Dia_Dt) OVER (PARTITION BY Mes_Id) AS Primer_dia_mes
-		,MAX(Dia_Dt) OVER (PARTITION BY Mes_Id) AS Ultimo_dia_mes
-		,Cast((Ultimo_dia_mes - Primer_dia_mes + 1)*1.00 AS DECIMAL(18,0)) Num_dias_mes
-		,MIN(Dia_Dt) OVER (PARTITION BY Trimestre_Id) AS Primer_dia_trimestre
-		,MAX(Dia_Dt) OVER (PARTITION BY Trimestre_Id) AS Ultimo_dia_trimestre
-		,Cast((Ultimo_dia_trimestre - Primer_dia_trimestre + 1)*1.00 AS DECIMAL(18,0)) Num_dias_trimestre
-		,MIN(Dia_Dt) OVER (PARTITION BY Ano_Id) AS Primer_dia_anno
-		,MAX(Dia_Dt) OVER (PARTITION BY Ano_Id) AS Ultimo_dia_anno
-		,Cast((Ultimo_dia_anno - Primer_dia_anno + 1)*1.00 AS DECIMAL(18,0)) Num_dias_anno
-	FROM MDB_SEGUROS_COLOMBIA.V_DIA
-	WHERE Mes_Id BETWEEN {mes_primera_ocurrencia} AND {mes_corte}
-) WITH DATA PRIMARY INDEX (Mes_Id) ON COMMIT PRESERVE ROWS;
-COLLECT STATISTICS ON FECHAS COLUMN (Mes_Id);
+    SELECT
+        mes_id
+        , MIN(dia_dt) AS primer_dia_mes
+        , MAX(dia_dt) AS ultimo_dia_mes
+        , CAST(ultimo_dia_mes - primer_dia_mes + 1 AS FLOAT)
+            AS num_dias_mes
+    FROM mdb_seguros_colombia.v_dia
+    WHERE
+        mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER) AND CAST(
+            '{mes_corte}' AS INTEGER
+        )
+    GROUP BY 1
+) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
+COLLECT STATISTICS ON FECHAS COLUMN (Mes_Id);  -- noqa:
 
 
 
-CREATE MULTISET VOLATILE TABLE BASE_EXPUESTOS
+CREATE MULTISET VOLATILE TABLE base_expuestos
 (
-	Poliza_Certificado_Id INTEGER NOT NULL
-	,Codigo_Ramo_Aux VARCHAR(3) NOT NULL
-	,Codigo_Op VARCHAR(2) NOT NULL
-	,Apertura_Canal_Aux VARCHAR(100) NOT NULL
-	,Apertura_Amparo_Desc VARCHAR(100) NOT NULL
-	,Fecha_Cancelacion DATE
-	,Fecha_Inclusion_Cobertura DATE
-	,Fecha_Exclusion_Cobertura DATE
-) PRIMARY INDEX (Poliza_Certificado_Id, Apertura_Amparo_Desc, Fecha_Inclusion_Cobertura, Fecha_Exclusion_Cobertura, Fecha_Cancelacion) ON COMMIT PRESERVE ROWS;
+    poliza_certificado_id INTEGER NOT NULL
+    , codigo_ramo_aux VARCHAR(3) NOT NULL
+    , codigo_op VARCHAR(2) NOT NULL
+    , apertura_canal_aux VARCHAR(100) NOT NULL
+    , apertura_amparo_desc VARCHAR(100) NOT NULL
+    , fecha_cancelacion DATE
+    , fecha_inclusion_cobertura DATE
+    , fecha_exclusion_cobertura DATE
+) PRIMARY INDEX (
+    poliza_certificado_id
+    , apertura_amparo_desc
+    , fecha_inclusion_cobertura
+    , fecha_exclusion_cobertura
+    , fecha_cancelacion
+) ON COMMIT PRESERVE ROWS;
 COLLECT STATISTICS ON BASE_EXPUESTOS COLUMN (Poliza_Certificado_Id, Apertura_Amparo_Desc, Fecha_Inclusion_Cobertura, Fecha_Exclusion_Cobertura, Fecha_Cancelacion);
 
 INSERT INTO BASE_EXPUESTOS
 SELECT
-	pc.Poliza_Certificado_Id
-	,CASE
-		WHEN ramo.Codigo_Ramo_Op = '081' AND vpc.Amparo_Id NOT IN (18647, 641, 930, 64082, 61296, -1)
-		THEN 'AAV'
-		ELSE ramo.Codigo_Ramo_Op
-	END AS Codigo_Ramo_Aux
-	,cia.Codigo_Op
-	,COALESCE(p.Apertura_Canal_Desc, c.Apertura_Canal_Desc, s.Apertura_Canal_Desc, 
-		CASE 
-			WHEN ramo.Codigo_Ramo_Op IN ('081','083') AND cia.Codigo_Op = '02' THEN 'Otros Banca'
-			WHEN ramo.Codigo_Ramo_Op IN ('083') AND cia.Codigo_Op = '01' THEN 'Otros'
-			ELSE 'Resto'
-		END
-	) AS Apertura_Canal_Aux
-	,COALESCE(amparo.Apertura_Amparo_Desc, 'RESTO') AS Apertura_Amparo_Desc
-	,pc.Fecha_Cancelacion
-	,MIN(vpc.Fecha_Inclusion_Cobertura) AS Fecha_Inclusion_Cobertura
-	,MAX(vpc.Fecha_Exclusion_Cobertura) aS Fecha_Exclusion_Cobertura
+    pc.poliza_certificado_id
+    , CASE
+        WHEN
+            pro.ramo_id = 78
+            AND vpc.amparo_id NOT IN (18647, 641, 930, 64082, 61296, -1)
+            THEN 'AAV'
+        ELSE ramo.codigo_ramo_op
+    END AS codigo_ramo_aux
+    , cia.codigo_op
+    , COALESCE(
+        p.apertura_canal_desc, c.apertura_canal_desc, s.apertura_canal_desc
+        , CASE
+            WHEN
+                pro.ramo_id IN (78, 274)
+                AND pro.compania_id = 3
+                THEN 'Otros Banca'
+            WHEN
+                pro.ramo_id = 78 AND pro.compania_id = 4
+                THEN 'Otros'
+            ELSE 'Resto'
+        END
+    ) AS apertura_canal_aux
+    , COALESCE(amparo.apertura_amparo_desc, 'RESTO') AS apertura_amparo_desc
+    , pc.fecha_cancelacion
+    , MIN(vpc.fecha_inclusion_cobertura) AS fecha_inclusion_cobertura
+    , MAX(vpc.fecha_exclusion_cobertura) AS fecha_exclusion_cobertura
 
-FROM MDB_SEGUROS_COLOMBIA.V_HIST_POLCERT_COBERTURA vpc
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_POLIZA_CERTIFICADO pc ON (vpc.poliza_certificado_id = pc.poliza_certificado_id AND vpc.Plan_Individual_Id = pc.Plan_Individual_Id)
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_PLAN_INDIVIDUAL plan ON (vpc.Plan_individual_Id = plan.Plan_individual_Id)
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_PRODUCTO pro ON (plan.Producto_id = pro.Producto_id)
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_COMPANIA cia ON (pro.Compania_Id = cia.Compania_Id)
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_RAMO ramo ON (pro.Ramo_Id = ramo.Ramo_Id)
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_POLIZA poli ON (poli.poliza_id = pc.poliza_id)
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_AMPARO ampa ON (vpc.Amparo_Id = ampa.Amparo_Id)
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_SUCURSAL sucu ON (poli.Sucursal_Id = sucu.Sucursal_Id)
-	INNER JOIN MDB_SEGUROS_COLOMBIA.V_CANAL_COMERCIAL canal ON (sucu.Canal_Comercial_Id = canal.Canal_Comercial_Id)
-	LEFT JOIN CANAL_POLIZA p ON (vpc.Poliza_Id = p.Poliza_Id AND Codigo_Ramo_Aux = p.Codigo_Ramo_Op AND p.Compania_Id = cia.Compania_Id)
-	LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Canal_Comercial_Id, Apertura_Canal_Desc FROM CANAL_CANAL) c
-		ON (Codigo_Ramo_Aux = c.Codigo_Ramo_Op
-		AND sucu.Canal_Comercial_Id = c.Canal_Comercial_Id
-		AND cia.Compania_Id = c.Compania_Id)
-	LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Sucursal_Id, Apertura_Canal_Desc FROM CANAL_SUCURSAL) s
-		ON (Codigo_Ramo_Aux = s.Codigo_Ramo_Op
-		AND sucu.Sucursal_Id = s.Sucursal_Id
-		AND cia.Compania_Id = s.Compania_Id)
-	LEFT JOIN (SELECT DISTINCT Compania_Id, Codigo_Ramo_Op, Apertura_Canal_Desc, Amparo_Id, Apertura_Amparo_Desc FROM AMPAROS) amparo
-		ON (Codigo_Ramo_Aux = amparo.Codigo_Ramo_Op
-		AND vpc.Amparo_Id = amparo.Amparo_Id
-		AND Apertura_Canal_Aux = amparo.Apertura_Canal_Desc
-		AND cia.Compania_Id = amparo.Compania_Id)
-		
-WHERE ((pro.Ramo_Id IN (78, 274, 57074, 140, 107, 271, 297, 204) AND pro.Compania_Id = 3)
-	OR (pro.Ramo_Id IN (54835, 274, 140, 107) AND pro.Compania_Id = 4))
+FROM mdb_seguros_colombia.v_hist_polcert_cobertura AS vpc
+LEFT JOIN
+    mdb_seguros_colombia.v_poliza_certificado AS pc
+    ON
+        (
+            vpc.poliza_certificado_id = pc.poliza_certificado_id
+            AND vpc.plan_individual_id = pc.plan_individual_id
+        )
+LEFT JOIN
+    mdb_seguros_colombia.v_plan_individual AS plan
+    ON (vpc.plan_individual_id = plan.plan_individual_id)
+LEFT JOIN
+    mdb_seguros_colombia.v_producto AS pro
+    ON (plan.producto_id = pro.producto_id)
+LEFT JOIN
+    mdb_seguros_colombia.v_compania AS cia
+    ON (pro.compania_id = cia.compania_id)
+LEFT JOIN mdb_seguros_colombia.v_ramo AS ramo ON (pro.ramo_id = ramo.ramo_id)
+LEFT JOIN
+    mdb_seguros_colombia.v_poliza AS poli
+    ON (pc.poliza_id = poli.poliza_id)
+LEFT JOIN
+    mdb_seguros_colombia.v_amparo AS ampa
+    ON (vpc.amparo_id = ampa.amparo_id)
+LEFT JOIN
+    mdb_seguros_colombia.v_sucursal AS sucu
+    ON (poli.sucursal_id = sucu.sucursal_id)
+INNER JOIN
+    mdb_seguros_colombia.v_canal_comercial AS canal
+    ON (sucu.canal_comercial_id = canal.canal_comercial_id)
+LEFT JOIN
+    canal_poliza AS p
+    ON
+        vpc.poliza_id = p.poliza_id
+        AND codigo_ramo_aux = p.codigo_ramo_op
+        AND cia.compania_id = p.compania_id
+LEFT JOIN
+    canal_canal AS c
+    ON (
+        codigo_ramo_aux = c.codigo_ramo_op
+        AND sucu.canal_comercial_id = c.canal_comercial_id
+        AND cia.compania_id = c.compania_id
+    )
+LEFT JOIN
+    canal_sucursal AS s
+    ON (
+        codigo_ramo_aux = s.codigo_ramo_op
+        AND sucu.sucursal_id = s.sucursal_id
+        AND cia.compania_id = s.compania_id
+    )
+LEFT JOIN
+    amparo
+    ON (
+        codigo_ramo_aux = amparo.codigo_ramo_op
+        AND vpc.amparo_id = amparo.amparo_id
+        AND apertura_canal_aux = amparo.apertura_canal_desc
+        AND cia.compania_id = amparo.compania_id
+    )
 
-GROUP BY 1,2,3,4,5,6
-HAVING MAX(vpc.Fecha_Exclusion_Cobertura) >= (DATE {fecha_primera_ocurrencia});
+WHERE
+    pro.ramo_id IN (54835, 78, 274, 57074, 140, 107, 271, 297, 204)
+    AND pro.compania_id IN (3, 4)
+
+GROUP BY 1, 2, 3, 4, 5, 6
+HAVING
+    MAX(vpc.fecha_exclusion_cobertura) >= (DATE '{fecha_primera_ocurrencia}');
 
 
 
-CREATE MULTISET VOLATILE TABLE EXPUESTOS AS
+CREATE MULTISET VOLATILE TABLE expuestos AS
 (
-	SELECT
-		Primer_dia_mes
-		,Codigo_Op
-		,Codigo_Ramo_Op
-		,Apertura_Canal_Desc
-		,Apertura_Amparo_Desc
-		,SUM(Expuestos) AS Expuestos
-		,SUM(Vigentes) AS Vigentes
-	FROM (
-		SELECT
-			fechas.Primer_dia_mes
-			,vpc.Codigo_Op
-			,vpc.Codigo_Ramo_Aux AS Codigo_Ramo_Op
-			,vpc.Apertura_Canal_Aux AS Apertura_Canal_Desc
-			,vpc.Apertura_Amparo_Desc
-			,GREATEST(vpc.Fecha_Inclusion_Cobertura, fechas.Primer_dia_mes) AS Fecha_Inicio
-			,LEAST(vpc.Fecha_Exclusion_Cobertura, fechas.Ultimo_dia_mes, COALESCE(vpc.Fecha_Cancelacion, (DATE '3000-01-01'))) AS Fecha_Fin
-			,SUM(CAST((Fecha_Fin - Fecha_Inicio + 1) AS DECIMAL(18,6)) / fechas.Num_dias_mes) AS Expuestos
-			,SUM(1) AS Vigentes
+    WITH base AS (
+        SELECT
+            fechas.primer_dia_mes
+            , vpc.codigo_op
+            , vpc.codigo_ramo_aux AS codigo_ramo_op
+            , vpc.apertura_canal_aux AS apertura_canal_desc
+            , vpc.apertura_amparo_desc
+            , GREATEST(vpc.fecha_inclusion_cobertura, fechas.primer_dia_mes)
+                AS fecha_inicio
+            , LEAST(
+                vpc.fecha_exclusion_cobertura
+                , fechas.ultimo_dia_mes
+                , COALESCE(vpc.fecha_cancelacion, (DATE '3000-01-01'))
+            ) AS fecha_fin
+            , SUM(
+                CAST(fecha_fin - fecha_inicio + 1 AS FLOAT)
+                / fechas.num_dias_mes
+            ) AS expuestos
+            , SUM(1) AS vigentes
 
-		FROM (SELECT DISTINCT Primer_dia_mes, Ultimo_dia_mes, Num_dias_mes FROM FECHAS) fechas
-			INNER JOIN BASE_EXPUESTOS vpc
-				ON (
-					vpc.Fecha_Inclusion_Cobertura <= fechas.Ultimo_dia_mes
-					AND COALESCE(vpc.Fecha_Cancelacion, (DATE '3000-01-01')) >= fechas.Primer_dia_mes
-					AND COALESCE(vpc.Fecha_Exclusion_Cobertura, (DATE '3000-01-01')) >= fechas.Primer_dia_mes
-				)
+        FROM fechas
+        INNER JOIN base_expuestos AS vpc
+            ON (
+                fechas.ultimo_dia_mes >= vpc.fecha_inclusion_cobertura
+                AND COALESCE(vpc.fecha_cancelacion, (DATE '3000-01-01'))
+                >= fechas.primer_dia_mes
+                AND COALESCE(vpc.fecha_exclusion_cobertura, (DATE '3000-01-01'))
+                >= fechas.primer_dia_mes
+            )
 
-		GROUP BY 1,2,3,4,5,6,7
-		) BASE
+        GROUP BY 1, 2, 3, 4, 5, 6, 7
+    )
 
-	GROUP BY 1,2,3,4,5
-) WITH DATA PRIMARY INDEX (Primer_dia_mes, Codigo_Ramo_Op, Apertura_Amparo_Desc) ON COMMIT PRESERVE ROWS;
+    SELECT
+        primer_dia_mes
+        , codigo_op
+        , codigo_ramo_op
+        , apertura_canal_desc
+        , apertura_amparo_desc
+        , SUM(expuestos) AS expuestos
+        , SUM(vigentes) AS vigentes
+    FROM base
+    GROUP BY 1, 2, 3, 4, 5
+
+) WITH DATA PRIMARY INDEX (
+    primer_dia_mes, codigo_ramo_op, apertura_amparo_desc
+) ON COMMIT PRESERVE ROWS;
 COLLECT STATISTICS ON EXPUESTOS COLUMN (Primer_dia_mes, Codigo_Ramo_Op, Apertura_Amparo_Desc);
 
 
 SELECT
-	CASE
-		WHEN base.Codigo_Op = '01'
-		THEN CONCAT(TRIM(base.Codigo_Ramo_Op), 'G - ', ramo.Ramo_Desc, ' GENERALES')
-		ELSE CONCAT(TRIM(base.Codigo_Ramo_Op), ' - ', CASE WHEN base.Codigo_Ramo_Op = 'AAV' THEN 'ANEXOS VI' ELSE ramo.Ramo_Desc END)
-	END AS Ramo_Desc
-	,COALESCE(base.Apertura_Canal_Desc, '-1') AS Apertura_Canal_Desc
-	,COALESCE(base.Apertura_Amparo_Desc, '-1') AS Apertura_Amparo_Desc
-	
-	,CASE
-		WHEN base.Codigo_Ramo_Op IN ('081','AAV','083') AND base.Codigo_Op = '02'
-			THEN CONCAT(
-				base.Codigo_Ramo_Op, '_',
-				agrcanal.Apertura_Canal_Cd, '_',
-				base.Apertura_Amparo_Desc
-			)
-		WHEN base.Codigo_Ramo_Op IN ('083') AND base.Codigo_Op = '01'
-			THEN CONCAT(
-				CONCAT(TRIM(base.Codigo_Ramo_Op), 'G'), '_',
-				agrcanal.Apertura_Canal_Cd, '_',
-				base.Apertura_Amparo_Desc
-			)
-		WHEN base.Codigo_Op = '01' AND base.Codigo_Ramo_Op NOT IN ('083') THEN CONCAT(TRIM(base.Codigo_Ramo_Op), 'G')
-		ELSE base.Codigo_Ramo_Op
-	END AS Agrupacion_Reservas
+    base.codigo_op
+    , base.codigo_ramo_op
+    , base.ramo_desc
+    , base.primer_dia_mes AS fecha_registro
+    , COALESCE(base.apertura_canal_desc, '-1') AS apertura_canal_desc
+    , COALESCE(base.apertura_amparo_desc, '-1') AS apertura_amparo_desc
+    , ZEROIFNULL(SUM(base.expuestos)) AS expuestos
+    , ZEROIFNULL(SUM(base.vigentes)) AS vigentes
 
-	,base.Primer_dia_mes AS Fecha_Registro
+FROM expuestos AS base
 
-	,ZEROIFNULL(SUM(base.Expuestos)) AS Expuestos
-	,ZEROIFNULL(SUM(base.Vigentes)) AS Vigentes
-
-FROM EXPUESTOS base
-	LEFT JOIN (SELECT DISTINCT Apertura_Canal_Desc, Apertura_Canal_Cd FROM CANAL_CANAL UNION SELECT DISTINCT Apertura_Canal_Desc, Apertura_Canal_Cd FROM CANAL_SUCURSAL UNION SELECT DISTINCT Apertura_Canal_Desc, Apertura_Canal_Cd FROM CANAL_POLIZA) agrcanal ON (base.Apertura_Canal_Desc = agrcanal.Apertura_Canal_Desc)
-	LEFT JOIN MDB_SEGUROS_COLOMBIA.V_RAMO ramo ON (base.Codigo_Ramo_Op = ramo.Codigo_Ramo_Op)
-
-GROUP BY 1,2,3,4,5
-ORDER BY 1,2,3,4,5
+GROUP BY 1, 2, 3, 4, 5, 6
+ORDER BY 1, 2, 3, 4, 5, 6

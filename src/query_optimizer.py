@@ -25,7 +25,7 @@ def read_query(file: str) -> None:
     ]
 
     queries = (
-        open(f"data/queries/{file}.sql")
+        open(file)
         .read()
         .format(
             mes_primera_ocurrencia=ct.PARAMS_FECHAS[0][1],
@@ -52,10 +52,10 @@ def read_query(file: str) -> None:
                 cur.execute(query)
             else:
                 df = pl.read_database(query, con)
-                df.write_csv(f"data/optimizations/{file}.txt")
+                df.write_csv(file.replace(".sql", ".txt"))
         else:
             cur.executemany(query, segm[add_num].rows())
             add_num += 1
 
 
-read_query("siniestros_autonomia_opt")
+read_query("data/optimizations/primas_autonomia_opt.sql")

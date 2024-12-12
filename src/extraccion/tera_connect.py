@@ -7,6 +7,14 @@ import constantes as ct
 from datetime import date
 
 
+def sini_primas_exp(file: str) -> str:
+    query_name = file.split("/")[-1]
+    for qty in ["siniestros", "primas", "expuestos"]:
+        if qty in query_name:
+            return qty
+    return "otro"
+
+
 def check_adds_segmentacion(segm_sheets: list[str]) -> None:
     for segm_sheet in segm_sheets:
         if (len(segm_sheet.split("_")) < 3) or (
@@ -29,8 +37,11 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
 
 
 def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]) -> None:
+    query_type = sini_primas_exp(file)
     segm_sheets_file = [
-        segm_sheet for segm_sheet in segm_sheets if file[:1] in segm_sheet.split("_")[1]
+        segm_sheet
+        for segm_sheet in segm_sheets
+        if query_type[:1] in segm_sheet.split("_")[1]
     ]
     num_adds = queries.count("?);")
     if num_adds != len(segm_sheets_file):
@@ -121,6 +132,7 @@ def checks_final_info(file: str, df: pl.DataFrame) -> None:
 
 
 def read_query(file: str) -> None:
+
     if ct.NEGOCIO == "autonomia" and "siniestros" in file:
         extra_processing = True
     else:

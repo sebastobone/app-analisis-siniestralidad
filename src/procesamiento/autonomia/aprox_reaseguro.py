@@ -493,8 +493,8 @@ def cuadre_cedido_sap(
     )
 
 
-def main():
+def main() -> pl.LazyFrame:
     df_incurrido = base_incurrido.base_incurrido()
     inc_atip = incurridos_cedidos_atipicos(df_incurrido)
     df_incurrido_reaseguro_aprox = aprox_reaseguro(df_incurrido, inc_atip)
-    return cuadre_cedido_sap(df_incurrido_reaseguro_aprox, inc_atip).collect()
+    return cuadre_cedido_sap(df_incurrido_reaseguro_aprox, inc_atip)

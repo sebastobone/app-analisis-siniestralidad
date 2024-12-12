@@ -1,3 +1,4 @@
+from procesamiento.autonomia import adds
 import procesamiento as pr
 from procesamiento.autonomia import siniestros_gen
 import constantes as ct
@@ -12,9 +13,11 @@ from procesamiento import base_primas_expuestos as bpdn
 
 
 if ct.NEGOCIO == "autonomia":
+    adds.main()
     # read_query("data/queries/autonomia/siniestros_cedidos.sql")
     # read_query("data/queries/autonomia/siniestros_brutos.sql")
-    df = siniestros_gen.main()
+    # df = siniestros_gen.main()
+    # read_query("data/queries/autonomia/primas.sql")
 
 
 # read_query("primas")

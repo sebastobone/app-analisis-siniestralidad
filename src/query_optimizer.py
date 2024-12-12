@@ -10,6 +10,7 @@ NEGOCIO = "autonomia"
 
 
 def read_query(file: str) -> None:
+    tipo_query = tera_connect.sini_primas_exp(file)
     # Tablas de segmentacion
     segm_sheets = [
         str(sheet)
@@ -21,7 +22,7 @@ def read_query(file: str) -> None:
     segm = [
         pl.read_excel(f"data/segmentacion_{NEGOCIO}.xlsx", sheet_name=str(segm_sheet))
         for segm_sheet in segm_sheets
-        if file[:1] in segm_sheet.split("_")[1]
+        if tipo_query[:1] in segm_sheet.split("_")[1]
     ]
 
     queries = (
@@ -34,7 +35,7 @@ def read_query(file: str) -> None:
         )
     )
 
-    tera_connect.check_suficiencia_adds(file, queries, segm_sheets)
+    # tera_connect.check_suficiencia_adds(file, queries, segm_sheets)
 
     credenciales = {
         "host": "teradata.suranet.com",

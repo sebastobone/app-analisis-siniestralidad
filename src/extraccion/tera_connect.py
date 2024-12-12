@@ -132,6 +132,7 @@ def checks_final_info(file: str, df: pl.DataFrame) -> None:
 
 
 def read_query(file: str) -> None:
+    tipo_query = sini_primas_exp(file)
 
     if ct.NEGOCIO == "autonomia" and "siniestros" in file:
         extra_processing = True
@@ -157,7 +158,7 @@ def read_query(file: str) -> None:
             f"data/segmentacion_{ct.NEGOCIO}.xlsx", sheet_name=str(segm_sheet)
         )
         for segm_sheet in segm_sheets
-        if file[:1] in segm_sheet.split("_")[1]
+        if tipo_query[:1] in segm_sheet.split("_")[1]
     ]
 
     queries = open(file).read()

@@ -195,6 +195,10 @@ def read_query(file: str) -> None:
                 df.write_parquet(
                     file.replace("queries", "raw").replace(".sql", ".parquet")
                 )
+                print(f"""
+                      Query {file} completado. Datos almacenados en 
+                      {file.replace("queries", "raw").replace(".sql", ".parquet")}.
+                      """)
         else:
             check_numero_columnas_add(file, query, segm[add_num])
             add = check_duplicados(segm[add_num])

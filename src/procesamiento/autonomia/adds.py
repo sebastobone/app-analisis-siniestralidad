@@ -2,7 +2,6 @@ import polars as pl
 from controles_informacion.controles_informacion import read_sap
 import constantes as ct
 import xlwings as xw
-import pandas as pd
 import os
 
 df = (

@@ -12,6 +12,7 @@ CREATE MULTISET VOLATILE TABLE canal_poliza
     poliza_id, codigo_ramo_op, compania_id
 ) ON COMMIT PRESERVE ROWS;
 INSERT INTO CANAL_POLIZA VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
+COLLECT STATISTICS ON canal_poliza INDEX (poliza_id, codigo_ramo_op, compania_id);  -- noqa:
 
 
 CREATE MULTISET VOLATILE TABLE canal_canal
@@ -28,6 +29,7 @@ CREATE MULTISET VOLATILE TABLE canal_canal
     canal_comercial_id, codigo_ramo_op, compania_id
 ) ON COMMIT PRESERVE ROWS;
 INSERT INTO CANAL_CANAL VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
+COLLECT STATISTICS ON canal_canal INDEX (canal_comercial_id, codigo_ramo_op, compania_id);  -- noqa:
 
 
 CREATE MULTISET VOLATILE TABLE canal_sucursal
@@ -44,6 +46,7 @@ CREATE MULTISET VOLATILE TABLE canal_sucursal
     sucursal_id, codigo_ramo_op, compania_id
 ) ON COMMIT PRESERVE ROWS;
 INSERT INTO CANAL_SUCURSAL VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
+COLLECT STATISTICS ON canal_sucursal INDEX (sucursal_id, codigo_ramo_op, compania_id);  -- noqa:
 
 
 CREATE MULTISET VOLATILE TABLE amparos
@@ -59,6 +62,7 @@ CREATE MULTISET VOLATILE TABLE amparos
     amparo_id, codigo_ramo_op, compania_id, apertura_canal_desc
 ) ON COMMIT PRESERVE ROWS;
 INSERT INTO AMPAROS VALUES (?, ?, ?, ?, ?, ?, ?);  -- noqa:
+COLLECT STATISTICS ON amparos INDEX (amparo_id, codigo_ramo_op, compania_id, apertura_canal_desc);  -- noqa:
 
 
 CREATE MULTISET VOLATILE TABLE fechas AS
@@ -78,10 +82,9 @@ CREATE MULTISET VOLATILE TABLE fechas AS
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 COLLECT STATISTICS ON FECHAS COLUMN (Mes_Id);  -- noqa:
 
-COLLECT STATISTICS ON canal_poliza INDEX (poliza_id, codigo_ramo_op, compania_id);
-COLLECT STATISTICS ON canal_canal INDEX (canal_comercial_id, codigo_ramo_op, compania_id);
-COLLECT STATISTICS ON canal_sucursal INDEX (sucursal_id, codigo_ramo_op, compania_id);
-COLLECT STATISTICS ON amparos INDEX (amparo_id, codigo_ramo_op, compania_id, apertura_canal_desc);
+
+
+
 
 
 

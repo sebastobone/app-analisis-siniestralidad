@@ -43,8 +43,8 @@ TIPO_ANALISIS = PARAMS_FECHAS[2][1]
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 
 
-def cols_tera(file: str) -> list[str]:
-    if file == "siniestros":
+def cols_tera(tipo_query: str) -> list[str]:
+    if tipo_query == "siniestros":
         return [
             "codigo_op",
             "codigo_ramo_op",
@@ -62,7 +62,7 @@ def cols_tera(file: str) -> list[str]:
             "aviso_bruto",
             "aviso_retenido",
         ]
-    elif file == "primas":
+    elif tipo_query == "primas":
         return [
             "codigo_op",
             "codigo_ramo_op",
@@ -75,7 +75,7 @@ def cols_tera(file: str) -> list[str]:
             "prima_retenida",
             "prima_retenida_devengada",
         ]
-    elif file == "expuestos":
+    elif tipo_query == "expuestos":
         return [
             "codigo_op",
             "codigo_ramo_op",

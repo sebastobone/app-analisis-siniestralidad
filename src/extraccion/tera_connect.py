@@ -52,6 +52,7 @@ def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]) -> N
             de este tipo. Por favor, revise las hojas que tiene o revise que el 
             nombre de las hojas siga el formato
             "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
+            Hojas actuales: {segm_sheets_file}
             """
         )
 
@@ -184,8 +185,9 @@ def read_query(file: str) -> None:
                 query = query.format(
                     mes_primera_ocurrencia=ct.MES_PRIMERA_OCURRENCIA,
                     mes_corte=ct.MES_CORTE,
-                    fecha_primera_ocurrencia=f"{ct.MES_PRIMERA_OCURRENCIA // 100}-{ct.MES_PRIMERA_OCURRENCIA % 100}-01",
-                    fecha_mes_corte=f"{ct.MES_CORTE // 100}-{ct.MES_CORTE % 100}-01",
+                    fecha_primera_ocurrencia=ct.INI_DATE,
+                    fecha_mes_corte=ct.END_DATE,
+                    dia_reaseguro=ct.DIA_CARGA_REASEGURO
                 )
             elif "{chunk_ini}" in query:
                 for fecha_chunk in tqdm(fechas_chunks):
@@ -202,8 +204,8 @@ def read_query(file: str) -> None:
                 for column in df.collect_schema().names():
                     df = df.rename({column: column.lower()})
 
-                if not extra_processing and query_negocio:
-                    checks_final_info(file, df)
+                if tipo_query != "otro":
+                    checks_final_info(tipo_query, df)
 
                 df.write_parquet(
                     file.replace("queries", "raw").replace(".sql", ".parquet")

@@ -16,8 +16,8 @@ if ct.NEGOCIO == "autonomia":
     adds.main()
     # read_query("data/queries/autonomia/siniestros_cedidos.sql")
     # read_query("data/queries/autonomia/siniestros_brutos.sql")
-    # df = siniestros_gen.main()
-    # read_query("data/queries/autonomia/primas.sql")
+    # siniestros_gen.main()
+    read_query("data/queries/autonomia/primas.sql")
 
 
 # read_query("primas")

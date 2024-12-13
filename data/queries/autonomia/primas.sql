@@ -9,7 +9,7 @@ CREATE MULTISET VOLATILE TABLE canal_poliza
     , apertura_canal_desc VARCHAR(100) NOT NULL
     , apertura_canal_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (numero_poliza) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_POLIZA VALUES (?,?,?,?,?,?,?,?);  -- noqa:
+INSERT INTO canal_poliza VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
 
 
 
@@ -24,7 +24,7 @@ CREATE MULTISET VOLATILE TABLE canal_canal
     , apertura_canal_desc VARCHAR(100) NOT NULL
     , apertura_canal_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (canal_comercial_id) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_CANAL VALUES (?,?,?,?,?,?,?,?);  -- noqa:
+INSERT INTO canal_canal VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
 
 
 
@@ -39,13 +39,13 @@ CREATE MULTISET VOLATILE TABLE canal_sucursal
     , apertura_canal_desc VARCHAR(100) NOT NULL
     , apertura_canal_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (sucursal_id) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_SUCURSAL VALUES (?,?,?,?,?,?,?,?);  -- noqa:
+INSERT INTO canal_sucursal VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
 
 
 
 CREATE MULTISET VOLATILE TABLE fechas AS
 (
-    SELECT DISTINCT
+    SELECT
         mes_id
         , MIN(dia_dt) AS primer_dia_mes
         , MAX(dia_dt) AS ultimo_dia_mes
@@ -55,22 +55,24 @@ CREATE MULTISET VOLATILE TABLE fechas AS
         mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER) AND CAST(
             '{mes_corte}' AS INTEGER
         )
+    GROUP BY 1
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 
 
 
 CREATE MULTISET VOLATILE TABLE meses_devengue AS
 (
-    SELECT DISTINCT
+    SELECT
         mes_id
-        , MIN(dia_dt) OVER (PARTITION BY mes_id) AS primer_dia_mes
-        , MAX(dia_dt) OVER (PARTITION BY mes_id) AS ultimo_dia_mes
+        , MIN(dia_dt) AS primer_dia_mes
+        , MAX(dia_dt) AS ultimo_dia_mes
         , ultimo_dia_mes - primer_dia_mes + 1 AS num_dias_mes
     FROM mdb_seguros_colombia.v_dia
     WHERE
         mes_id BETWEEN CAST('{mes_corte}' AS INTEGER)
         - 300 AND CAST('{mes_corte}' AS INTEGER)
         + 200
+    GROUP BY 1
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 
 
@@ -87,9 +89,8 @@ CREATE MULTISET VOLATILE TABLE primas_cedidas_rpnd_sap
     , mov_rpnd_cedido FLOAT NOT NULL
     , mov_rpnd_retenido FLOAT NOT NULL
     , prima_cedida FLOAT NOT NULL
-    , prima_devengada_cedida FLOAT NOT NULL
 ) PRIMARY INDEX (codigo_op, codigo_ramo_op, mes_id) ON COMMIT PRESERVE ROWS;
-INSERT INTO PRIMAS_CEDIDAS_RPND_SAP VALUES (?,?,?,?,?,?,?,?,?,?,?,?);  -- noqa:
+INSERT INTO primas_cedidas_rpnd_sap VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
 
 
 
@@ -100,7 +101,7 @@ CREATE MULTISET VOLATILE TABLE gastos_expedicion
     , ano_id INTEGER NOT NULL
     , porcentaje_gastos FLOAT NOT NULL
 ) PRIMARY INDEX (codigo_op, codigo_ramo_op, ano_id) ON COMMIT PRESERVE ROWS;
-INSERT INTO GASTOS_EXPEDICION VALUES (?,?,?,?);  -- noqa:
+INSERT INTO gastos_expedicion VALUES (?, ?, ?, ?);  -- noqa:
 
 
 
@@ -338,9 +339,6 @@ FROM (
         mdb_seguros_colombia.v_sucursal AS sucu
         ON (rtdc.sucursal_id = sucu.sucursal_id)
     LEFT JOIN
-        mdb_seguros_colombia.v_compania AS cia
-        ON (rtdc.compania_origen_id = cia.compania_id)
-    LEFT JOIN
         canal_poliza AS p
         ON
 			rtdc.poliza_id = p.poliza_id
@@ -497,7 +495,7 @@ CREATE MULTISET VOLATILE TABLE base_primas AS
                     COALESCE(rtdc.mes_id, evpro.mes_id)
                     = CAST('{mes_corte}' AS INTEGER)
                     AND CURRENT_DATE
-                    <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '15' DAY
+                    <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '{dia_reaseguro}' DAY
                     THEN evpro.prima_bruta
                 ELSE rtdc.prima_bruta
             END
@@ -508,7 +506,7 @@ CREATE MULTISET VOLATILE TABLE base_primas AS
                     COALESCE(rtdc.mes_id, evpro.mes_id)
                     = CAST('{mes_corte}' AS INTEGER)
                     AND CURRENT_DATE
-                    <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '15' DAY
+                    <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '{dia_reaseguro}' DAY
                     THEN evpro.prima_bruta - ZEROIFNULL(sap.prima_cedida)
                 ELSE rtdc.prima_retenida
             END
@@ -681,8 +679,7 @@ CREATE MULTISET VOLATILE TABLE PERFILES_DEVENGUE AS
 (
 	WITH perfil1 AS (
 		SELECT
-				-- base.*
-			base.mes_id
+			base.*
 			,SUM(Prima_Bruta_Devengable) OVER (PARTITION BY Mes_Id, Codigo_Op, Codigo_Ramo_Aux, Apertura_Canal_Desc, Tipo_Vigencia, Tipo_Produccion) AS Total_Pdn
 			,CAST(CAST(Prima_Bruta_Devengable AS FLOAT) / CASE WHEN Total_Pdn = 0 THEN 1E9 ELSE Total_Pdn END AS DECIMAL(18,6)) AS Peso
 		FROM BASE_PERFILES_DEVENGUE AS base
@@ -929,7 +926,7 @@ CREATE MULTISET VOLATILE TABLE reparticion_difs_rpnd_sap AS
             AND tipo_vigencia <> 'MV'
     )
 
-    , deg AS (
+    , dev AS (
         SELECT
             codigo_op
             , codigo_ramo_op
@@ -1022,7 +1019,7 @@ CREATE MULTISET VOLATILE TABLE primas_final AS
             WHEN
                 base.mes_id = CAST('{mes_corte}' AS INTEGER)
                 AND CURRENT_DATE
-                <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '15' DAY
+                <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '{dia_reaseguro}' DAY
                 THEN
                     base.prima_bruta
                     + ZEROIFNULL(dev.mov_rpnd_bruto)
@@ -1033,7 +1030,7 @@ CREATE MULTISET VOLATILE TABLE primas_final AS
             WHEN
                 base.mes_id = CAST('{mes_corte}' AS INTEGER)
                 AND CURRENT_DATE
-                <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '15' DAY
+                <= LAST_DAY((DATE '{fecha_mes_corte}')) + INTERVAL '{dia_reaseguro}' DAY
                 THEN
                     base.prima_retenida
                     + ZEROIFNULL(dev.mov_rpnd_retenido)
@@ -1069,7 +1066,7 @@ SELECT
     END AS ramo_desc
     , fechas.primer_dia_mes AS fecha_registro
     , COALESCE(base.apertura_canal_desc, '-1') AS apertura_canal_desc
-    , COALESCE(base.apertura_amparo_desc, '-1') AS apertura_amparo_desc
+    , 'NO APLICA' AS apertura_amparo_desc
     , ZEROIFNULL(SUM(base.prima_bruta)) AS prima_bruta
     , ZEROIFNULL(SUM(base.prima_bruta_devengada)) AS prima_bruta_devengada
     , ZEROIFNULL(SUM(base.prima_retenida)) AS prima_retenida

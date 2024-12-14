@@ -11,7 +11,7 @@ SELECT
 FROM mdb_seguros_colombia.v_plan_individual AS pind
 INNER JOIN
     mdb_seguros_colombia.v_producto AS pro
-    ON pind.plan_individual_id = pro.producto_id
+    ON pind.producto_id = pro.producto_id
 INNER JOIN mdb_seguros_colombia.v_ramo AS ramo ON pro.ramo_id = ramo.ramo_id
 INNER JOIN
     mdb_seguros_colombia.v_compania AS cia

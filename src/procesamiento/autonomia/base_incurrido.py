@@ -92,7 +92,7 @@ def base_incurrido() -> pl.LazyFrame:
             )
         )
         .join(
-            utils.lowercase_cols(segm["add_pe_Amparos"].lazy())
+            utils.lowercase_cols(segm["add_e_Amparos"].lazy())
             .with_columns(
                 pl.col("compania_id").cast(pl.Int32), pl.col("amparo_id").cast(pl.Int32)
             )

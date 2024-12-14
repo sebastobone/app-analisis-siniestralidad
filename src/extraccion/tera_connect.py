@@ -187,7 +187,7 @@ def read_query(file: str) -> None:
                     mes_corte=ct.MES_CORTE,
                     fecha_primera_ocurrencia=ct.INI_DATE,
                     fecha_mes_corte=ct.END_DATE,
-                    dia_reaseguro=ct.DIA_CARGA_REASEGURO
+                    dia_reaseguro=ct.DIA_CARGA_REASEGURO,
                 )
             elif "{chunk_ini}" in query:
                 for fecha_chunk in tqdm(fechas_chunks):

@@ -16,9 +16,9 @@ if ct.NEGOCIO == "autonomia":
     adds.main()
     # read_query("data/queries/autonomia/siniestros_cedidos.sql")
     # read_query("data/queries/autonomia/siniestros_brutos.sql")
-    # siniestros_gen.main()
+    siniestros_gen.main()
     # read_query("data/queries/autonomia/primas.sql")
-    read_query("data/queries/autonomia/expuestos.sql")
+    # read_query("data/queries/autonomia/expuestos.sql")
 
 # # Descomentar la siguiente fila si se necesita volver a correr la info, permite sobrescribir los archivos de controles
 # ctrl.set_permissions("data/controles_informacion", "write")

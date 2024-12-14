@@ -12,7 +12,7 @@ def segm() -> dict[str, pl.DataFrame]:
             "add_pe_Canal-Poliza",
             "add_pe_Canal-Canal",
             "add_pe_Canal-Sucursal",
-            "add_pe_Amparos",
+            "add_e_Amparos",
             "Atipicos",
             "Inc_Ced_Atipicos",
             "SAP_Sinis_Ced",

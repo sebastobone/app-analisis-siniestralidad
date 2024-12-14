@@ -134,7 +134,7 @@ def incurridos_cedidos_atipicos(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
             )
         )
         .join(
-            utils.lowercase_cols(segm["add_pe_Amparos"].lazy()).unique(),
+            utils.lowercase_cols(segm["add_e_Amparos"].lazy()).unique(),
             on=["codigo_ramo_op", "codigo_op", "amparo_id", "apertura_canal_desc"],
             how="left",
         )
@@ -410,8 +410,6 @@ def cuadre_cedido_sap(
             + pl.col("aviso_cedido_tipicos")
         )
     )
-
-    df_incurrido.collect()
 
     tera = (
         df_incurrido.filter(

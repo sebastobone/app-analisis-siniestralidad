@@ -191,10 +191,20 @@ def main() -> None:
         .with_columns(
             ramo_desc=pl.when(pl.col("codigo_ramo_op") == "AAV")
             .then(pl.lit("ANEXOS VI"))
-            .otherwise(pl.col("ramo_desc"))
+            .otherwise(pl.col("ramo_desc")),
+            apertura_reservas=pl.concat_str(
+                [
+                    pl.col("codigo_op"),
+                    pl.col("codigo_ramo_op"),
+                    pl.col("apertura_canal_desc"),
+                    pl.col("apertura_amparo_desc"),
+                ],
+                separator="_",
+            ),
         )
         .group_by(
             [
+                "apertura_reservas",
                 "codigo_op",
                 "codigo_ramo_op",
                 "ramo_desc",

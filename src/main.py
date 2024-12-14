@@ -13,7 +13,7 @@ from procesamiento import base_primas_expuestos as bpdn
 
 
 if ct.NEGOCIO == "autonomia":
-    adds.main()
+    # adds.main()
     # read_query("data/queries/autonomia/siniestros_cedidos.sql")
     # read_query("data/queries/autonomia/siniestros_brutos.sql")
     # siniestros_gen.main()

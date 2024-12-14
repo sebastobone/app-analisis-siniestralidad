@@ -125,12 +125,8 @@ def main() -> None:
         [
             pl.col("pago_bruto").sum(),
             pl.col("pago_retenido").sum(),
-            pl.col("pago_retenido_aprox").sum(),
-            pl.col("pago_retenido_aprox_cuadrado").sum(),
             pl.col("aviso_bruto").sum(),
             pl.col("aviso_retenido").sum(),
-            pl.col("aviso_retenido_aprox").sum(),
-            pl.col("aviso_retenido_aprox_cuadrado").sum(),
         ]
     )
 
@@ -208,14 +204,27 @@ def main() -> None:
                 "codigo_op",
                 "codigo_ramo_op",
                 "ramo_desc",
-                "fecha_siniestro",
-                "fecha_registro",
                 "apertura_canal_desc",
                 "apertura_amparo_desc",
                 "atipico",
+                "fecha_siniestro",
+                "fecha_registro",
             ]
         )
         .sum()
+        .sort(
+            [
+                "apertura_reservas",
+                "codigo_op",
+                "codigo_ramo_op",
+                "ramo_desc",
+                "apertura_canal_desc",
+                "apertura_amparo_desc",
+                "atipico",
+                "fecha_siniestro",
+                "fecha_registro",
+            ]
+        )
         .collect()
     )
 

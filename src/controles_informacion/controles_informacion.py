@@ -191,16 +191,12 @@ def valid_contable(
     ).fill_null(0)
 
     for qty in qtys:
-        valid = (
-            valid.with_columns(
-                (pl.col(f"{qty}_SAP") - pl.col(qty)).alias(f"diferencia_{qty}"),
-            )
-            .with_columns(
-                (pl.col(f"diferencia_{qty}") / pl.col(f"{qty}_SAP")).alias(
-                    f"dif%_{qty}"
-                )
-            )
-            .drop(qty)
+        valid = valid.with_columns(
+            (pl.col(f"{qty}_SAP") - pl.col(qty)).alias(f"diferencia_{qty}"),
+        ).with_columns(
+            (pl.col(f"diferencia_{qty}") / pl.col(f"{qty}_SAP"))
+            .alias(f"dif%_{qty}")
+            .fill_nan(0)
         )
 
         valid_mes = (
@@ -216,6 +212,7 @@ def valid_contable(
                     [
                         "codigo_op",
                         "codigo_ramo_op",
+                        qty,
                         f"{qty}_SAP",
                         f"diferencia_{qty}",
                         f"dif%_{qty}",
@@ -247,12 +244,9 @@ def cuadre_contable(df: pl.LazyFrame, file: str, valid: pl.LazyFrame) -> pl.Lazy
             ]
         )
         .with_columns(
-            fecha_registro=(
-                (pl.col("mes_mov") // pl.lit(100)).cast(pl.String)
-                + "-"
-                + (pl.col("mes_mov") % pl.lit(100)).cast(pl.String).str.zfill(2)
-                + "-01"
-            ).cast(pl.Date)
+            fecha_registro=pl.date(
+                pl.col("mes_mov") // pl.lit(100), pl.col("mes_mov") % pl.lit(100), 1
+            )
         )
         .join(agrups, on=["codigo_op", "codigo_ramo_op"])
         .with_columns(
@@ -266,7 +260,8 @@ def cuadre_contable(df: pl.LazyFrame, file: str, valid: pl.LazyFrame) -> pl.Lazy
     )
 
     df_cuadre = (
-        pl.concat([df, dif], how="vertical_relaxed")
+        # pl.concat([df, dif], how="vertical_relaxed")
+        df
         .group_by(
             df.collect_schema().names()[
                 : df.collect_schema().names().index("fecha_registro") + 1
@@ -275,8 +270,14 @@ def cuadre_contable(df: pl.LazyFrame, file: str, valid: pl.LazyFrame) -> pl.Lazy
         .sum()
     )
 
-    df_cuadre.collect().write_csv(f"data/raw/{ct.NEGOCIO}/{file}.csv", separator="\t")
-    df_cuadre.collect().write_parquet(f"data/raw/{ct.NEGOCIO}/{file}.parquet")
+    print(df.collect())
+    print(df_cuadre.collect())
+    print(df.collect_schema().names()[
+                : df.collect_schema().names().index("fecha_registro") + 1
+            ])
+
+    # df_cuadre.collect().write_csv(f"data/raw/{ct.NEGOCIO}/{file}.csv", separator="\t")
+    # df_cuadre.collect().write_parquet(f"data/raw/{ct.NEGOCIO}/{file}.parquet")
 
     return df_cuadre
 
@@ -484,12 +485,11 @@ def generar_controles(file: str) -> None:
         df.collect().write_csv(
             f"data/raw/{ct.NEGOCIO}/{file}_pre_cuadre.csv", separator="\t"
         )
-        df.collect().write_parquet(f"data/raw/{ct.NEGOCIO}/{file}_pre_cuadre.parquet")
         df_cuadrado = cuadre_contable(df, file, valid_pre_cuadre)
-        _ = controles_informacion(
-            df_cuadrado,
-            file,
-            group_cols,
-            qtys,
-            estado_cuadre="post_cuadre_contable",
-        )
+        # _ = controles_informacion(
+        #     df_cuadrado,
+        #     file,
+        #     group_cols,
+        #     qtys,
+        #     estado_cuadre="post_cuadre_contable",
+        # )

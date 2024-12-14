@@ -84,10 +84,6 @@ COLLECT STATISTICS ON FECHAS COLUMN (Mes_Id);  -- noqa:
 
 
 
-
-
-
-
 CREATE MULTISET VOLATILE TABLE base_expuestos
 (
     poliza_certificado_id INTEGER NOT NULL
@@ -105,7 +101,13 @@ CREATE MULTISET VOLATILE TABLE base_expuestos
     , fecha_exclusion_cobertura
     , fecha_cancelacion
 ) ON COMMIT PRESERVE ROWS;
-COLLECT STATISTICS ON BASE_EXPUESTOS COLUMN (Poliza_Certificado_Id, Apertura_Amparo_Desc, Fecha_Inclusion_Cobertura, Fecha_Exclusion_Cobertura, Fecha_Cancelacion);
+COLLECT STATISTICS ON BASE_EXPUESTOS INDEX (
+    poliza_certificado_id
+    , apertura_amparo_desc
+    , fecha_inclusion_cobertura
+    , fecha_exclusion_cobertura
+    , fecha_cancelacion
+);
 
 INSERT INTO BASE_EXPUESTOS
 WITH base AS (

@@ -1,11 +1,11 @@
 Explanation
  This request is eligible for incremental planning and execution (IPE).
  The following is the static plan for the request.
-"  1) First, we lock sura_consultas.POLIZA_CERTIFICADO_DD in TD_MAP1 for"
-"     access, we lock Sura_Consultas.sucursal_dd in TD_MAP1 for access,"
+"  1) First, we lock Sura_Consultas.sucursal_dd in TD_MAP1 for access,"
 "     we lock sura_consultas.ramo_dd in TD_MAP1 for access, we lock"
-"     SURA_CONSULTAS.INSURANCE_COVERAGE_HIST in TD_MAP1 for access, we"
-"     lock SURA_CONSULTAS.a in TD_MAP1 for access, we lock"
+"     sura_consultas.POLIZA_CERTIFICADO_DD in TD_MAP1 for access, we"
+"     lock SURA_CONSULTAS.INSURANCE_COVERAGE_HIST in TD_MAP1 for access,"
+"     we lock SURA_CONSULTAS.a in TD_MAP1 for access, we lock"
 "     sura_consultas.underwriting_class in TD_MAP1 for access, we lock"
 "     SURA_CONSULTAS.PRODUCT_GROUP in TD_MAP1 for access, we lock"
 "     SURA_CONSULTAS.PRODUCT in TD_MAP1 for access, and we lock"
@@ -56,8 +56,8 @@ Explanation
 "          (all_amps) (compressed columns allowed), which is built"
           locally on the AMPs.  Then we do a SORT to order Spool 6 by
           the hash code of (SURA_CONSULTAS.b.Product_Group_Id).  The
-"          size of Spool 6 is estimated with low confidence to be 58,022"
-"          rows (4,003,518 bytes).  The estimated time for this step is"
+"          size of Spool 6 is estimated with low confidence to be 58,055"
+"          rows (4,005,795 bytes).  The estimated time for this step is"
           0.01 seconds.
   4) We do an all-AMPs JOIN step in TD_Map1 from Spool 5 (Last Use) by
 "     way of a RowHash match scan, which is joined to Spool 6 (Last Use)"
@@ -69,8 +69,8 @@ Explanation
 "     SURA_CONSULTAS.a.Product_Start_Dt, SURA_CONSULTAS.a.Product_Name,"
 "     SURA_CONSULTAS.a.Product_Desc, SURA_CONSULTAS.b.Product_Group_Id,"
      SURA_CONSULTAS.a.Product_Id) to all AMPs in TD_Map1.  The size of
-"     Spool 1 is estimated with low confidence to be 57,671 rows ("
-"     11,707,213 bytes).  The estimated time for this step is 0.03"
+"     Spool 1 is estimated with low confidence to be 57,704 rows ("
+"     11,713,912 bytes).  The estimated time for this step is 0.03"
      seconds.
   5) We execute the following steps in parallel.
        1) We do an all-AMPs RETRIEVE step in TD_MAP1 from
@@ -81,7 +81,7 @@ Explanation
 "          desde Fuente', -3, -3) to all AMPs in TD_Map1.  Then we do a"
           SORT to order Spool 1 by the sort key in spool field1
           eliminating duplicate rows.  The size of Spool 1 is estimated
-"          with low confidence to be 43,255 rows (8,780,765 bytes).  The"
+"          with low confidence to be 43,279 rows (8,785,637 bytes).  The"
           estimated time for this step is 0.01 seconds.
        2) We do a single-AMP RETRIEVE step from sura_consultas.ramo_dd
 "          by way of the primary index ""sura_consultas.ramo_dd.Ramo_Id ="
@@ -199,8 +199,8 @@ Explanation
      The result goes into Spool 13 (all_amps) (compressed columns
 "     allowed) fanned out into 10 hash join partitions, which is built"
      locally on the AMPs.  The size of Spool 13 is estimated with low
-"     confidence to be 49,242,495 rows (1,231,062,375 bytes).  The"
-     estimated time for this step is 4.99 seconds.
+"     confidence to be 49,314,602 rows (1,232,865,050 bytes).  The"
+     estimated time for this step is 5.00 seconds.
  21) We do an all-AMPs JOIN step in TD_MAP1 from sura_consultas.a by
 "     way of a RowHash match scan with no residual conditions, which is"
      joined to SURA_CONSULTAS.a by way of a RowHash match scan with a
@@ -216,8 +216,8 @@ Explanation
 "     allowed) fanned out into 10 hash join partitions, which is"
      redistributed by the hash code of (SURA_CONSULTAS.a.Poliza_Id) to
      all AMPs in TD_Map1.  The size of Spool 14 is estimated with low
-"     confidence to be 382,058,542 rows (17,956,751,474 bytes).  The"
-     estimated time for this step is 2 minutes and 29 seconds.
+"     confidence to be 383,890,200 rows (18,042,839,400 bytes).  The"
+     estimated time for this step is 2 minutes and 30 seconds.
  22) We do an all-AMPs JOIN step in TD_Map1 from Spool 11 (Last Use) by
 "     way of an all-rows scan, which is joined to Spool 1 (Last Use) by"
      way of an all-rows scan.  Spool 11 and Spool 1 are joined using a
@@ -225,7 +225,7 @@ Explanation
 "     Product_Group_Id"").  The result goes into Spool 15 (all_amps)"
 "     (compressed columns allowed), which is duplicated on all AMPs in"
      TD_Map1.  The size of Spool 15 is estimated with low confidence to
-"     be 3,053,568 rows (122,142,720 bytes).  The estimated time for"
+"     be 3,055,360 rows (122,214,400 bytes).  The estimated time for"
      this step is 0.04 seconds.
  23) We do an all-AMPs JOIN step in TD_Map1 from Spool 13 (Last Use) by
 "     way of an all-rows scan, which is joined to Spool 14 (Last Use) by"
@@ -234,8 +234,8 @@ Explanation
 "     Account_Id"").  The result goes into Spool 16 (all_amps)"
 "     (compressed columns allowed), which is built locally on the AMPs."
      The size of Spool 16 is estimated with low confidence to be
-"     379,466,243 rows (20,870,643,365 bytes).  The estimated time for"
-     this step is 9.84 seconds.
+"     381,674,289 rows (20,992,085,895 bytes).  The estimated time for"
+     this step is 9.88 seconds.
  24) We do an all-AMPs JOIN step in TD_Map1 from Spool 15 (Last Use) by
 "     way of an all-rows scan, which is joined to Spool 16 (Last Use) by"
      way of an all-rows scan.  Spool 15 and Spool 16 are joined using a
@@ -244,8 +244,8 @@ Explanation
 "     PLAN_INDIVIDUAL_ID)"").  The result goes into Spool 17 (all_amps)"
 "     (compressed columns allowed), which is built locally on the AMPs."
      The size of Spool 17 is estimated with low confidence to be
-"     888,375,535 rows (61,297,911,915 bytes).  The estimated time for"
-     this step is 10.85 seconds.
+"     894,069,213 rows (61,690,775,697 bytes).  The estimated time for"
+     this step is 10.92 seconds.
  25) We do an all-AMPs RETRIEVE step in TD_MAP1 from SEBATOEC.s by way
      of an all-rows scan with no residual conditions into Spool 18
 "     (all_amps) (compressed columns allowed), which is duplicated on"
@@ -265,9 +265,9 @@ Explanation
 "         sucursal_id) AND (Compania_Id = compania_id ))"").  The result"
 "         goes into Spool 19 (all_amps) (compressed columns allowed),"
          which is built locally on the AMPs.  The size of Spool 19 is
-"         estimated with low confidence to be 888,375,536 rows ("
-"         88,837,553,600 bytes).  The estimated time for this step is"
-         25.62 seconds.
+"         estimated with low confidence to be 894,069,214 rows ("
+"         89,406,921,400 bytes).  The estimated time for this step is"
+         25.78 seconds.
       2) We do an all-AMPs RETRIEVE step in TD_MAP1 from SEBATOEC.c by
          way of an all-rows scan with no residual conditions into Spool
 "         20 (all_amps) (compressed columns allowed), which is"
@@ -295,8 +295,8 @@ Explanation
 "         compania_id ))"").  The result goes into Spool 22 (all_amps)"
 "         (compressed columns allowed), which is built locally on the"
          AMPs.  The size of Spool 22 is estimated with low confidence
-"         to be 888,375,537 rows (116,377,195,347 bytes).  The estimated"
-         time for this step is 32.64 seconds.
+"         to be 894,069,214 rows (117,123,067,034 bytes).  The estimated"
+         time for this step is 32.84 seconds.
       2) We do an all-AMPs RETRIEVE step in TD_MAP1 from
          SEBATOEC.amparo by way of an all-rows scan with no residual
          conditions into Spool 23 (all_amps) (compressed columns
@@ -315,8 +315,8 @@ Explanation
 "     ))= codigo_ramo_op) AND (Compania_Id = compania_id ))"").  The"
 "     result goes into Spool 24 (all_amps) (compressed columns allowed),"
      which is built locally on the AMPs.  The size of Spool 24 is
-"     estimated with low confidence to be 888,375,538 rows ("
-"     144,805,212,694 bytes).  The estimated time for this step is 27.05"
+"     estimated with low confidence to be 894,069,215 rows ("
+"     145,733,282,045 bytes).  The estimated time for this step is 27.23"
      seconds.
  29) We do an all-AMPs JOIN step in TD_Map1 from Spool 23 (Last Use) by
 "     way of an all-rows scan, which is joined to Spool 24 (Last Use) by"
@@ -340,8 +340,8 @@ Explanation
 "     = compania_id )))"").  The result goes into Spool 4 (all_amps)"
 "     (compressed columns allowed), which is built locally on the AMPs."
      The size of Spool 4 is estimated with low confidence to be
-"     888,375,539 rows (176,786,732,261 bytes).  The estimated time for"
-     this step is 32.60 seconds.
+"     894,069,216 rows (177,919,773,984 bytes).  The estimated time for"
+     this step is 32.81 seconds.
  30) We do an all-AMPs SUM step in TD_Map1 to aggregate from Spool 4
 "     (Last Use) by way of an all-rows scan, grouping by field1 ("
 "     SURA_CONSULTAS.a.Account_Id ,( CASE WHEN"
@@ -368,16 +368,16 @@ Explanation
      (sura_consultas.a.Fecha_Ultimo_Estado) ELSE (NULL) END)).
 "     Aggregate intermediate results are computed globally, then placed"
      in Spool 30 in TD_Map1.  The aggregate spool file will not be
-     cached in memory.  The size of Spool 30 is estimated with no
-"     confidence to be 666,281,655 rows (323,812,884,330 bytes).  The"
-     estimated time for this step is 13 minutes and 24 seconds.
+     cached in memory.  The size of Spool 30 is estimated with low
+"     confidence to be 670,551,912 rows (325,888,229,232 bytes).  The"
+     estimated time for this step is 7 minutes and 35 seconds.
  31) We do an all-AMPs RETRIEVE step in TD_Map1 from Spool 30 (Last
 "     Use) by way of an all-rows scan into Spool 3 (group_amps), which"
      is built locally on the AMPs.  The size of Spool 3 is estimated
-"     with no confidence to be 666,281,655 rows (161,240,160,510 bytes)."
-     The estimated time for this step is 18.32 seconds.
+"     with low confidence to be 670,551,912 rows (162,273,562,704 bytes)."
+     The estimated time for this step is 18.44 seconds.
 " 32) Finally, we send out an END TRANSACTION step to all AMPs involved"
      in processing the request.
   -> The contents of Spool 3 are sent back to the user as the result of
-     statement 1.  The total estimated time is 18 minutes and 35
+     statement 1.  The total estimated time is 12 minutes and 48
      seconds.

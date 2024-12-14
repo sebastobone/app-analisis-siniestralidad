@@ -59,4 +59,4 @@ def read_query(file: str) -> None:
             add_num += 1
 
 
-read_query("data/optimizations/primas_autonomia_opt.sql")
+read_query("data/optimizations/expuestos_autonomia_opt_2.sql")

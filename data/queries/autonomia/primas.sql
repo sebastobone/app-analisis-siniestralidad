@@ -1064,9 +1064,9 @@ SELECT
         WHEN base.codigo_ramo_op = 'AAV' THEN 'ANEXOS VI'
         ELSE ramo.ramo_desc
     END AS ramo_desc
-    , fechas.primer_dia_mes AS fecha_registro
     , COALESCE(base.apertura_canal_desc, '-1') AS apertura_canal_desc
     , 'NO APLICA' AS apertura_amparo_desc
+    , fechas.primer_dia_mes AS fecha_registro
     , ZEROIFNULL(SUM(base.prima_bruta)) AS prima_bruta
     , ZEROIFNULL(SUM(base.prima_bruta_devengada)) AS prima_bruta_devengada
     , ZEROIFNULL(SUM(base.prima_retenida)) AS prima_retenida

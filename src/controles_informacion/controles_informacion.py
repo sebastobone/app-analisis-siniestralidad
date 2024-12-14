@@ -260,24 +260,22 @@ def cuadre_contable(df: pl.LazyFrame, file: str, valid: pl.LazyFrame) -> pl.Lazy
     )
 
     df_cuadre = (
-        # pl.concat([df, dif], how="vertical_relaxed")
-        df
+        pl.concat([df, dif], how="vertical_relaxed")
         .group_by(
             df.collect_schema().names()[
                 : df.collect_schema().names().index("fecha_registro") + 1
             ]
         )
         .sum()
+        .sort(
+            df.collect_schema().names()[
+                : df.collect_schema().names().index("fecha_registro") + 1
+            ]
+        )
     )
 
-    print(df.collect())
-    print(df_cuadre.collect())
-    print(df.collect_schema().names()[
-                : df.collect_schema().names().index("fecha_registro") + 1
-            ])
-
-    # df_cuadre.collect().write_csv(f"data/raw/{ct.NEGOCIO}/{file}.csv", separator="\t")
-    # df_cuadre.collect().write_parquet(f"data/raw/{ct.NEGOCIO}/{file}.parquet")
+    df_cuadre.collect().write_csv(f"data/raw/{ct.NEGOCIO}/{file}.csv", separator="\t")
+    df_cuadre.collect().write_parquet(f"data/raw/{ct.NEGOCIO}/{file}.parquet")
 
     return df_cuadre
 

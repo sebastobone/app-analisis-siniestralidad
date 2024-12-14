@@ -10,18 +10,15 @@ from datetime import date
 def sini_primas_exp(file: str) -> str:
     query_name = file.split("/")[-1]
     for qty in ["siniestros", "primas", "expuestos"]:
-        if qty in query_name:
+        if qty == query_name.replace(".sql", ""):
             return qty
     return "otro"
 
 
 def check_adds_segmentacion(segm_sheets: list[str]) -> None:
-    for segm_sheet in segm_sheets:
-        if (len(segm_sheet.split("_")) < 3) or (
-            "s" not in segm_sheet.split("_")[1]
-            and "p" not in segm_sheet.split("_")[1]
-            and "e" not in segm_sheet.split("_")[1]
-        ):
+    for sheet in segm_sheets:
+        partes = sheet.split("_")
+        if (len(partes) < 3) or not any(char in partes[1] for char in "spe"):
             raise Exception(
                 """
                 El nombre de las hojas con tablas a cargar debe seguir el
@@ -30,8 +27,8 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
                     siniestros -> s
                     primas -> p
                     expuestos -> e
-                De forma que, por ejemplo, un formato valido seria "add_spe_Canales"
-                o "add_p_Sucursales". Debe corregir el nombre de la hoja.
+                Ejemplo: "add_spe_Canales" o "add_p_Sucursales".
+                Corregir el nombre de la hoja.
                 """
             )
 
@@ -104,16 +101,16 @@ def checks_final_info(file: str, df: pl.DataFrame) -> None:
     """
     for column in ct.cols_tera(file):
         if column not in df.collect_schema().names():
-            raise Exception(f"""¡Falta la columna {column}!""")
+            raise ValueError(f"""¡Falta la columna {column}!""")
 
     if (
         "fecha_siniestro" in df.collect_schema().names()
         and df.get_column("fecha_siniestro").dtype != pl.Date
     ):
-        raise Exception("""La columna fecha_siniestro debe estar en formato fecha.""")
+        raise ValueError("""La columna fecha_siniestro debe estar en formato fecha.""")
 
     if df.get_column("fecha_registro").dtype != pl.Date:
-        raise Exception("""La columna fecha_registro debe estar en formato fecha.""")
+        raise ValueError("""La columna fecha_registro debe estar en formato fecha.""")
 
     df = df.select(
         pl.concat_str(
@@ -140,71 +137,74 @@ def read_query(file: str) -> None:
     else:
         extra_processing = False
 
-    if "siniestros" in file or "primas" in file or "expuestos" in file:
-        query_negocio = True
-    else:
-        query_negocio = False
+    query_negocio = tipo_query != "otro"
 
     # Tablas de segmentacion
+    archivo_segm = f"data/segmentacion_{ct.NEGOCIO}.xlsx"
     segm_sheets = [
         str(sheet)
-        for sheet in pd.ExcelFile(f"data/segmentacion_{ct.NEGOCIO}.xlsx").sheet_names
-        if str(sheet)[:3] == "add"
+        for sheet in pd.ExcelFile(archivo_segm).sheet_names
+        if str(sheet).startswith("add")
     ]
     if len(segm_sheets) > 0:
         check_adds_segmentacion(segm_sheets)
 
     segm = [
-        pl.read_excel(
-            f"data/segmentacion_{ct.NEGOCIO}.xlsx", sheet_name=str(segm_sheet)
-        )
+        pl.read_excel(archivo_segm, sheet_name=str(segm_sheet))
         for segm_sheet in segm_sheets
-        if tipo_query[:1] in segm_sheet.split("_")[1]
+        if tipo_query[0] in segm_sheet.split("_")[1]
     ]
 
     queries = open(file).read()
-
     check_suficiencia_adds(file, queries, segm_sheets)
 
     con = td.connect(json.dumps(ct.CREDENCIALES_TERADATA))
     cur = con.cursor()
 
     # Limites para correr queries pesados por partes
-    chunk_lim_1 = date(
+    chunk_start = date(
         ct.MES_PRIMERA_OCURRENCIA // 100, ct.MES_PRIMERA_OCURRENCIA % 100, 1
     )
-    chunk_lim_2 = date(ct.MES_CORTE // 100, ct.MES_CORTE % 100, 1)
+    chunk_end = date(ct.MES_CORTE // 100, ct.MES_CORTE % 100, 1)
 
-    fechas_chunks = pl.date_range(chunk_lim_1, chunk_lim_2, interval="1mo", eager=True)
-    fechas_chunks = list(zip(fechas_chunks, fechas_chunks.dt.month_end()))
+    fechas_chunks = list(
+        zip(
+            pl.date_range(chunk_start, chunk_end, interval="1mo", eager=True),
+            pl.date_range(
+                chunk_start, chunk_end, interval="1mo", eager=True
+            ).dt.month_end(),
+        )
+    )
 
     add_num = 0
     for n_query, query in enumerate(tqdm(queries.split(sep=";"))):
         if "?" not in query:
-            if "{chunk_ini}" not in query:
-                query = query.format(
-                    mes_primera_ocurrencia=ct.MES_PRIMERA_OCURRENCIA,
-                    mes_corte=ct.MES_CORTE,
-                    fecha_primera_ocurrencia=ct.INI_DATE,
-                    fecha_mes_corte=ct.END_DATE,
-                    dia_reaseguro=ct.DIA_CARGA_REASEGURO,
-                )
-            elif "{chunk_ini}" in query:
-                for fecha_chunk in tqdm(fechas_chunks):
-                    query_chunk = query.format(
-                        chunk_ini=fecha_chunk[0].strftime(format="%Y%m"),
-                        chunk_fin=fecha_chunk[1].strftime(format="%Y%m"),
+            query = query.format(
+                mes_primera_ocurrencia=ct.MES_PRIMERA_OCURRENCIA,
+                mes_corte=ct.MES_CORTE,
+                fecha_primera_ocurrencia=ct.INI_DATE,
+                fecha_mes_corte=ct.END_DATE,
+                dia_reaseguro=ct.DIA_CARGA_REASEGURO,
+            )
+
+            if "{chunk_ini}" in query:
+                for chunk_ini, chunk_fin in tqdm(fechas_chunks):
+                    cur.execute(
+                        query.format(
+                            chunk_ini=chunk_ini.strftime(format="%Y%m"),
+                            chunk_fin=chunk_fin.strftime(format="%Y%m"),
+                        )
                     )
-                    cur.execute(query_chunk)
 
             if n_query != len(queries.split(sep=";")) - 1:
                 cur.execute(query)
             else:
                 df = pl.read_database(query, con)
-                for column in df.collect_schema().names():
-                    df = df.rename({column: column.lower()})
+                df = df.rename(
+                    {column: column.lower() for column in df.collect_schema().names()}
+                )
 
-                if tipo_query != "otro":
+                if query_negocio:
                     checks_final_info(tipo_query, df)
 
                 df.write_parquet(
@@ -216,7 +216,7 @@ def read_query(file: str) -> None:
                       """)
         else:
             check_numero_columnas_add(file, query, segm[add_num])
-            add = check_duplicados(segm[add_num])
+            add = check_duplicados(segm[add_num])   
             check_nulls(add)
             cur.executemany(query, add.rows())
             add_num += 1
@@ -231,6 +231,6 @@ def read_query(file: str) -> None:
                 ]
             )
         )
-        if len(df_faltante) != 0:
+        if not df_faltante.is_empty():
             print(df_faltante)
-            raise Exception("""¡Alerta! Revise las segmentaciones faltantes.""")
+            raise ValueError("""¡Alerta! Revise las segmentaciones faltantes.""")

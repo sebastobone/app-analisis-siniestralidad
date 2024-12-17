@@ -112,24 +112,20 @@ def checks_final_info(file: str, df: pl.DataFrame) -> None:
     if df.get_column("fecha_registro").dtype != pl.Date:
         raise ValueError("""La columna fecha_registro debe estar en formato fecha.""")
 
-    df = df.select(
-        pl.concat_str(
-            [
-                pl.col("codigo_op"),
-                pl.col("codigo_ramo_op"),
-                pl.col("apertura_canal_desc"),
-                pl.col("apertura_amparo_desc"),
-            ],
-            separator="_",
-        ).alias("apertura_reservas"),
-        pl.all(),
-    )
-    df.write_csv(file.replace("queries", "raw").replace(".sql", ".csv"), separator="\t")
 
-    return df
+def col_apertura_reservas() -> pl.Expr:
+    return pl.concat_str(
+        [
+            pl.col("codigo_op"),
+            pl.col("codigo_ramo_op"),
+            pl.col("apertura_canal_desc"),
+            pl.col("apertura_amparo_desc"),
+        ],
+        separator="_",
+    ).alias("apertura_reservas")
 
 
-def read_query(file: str) -> None:
+def read_query(file: str, save_path: str, save_format: str) -> None:
     tipo_query = sini_primas_exp(file)
 
     if ct.NEGOCIO == "autonomia" and "siniestros" in file:
@@ -206,17 +202,24 @@ def read_query(file: str) -> None:
 
                 if query_negocio:
                     checks_final_info(tipo_query, df)
+                    df = df.select(
+                        col_apertura_reservas(),
+                        pl.all(),
+                    )
+                    df.write_csv(f"{save_path}.csv", separator="\t")
 
-                df.write_parquet(
-                    file.replace("queries", "raw").replace(".sql", ".parquet")
-                )
+                if save_format == "parquet":
+                    df.write_parquet(f"{save_path}.parquet")
+                elif save_format == "csv":
+                    df.write_csv(f"{save_path}.csv", separator="\t")
+
                 print(f"""
                       Query {file} completado. Datos almacenados en 
-                      {file.replace("queries", "raw").replace(".sql", ".parquet")}.
+                      {save_path}.{save_format}.
                       """)
         else:
             check_numero_columnas_add(file, query, segm[add_num])
-            add = check_duplicados(segm[add_num])   
+            add = check_duplicados(segm[add_num])
             check_nulls(add)
             cur.executemany(query, add.rows())
             add_num += 1

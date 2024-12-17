@@ -223,10 +223,10 @@ def valid_contable(
     return valid
 
 
-def cuadre_contable(df: pl.LazyFrame, file: str, valid: pl.LazyFrame) -> pl.LazyFrame:
+def cuadre_contable(df: pl.DataFrame, file: str, valid: pl.DataFrame) -> pl.LazyFrame:
     keys = pl.read_excel(
         "data/segmentacion.xlsx", sheet_name=f"Cuadre_Contable_{file.capitalize()}"
-    ).lazy()
+    )
 
     agrups = keys.join(
         df.select(
@@ -274,10 +274,10 @@ def cuadre_contable(df: pl.LazyFrame, file: str, valid: pl.LazyFrame) -> pl.Lazy
         )
     )
 
-    df_cuadre.collect().write_csv(f"data/raw/{ct.NEGOCIO}/{file}.csv", separator="\t")
-    df_cuadre.collect().write_parquet(f"data/raw/{ct.NEGOCIO}/{file}.parquet")
+    df_cuadre.write_csv(f"data/raw/{ct.NEGOCIO}/{file}.csv", separator="\t")
+    df_cuadre.write_parquet(f"data/raw/{ct.NEGOCIO}/{file}.parquet")
 
-    return df_cuadre
+    return df_cuadre.lazy()
 
 
 def integridad_exactitud(
@@ -311,7 +311,7 @@ def controles_informacion(
     group_cols: list[str],
     qtys: list[str],
     estado_cuadre: str,
-) -> pl.LazyFrame:
+) -> pl.DataFrame:
     mes_corte = ct.PARAMS_FECHAS[1][1]
 
     # Consistencia historica Tera
@@ -364,7 +364,7 @@ def controles_informacion(
 
     integridad_exactitud(df, estado_cuadre, file, mes_corte, qtys)
 
-    return valid
+    return valid.collect()
 
 
 def set_permissions(directory, permission="write"):
@@ -483,11 +483,11 @@ def generar_controles(file: str) -> None:
         df.collect().write_csv(
             f"data/raw/{ct.NEGOCIO}/{file}_pre_cuadre.csv", separator="\t"
         )
-        df_cuadrado = cuadre_contable(df, file, valid_pre_cuadre)
-        # _ = controles_informacion(
-        #     df_cuadrado,
-        #     file,
-        #     group_cols,
-        #     qtys,
-        #     estado_cuadre="post_cuadre_contable",
-        # )
+        df_cuadrado = cuadre_contable(df.collect(), file, valid_pre_cuadre)
+        _ = controles_informacion(
+            df_cuadrado,
+            file,
+            group_cols,
+            qtys,
+            estado_cuadre="post_cuadre_contable",
+        )

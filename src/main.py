@@ -9,13 +9,23 @@ from procesamiento import base_primas_expuestos as bpdn
 # import plantilla
 
 read_query("data/queries/catalogos/planes.sql", "data/catalogos/planes", "parquet")
-read_query("data/queries/catalogos/sucursales.sql", "data/catalogos/sucursales", "parquet")
+read_query(
+    "data/queries/catalogos/sucursales.sql", "data/catalogos/sucursales", "parquet"
+)
 
 
 # if ct.NEGOCIO == "autonomia":
 # adds.main()
-read_query("data/queries/autonomia/siniestros_cedidos.sql", "data/raw/siniestros_cedidos.sql")
-read_query("data/queries/autonomia/siniestros_brutos.sql", "data/raw/siniestros_brutos.sql")
+read_query(
+    "data/queries/autonomia/siniestros_cedidos.sql",
+    "data/raw/siniestros_cedidos",
+    "parquet",
+)
+read_query(
+    "data/queries/autonomia/siniestros_brutos.sql",
+    "data/raw/siniestros_brutos",
+    "parquet",
+)
 # siniestros_gen.main()
 # read_query("data/queries/autonomia/primas.sql")
 # read_query("data/queries/autonomia/expuestos.sql")

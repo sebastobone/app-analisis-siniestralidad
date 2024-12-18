@@ -16,21 +16,21 @@ def check_plantilla(plantilla: str) -> None:
         )
 
 
-def modos(modo: str, plantilla: str | None = None) -> None:
+def modos(wb: xw.Book, modo: str, plantilla: str | None = None) -> None:
     if modo == "prep":
-        preparar_plantilla()
+        preparar_plantilla(wb)
     elif modo == "gen":
         if plantilla is None:
             raise Exception("Especifique una plantilla.")
         check_plantilla(plantilla)
-        generar_plantilla(plantilla)
+        generar_plantilla(wb, plantilla)
     elif modo in ("guardar", "traer"):
         if plantilla is None:
             raise Exception("Especifique una plantilla.")
         check_plantilla(plantilla)
-        guardar_traer_fn(modo, plantilla)
+        guardar_traer_fn(wb, modo, plantilla)
     elif modo == "almacenar":
-        almacenar_analisis()
+        almacenar_analisis(wb)
     else:
         raise Exception(
             """
@@ -40,7 +40,7 @@ def modos(modo: str, plantilla: str | None = None) -> None:
         )
 
 
-def preparar_plantilla() -> None:
+def preparar_plantilla(wb: xw.Book) -> None:
     wb.sheets["Modo"]["A4"].value = "Mes corte"
     wb.sheets["Modo"]["B4"].value = ct.MES_CORTE
     wb.sheets["Modo"]["A5"].value = "Mes anterior"
@@ -85,7 +85,7 @@ def preparar_plantilla() -> None:
     wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-def generar_plantilla(plantilla: str) -> None:
+def generar_plantilla(wb: xw.Book, plantilla: str) -> None:
     s = time.time()
 
     plantilla = f"Plantilla_{plantilla.capitalize()}"
@@ -131,7 +131,7 @@ def generar_plantilla(plantilla: str) -> None:
     wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-def guardar_traer_fn(modo: str, plantilla: str) -> None:
+def guardar_traer_fn(wb: xw.Book, modo: str, plantilla: str) -> None:
     s = time.time()
 
     apertura = wb.sheets["Aperturas"]["A2"].value
@@ -190,7 +190,7 @@ def guardar_traer_fn(modo: str, plantilla: str) -> None:
         wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-def almacenar_analisis() -> None:
+def almacenar_analisis(wb: xw.Book) -> None:
     s = time.time()
 
     df_tips = ct.sheet_to_dataframe(wb, "Aux_Totales").with_columns(atipico=0)
@@ -223,8 +223,11 @@ def almacenar_analisis() -> None:
     wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-xw.Book(f"{os.getcwd()}/src/plantilla.xlsm").set_mock_caller()
-wb = xw.Book.caller()
+def abrir_plantilla(plantilla_path: str) -> xw.Book:
+    xw.Book(plantilla_path).set_mock_caller()
+    wb = xw.Book.caller()
 
-wb.macro("eliminar_modulos")
-wb.macro("crear_modulos")
+    wb.macro("eliminar_modulos")
+    wb.macro("crear_modulos")
+
+    return wb

@@ -4,7 +4,6 @@ from metodos_plantilla import tablas_resumen
 from metodos_plantilla import guardar_traer
 import polars as pl
 import constantes as ct
-import os
 import time
 
 
@@ -17,9 +16,9 @@ def check_plantilla(plantilla: str) -> None:
 
 
 def modos(wb: xw.Book, modo: str, plantilla: str | None = None) -> None:
-    if modo == "prep":
+    if modo == "preparar":
         preparar_plantilla(wb)
-    elif modo == "gen":
+    elif modo == "generar":
         if plantilla is None:
             raise Exception("Especifique una plantilla.")
         check_plantilla(plantilla)
@@ -35,7 +34,7 @@ def modos(wb: xw.Book, modo: str, plantilla: str | None = None) -> None:
         raise Exception(
             """
             Modo no encontrado. Opciones disponibles: 
-            prep, gen, guardar, traer, almacenar
+            preparar, generar, guardar, traer, almacenar
             """
         )
 

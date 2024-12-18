@@ -6,7 +6,6 @@ from extraccion.tera_connect import read_query
 from controles_informacion import controles_informacion as ctrl
 from procesamiento import base_siniestros as bsin
 from procesamiento import base_primas_expuestos as bpdn
-# import plantilla
 
 read_query("data/queries/catalogos/planes.sql", "data/catalogos/planes", "parquet")
 read_query(
@@ -52,5 +51,3 @@ bpdn.bases_primas_expuestos(
         "prima_retenida_devengada",
     ],
 )
-
-# # plantilla.modos("prep")

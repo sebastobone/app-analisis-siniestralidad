@@ -7,8 +7,10 @@ import constantes as ct
 import time
 
 
-def check_plantilla(plantilla: str) -> None:
-    if plantilla not in ("frec", "seve", "plata", "entremes"):
+def check_plantilla(plantilla: str | None) -> None:
+    if plantilla is None:
+        raise Exception("Especifique una plantilla.")
+    elif plantilla not in ("frec", "seve", "plata", "entremes"):
         raise Exception(
             """Plantilla no encontrada. Opciones disponibles: 
             frec, seve, plata, entremes"""
@@ -19,17 +21,30 @@ def modos(wb: xw.Book, modo: str, plantilla: str | None = None) -> None:
     if modo == "preparar":
         preparar_plantilla(wb)
     elif modo == "generar":
-        if plantilla is None:
-            raise Exception("Especifique una plantilla.")
         check_plantilla(plantilla)
-        generar_plantilla(wb, plantilla)
+        generar_plantilla(
+            wb,
+            plantilla,
+            wb.sheets["Aperturas"]["A2"].value,
+            wb.sheets["Atributos"]["A2"].value,
+        )
     elif modo in ("guardar", "traer"):
-        if plantilla is None:
-            raise Exception("Especifique una plantilla.")
         check_plantilla(plantilla)
-        guardar_traer_fn(wb, modo, plantilla)
+        guardar_traer_fn(
+            wb,
+            modo,
+            plantilla,
+            wb.sheets["Aperturas"]["A2"].value,
+            wb.sheets["Atributos"]["A2"].value,
+        )
     elif modo == "almacenar":
         almacenar_analisis(wb)
+    elif modo == "guardar_todo":
+        check_plantilla(plantilla)
+        traer_guardar_todo(wb, plantilla)
+    elif modo == "traer_guardar_todo":
+        check_plantilla(plantilla)
+        traer_guardar_todo(wb, plantilla, traer=True)
     else:
         raise Exception(
             """
@@ -84,12 +99,12 @@ def preparar_plantilla(wb: xw.Book) -> None:
     wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-def generar_plantilla(wb: xw.Book, plantilla: str) -> None:
+def generar_plantilla(
+    wb: xw.Book, plantilla: str, apertura: str, atributo: str
+) -> None:
     s = time.time()
 
     plantilla = f"Plantilla_{plantilla.capitalize()}"
-    apertura = wb.sheets["Aperturas"]["A2"].value
-    atributo = wb.sheets["Atributos"]["A2"].value
 
     atributo = atributo if plantilla != "Plantilla_Frec" else "bruto"
     cantidades = (
@@ -130,11 +145,10 @@ def generar_plantilla(wb: xw.Book, plantilla: str) -> None:
     wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-def guardar_traer_fn(wb: xw.Book, modo: str, plantilla: str) -> None:
+def guardar_traer_fn(
+    wb: xw.Book, modo: str, plantilla: str, apertura: str, atributo: str
+) -> None:
     s = time.time()
-
-    apertura = wb.sheets["Aperturas"]["A2"].value
-    atributo = wb.sheets["Atributos"]["A2"].value
 
     plantilla = f"Plantilla_{plantilla.capitalize()}"
     atributo = atributo if plantilla != "Plantilla_Frec" else "bruto"
@@ -216,6 +230,24 @@ def almacenar_analisis(wb: xw.Book) -> None:
     # Por si falla, que no borre los nombres de las columnas
     wb_res.sheets["BD"]["A1"].value = df.collect_schema().names()
     wb_res.sheets["BD"]["A1"].options(index=False).value = df.collect().to_pandas()
+
+    wb.sheets["Modo"]["A2"].value = time.time() - s
+
+
+def traer_guardar_todo(wb: xw.Book, plantilla: str, traer: bool = False):
+    s = time.time()
+
+    aperturas = pl.read_csv("data/processed/aperturas.csv", separator="\t").get_column(
+        "apertura_reservas"
+    )
+    atributos = ["bruto", "retenido"] if plantilla != "Plantilla_Frec" else ["bruto"]
+
+    for apertura in aperturas:
+        for atributo in atributos:
+            generar_plantilla(wb, plantilla, apertura, atributo)
+            if traer:
+                guardar_traer_fn(wb, "traer", plantilla, apertura, atributo)
+            guardar_traer_fn(wb, "guardar", plantilla, apertura, atributo)
 
     wb.sheets["Modo"]["A2"].value = time.time() - s
 

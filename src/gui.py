@@ -36,7 +36,9 @@ boton_preparar.pack(pady=20)
 modo_var = tk.StringVar(value="generar")
 modo_label = tk.Label(root, text="Seleccione accion:")
 modo_label.pack()
-modo_menu = tk.OptionMenu(root, modo_var, "generar", "guardar", "traer")
+modo_menu = tk.OptionMenu(
+    root, modo_var, "generar", "guardar", "traer", "guardar_todo", "traer_guardar_todo"
+)
 modo_menu.pack()
 
 if ct.TIPO_ANALISIS == "Entremes":
@@ -61,6 +63,3 @@ boton_almacenar = tk.Button(
 boton_almacenar.pack(pady=20)
 
 root.mainloop()
-
-
-# # plantilla.modos("prep")

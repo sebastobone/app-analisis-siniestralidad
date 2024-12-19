@@ -92,14 +92,14 @@ def check_nulls(add: pl.DataFrame) -> None:
         )
 
 
-def checks_final_info(file: str, df: pl.DataFrame) -> None:
+def checks_final_info(tipo_query: str, df: pl.DataFrame) -> None:
     """
     Esta funcion se usa cuando se ejecuta un query de siniestros,
     primas, o expuestos que consolida la informacion necesaria para
     pasar a las transformaciones de la plantilla, sin necesidad de
     hacer procesamiento extra.
     """
-    for column in ct.cols_tera(file):
+    for column in ct.min_cols_tera(tipo_query):
         if column not in df.collect_schema().names():
             raise ValueError(f"""¡Falta la columna {column}!""")
 
@@ -158,16 +158,11 @@ def read_query(file: str, save_path: str, save_format: str) -> None:
     cur = con.cursor()
 
     # Limites para correr queries pesados por partes
-    chunk_start = date(
-        ct.MES_PRIMERA_OCURRENCIA // 100, ct.MES_PRIMERA_OCURRENCIA % 100, 1
-    )
-    chunk_end = date(ct.MES_CORTE // 100, ct.MES_CORTE % 100, 1)
-
     fechas_chunks = list(
         zip(
-            pl.date_range(chunk_start, chunk_end, interval="1mo", eager=True),
+            pl.date_range(ct.INI_DATE, ct.END_DATE, interval="1mo", eager=True),
             pl.date_range(
-                chunk_start, chunk_end, interval="1mo", eager=True
+                ct.INI_DATE, ct.END_DATE, interval="1mo", eager=True
             ).dt.month_end(),
         )
     )
@@ -176,8 +171,8 @@ def read_query(file: str, save_path: str, save_format: str) -> None:
     for n_query, query in enumerate(tqdm(queries.split(sep=";"))):
         if "?" not in query:
             query = query.format(
-                mes_primera_ocurrencia=ct.MES_PRIMERA_OCURRENCIA,
-                mes_corte=ct.MES_CORTE,
+                mes_primera_ocurrencia=ct.INI_DATE.strftime("%Y%m"),
+                mes_corte=ct.END_DATE.strftime("%Y%m"),
                 fecha_primera_ocurrencia=ct.INI_DATE,
                 fecha_mes_corte=ct.END_DATE,
                 dia_reaseguro=ct.DIA_CARGA_REASEGURO,

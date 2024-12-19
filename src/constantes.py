@@ -6,6 +6,10 @@ from datetime import date
 
 NEGOCIO = "autonomia"
 
+PARAMS = pl.read_excel(
+    f"data/segmentacion_{NEGOCIO}.xlsx", sheet_name="Parametros", has_header=False
+).to_dict()
+
 CREDENCIALES_TERADATA = {
     "host": "teradata.suranet.com",
     "user": "sebatoec",
@@ -20,38 +24,30 @@ APERT_COLS = [
 ]
 BASE_COLS = ["ramo_desc", "apertura_canal_desc", "apertura_amparo_desc"]
 
-PARAMS_FECHAS = pl.read_excel(
-    f"data/segmentacion_{NEGOCIO}.xlsx", sheet_name="Fechas", has_header=False
-).rows()
+INI_DATE = int(PARAMS["Mes de la primera ocurrencia (AAAAMM)"])
+END_DATE = int(PARAMS["Mes de corte (AAAAMM)"])
 
-INI_DATE = date(int(PARAMS_FECHAS[0][1]) // 100, int(PARAMS_FECHAS[0][1]) % 100, 1)
-END_DATE = date(int(PARAMS_FECHAS[1][1]) // 100, int(PARAMS_FECHAS[1][1]) % 100, 1)
+INI_DATE = date(INI_DATE // 100, INI_DATE % 100, 1)
+END_DATE = date(END_DATE // 100, END_DATE % 100, 1)
 
-INI_DATE_PL = pl.date(
-    int(PARAMS_FECHAS[0][1]) // 100, int(PARAMS_FECHAS[0][1]) % 100, 1
-)
-END_DATE_PL = pl.date(
-    int(PARAMS_FECHAS[1][1]) // 100, int(PARAMS_FECHAS[1][1]) % 100, 1
-)
+DIA_CARGA_REASEGURO = int(PARAMS["Dia subida reaseguro Teradata"])
 
-DIA_CARGA_REASEGURO = int(PARAMS_FECHAS[11][1])
-
-MES_PRIMERA_OCURRENCIA = int(PARAMS_FECHAS[0][1])
-MES_CORTE = int(PARAMS_FECHAS[1][1])
-TIPO_ANALISIS = PARAMS_FECHAS[2][1]
+TIPO_ANALISIS = PARAMS["Tipo analisis"]
 
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 
 
-def cols_tera(tipo_query: str) -> list[str]:
+def min_cols_tera(tipo_query: str) -> list[str]:
+    """
+    Define las columnas minimas que tienen que salir de un query
+    que consolida la informacion de primas, siniestros, o expuestos.
+    """
     if tipo_query == "siniestros":
         return [
             "codigo_op",
             "codigo_ramo_op",
             "ramo_desc",
             "atipico",
-            "apertura_canal_desc",
-            "apertura_amparo_desc",
             "fecha_siniestro",
             "fecha_registro",
             "conteo_pago",
@@ -68,8 +64,6 @@ def cols_tera(tipo_query: str) -> list[str]:
             "codigo_ramo_op",
             "ramo_desc",
             "fecha_registro",
-            "apertura_canal_desc",
-            "apertura_amparo_desc",
             "prima_bruta",
             "prima_bruta_devengada",
             "prima_retenida",
@@ -81,8 +75,6 @@ def cols_tera(tipo_query: str) -> list[str]:
             "codigo_ramo_op",
             "ramo_desc",
             "fecha_registro",
-            "apertura_canal_desc",
-            "apertura_amparo_desc",
             "expuestos",
             "vigentes",
         ]

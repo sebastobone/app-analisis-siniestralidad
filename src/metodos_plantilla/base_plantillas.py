@@ -14,7 +14,9 @@ def base_plantillas(
         .filter(pl.col("apertura_reservas") == apertura)
         .join(
             pl.LazyFrame(
-                periodicidades, schema=["apertura_reservas", "periodicidad_ocurrencia"]
+                periodicidades,
+                schema=["apertura_reservas", "periodicidad_ocurrencia"],
+                orient="row",
             ),
             on=["apertura_reservas", "periodicidad_ocurrencia"],
         )

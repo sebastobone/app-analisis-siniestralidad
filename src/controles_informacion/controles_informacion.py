@@ -409,9 +409,7 @@ def evidencias_parametros():
         raise Exception("Proceso interrumpido, vuelva a ejecutar.")
 
     original_file = f"data/segmentacion_{ct.NEGOCIO}.xlsx"
-    stored_file = (
-        f"data/controles_informacion/{ct.END_DATE.strftime("%Y%m")}_segmentacion_{ct.NEGOCIO}.xlsx"
-    )
+    stored_file = f"data/controles_informacion/{ct.END_DATE.strftime("%Y%m")}_segmentacion_{ct.NEGOCIO}.xlsx"
 
     shutil.copyfile(original_file, stored_file)
 

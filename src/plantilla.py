@@ -40,16 +40,13 @@ def modos(wb: xw.Book, modo: str, plantilla: str | None = None) -> None:
 
 
 def preparar_plantilla(wb: xw.Book) -> None:
-
     mes_corte = int(ct.END_DATE.strftime("%Y%m"))
 
     wb.sheets["Modo"]["A4"].value = "Mes corte"
     wb.sheets["Modo"]["B4"].value = mes_corte
     wb.sheets["Modo"]["A5"].value = "Mes anterior"
     wb.sheets["Modo"]["B5"].value = (
-        mes_corte - 1
-        if mes_corte % 100 != 1
-        else ((mes_corte // 100) - 1) * 100 + 12
+        mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
     )
 
     if ct.TIPO_ANALISIS == "Triangulos":
@@ -152,7 +149,6 @@ def guardar_traer_fn(wb: xw.Book, modo: str, plantilla: str) -> None:
 
     if modo == "guardar":
         guardar_traer.guardar(
-            ct.path_plantilla(wb),
             wb.sheets[plantilla],
             apertura,
             atributo,
@@ -180,7 +176,6 @@ def guardar_traer_fn(wb: xw.Book, modo: str, plantilla: str) -> None:
 
     elif modo == "traer":
         guardar_traer.traer(
-            ct.path_plantilla(wb),
             wb.sheets[plantilla],
             apertura,
             atributo,

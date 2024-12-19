@@ -1,4 +1,4 @@
-import sqlite3
+import polars as pl
 import xlwings as xw
 import constantes as ct
 
@@ -262,7 +262,6 @@ def parameter_ranges(
 
 
 def guardar(
-    path_plantilla: str,
     sheet: xw.Sheet,
     apertura: str,
     atributo: str,
@@ -270,68 +269,16 @@ def guardar(
     num_alturas: int,
     mes_del_periodo: int,
 ) -> None:
-    conn = sqlite3.connect(f"{path_plantilla}/../data/db/formulas.db")
-    cursor = conn.cursor()
-
     for range_name, range_values in parameter_ranges(
         sheet, num_ocurrencias, num_alturas, mes_del_periodo
     ).items():
-        cursor.execute(
-            """
-            DELETE FROM matrices 
-            WHERE apertura = ? 
-            AND atributo = ?
-            AND plantilla = ?
-            AND tipo = ?
-            """,
-            (apertura, atributo, sheet.name, range_name),
+        pl.DataFrame(range_values.formula).transpose().write_csv(
+            f"data/db/{apertura}_{atributo}_{sheet.name}_{range_name}.csv",
+            separator="\t"
         )
-
-        for r, row in enumerate(range_values.formula, start=1):
-            for c, formula in enumerate(row, start=1):
-                cursor.execute(
-                    """INSERT OR REPLACE INTO matrices 
-                    (apertura, atributo, plantilla, tipo, fila, columna, formula) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (apertura, atributo, sheet.name, range_name, r, c, formula),
-                )
-
-    conn.commit()
-    conn.close()
-
-
-def traer_formulas(
-    cursor: sqlite3.Cursor,
-    apertura: str,
-    atributo: str,
-    plantilla: str,
-    tipo: str,
-    range_values: xw.Range,
-):
-    cursor.execute(
-        """
-        SELECT fila, columna, formula 
-        FROM matrices 
-        WHERE apertura = ? 
-        AND atributo = ?
-        AND plantilla = ?
-        AND tipo = ?
-        """,
-        (apertura, atributo, plantilla, tipo),
-    )
-
-    formulas = [
-        ["" for _ in range(range_values.shape[1])] for _ in range(range_values.shape[0])
-    ]
-    for row, col, formula in cursor.fetchall():
-        formulas[row - 1][col - 1] = formula
-
-    return formulas
 
 
 def traer(
-    path_plantilla: str,
     sheet: xw.Sheet,
     apertura: str,
     atributo: str,
@@ -339,14 +286,10 @@ def traer(
     num_alturas: int,
     mes_del_periodo: int,
 ) -> None:
-    conn = sqlite3.connect(f"{path_plantilla}/../data/db/formulas.db")
-    cursor = conn.cursor()
-
     for range_name, range_values in parameter_ranges(
         sheet, num_ocurrencias, num_alturas, mes_del_periodo
     ).items():
-        range_values.formula = traer_formulas(
-            cursor, apertura, atributo, sheet.name, range_name, range_values
-        )
-
-    conn.close()
+        range_values.formula = pl.read_csv(
+            f"data/db/{apertura}_{atributo}_{sheet.name}_{range_name}.csv",
+            separator="\t"
+        ).rows()

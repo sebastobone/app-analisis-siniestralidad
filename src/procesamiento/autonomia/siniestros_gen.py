@@ -1,6 +1,9 @@
 import polars as pl
+from . import base_incurrido
 from . import aprox_reaseguro
 import constantes as ct
+import datetime
+from calendar import monthrange
 
 
 def conteo(
@@ -40,7 +43,15 @@ def conteo(
 
 
 def main() -> None:
-    df_incurrido = aprox_reaseguro.main()
+    df_incurrido = base_incurrido.base_incurrido()
+
+    if datetime.date.today() < datetime.date(
+        ct.END_DATE.year,
+        ct.END_DATE.month,
+        monthrange(ct.END_DATE.year, ct.END_DATE.month)[1],
+    ) + datetime.timedelta(days=ct.DIA_CARGA_REASEGURO):
+        df_incurrido = aprox_reaseguro.main(df_incurrido)
+
     conteo_pago = conteo(
         df_incurrido,
         pl.col("pago_bruto").abs() > 1000,

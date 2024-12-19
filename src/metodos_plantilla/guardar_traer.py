@@ -1,6 +1,7 @@
 import polars as pl
 import xlwings as xw
 import constantes as ct
+from tkinter import messagebox
 
 
 def index(objective: str, range: xw.Range) -> int:
@@ -274,7 +275,7 @@ def guardar(
     ).items():
         pl.DataFrame(range_values.formula).transpose().write_csv(
             f"data/db/{apertura}_{atributo}_{sheet.name}_{range_name}.csv",
-            separator="\t"
+            separator="\t",
         )
 
 
@@ -289,7 +290,17 @@ def traer(
     for range_name, range_values in parameter_ranges(
         sheet, num_ocurrencias, num_alturas, mes_del_periodo
     ).items():
-        range_values.formula = pl.read_csv(
-            f"data/db/{apertura}_{atributo}_{sheet.name}_{range_name}.csv",
-            separator="\t"
-        ).rows()
+        try:
+            range_values.formula = pl.read_csv(
+                f"data/db/{apertura}_{atributo}_{sheet.name}_{range_name}.csv",
+                separator="\t",
+            ).rows()
+        except FileNotFoundError:
+            messagebox.showerror(
+                "Error",
+                f"""
+                No se encontraron formulas para la apertura {apertura}
+                con el atributo {atributo} en la plantilla {sheet.name}.
+                """,
+            )
+            break

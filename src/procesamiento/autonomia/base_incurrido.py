@@ -147,10 +147,18 @@ def base_incurrido() -> pl.LazyFrame:
         )
         .with_columns(
             [
+                (pl.col(f"pago_{attr}") + pl.col(f"aviso_{attr}")).alias(
+                    f"incurrido_{attr}"
+                )
+                for attr in ["bruto", "cedido"]
+            ]
+        )
+        .with_columns(
+            [
                 (pl.col(f"{qty}_bruto") - pl.col(f"{qty}_cedido")).alias(
                     f"{qty}_retenido"
                 )
-                for qty in ["pago", "aviso"]
+                for qty in ["pago", "aviso", "incurrido"]
             ]
         )
     )

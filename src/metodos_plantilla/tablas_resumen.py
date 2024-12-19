@@ -44,8 +44,6 @@ def tablas_resumen(
         )
     )
 
-    print(diagonales.collect())
-
     if tipo_analisis == "Entremes":
         ult_ocurr = (
             pl.scan_parquet(

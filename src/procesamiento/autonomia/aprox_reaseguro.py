@@ -1,16 +1,8 @@
 import polars as pl
 import constantes as ct
 from datetime import date
-from . import base_incurrido
 from . import segmentaciones
 import utils
-
-
-def cond_no_aproximar_reaseguro() -> pl.Expr:
-    return (pl.col("fecha_registro").dt.month_start() != ct.END_DATE) | (
-        date.today()
-        > pl.lit(ct.END_DATE).dt.month_end().dt.offset_by(f"{ct.DIA_CARGA_REASEGURO}d")
-    )
 
 
 def dif_vida_grupo() -> pl.Expr:
@@ -214,19 +206,15 @@ def aprox_reaseguro(df_incurrido: pl.LazyFrame, inc_atip: pl.LazyFrame) -> pl.La
                 for qty in [
                     "pago_bruto",
                     "aviso_bruto",
+                    "incurrido_bruto",
                     "pago_retenido",
                     "aviso_retenido",
+                    "incurrido_retenido",
                 ]
             ]
         )
         .with_columns(
-            incurrido_bruto=pl.col("pago_bruto") + pl.col("aviso_bruto"),
-            incurrido_bruto_acum=pl.col("pago_bruto_acum") + pl.col("aviso_bruto_acum"),
-        )
-        .with_columns(
-            pago_retenido_aprox=pl.when(cond_no_aproximar_reaseguro())
-            .then(pl.col("pago_retenido"))
-            .when(
+            pago_retenido_aprox=pl.when(
                 (pl.col("atipico") == 0)
                 & (pl.col("codigo_ramo_op") == "083")
                 & (pl.col("codigo_op") == "02")
@@ -271,9 +259,7 @@ def aprox_reaseguro(df_incurrido: pl.LazyFrame, inc_atip: pl.LazyFrame) -> pl.La
             .then(pl.col("pago_bruto") - pl.col("pago_cedido_atip").fill_null(0))
         )
         .with_columns(
-            aviso_retenido_aprox=pl.when(cond_no_aproximar_reaseguro())
-            .then(pl.col("aviso_retenido"))
-            .when(
+            aviso_retenido_aprox=pl.when(
                 (pl.col("atipico") == 0)
                 & (pl.col("codigo_ramo_op") == "083")
                 & (pl.col("codigo_op") == "02")
@@ -471,9 +457,7 @@ def cuadre_cedido_sap(
         df_incurrido.join(escala_sap, on=["codigo_op", "codigo_ramo_op"], how="left")
         .with_columns(
             [
-                pl.when(cond_no_aproximar_reaseguro())
-                .then(pl.col(f"{qty}_cedido_aprox"))
-                .when(dif_vida_grupo())
+                pl.when(dif_vida_grupo())
                 .then(pl.col(f"{qty}_cedido_aprox"))
                 .otherwise(
                     pl.col(f"{qty}_cedido_aprox")
@@ -496,8 +480,7 @@ def cuadre_cedido_sap(
     )
 
 
-def main() -> pl.LazyFrame:
-    df_incurrido = base_incurrido.base_incurrido()
+def main(df_incurrido) -> pl.LazyFrame:
     inc_atip = incurridos_cedidos_atipicos(df_incurrido)
     df_incurrido_reaseguro_aprox = aprox_reaseguro(df_incurrido, inc_atip)
     return cuadre_cedido_sap(df_incurrido_reaseguro_aprox, inc_atip)

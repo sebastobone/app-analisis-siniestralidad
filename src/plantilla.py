@@ -40,13 +40,16 @@ def modos(wb: xw.Book, modo: str, plantilla: str | None = None) -> None:
 
 
 def preparar_plantilla(wb: xw.Book) -> None:
+
+    mes_corte = int(ct.END_DATE.strftime("%Y%m"))
+
     wb.sheets["Modo"]["A4"].value = "Mes corte"
-    wb.sheets["Modo"]["B4"].value = ct.MES_CORTE
+    wb.sheets["Modo"]["B4"].value = mes_corte
     wb.sheets["Modo"]["A5"].value = "Mes anterior"
     wb.sheets["Modo"]["B5"].value = (
-        ct.MES_CORTE - 1
-        if ct.MES_CORTE % 100 != 1
-        else ((ct.MES_CORTE // 100) - 1) * 100 + 12
+        mes_corte - 1
+        if mes_corte % 100 != 1
+        else ((mes_corte // 100) - 1) * 100 + 12
     )
 
     if ct.TIPO_ANALISIS == "Triangulos":
@@ -107,8 +110,8 @@ def generar_plantilla(wb: xw.Book, plantilla: str) -> None:
     )
 
     NUM_OCURRENCIAS = df.shape[0]
-    NUM_ALTURAS = df.shape[1] // 2
-    MES_DEL_PERIODO = ct.mes_del_periodo(ct.MES_CORTE, NUM_OCURRENCIAS, NUM_ALTURAS)
+    NUM_ALTURAS = df.shape[1] // len(cantidades)
+    MES_DEL_PERIODO = ct.mes_del_periodo(ct.END_DATE, NUM_OCURRENCIAS, NUM_ALTURAS)
 
     wb.sheets["Modo"]["B6"].value = MES_DEL_PERIODO
 
@@ -143,7 +146,7 @@ def guardar_traer_fn(wb: xw.Book, modo: str, plantilla: str) -> None:
     NUM_ALTURAS = ct.num_alturas(wb.sheets[plantilla])
 
     if plantilla == "Plantilla_Entremes":
-        MES_DEL_PERIODO = ct.mes_del_periodo(ct.MES_CORTE, NUM_OCURRENCIAS, NUM_ALTURAS)
+        MES_DEL_PERIODO = ct.mes_del_periodo(ct.END_DATE, NUM_OCURRENCIAS, NUM_ALTURAS)
     else:
         MES_DEL_PERIODO = 1
 

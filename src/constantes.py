@@ -1,7 +1,7 @@
 import xlwings as xw
 import polars as pl
 import pandas as pd
-from math import ceil, floor
+from math import ceil
 from datetime import date
 
 NEGOCIO = "autonomia"
@@ -111,16 +111,14 @@ def num_alturas(sheet: xw.Sheet) -> int:
     )
 
 
-def mes_del_periodo(mes_corte: int, num_ocurrencias: int, num_alturas: int) -> int:
-    anno = mes_corte // 100
-    mes = mes_corte % 100
+def mes_del_periodo(mes_corte: date, num_ocurrencias: int, num_alturas: int) -> int:
     periodicidad = ceil(num_alturas / num_ocurrencias)
 
-    if mes < periodicidad:
-        mes_periodo = mes
+    if mes_corte.month < periodicidad:
+        mes_periodo = mes_corte.month
     else:
-        mes_periodo = mes_corte - (
-            anno * 100 + floor(mes / periodicidad) * periodicidad
+        mes_periodo = int(mes_corte.strftime("%Y%m")) - (
+            mes_corte.year * 100 + (mes_corte.month // periodicidad) * periodicidad
         )
     return mes_periodo
 

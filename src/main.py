@@ -1,6 +1,6 @@
 from procesamiento.autonomia import adds
 from procesamiento.autonomia import siniestros_gen
-import constantes as ct
+from constantes import NEGOCIO
 from extraccion.tera_connect import read_query
 from controles_informacion import controles_informacion as ctrl
 from procesamiento import base_siniestros as bsin
@@ -11,7 +11,7 @@ read_query(
     "data/queries/catalogos/sucursales.sql", "data/catalogos/sucursales", "parquet"
 )
 
-if ct.NEGOCIO == "autonomia":
+if NEGOCIO == "autonomia":
     adds.main()
     read_query(
         "data/queries/autonomia/siniestros_cedidos.sql",

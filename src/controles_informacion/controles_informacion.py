@@ -105,6 +105,12 @@ def read_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
                 .select(["codigo_op", "codigo_ramo_op", "mes_mov", qty])
             )
 
+            if mes_corte not in df_cont.collect().get_column("mes_mov").unique():
+                raise Exception(
+                    f"""¡Error! No se pudo encontrar el mes {mes_corte}
+                    en la hoja {qty} del AFO de {cia}. Actualizar el AFO."""
+                )
+
             if ct == 0:
                 dfs_cont = df_cont
             else:

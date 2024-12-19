@@ -10,10 +10,10 @@ def cantidades_sap(hojas_afo: list[str]) -> pl.DataFrame:
         read_sap(
             ["Generales", "Vida"],
             hojas_afo,
-            int(END_DATE),
+            int(END_DATE.strftime("%Y%m")),
         )
         .filter(
-            (pl.col("mes_mov") == int(END_DATE))
+            (pl.col("mes_mov") == int(END_DATE.strftime("%Y%m")))
             & (
                 pl.col("codigo_ramo_op").is_in(
                     ["025", "069", "081", "083", "084", "086", "095", "096", "181"]

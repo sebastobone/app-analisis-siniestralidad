@@ -178,7 +178,7 @@ def main() -> None:
             pl.col("fecha_registro").clip(lower_bound=ct.INI_DATE).dt.month_start(),
         )
         .join(
-            pl.scan_parquet("data/raw/catalogos/planes.parquet")
+            pl.scan_parquet("data/catalogos/planes.parquet")
             .select(["codigo_ramo_op", "ramo_desc"])
             .unique(),
             on="codigo_ramo_op",
@@ -228,5 +228,5 @@ def main() -> None:
         .collect()
     )
 
-    consolidado.write_csv("data/raw/autonomia/siniestros.csv", separator="\t")
-    consolidado.write_parquet("data/raw/autonomia/siniestros.parquet")
+    consolidado.write_csv("data/raw/siniestros.csv", separator="\t")
+    consolidado.write_parquet("data/raw/siniestros.parquet")

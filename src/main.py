@@ -24,8 +24,10 @@ if ct.NEGOCIO == "autonomia":
         "parquet",
     )
     siniestros_gen.main()
-    read_query("data/queries/autonomia/primas.sql")
-    read_query("data/queries/autonomia/expuestos.sql")
+    read_query("data/queries/autonomia/primas.sql", "data/raw/primas", "parquet")
+    read_query("data/queries/autonomia/expuestos.sql", "data/raw/expuestos", "parquet")
+
+print("Generando controles de informacion...")
 
 # Descomentar la siguiente fila si se necesita volver a correr la info, permite sobrescribir los archivos de controles
 ctrl.set_permissions("data/controles_informacion", "write")
@@ -36,6 +38,8 @@ ctrl.generar_controles("expuestos")
 
 ctrl.evidencias_parametros()
 ctrl.set_permissions("data/controles_informacion", "read")
+
+print("Creando inputs para la plantilla...")
 
 bsin.aperturas()
 bsin.bases_siniestros()
@@ -49,3 +53,5 @@ bpdn.bases_primas_expuestos(
         "prima_retenida_devengada",
     ],
 )
+
+print("Extraccion y procesamiento de la informacion terminado exitosamente.")

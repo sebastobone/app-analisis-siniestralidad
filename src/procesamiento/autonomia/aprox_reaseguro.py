@@ -93,7 +93,8 @@ def vig_contrato_083() -> pl.LazyFrame:
 def incurridos_cedidos_atipicos(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
     segm = segmentaciones.segm()
     return (
-        utils.lowercase_columns(segm["Inc_Ced_Atipicos"]).lazy()
+        utils.lowercase_columns(segm["Inc_Ced_Atipicos"])
+        .lazy()
         .rename({"ramo": "codigo_ramo_op", "sociedad": "codigo_op"})
         .join(
             utils.lowercase_columns(segm["add_pe_Canal-Poliza"]).lazy().unique(),
@@ -101,7 +102,8 @@ def incurridos_cedidos_atipicos(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
             how="left",
         )
         .join(
-            utils.lowercase_columns(segm["add_pe_Canal-Canal"]).lazy()
+            utils.lowercase_columns(segm["add_pe_Canal-Canal"])
+            .lazy()
             .with_columns(pl.col("canal_comercial_id").cast(pl.String))
             .unique(),
             on=["canal_comercial_id", "codigo_ramo_op", "compania_id"],
@@ -109,7 +111,8 @@ def incurridos_cedidos_atipicos(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
             suffix="_1",
         )
         .join(
-            utils.lowercase_columns(segm["add_pe_Canal-Sucursal"]).lazy()
+            utils.lowercase_columns(segm["add_pe_Canal-Sucursal"])
+            .lazy()
             .with_columns(pl.col("sucursal_id").cast(pl.String))
             .unique(),
             on=["sucursal_id", "codigo_ramo_op", "codigo_op"],
@@ -397,7 +400,8 @@ def cuadre_cedido_sap(
     )
 
     sap = (
-        utils.lowercase_columns(segm["SAP_Sinis_Ced"]).lazy()
+        utils.lowercase_columns(segm["SAP_Sinis_Ced"])
+        .lazy()
         .join(inc_atip, on=["codigo_op", "codigo_ramo_op"], how="left")
         .with_columns(
             pago_cedido_tipicos=pl.col("pago_cedido")
@@ -414,7 +418,7 @@ def cuadre_cedido_sap(
 
     tera = (
         df_incurrido.filter(
-            (pl.col("fecha_registro").dt.month_start() == ct.END_DATE_PL)
+            (pl.col("fecha_registro").dt.month_start() == ct.END_DATE)
             & (pl.col("atipico") == 0)
         )
         .with_columns(dif_vida_grupo=dif_vida_grupo())

@@ -2,6 +2,7 @@ import polars as pl
 from time import sleep
 import os
 import constantes as ct
+from utils import lowercase_columns
 
 
 def group_tera(
@@ -146,9 +147,7 @@ def consistencia_historica(
     meses = set()
     for i, f in enumerate(available_files):
         mes_file = f[-11:-5]
-        df = pl.read_excel(
-            f"data/controles_informacion/{estado_cuadre}/{f}"
-        ).lazy()
+        df = pl.read_excel(f"data/controles_informacion/{estado_cuadre}/{f}").lazy()
         for qty in qtys:
             df = df.rename({qty: f"{qty}_{mes_file}"})
 
@@ -224,15 +223,11 @@ def valid_contable(
 
 
 def cuadre_contable(df: pl.DataFrame, file: str, valid: pl.DataFrame) -> pl.LazyFrame:
-    keys = pl.read_excel(
-        "data/segmentacion.xlsx", sheet_name=f"Cuadre_Contable_{file.capitalize()}"
-    )
-
-    agrups = keys.join(
-        df.select(
-            keys.collect_schema().names() + ["ramo_desc", "apertura_reservas"]
-        ).unique(),
-        on=keys.collect_schema().names(),
+    agrups = lowercase_columns(
+        pl.read_excel(
+            f"data/segmentacion_{ct.NEGOCIO}.xlsx",
+            sheet_name=f"Cuadre_Contable_{file.capitalize()}",
+        )
     )
 
     dif = (
@@ -287,9 +282,6 @@ def integridad_exactitud(
     qty_cols = df.collect_schema().names()[df.collect_schema().names().index(qtys[0]) :]
 
     apr_cols = [col for col in apr_cols if "fecha" not in col]
-
-    print(apr_cols)
-    print(qty_cols)
 
     rep = (
         df.select(apr_cols + qty_cols)
@@ -416,9 +408,9 @@ def evidencias_parametros():
     if not user_yes:
         raise Exception("Proceso interrumpido, vuelva a ejecutar.")
 
-    original_file = "data/segmentacion.xlsx"
+    original_file = f"data/segmentacion_{ct.NEGOCIO}.xlsx"
     stored_file = (
-        f"data/controles_informacion/{ct.END_DATE.strftime("%Y%m")}_segmentacion.xlsx"
+        f"data/controles_informacion/{ct.END_DATE.strftime("%Y%m")}_segmentacion_{ct.NEGOCIO}.xlsx"
     )
 
     shutil.copyfile(original_file, stored_file)
@@ -478,9 +470,7 @@ def generar_controles(file: str) -> None:
     )
 
     if file in ("siniestros", "primas"):
-        df.collect().write_csv(
-            f"data/raw/{file}_pre_cuadre.csv", separator="\t"
-        )
+        df.collect().write_csv(f"data/raw/{file}_pre_cuadre.csv", separator="\t")
         df_cuadrado = cuadre_contable(df.collect(), file, valid_pre_cuadre)
         _ = controles_informacion(
             df_cuadrado,

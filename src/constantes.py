@@ -6,9 +6,11 @@ from datetime import date
 
 NEGOCIO = "autonomia"
 
-PARAMS = pl.read_excel(
-    f"data/segmentacion_{NEGOCIO}.xlsx", sheet_name="Parametros", has_header=False
-).to_dict()
+PARAMS = dict(
+    pl.read_excel(
+        f"data/segmentacion_{NEGOCIO}.xlsx", sheet_name="Parametros", has_header=False
+    ).rows()
+)
 
 CREDENCIALES_TERADATA = {
     "host": "teradata.suranet.com",

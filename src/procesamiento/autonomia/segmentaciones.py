@@ -1,10 +1,6 @@
 import polars as pl
 
 
-def lowercase_cols(df: pl.DataFrame | pl.LazyFrame) -> pl.LazyFrame:
-    return df.rename({col: col.lower() for col in df.collect_schema().names()}).lazy()
-
-
 def segm() -> dict[str, pl.DataFrame]:
     return pl.read_excel(
         "data/segmentacion_autonomia.xlsx",

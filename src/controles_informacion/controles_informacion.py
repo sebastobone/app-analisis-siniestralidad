@@ -135,7 +135,7 @@ def consistencia_historica(
 ) -> pl.DataFrame:
     available_files = [
         f
-        for f in os.listdir(f"data/controles_informacion/{ct.NEGOCIO}/{estado_cuadre}")
+        for f in os.listdir(f"data/controles_informacion/{estado_cuadre}")
         if f"{file}_{fuente}" in f
         and "sap_vs_tera" not in f
         and "ramo" not in f
@@ -147,7 +147,7 @@ def consistencia_historica(
     for i, f in enumerate(available_files):
         mes_file = f[-11:-5]
         df = pl.read_excel(
-            f"data/controles_informacion/{ct.NEGOCIO}/{estado_cuadre}/{f}"
+            f"data/controles_informacion/{estado_cuadre}/{f}"
         ).lazy()
         for qty in qtys:
             df = df.rename({qty: f"{qty}_{mes_file}"})
@@ -171,7 +171,7 @@ def consistencia_historica(
 
     dfs_eager = dfs.sort(group_cols).collect()
     dfs_eager.write_excel(
-        f"data/controles_informacion/{ct.NEGOCIO}/{estado_cuadre}/{file}_{fuente}_consistencia_historica.xlsx",
+        f"data/controles_informacion/{estado_cuadre}/{file}_{fuente}_consistencia_historica.xlsx",
     )
 
     return dfs_eager
@@ -274,8 +274,8 @@ def cuadre_contable(df: pl.DataFrame, file: str, valid: pl.DataFrame) -> pl.Lazy
         )
     )
 
-    df_cuadre.write_csv(f"data/raw/{ct.NEGOCIO}/{file}.csv", separator="\t")
-    df_cuadre.write_parquet(f"data/raw/{ct.NEGOCIO}/{file}.parquet")
+    df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
+    df_cuadre.write_parquet(f"data/raw/{file}.parquet")
 
     return df_cuadre.lazy()
 
@@ -301,7 +301,7 @@ def integridad_exactitud(
     )
 
     rep.write_excel(
-        f"data/controles_informacion/{ct.NEGOCIO}/{estado_cuadre}/{file}_integridad_exactitud_{mes_corte}.xlsx",
+        f"data/controles_informacion/{estado_cuadre}/{file}_integridad_exactitud_{mes_corte}.xlsx",
     )
 
 
@@ -312,11 +312,11 @@ def controles_informacion(
     qtys: list[str],
     estado_cuadre: str,
 ) -> pl.DataFrame:
-    mes_corte = ct.PARAMS_FECHAS[1][1]
+    mes_corte = ct.END_DATE.strftime("%Y%m")
 
     # Consistencia historica Tera
     group_tera(df, file, group_cols, qtys).collect().write_excel(
-        f"data/controles_informacion/{ct.NEGOCIO}/{estado_cuadre}/{file}_tera_{mes_corte}.xlsx",
+        f"data/controles_informacion/{estado_cuadre}/{file}_tera_{mes_corte}.xlsx",
     )
     consistencia_historica(file, group_cols, qtys, estado_cuadre, fuente="tera")
 
@@ -339,7 +339,7 @@ def controles_informacion(
         )
 
         dfs_cont.collect().write_excel(
-            f"data/controles_informacion/{ct.NEGOCIO}/{estado_cuadre}/{file}_sap_{mes_corte}.xlsx",
+            f"data/controles_informacion/{estado_cuadre}/{file}_sap_{mes_corte}.xlsx",
         )
         consistencia_historica(
             file,
@@ -353,13 +353,13 @@ def controles_informacion(
         valid = valid_contable(df_agrup_ramo, dfs_cont, int(mes_corte), qtys)
 
         valid.collect().write_excel(
-            f"data/controles_informacion/{ct.NEGOCIO}/{estado_cuadre}/{file}_sap_vs_tera_{mes_corte}.xlsx",
+            f"data/controles_informacion/{estado_cuadre}/{file}_sap_vs_tera_{mes_corte}.xlsx",
         )
 
     elif file == "expuestos":
         valid = pl.LazyFrame()
         df_agrup_ramo.collect().write_excel(
-            f"data/controles_informacion/{ct.NEGOCIO}/{estado_cuadre}/expuestos_tera_ramo_{mes_corte}.xlsx",
+            f"data/controles_informacion/{estado_cuadre}/expuestos_tera_ramo_{mes_corte}.xlsx",
         )
 
     integridad_exactitud(df, estado_cuadre, file, mes_corte, qtys)
@@ -403,8 +403,6 @@ def evidencias_parametros():
     import tkinter as tk
     from tkinter import messagebox
 
-    mes_corte = ct.PARAMS_FECHAS[1][1]
-
     root = tk.Tk()
     root.attributes("-topmost", True)
 
@@ -420,7 +418,7 @@ def evidencias_parametros():
 
     original_file = "data/segmentacion.xlsx"
     stored_file = (
-        f"data/controles_informacion/{ct.NEGOCIO}/{mes_corte}_segmentacion.xlsx"
+        f"data/controles_informacion/{ct.END_DATE.strftime("%Y%m")}_segmentacion.xlsx"
     )
 
     shutil.copyfile(original_file, stored_file)
@@ -442,7 +440,7 @@ def evidencias_parametros():
         sleep(0.5)
 
     pyautogui.screenshot(
-        f"data/controles_informacion/{ct.NEGOCIO}/{mes_corte}_extraccion.png"
+        f"data/controles_informacion/{ct.END_DATE.strftime("%Y%m")}_extraccion.png"
     )
 
     if os.name == "nt":
@@ -469,7 +467,7 @@ def generar_controles(file: str) -> None:
         qtys = ["expuestos"]
         group_cols = ["apertura_reservas", "mes_mov"]
 
-    df = pl.scan_parquet(f"data/raw/{ct.NEGOCIO}/{file}.parquet")
+    df = pl.scan_parquet(f"data/raw/{file}.parquet")
 
     valid_pre_cuadre = controles_informacion(
         df,
@@ -481,7 +479,7 @@ def generar_controles(file: str) -> None:
 
     if file in ("siniestros", "primas"):
         df.collect().write_csv(
-            f"data/raw/{ct.NEGOCIO}/{file}_pre_cuadre.csv", separator="\t"
+            f"data/raw/{file}_pre_cuadre.csv", separator="\t"
         )
         df_cuadrado = cuadre_contable(df.collect(), file, valid_pre_cuadre)
         _ = controles_informacion(

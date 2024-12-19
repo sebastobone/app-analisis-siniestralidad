@@ -1,6 +1,6 @@
 import polars as pl
 import constantes as ct
-from procesamiento import utils
+import utils
 
 
 def bases_primas_expuestos(qty: str, qty_cols: list[str]) -> None:

@@ -2,13 +2,14 @@ import polars as pl
 import constantes as ct
 from datetime import date
 from . import base_incurrido
-from . import utils
+from . import segmentaciones
+import utils
 
 
 def cond_no_aproximar_reaseguro() -> pl.Expr:
-    return (pl.col("fecha_registro").dt.month_start() != ct.END_DATE_PL) | (
+    return (pl.col("fecha_registro").dt.month_start() != ct.END_DATE) | (
         date.today()
-        > ct.END_DATE_PL.dt.month_end().dt.offset_by(f"{ct.DIA_CARGA_REASEGURO}d")
+        > pl.lit(ct.END_DATE).dt.month_end().dt.offset_by(f"{ct.DIA_CARGA_REASEGURO}d")
     )
 
 
@@ -36,8 +37,8 @@ def pcts_retencion(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
             & (pl.col("atipico") == 0)
             & (
                 pl.col("fecha_registro").is_between(
-                    ct.END_DATE_PL.dt.month_end().dt.offset_by("-13mo"),
-                    ct.END_DATE_PL.dt.month_end().dt.offset_by("-1mo"),
+                    pl.lit(ct.END_DATE).dt.month_end().dt.offset_by("-13mo"),
+                    pl.lit(ct.END_DATE).dt.month_end().dt.offset_by("-1mo"),
                 )
             )
         )
@@ -90,17 +91,17 @@ def vig_contrato_083() -> pl.LazyFrame:
 
 
 def incurridos_cedidos_atipicos(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
-    segm = utils.segm()
+    segm = segmentaciones.segm()
     return (
-        utils.lowercase_cols(segm["Inc_Ced_Atipicos"].lazy())
+        utils.lowercase_columns(segm["Inc_Ced_Atipicos"]).lazy()
         .rename({"ramo": "codigo_ramo_op", "sociedad": "codigo_op"})
         .join(
-            utils.lowercase_cols(segm["add_pe_Canal-Poliza"].lazy()).unique(),
+            utils.lowercase_columns(segm["add_pe_Canal-Poliza"]).lazy().unique(),
             on=["numero_poliza", "codigo_ramo_op", "codigo_op"],
             how="left",
         )
         .join(
-            utils.lowercase_cols(segm["add_pe_Canal-Canal"].lazy())
+            utils.lowercase_columns(segm["add_pe_Canal-Canal"]).lazy()
             .with_columns(pl.col("canal_comercial_id").cast(pl.String))
             .unique(),
             on=["canal_comercial_id", "codigo_ramo_op", "compania_id"],
@@ -108,7 +109,7 @@ def incurridos_cedidos_atipicos(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
             suffix="_1",
         )
         .join(
-            utils.lowercase_cols(segm["add_pe_Canal-Sucursal"].lazy())
+            utils.lowercase_columns(segm["add_pe_Canal-Sucursal"]).lazy()
             .with_columns(pl.col("sucursal_id").cast(pl.String))
             .unique(),
             on=["sucursal_id", "codigo_ramo_op", "codigo_op"],
@@ -134,7 +135,7 @@ def incurridos_cedidos_atipicos(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
             )
         )
         .join(
-            utils.lowercase_cols(segm["add_e_Amparos"].lazy()).unique(),
+            utils.lowercase_columns(segm["add_e_Amparos"]).lazy().unique(),
             on=["codigo_ramo_op", "codigo_op", "amparo_id", "apertura_canal_desc"],
             how="left",
         )
@@ -378,7 +379,7 @@ def aprox_reaseguro(df_incurrido: pl.LazyFrame, inc_atip: pl.LazyFrame) -> pl.La
 def cuadre_cedido_sap(
     df_incurrido: pl.LazyFrame, inc_atip: pl.LazyFrame
 ) -> pl.LazyFrame:
-    segm = utils.segm()
+    segm = segmentaciones.segm()
 
     inc_atip = (
         inc_atip.with_columns(
@@ -396,7 +397,7 @@ def cuadre_cedido_sap(
     )
 
     sap = (
-        utils.lowercase_cols(segm["SAP_Sinis_Ced"].lazy())
+        utils.lowercase_columns(segm["SAP_Sinis_Ced"]).lazy()
         .join(inc_atip, on=["codigo_op", "codigo_ramo_op"], how="left")
         .with_columns(
             pago_cedido_tipicos=pl.col("pago_cedido")

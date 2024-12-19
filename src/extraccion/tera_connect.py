@@ -4,7 +4,7 @@ from tqdm import tqdm
 import json
 import pandas as pd
 import constantes as ct
-from datetime import date
+import utils
 
 
 def sini_primas_exp(file: str) -> str:
@@ -112,6 +112,16 @@ def checks_final_info(tipo_query: str, df: pl.DataFrame) -> None:
     if df.get_column("fecha_registro").dtype != pl.Date:
         raise ValueError("""La columna fecha_registro debe estar en formato fecha.""")
 
+    # Segmentaciones faltantes
+    df_faltante = df.filter(
+        pl.any_horizontal(
+            [(pl.col(col).is_null() | pl.col(col).eq("-1")) for col in ct.APERT_COLS]
+        )
+    )
+    if not df_faltante.is_empty():
+        print(df_faltante)
+        raise ValueError("""¡Alerta! Revise las segmentaciones faltantes.""")
+
 
 def col_apertura_reservas() -> pl.Expr:
     return pl.concat_str(
@@ -127,13 +137,6 @@ def col_apertura_reservas() -> pl.Expr:
 
 def read_query(file: str, save_path: str, save_format: str) -> None:
     tipo_query = sini_primas_exp(file)
-
-    if ct.NEGOCIO == "autonomia" and "siniestros" in file:
-        extra_processing = True
-    else:
-        extra_processing = False
-
-    query_negocio = tipo_query != "otro"
 
     # Tablas de segmentacion
     archivo_segm = f"data/segmentacion_{ct.NEGOCIO}.xlsx"
@@ -191,12 +194,11 @@ def read_query(file: str, save_path: str, save_format: str) -> None:
                 cur.execute(query)
             else:
                 df = pl.read_database(query, con)
-                df = df.rename(
-                    {column: column.lower() for column in df.collect_schema().names()}
-                )
+                df = utils.lowercase_columns(df)
 
-                if query_negocio:
+                if tipo_query != "otro":
                     checks_final_info(tipo_query, df)
+
                     df = df.select(
                         col_apertura_reservas(),
                         pl.all(),
@@ -218,17 +220,3 @@ def read_query(file: str, save_path: str, save_format: str) -> None:
             check_nulls(add)
             cur.executemany(query, add.rows())
             add_num += 1
-
-    if not extra_processing and query_negocio:
-        # Segmentaciones faltantes
-        df_faltante = df.filter(
-            pl.any_horizontal(
-                [
-                    (pl.col(col).is_null() | pl.col(col).eq("-1"))
-                    for col in ct.APERT_COLS
-                ]
-            )
-        )
-        if not df_faltante.is_empty():
-            print(df_faltante)
-            raise ValueError("""¡Alerta! Revise las segmentaciones faltantes.""")

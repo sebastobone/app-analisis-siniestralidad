@@ -1,6 +1,6 @@
 import polars as pl
 from controles_informacion.controles_informacion import read_sap
-import constantes as ct
+from constantes import END_DATE
 import xlwings as xw
 import os
 
@@ -10,10 +10,10 @@ def cantidades_sap(hojas_afo: list[str]) -> pl.DataFrame:
         read_sap(
             ["Generales", "Vida"],
             hojas_afo,
-            int(ct.PARAMS_FECHAS[1][1]),
+            int(END_DATE),
         )
         .filter(
-            (pl.col("mes_mov") == int(ct.PARAMS_FECHAS[1][1]))
+            (pl.col("mes_mov") == int(END_DATE))
             & (
                 pl.col("codigo_ramo_op").is_in(
                     ["025", "069", "081", "083", "084", "086", "095", "096", "181"]
@@ -29,10 +29,10 @@ def crear_hoja_segmentacion(df: pl.DataFrame, nombre_hoja: str) -> None:
     wb = xw.Book.caller()
 
     try:
-        wb.sheets.add(name=nombre_hoja, after="Fechas")
+        wb.sheets.add(name=nombre_hoja, after="Parametros")
     except ValueError:
         wb.sheets[nombre_hoja].delete()
-        wb.sheets.add(name=nombre_hoja, after="Fechas")
+        wb.sheets.add(name=nombre_hoja, after="Parametros")
 
     wb.sheets[nombre_hoja].range("A1:A500").number_format = "@"
     wb.sheets[nombre_hoja].range("B1:B500").number_format = "@"

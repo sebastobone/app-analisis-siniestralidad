@@ -1,9 +1,10 @@
 import polars as pl
-from . import utils
+from . import segmentaciones
+import utils
 
 
 def base_incurrido() -> pl.LazyFrame:
-    segm = utils.segm()
+    segm = segmentaciones.segm()
     return (
         pl.scan_parquet("data/raw/autonomia/siniestros_brutos.parquet")
         .join(
@@ -43,7 +44,7 @@ def base_incurrido() -> pl.LazyFrame:
             pl.scan_parquet("data/raw/catalogos/sucursales.parquet"), on="sucursal_id"
         )
         .join(
-            utils.lowercase_cols(segm["add_pe_Canal-Poliza"].lazy())
+            utils.lowercase_columns(segm["add_pe_Canal-Poliza"]).lazy()
             .with_columns(
                 pl.col("poliza_id").cast(pl.Int64), pl.col("compania_id").cast(pl.Int32)
             )
@@ -52,7 +53,7 @@ def base_incurrido() -> pl.LazyFrame:
             how="left",
         )
         .join(
-            utils.lowercase_cols(segm["add_pe_Canal-Canal"].lazy())
+            utils.lowercase_columns(segm["add_pe_Canal-Canal"]).lazy()
             .with_columns(
                 pl.col("compania_id").cast(pl.Int32),
                 pl.col("canal_comercial_id").cast(pl.Int32),
@@ -63,7 +64,7 @@ def base_incurrido() -> pl.LazyFrame:
             suffix="_1",
         )
         .join(
-            utils.lowercase_cols(segm["add_pe_Canal-Sucursal"].lazy())
+            utils.lowercase_columns(segm["add_pe_Canal-Sucursal"]).lazy()
             .with_columns(
                 pl.col("compania_id").cast(pl.Int32),
                 pl.col("sucursal_id").cast(pl.Int32),
@@ -92,7 +93,7 @@ def base_incurrido() -> pl.LazyFrame:
             )
         )
         .join(
-            utils.lowercase_cols(segm["add_e_Amparos"].lazy())
+            utils.lowercase_columns(segm["add_e_Amparos"]).lazy()
             .with_columns(
                 pl.col("compania_id").cast(pl.Int32), pl.col("amparo_id").cast(pl.Int32)
             )
@@ -102,7 +103,7 @@ def base_incurrido() -> pl.LazyFrame:
         )
         .with_columns(pl.col("apertura_amparo_desc").fill_null(pl.lit("RESTO")))
         .join(
-            utils.lowercase_cols(segm["Atipicos"].lazy())
+            utils.lowercase_columns(segm["Atipicos"]).lazy()
             .with_columns(pl.col("compania_id").cast(pl.Int32))
             .unique(),
             on=[

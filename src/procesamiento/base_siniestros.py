@@ -2,25 +2,25 @@ import polars as pl
 from datetime import date
 from math import floor, ceil
 import constantes as ct
-from procesamiento import utils
+import utils
 
 
 def aperturas() -> None:
     return (
-        pl.scan_parquet(f"data/raw/siniestros.parquet")
+        pl.scan_parquet("data/raw/siniestros.parquet")
         .with_columns(ramo_desc=utils.col_ramo_desc())
         .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
         .select(["apertura_reservas"] + ct.BASE_COLS)
         .unique()
         .sort("apertura_reservas")
         .collect()
-        .write_csv(f"data/processed/aperturas.csv", separator="\t")
+        .write_csv("data/processed/aperturas.csv", separator="\t")
     )
 
 
 def sinis_prep():
     df_sinis = (
-        pl.scan_parquet(f"data/raw/siniestros.parquet")
+        pl.scan_parquet("data/raw/siniestros.parquet")
         .with_columns(ramo_desc=utils.col_ramo_desc())
         .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
     )

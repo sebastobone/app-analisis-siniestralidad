@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+    <title>Plantilla Seguimiento Reservas</title>
+</head>
+<body>
+    <h2>Seleccione su negocio:</h2>
+    <form method="POST">
+        <select name="dropdown_negocio">
+            <option value="arl">ARL</option>
+            <option value="autonomia">Autonomia</option>
+            <option value="empresariales">Empresariales</option>
+            <option value="movilidad">Movilidad</option>
+            <option value="salud">Salud</option>
+            <option value="soat">SOAT</option>
+        </select>
+        <input type="submit" value="Aceptar">
+    </form>
+
+    <h2>Correr queries</h2>
+    <form method="POST" action="/boton_correr_query_siniestros">
+        <button type="submit">Correr query siniestros</button>
+    </form>
+
+    <form method="POST" action="/boton_correr_primas">
+        <button type="submit">Correr query primas</button>
+    </form>
+
+    <form method="POST" action="/boton_correr_expuestos">
+        <button type="submit">Correr query expuestos</button>
+    </form>
+
+    {% if message %}
+        <p><strong>{{ message }}</strong></p>
+    {% endif %}
+</body>
+</html>

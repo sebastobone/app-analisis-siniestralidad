@@ -39,10 +39,12 @@ def crear_hoja_segmentacion(df: pl.DataFrame, nombre_hoja: str) -> None:
     wb.sheets[nombre_hoja]["A1"].options(index=False).value = df.to_pandas()
 
 
-def main() -> None:
+def sap_sinis_ced() -> None:
     df_sinis = cantidades_sap(["pago_cedido", "aviso_cedido"])
     crear_hoja_segmentacion(df_sinis, "SAP_Sinis_Ced")
 
+
+def sap_primas_ced() -> None:
     df_primas = cantidades_sap(
         [
             "prima_bruta",

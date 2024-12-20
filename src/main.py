@@ -59,6 +59,9 @@ def generar_controles() -> None:
     ctrl.set_permissions("data/controles_informacion", "read")
 
 
-def abrir_plantilla(path: str):
+def abrir_plantilla(path: str) -> None:
     return plantilla.abrir_plantilla(path)
 
+
+def preparar_plantilla(wb) -> None:
+    return plantilla.preparar_plantilla(wb)

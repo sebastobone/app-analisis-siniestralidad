@@ -17,8 +17,6 @@ def index():
     if request.method == "POST":
         negocio = request.form.get("dropdown_negocio")
         wb_path = request.form.get("wb_path")
-        print(negocio)
-        print(wb_path)
     return render_template("index.html", negocio=negocio, message=message)
 
 
@@ -57,7 +55,13 @@ def boton_abrir_plantilla():
     global wb
     wb = main.abrir_plantilla(wb_path)
     return redirect(url_for("index"))
-   
+
+
+@app.route("/boton_preparar_plantilla", methods=["POST"])
+def boton_preparar_plantilla():
+    main.preparar_plantilla(wb)
+    return redirect(url_for("index"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

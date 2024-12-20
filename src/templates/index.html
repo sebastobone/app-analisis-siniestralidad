@@ -2,7 +2,16 @@
 <html>
 <head>
     <title>Plantilla Seguimiento Reservas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+<nav>
+    <h1>Plantilla Seguimiento Reservas - SURA Colombia</h1>
+    <ul>
+        <li>
+            <img src="static/logo_sura.png" alt="Logo SURA" width="200" height="74"></img>
+        </li>
+    </ul>
+</nav>
 <body>
     <h2>Seleccione su negocio:</h2>
     <form method="POST">
@@ -50,6 +59,9 @@
     </form>
     <form method="POST" action="/boton_abrir_plantilla">
         <button type="submit">Abrir plantilla</button>
+    </form>
+    <form method="POST" action="/boton_preparar_plantilla">
+        <button type="submit">Preparar plantilla</button>
     </form>
 </body>
 </html>

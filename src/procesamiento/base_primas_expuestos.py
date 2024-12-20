@@ -3,7 +3,7 @@ import constantes as ct
 import utils
 
 
-def bases_primas_expuestos(qty: str, qty_cols: list[str]) -> None:
+def bases_primas_expuestos(qty: str) -> None:
     def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
         return (
             (col.dt.year() * 100 + col.dt.month()).alias("Mensual"),
@@ -11,6 +11,17 @@ def bases_primas_expuestos(qty: str, qty_cols: list[str]) -> None:
             (col.dt.year() * 100 + (col.dt.month() / 6).ceil() * 6).alias("Semestral"),
             col.dt.year().alias("Anual"),
         )
+
+    qty_cols = (
+        [
+            "prima_bruta",
+            "prima_bruta_devengada",
+            "prima_retenida",
+            "prima_retenida_devengada",
+        ]
+        if qty == "primas"
+        else ["expuestos", "vigentes"]
+    )
 
     df_group = (
         pl.scan_parquet(f"data/raw/{qty}.parquet")

@@ -17,21 +17,39 @@
         <input type="submit" value="Aceptar">
     </form>
 
+    {% if negocio %}
+        <p>Negocio seleccionado: <strong>{{ negocio }}</strong></p>
+    {% endif %}
+
     <h2>Correr queries</h2>
     <form method="POST" action="/boton_correr_query_siniestros">
         <button type="submit">Correr query siniestros</button>
     </form>
 
-    <form method="POST" action="/boton_correr_primas">
+    <form method="POST" action="/boton_correr_query_primas">
         <button type="submit">Correr query primas</button>
     </form>
 
-    <form method="POST" action="/boton_correr_expuestos">
+    <form method="POST" action="/boton_correr_query_expuestos">
         <button type="submit">Correr query expuestos</button>
     </form>
 
     {% if message %}
         <p><strong>{{ message }}</strong></p>
     {% endif %}
+
+    <h2>Controles de informacion</h2>
+    <form method="POST" action="/boton_generar_controles">
+        <button type="submit">Generar controles</button>
+    </form>
+
+    <h2>Plantilla</h2>
+    <form method="POST" action="/">
+        <input type="text" name="wb_path" placeholder="Ingrese ruta de la plantilla:" required>
+        <input type="submit" value="Aceptar">
+    </form>
+    <form method="POST" action="/boton_abrir_plantilla">
+        <button type="submit">Abrir plantilla</button>
+    </form>
 </body>
 </html>

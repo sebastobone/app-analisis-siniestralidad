@@ -1,8 +1,8 @@
 import polars as pl
 from datetime import date
 from math import floor, ceil
-import constantes as ct
-import utils
+import src.constantes as ct
+from src import utils
 
 
 def aperturas() -> None:

@@ -1,8 +1,8 @@
 import polars as pl
 from time import sleep
 import os
-import constantes as ct
-from utils import lowercase_columns
+import src.constantes as ct
+from src.utils import lowercase_columns
 
 
 def group_tera(

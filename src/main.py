@@ -1,10 +1,10 @@
-from procesamiento.autonomia import adds
-from procesamiento.autonomia import siniestros_gen
-from extraccion.tera_connect import read_query
-from controles_informacion import controles_informacion as ctrl
-from procesamiento import base_siniestros as bsin
-from procesamiento import base_primas_expuestos as bpdn
-import plantilla
+from src.procesamiento.autonomia import adds
+from src.procesamiento.autonomia import siniestros_gen
+from src.extraccion.tera_connect import read_query
+from src.controles_informacion import controles_informacion as ctrl
+from src.procesamiento import base_siniestros as bsin
+from src.procesamiento import base_primas_expuestos as bpdn
+from src import plantilla
 import xlwings as xw
 
 

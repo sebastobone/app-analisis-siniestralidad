@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12.5"
 dependencies = [
+    "fastapi[standard]>=0.115.6",
     "fastexcel>=0.12.0",
     "flask>=3.1.0",
     "openpyxl>=3.1.5",
@@ -16,6 +17,7 @@ dependencies = [
     "pytest>=8.3.4",
     "teradatasql>=20.0.0.20",
     "tqdm>=4.67.1",
+    "uvicorn>=0.34.0",
     "xlsxwriter>=3.2.0",
     "xlwings>=0.33.3",
 ]

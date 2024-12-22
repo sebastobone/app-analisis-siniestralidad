@@ -1,8 +1,8 @@
 import polars as pl
-import constantes as ct
+import src.constantes as ct
 from datetime import date
 from . import segmentaciones
-import utils
+from src import utils
 
 
 def dif_vida_grupo() -> pl.Expr:

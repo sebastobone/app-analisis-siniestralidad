@@ -1,6 +1,6 @@
 import polars as pl
-import constantes as ct
-import utils
+import src.constantes as ct
+from src import utils
 
 
 def bases_primas_expuestos(qty: str) -> None:

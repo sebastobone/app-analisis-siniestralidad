@@ -3,8 +3,8 @@ import polars as pl
 from tqdm import tqdm
 import json
 import pandas as pd
-import constantes as ct
-import utils
+import src.constantes as ct
+from src import utils
 
 
 def sini_primas_exp(file: str) -> str:

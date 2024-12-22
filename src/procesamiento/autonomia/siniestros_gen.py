@@ -1,7 +1,7 @@
 import polars as pl
 from . import base_incurrido
 from . import aprox_reaseguro
-import constantes as ct
+import src.constantes as ct
 import datetime
 from calendar import monthrange
 

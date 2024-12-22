@@ -1,6 +1,6 @@
 import polars as pl
-from controles_informacion.controles_informacion import read_sap
-from constantes import END_DATE
+from src.controles_informacion.controles_informacion import read_sap
+from src.constantes import END_DATE
 import xlwings as xw
 import os
 

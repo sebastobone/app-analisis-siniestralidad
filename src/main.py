@@ -5,6 +5,7 @@ from controles_informacion import controles_informacion as ctrl
 from procesamiento import base_siniestros as bsin
 from procesamiento import base_primas_expuestos as bpdn
 import plantilla
+import xlwings as xw
 
 
 def correr_query_siniestros(negocio: str) -> None:
@@ -63,5 +64,5 @@ def abrir_plantilla(path: str) -> None:
     return plantilla.abrir_plantilla(path)
 
 
-def preparar_plantilla(wb) -> None:
-    return plantilla.preparar_plantilla(wb)
+def modos_plantilla(wb: xw.Book, modo: str, plant: str | None = None) -> None:
+    return plantilla.modos(wb, modo, plant)

@@ -1,6 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for
 import main
-import os
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
@@ -59,8 +58,69 @@ def boton_abrir_plantilla():
 
 @app.route("/boton_preparar_plantilla", methods=["POST"])
 def boton_preparar_plantilla():
-    main.preparar_plantilla(wb)
+    main.modos_plantilla(wb, "preparar")
     return redirect(url_for("index"))
+
+
+@app.route("/boton_generar_plantilla_frecuencia", methods=["POST"])
+def boton_generar_plantilla_frecuencia():
+    main.modos_plantilla(wb, "generar", "frec")
+    return redirect(url_for("index"))
+
+
+@app.route("/boton_guardar_plantilla_frecuencia", methods=["POST"])
+def boton_guardar_plantilla_frecuencia():
+    main.modos_plantilla(wb, "guardar", "frec")
+    return redirect(url_for("index"))
+
+
+@app.route("/boton_traer_plantilla_frecuencia", methods=["POST"])
+def boton_traer_plantilla_frecuencia():
+    main.modos_plantilla(wb, "traer", "frec")
+    return redirect(url_for("index"))
+
+
+@app.route("/boton_generar_plantilla_severidad", methods=["POST"])
+def boton_generar_plantilla_severidad():
+    main.modos_plantilla(wb, "generar", "seve")
+    return redirect(url_for("index"))
+
+
+@app.route("/boton_guardar_plantilla_severidad", methods=["POST"])
+def boton_guardar_plantilla_severidad():
+    main.modos_plantilla(wb, "guardar", "seve")
+    return redirect(url_for("index"))
+
+
+@app.route("/boton_traer_plantilla_severidad", methods=["POST"])
+def boton_traer_plantilla_severidad():
+    main.modos_plantilla(wb, "traer", "seve")
+    return redirect(url_for("index"))
+
+
+@app.route("/boton_generar_plantilla_plata", methods=["POST"])
+def boton_generar_plantilla_plata():
+    main.modos_plantilla(wb, "generar", "plata")
+    return redirect(url_for("index"))
+
+
+@app.route("/boton_guardar_plantilla_plata", methods=["POST"])
+def boton_guardar_plantilla_plata():
+    main.modos_plantilla(wb, "guardar", "plata")
+    return redirect(url_for("index"))
+
+
+@app.route("/boton_traer_plantilla_plata", methods=["POST"])
+def boton_traer_plantilla_plata():
+    main.modos_plantilla(wb, "traer", "plata")
+    return redirect(url_for("index"))
+
+
+@app.route("/boton_almacenar_analisis", methods=["POST"])
+def boton_almacenar_analisis():
+    main.modos_plantilla(wb, "almacenar")
+    return redirect(url_for("index"))
+
 
 
 if __name__ == "__main__":

@@ -1,127 +1,96 @@
-from flask import Flask, request, render_template, redirect, url_for
-import main
+from fastapi import FastAPI, Form, Request, Depends
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from src import main
+from typing import Annotated
 
-app = Flask(__name__)
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+app = FastAPI()
 
-negocio = None
-message = None
-wb = None
-wb_path = None
-
-
-@app.route("/", methods=["GET", "POST"])
-def index():
-    global negocio, message, wb_path
-    if request.method == "POST":
-        negocio = request.form.get("dropdown_negocio")
-        wb_path = request.form.get("wb_path")
-    return render_template("index.html", negocio=negocio, message=message)
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
+templates = Jinja2Templates(directory="src/templates")
 
 
-@app.route("/boton_correr_query_siniestros", methods=["POST"])
-def boton_correr_siniestros():
-    global message
-    message = "Query de siniestros ejecutado exitosamente."
+@app.get("/", response_class=HTMLResponse)
+async def read_form(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.post("/correr-query-siniestros")
+async def correr_query_siniestros(negocio: Annotated[str, Form()]) -> RedirectResponse:
     main.correr_query_siniestros(negocio)
-    return redirect(url_for("index"))
+    return RedirectResponse(url="/")
 
 
-@app.route("/boton_correr_query_primas", methods=["POST"])
-def boton_correr_query_primas():
-    global message
-    message = "Query de primas ejecutado exitosamente."
+@app.post("/correr-query-primas")
+async def correr_query_primas(negocio: Annotated[str, Form()]) -> RedirectResponse:
     main.correr_query_primas(negocio)
-    return redirect(url_for("index"))
+    return RedirectResponse(url="/")
 
 
-@app.route("/boton_correr_query_expuestos", methods=["POST"])
-def boton_correr_query_expuestos():
-    global message
-    message = "Query de expuestos ejecutado exitosamente."
-    main.correr_query_primas(negocio)
-    return redirect(url_for("index"))
+@app.post("/correr-query-expuestos")
+async def correr_query_expuestos(negocio: Annotated[str, Form()]) -> RedirectResponse:
+    main.correr_query_expuestos(negocio)
+    return RedirectResponse(url="/")
 
 
-@app.route("/boton_generar_controles", methods=["POST"])
-def boton_generar_controles():
+@app.post("/generar-controles")
+async def generar_controles() -> RedirectResponse:
     main.generar_controles()
-    return redirect(url_for("index"))
+    return RedirectResponse(url="/")
 
 
-@app.route("/boton_abrir_plantilla", methods=["POST"])
-def boton_abrir_plantilla():
-    global wb
-    wb = main.abrir_plantilla(wb_path)
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_preparar_plantilla", methods=["POST"])
-def boton_preparar_plantilla():
+@app.post("/preparar-plantilla")
+async def preparar_plantilla(path_wb: Annotated[str, Form()]) -> RedirectResponse:
+    wb = main.abrir_plantilla(path_wb)
     main.modos_plantilla(wb, "preparar")
-    return redirect(url_for("index"))
+    return RedirectResponse(url="/")
 
 
-@app.route("/boton_generar_plantilla_frecuencia", methods=["POST"])
-def boton_generar_plantilla_frecuencia():
-    main.modos_plantilla(wb, "generar", "frec")
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_guardar_plantilla_frecuencia", methods=["POST"])
-def boton_guardar_plantilla_frecuencia():
-    main.modos_plantilla(wb, "guardar", "frec")
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_traer_plantilla_frecuencia", methods=["POST"])
-def boton_traer_plantilla_frecuencia():
-    main.modos_plantilla(wb, "traer", "frec")
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_generar_plantilla_severidad", methods=["POST"])
-def boton_generar_plantilla_severidad():
-    main.modos_plantilla(wb, "generar", "seve")
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_guardar_plantilla_severidad", methods=["POST"])
-def boton_guardar_plantilla_severidad():
-    main.modos_plantilla(wb, "guardar", "seve")
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_traer_plantilla_severidad", methods=["POST"])
-def boton_traer_plantilla_severidad():
-    main.modos_plantilla(wb, "traer", "seve")
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_generar_plantilla_plata", methods=["POST"])
-def boton_generar_plantilla_plata():
-    main.modos_plantilla(wb, "generar", "plata")
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_guardar_plantilla_plata", methods=["POST"])
-def boton_guardar_plantilla_plata():
-    main.modos_plantilla(wb, "guardar", "plata")
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_traer_plantilla_plata", methods=["POST"])
-def boton_traer_plantilla_plata():
-    main.modos_plantilla(wb, "traer", "plata")
-    return redirect(url_for("index"))
-
-
-@app.route("/boton_almacenar_analisis", methods=["POST"])
-def boton_almacenar_analisis():
+@app.post("/almacenar-analisis")
+async def almacenar_analisis(path_wb: Annotated[str, Form()]) -> RedirectResponse:
+    wb = main.abrir_plantilla(path_wb)
     main.modos_plantilla(wb, "almacenar")
-    return redirect(url_for("index"))
+    return RedirectResponse(url="/")
 
 
+@app.post("/generar-plantilla")
+async def generar_plantilla(
+    path_wb: Annotated[str, Form()], plantilla: Annotated[str, Form()]
+) -> RedirectResponse:
+    wb = main.abrir_plantilla(path_wb)
+    main.modos_plantilla(wb, "generar", plantilla)
+    return RedirectResponse(url="/")
 
-if __name__ == "__main__":
-    app.run(debug=True)
+
+@app.post("/guardar-plantilla")
+async def guardar_plantilla(
+    path_wb: Annotated[str, Form()], plantilla: Annotated[str, Form()]
+) -> RedirectResponse:
+    wb = main.abrir_plantilla(path_wb)
+    main.modos_plantilla(wb, "guardar", plantilla)
+    return RedirectResponse(url="/")
+
+
+@app.post("/traer-plantilla")
+async def traer_plantilla(
+    path_wb: Annotated[str, Form()], plantilla: Annotated[str, Form()]
+) -> RedirectResponse:
+    wb = main.abrir_plantilla(path_wb)
+    main.modos_plantilla(wb, "traer", plantilla)
+    return RedirectResponse(url="/")
+
+
+# @app.post("/boton_generar_controles")
+# async def boton_generar_controles():
+#     main.generar_controles()
+#     return RedirectResponse(url="/", status_code=303)
+
+
+# @app.post("/boton_abrir_plantilla")
+# async def boton_abrir_plantilla():
+#     global wb
+#     wb = main.abrir_plantilla(wb_path)
+#     print(wb_path)
+#     print(wb)
+#     return RedirectResponse(url="/", status_code=303)

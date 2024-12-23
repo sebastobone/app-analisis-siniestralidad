@@ -512,7 +512,6 @@ dependencies = [
     { name = "pytest" },
     { name = "teradatasql" },
     { name = "tqdm" },
-    { name = "uvicorn" },
     { name = "xlsxwriter" },
     { name = "xlwings" },
 ]
@@ -531,7 +530,6 @@ requires-dist = [
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "teradatasql", specifier = ">=20.0.0.20" },
     { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "uvicorn", specifier = ">=0.34.0" },
     { name = "xlsxwriter", specifier = ">=3.2.0" },
     { name = "xlwings", specifier = ">=0.33.3" },
 ]

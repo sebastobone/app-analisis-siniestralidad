@@ -60,9 +60,37 @@ def generar_controles() -> None:
     ctrl.set_permissions("data/controles_informacion", "read")
 
 
-def abrir_plantilla(path: str) -> None:
-    return plantilla.abrir_plantilla(path)
+def abrir_plantilla(plantilla_path: str) -> xw.Book:
+    xw.Book(plantilla_path).set_mock_caller()
+    wb = xw.Book.caller()
+
+    wb.macro("eliminar_modulos")
+    wb.macro("crear_modulos")
+
+    return wb
 
 
 def modos_plantilla(wb: xw.Book, modo: str, plant: str | None = None) -> None:
-    return plantilla.modos(wb, modo, plant)
+    if modo == "preparar":
+        plantilla.preparar_plantilla(wb)
+    elif modo == "generar":
+        plantilla.generar_plantilla(
+            wb,
+            str(plant),
+            wb.sheets["Aperturas"]["A2"].value,
+            wb.sheets["Atributos"]["A2"].value,
+        )
+    elif modo in ("guardar", "traer"):
+        plantilla.guardar_traer_fn(
+            wb,
+            modo,
+            str(plant),
+            wb.sheets["Aperturas"]["A2"].value,
+            wb.sheets["Atributos"]["A2"].value,
+        )
+    elif modo == "almacenar":
+        plantilla.almacenar_analisis(wb)
+    elif modo == "guardar_todo":
+        plantilla.traer_guardar_todo(wb, str(plant))
+    elif modo == "traer_guardar_todo":
+        plantilla.traer_guardar_todo(wb, str(plant), traer=True)

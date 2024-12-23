@@ -7,53 +7,6 @@ import src.constantes as ct
 import time
 
 
-def check_plantilla(plantilla: str | None) -> None:
-    if plantilla is None:
-        raise Exception("Especifique una plantilla.")
-    elif plantilla not in ("frec", "seve", "plata", "entremes"):
-        raise Exception(
-            """Plantilla no encontrada. Opciones disponibles: 
-            frec, seve, plata, entremes"""
-        )
-
-
-def modos(wb: xw.Book, modo: str, plantilla: str | None = None) -> None:
-    if modo == "preparar":
-        preparar_plantilla(wb)
-    elif modo == "generar":
-        check_plantilla(plantilla)
-        generar_plantilla(
-            wb,
-            plantilla,
-            wb.sheets["Aperturas"]["A2"].value,
-            wb.sheets["Atributos"]["A2"].value,
-        )
-    elif modo in ("guardar", "traer"):
-        check_plantilla(plantilla)
-        guardar_traer_fn(
-            wb,
-            modo,
-            plantilla,
-            wb.sheets["Aperturas"]["A2"].value,
-            wb.sheets["Atributos"]["A2"].value,
-        )
-    elif modo == "almacenar":
-        almacenar_analisis(wb)
-    elif modo == "guardar_todo":
-        check_plantilla(plantilla)
-        traer_guardar_todo(wb, plantilla)
-    elif modo == "traer_guardar_todo":
-        check_plantilla(plantilla)
-        traer_guardar_todo(wb, plantilla, traer=True)
-    else:
-        raise Exception(
-            """
-            Modo no encontrado. Opciones disponibles: 
-            preparar, generar, guardar, traer, almacenar
-            """
-        )
-
-
 def preparar_plantilla(wb: xw.Book) -> None:
     mes_corte = int(ct.END_DATE.strftime("%Y%m"))
 
@@ -250,13 +203,3 @@ def traer_guardar_todo(wb: xw.Book, plantilla: str, traer: bool = False):
             guardar_traer_fn(wb, "guardar", plantilla, apertura, atributo)
 
     wb.sheets["Modo"]["A2"].value = time.time() - s
-
-
-def abrir_plantilla(plantilla_path: str) -> xw.Book:
-    xw.Book(plantilla_path).set_mock_caller()
-    wb = xw.Book.caller()
-
-    wb.macro("eliminar_modulos")
-    wb.macro("crear_modulos")
-
-    return wb

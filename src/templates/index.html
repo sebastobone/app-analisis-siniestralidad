@@ -1,5 +1,5 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>Plantilla Seguimiento Reservas</title>
     <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
@@ -13,9 +13,10 @@
     </ul>
 </nav>
 <body>
-    <h2>Seleccione su negocio:</h2>
+    <h2>Parametros</h2>
     <form method="POST">
-        <select name="dropdown_negocio">
+        <label for="negocio">Negocio:</label>
+        <select name="negocio">
             <option value="arl">ARL</option>
             <option value="autonomia">Autonomia</option>
             <option value="empresariales">Empresariales</option>
@@ -23,80 +24,52 @@
             <option value="salud">Salud</option>
             <option value="soat">SOAT</option>
         </select>
-        <input type="submit" value="Aceptar">
     </form>
 
-    {% if negocio %}
-        <p>Negocio seleccionado: <strong>{{ negocio }}</strong></p>
-    {% endif %}
-
-    <h2>Correr queries</h2>
-    <form method="POST" action="/boton_correr_query_siniestros">
+    <h2>Extraccion de informacion</h2>
+    <form method="POST" action="/correr-query-siniestros">
         <button type="submit">Correr query siniestros</button>
     </form>
-
-    <form method="POST" action="/boton_correr_query_primas">
+    <form method="POST" action="/correr-query-primas">
         <button type="submit">Correr query primas</button>
     </form>
-
-    <form method="POST" action="/boton_correr_query_expuestos">
+    <form method="POST" action="/correr-query-expuestos">
         <button type="submit">Correr query expuestos</button>
     </form>
 
-    {% if message %}
-        <p><strong>{{ message }}</strong></p>
-    {% endif %}
-
     <h2>Controles de informacion</h2>
-    <form method="POST" action="/boton_generar_controles">
+    <form method="POST" action="/generar-controles">
         <button type="submit">Generar controles</button>
     </form>
 
     <h2>Plantilla</h2>
-    <form method="POST" action="/">
-        <input type="text" name="wb_path" placeholder="Ingrese ruta de la plantilla:" required>
-        <input type="submit" value="Aceptar">
+    <form method="POST">
+        <label for="path_wb">Ruta de la plantilla:</label>
+        <input type="text" id="path_wb" name="path_wb" required>
     </form>
-    <form method="POST" action="/boton_abrir_plantilla">
-        <button type="submit">Abrir plantilla</button>
-    </form>
-    <form method="POST" action="/boton_preparar_plantilla">
+    <form method="POST" action="/preparar-plantilla">
         <button type="submit">Preparar plantilla</button>
     </form>
-    <form method="POST" action="/boton_almacenar_analisis">
+    <form method="POST" action="/almacenar-analisis">
         <button type="submit">Almacenar analisis</button>
     </form>
 
-    <h3>Plantilla Frecuencia</h3>
-    <form method="POST" action="/boton_generar_plantilla_frecuencia">
+    <form method="POST">
+        <label for="plantilla">Seleccione plantilla:</label>
+        <select name="plantilla">
+            <option value="frec">Frecuencia</option>
+            <option value="seve">Severidad</option>
+            <option value="plata">Plata</option>
+            <option value="entremes">Entremes</option>
+        </select>
+    </form>
+    <form method="POST" action="/generar_plantilla">
         <button type="submit">Generar</button>
     </form>
-    <form method="POST" action="/boton_guardar_plantilla_frecuencia">
+    <form method="POST" action="/guardar_plantilla">
         <button type="submit">Guardar</button>
     </form>
-    <form method="POST" action="/boton_traer_plantilla_frecuencia">
-        <button type="submit">Traer</button>
-    </form>
-
-    <h3>Plantilla Severidad</h3>
-    <form method="POST" action="/boton_generar_plantilla_severidad">
-        <button type="submit">Generar</button>
-    </form>
-    <form method="POST" action="/boton_guardar_plantilla_severidad">
-        <button type="submit">Guardar</button>
-    </form>
-    <form method="POST" action="/boton_traer_plantilla_severidad">
-        <button type="submit">Traer</button>
-    </form>
-
-    <h3>Plantilla Plata</h3>
-    <form method="POST" action="/boton_generar_plantilla_plata">
-        <button type="submit">Generar</button>
-    </form>
-    <form method="POST" action="/boton_guardar_plantilla_plata">
-        <button type="submit">Guardar</button>
-    </form>
-    <form method="POST" action="/boton_traer_plantilla_plata">
+    <form method="POST" action="/traer_plantilla">
         <button type="submit">Traer</button>
     </form>
 </body>

@@ -5,6 +5,8 @@ from src.controles_informacion import controles_informacion as ctrl
 from src.procesamiento import base_siniestros as bsin
 from src.procesamiento import base_primas_expuestos as bpdn
 import xlwings as xw
+import os
+import shutil
 
 
 def correr_query_siniestros(
@@ -72,7 +74,6 @@ def correr_query_primas(
     negocio: str,
     mes_inicio: int,
     mes_corte: int,
-    tipo_analisis: str,
     aproximar_reaseguro: bool,
 ) -> None:
     if negocio == "autonomia":
@@ -93,8 +94,6 @@ def correr_query_expuestos(
     negocio: str,
     mes_inicio: int,
     mes_corte: int,
-    tipo_analisis: str,
-    aproximar_reaseguro: bool,
 ) -> None:
     read_query(
         f"data/queries/{negocio}/expuestos.sql",
@@ -103,7 +102,6 @@ def correr_query_expuestos(
         negocio,
         mes_inicio,
         mes_corte,
-        aproximar_reaseguro,
     )
     bpdn.bases_primas_expuestos("expuestos")
 
@@ -120,6 +118,9 @@ def generar_controles(negocio: str, mes_corte: int) -> None:
 
 
 def abrir_plantilla(plantilla_path: str) -> xw.Book:
+    if not os.path.exists(plantilla_path):
+        shutil.copyfile("src/plantilla.xlsm", plantilla_path)
+
     xw.Book(plantilla_path).set_mock_caller()
     wb = xw.Book.caller()
 

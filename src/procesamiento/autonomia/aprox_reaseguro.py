@@ -1,5 +1,4 @@
 import polars as pl
-import src.constantes as ct
 from datetime import date
 from . import segmentaciones
 from src import utils
@@ -22,15 +21,19 @@ def dif_vida_grupo() -> pl.Expr:
     )
 
 
-def pcts_retencion(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
+def pcts_retencion(df_incurrido: pl.LazyFrame, mes_corte: int) -> pl.LazyFrame:
     return (
         df_incurrido.filter(
             ~((pl.col("codigo_ramo_op") == "083") & (pl.col("codigo_op") == "02"))
             & (pl.col("atipico") == 0)
             & (
                 pl.col("fecha_registro").is_between(
-                    pl.lit(ct.END_DATE).dt.month_end().dt.offset_by("-13mo"),
-                    pl.lit(ct.END_DATE).dt.month_end().dt.offset_by("-1mo"),
+                    pl.lit(utils.yyyymm_to_date(mes_corte))
+                    .dt.month_end()
+                    .dt.offset_by("-13mo"),
+                    pl.lit(utils.yyyymm_to_date(mes_corte))
+                    .dt.month_end()
+                    .dt.offset_by("-1mo"),
                 )
             )
         )
@@ -61,11 +64,14 @@ def pcts_retencion(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
     )
 
 
-def vig_contrato_083() -> pl.LazyFrame:
+def vig_contrato_083(mes_corte) -> pl.LazyFrame:
     return (
         pl.DataFrame(
             pl.date_range(
-                pl.date(1990, 1, 1), ct.END_DATE, interval="1y", eager=True
+                pl.date(1990, 1, 1),
+                utils.yyyymm_to_date(mes_corte),
+                interval="1y",
+                eager=True,
             ).alias("primer_dia_ano")
         )
         .lazy()
@@ -158,16 +164,18 @@ def incurridos_cedidos_atipicos(df_incurrido: pl.LazyFrame) -> pl.LazyFrame:
     )
 
 
-def aprox_reaseguro(df_incurrido: pl.LazyFrame, inc_atip: pl.LazyFrame) -> pl.LazyFrame:
+def aprox_reaseguro(
+    df_incurrido: pl.LazyFrame, inc_atip: pl.LazyFrame, mes_corte: int
+) -> pl.LazyFrame:
     df = (
         df_incurrido.join_where(
-            vig_contrato_083(),
+            vig_contrato_083(mes_corte),
             pl.col("fecha_siniestro").is_between(
                 pl.col("inicio_vigencia_contrato"), pl.col("fin_vigencia_contrato")
             ),
         )
         .join(
-            pcts_retencion(df_incurrido),
+            pcts_retencion(df_incurrido, mes_corte),
             on=[
                 "codigo_op",
                 "codigo_ramo_op",
@@ -366,7 +374,7 @@ def aprox_reaseguro(df_incurrido: pl.LazyFrame, inc_atip: pl.LazyFrame) -> pl.La
 
 
 def cuadre_cedido_sap(
-    df_incurrido: pl.LazyFrame, inc_atip: pl.LazyFrame
+    df_incurrido: pl.LazyFrame, inc_atip: pl.LazyFrame, mes_corte: int
 ) -> pl.LazyFrame:
     segm = segmentaciones.segm()
 
@@ -404,7 +412,10 @@ def cuadre_cedido_sap(
 
     tera = (
         df_incurrido.filter(
-            (pl.col("fecha_registro").dt.month_start() == ct.END_DATE)
+            (
+                pl.col("fecha_registro").dt.month_start()
+                == utils.yyyymm_to_date(mes_corte)
+            )
             & (pl.col("atipico") == 0)
         )
         .with_columns(dif_vida_grupo=dif_vida_grupo())
@@ -480,7 +491,7 @@ def cuadre_cedido_sap(
     )
 
 
-def main(df_incurrido) -> pl.LazyFrame:
+def main(df_incurrido: pl.LazyFrame, mes_corte: int) -> pl.LazyFrame:
     inc_atip = incurridos_cedidos_atipicos(df_incurrido)
-    df_incurrido_reaseguro_aprox = aprox_reaseguro(df_incurrido, inc_atip)
-    return cuadre_cedido_sap(df_incurrido_reaseguro_aprox, inc_atip)
+    df_incurrido_reaseguro_aprox = aprox_reaseguro(df_incurrido, inc_atip, mes_corte)
+    return cuadre_cedido_sap(df_incurrido_reaseguro_aprox, inc_atip, mes_corte)

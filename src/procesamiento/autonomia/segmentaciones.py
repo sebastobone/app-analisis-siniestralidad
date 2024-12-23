@@ -3,7 +3,7 @@ import polars as pl
 
 def segm() -> dict[str, pl.DataFrame]:
     return pl.read_excel(
-        "data/segmentacion_autonomia.xlsx",
+        source="data/segmentacion_autonomia.xlsx",
         sheet_name=[
             "add_pe_Canal-Poliza",
             "add_pe_Canal-Canal",

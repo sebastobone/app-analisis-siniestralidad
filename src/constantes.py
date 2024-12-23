@@ -4,13 +4,6 @@ import pandas as pd
 from math import ceil
 from datetime import date
 
-NEGOCIO = "autonomia"
-
-PARAMS = dict(
-    pl.read_excel(
-        f"data/segmentacion_{NEGOCIO}.xlsx", sheet_name="Parametros", has_header=False
-    ).rows()
-)
 
 CREDENCIALES_TERADATA = {
     "host": "teradata.suranet.com",
@@ -25,16 +18,6 @@ APERT_COLS = [
     "apertura_amparo_desc",
 ]
 BASE_COLS = ["ramo_desc", "apertura_canal_desc", "apertura_amparo_desc"]
-
-INI_DATE = int(PARAMS["Mes de la primera ocurrencia (AAAAMM)"])
-END_DATE = int(PARAMS["Mes de corte (AAAAMM)"])
-
-INI_DATE = date(INI_DATE // 100, INI_DATE % 100, 1)
-END_DATE = date(END_DATE // 100, END_DATE % 100, 1)
-
-DIA_CARGA_REASEGURO = int(PARAMS["Dia subida reaseguro Teradata"])
-
-TIPO_ANALISIS = PARAMS["Tipo analisis"]
 
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 
@@ -71,15 +54,15 @@ def min_cols_tera(tipo_query: str) -> list[str]:
             "prima_retenida",
             "prima_retenida_devengada",
         ]
-    elif tipo_query == "expuestos":
-        return [
-            "codigo_op",
-            "codigo_ramo_op",
-            "ramo_desc",
-            "fecha_registro",
-            "expuestos",
-            "vigentes",
-        ]
+
+    return [
+        "codigo_op",
+        "codigo_ramo_op",
+        "ramo_desc",
+        "fecha_registro",
+        "expuestos",
+        "vigentes",
+    ]
 
 
 HEADER_TRIANGULOS = 2

@@ -26,6 +26,29 @@
         </select>
     </form>
 
+    <form method="POST">
+        <label for="mes_inicio">Fecha primera ocurrencia (AAAAMM):</label>
+        <input type="text" id="mes_inicio" name="mes_inicio" required>
+    </form>
+
+    <form method="POST">
+        <label for="mes_fin">Fecha primera ocurrencia (AAAAMM):</label>
+        <input type="text" id="mes_fin" name="mes_fin" required>
+    </form>
+
+    <form method="POST">
+        <label for="tipo_analisis">Tipo de analisis:</label>
+        <select name="tipo_analisis">
+            <option value="triangulos">Triangulos</option>
+            <option value="entremes">Entremes</option>
+        </select>
+    </form>
+
+    <form method="POST">
+        <label for="dia_reaseguro">Dia del mes en que se carga reaseguro a Teradata:</label>
+        <input type="text" id="dia_reaseguro" name="dia_reaseguro">
+    </form>
+
     <h2>Extraccion de informacion</h2>
     <form method="POST" action="/correr-query-siniestros">
         <button type="submit">Correr query siniestros</button>

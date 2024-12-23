@@ -1,4 +1,5 @@
 import polars as pl
+from datetime import date
 
 
 def lowercase_columns(df: pl.LazyFrame | pl.DataFrame) -> pl.LazyFrame | pl.DataFrame:
@@ -12,3 +13,7 @@ def col_ramo_desc() -> pl.Expr:
         pl.col("ramo_desc"),
         separator=" - ",
     )
+
+
+def yyyymm_to_date(mes_yyyymm: int) -> date:
+    return date(mes_yyyymm // 100, mes_yyyymm % 100, 1)

@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Form, Request, Depends
+from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from src import main
+from src import plantilla
 from typing import Annotated
 
 app = FastAPI()
@@ -17,67 +18,125 @@ async def read_form(request: Request):
 
 
 @app.post("/correr-query-siniestros")
-async def correr_query_siniestros(negocio: Annotated[str, Form()]) -> RedirectResponse:
-    main.correr_query_siniestros(negocio)
+async def correr_query_siniestros(
+    negocio: Annotated[str, Form()],
+    mes_inicio: Annotated[int, Form()],
+    mes_corte: Annotated[int, Form()],
+    tipo_analisis: Annotated[str, Form()],
+    aproximar_reaseguro: Annotated[bool, Form()],
+) -> RedirectResponse:
+    main.correr_query_siniestros(
+        negocio, mes_inicio, mes_corte, tipo_analisis, aproximar_reaseguro
+    )
     return RedirectResponse(url="/")
 
 
 @app.post("/correr-query-primas")
-async def correr_query_primas(negocio: Annotated[str, Form()]) -> RedirectResponse:
-    main.correr_query_primas(negocio)
+async def correr_query_primas(
+    negocio: Annotated[str, Form()],
+    mes_inicio: Annotated[int, Form()],
+    mes_corte: Annotated[int, Form()],
+    tipo_analisis: Annotated[str, Form()],
+    aproximar_reaseguro: Annotated[bool, Form()],
+) -> RedirectResponse:
+    main.correr_query_primas(
+        negocio, mes_inicio, mes_corte, tipo_analisis, aproximar_reaseguro
+    )
     return RedirectResponse(url="/")
 
 
 @app.post("/correr-query-expuestos")
-async def correr_query_expuestos(negocio: Annotated[str, Form()]) -> RedirectResponse:
-    main.correr_query_expuestos(negocio)
+async def correr_query_expuestos(
+    negocio: Annotated[str, Form()],
+    mes_inicio: Annotated[int, Form()],
+    mes_corte: Annotated[int, Form()],
+    tipo_analisis: Annotated[str, Form()],
+    aproximar_reaseguro: Annotated[bool, Form()],
+) -> RedirectResponse:
+    main.correr_query_expuestos(
+        negocio, mes_inicio, mes_corte, tipo_analisis, aproximar_reaseguro
+    )
     return RedirectResponse(url="/")
 
 
 @app.post("/generar-controles")
-async def generar_controles() -> RedirectResponse:
-    main.generar_controles()
+async def generar_controles(
+    negocio: Annotated[str, Form()], mes_corte: Annotated[int, Form()]
+) -> RedirectResponse:
+    main.generar_controles(negocio, mes_corte)
     return RedirectResponse(url="/")
 
 
 @app.post("/preparar-plantilla")
-async def preparar_plantilla(path_wb: Annotated[str, Form()]) -> RedirectResponse:
+async def preparar_plantilla(
+    path_wb: Annotated[str, Form()],
+    mes_corte: Annotated[int, Form()],
+    tipo_analisis: Annotated[str, Form()],
+) -> RedirectResponse:
     wb = main.abrir_plantilla(path_wb)
-    main.modos_plantilla(wb, "preparar")
+    plantilla.preparar_plantilla(wb, mes_corte, tipo_analisis)
     return RedirectResponse(url="/")
 
 
 @app.post("/almacenar-analisis")
-async def almacenar_analisis(path_wb: Annotated[str, Form()]) -> RedirectResponse:
+async def almacenar_analisis(
+    path_wb: Annotated[str, Form()], mes_corte: Annotated[int, Form()]
+) -> RedirectResponse:
     wb = main.abrir_plantilla(path_wb)
-    main.modos_plantilla(wb, "almacenar")
+    plantilla.almacenar_analisis(wb, mes_corte)
     return RedirectResponse(url="/")
 
 
 @app.post("/generar-plantilla")
 async def generar_plantilla(
-    path_wb: Annotated[str, Form()], plantilla: Annotated[str, Form()]
+    path_wb: Annotated[str, Form()],
+    plant: Annotated[str, Form()],
+    mes_corte: Annotated[int, Form()],
 ) -> RedirectResponse:
     wb = main.abrir_plantilla(path_wb)
-    main.modos_plantilla(wb, "generar", plantilla)
+    plantilla.generar_plantilla(
+        wb,
+        plant,
+        wb.sheets["Aperturas"]["A2"].value,
+        wb.sheets["Atributos"]["A2"].value,
+        mes_corte,
+    )
     return RedirectResponse(url="/")
 
 
 @app.post("/guardar-plantilla")
 async def guardar_plantilla(
-    path_wb: Annotated[str, Form()], plantilla: Annotated[str, Form()]
+    path_wb: Annotated[str, Form()],
+    plant: Annotated[str, Form()],
+    mes_corte: Annotated[int, Form()],
 ) -> RedirectResponse:
     wb = main.abrir_plantilla(path_wb)
-    main.modos_plantilla(wb, "guardar", plantilla)
+    plantilla.guardar_traer_fn(
+        wb,
+        "guardar",
+        wb.sheets["Aperturas"]["A2"].value,
+        wb.sheets["Atributos"]["A2"].value,
+        plant,
+        mes_corte,
+    )
     return RedirectResponse(url="/")
 
 
 @app.post("/traer-plantilla")
 async def traer_plantilla(
-    path_wb: Annotated[str, Form()], plantilla: Annotated[str, Form()]
+    path_wb: Annotated[str, Form()],
+    plant: Annotated[str, Form()],
+    mes_corte: Annotated[int, Form()],
 ) -> RedirectResponse:
     wb = main.abrir_plantilla(path_wb)
-    main.modos_plantilla(wb, "traer", plantilla)
+    plantilla.guardar_traer_fn(
+        wb,
+        "traer",
+        wb.sheets["Aperturas"]["A2"].value,
+        wb.sheets["Atributos"]["A2"].value,
+        plant,
+        mes_corte,
+    )
     return RedirectResponse(url="/")
 
 

@@ -83,7 +83,8 @@ def check_duplicados(add: pl.DataFrame) -> pl.DataFrame:
 
 
 def check_nulls(add: pl.DataFrame) -> None:
-    if add.null_count().max_horizontal().max() > 0:
+    num_nulls = add.null_count().max_horizontal().max()
+    if isinstance(num_nulls, int) and num_nulls > 0:
         raise Exception(
             f"""
             Error -> tiene valores nulos en la siguiente tabla: {add}
@@ -135,11 +136,19 @@ def col_apertura_reservas() -> pl.Expr:
     ).alias("apertura_reservas")
 
 
-def read_query(file: str, save_path: str, save_format: str) -> None:
+def read_query(
+    file: str,
+    save_path: str,
+    save_format: str,
+    negocio: str,
+    mes_inicio: int,
+    mes_corte: int,
+    aproximar_reaseguro: int | None = None,
+) -> None:
     tipo_query = sini_primas_exp(file)
 
     # Tablas de segmentacion
-    archivo_segm = f"data/segmentacion_{ct.NEGOCIO}.xlsx"
+    archivo_segm = f"data/segmentacion_{negocio}.xlsx"
     segm_sheets = [
         str(sheet)
         for sheet in pd.ExcelFile(archivo_segm).sheet_names
@@ -163,9 +172,17 @@ def read_query(file: str, save_path: str, save_format: str) -> None:
     # Limites para correr queries pesados por partes
     fechas_chunks = list(
         zip(
-            pl.date_range(ct.INI_DATE, ct.END_DATE, interval="1mo", eager=True),
             pl.date_range(
-                ct.INI_DATE, ct.END_DATE, interval="1mo", eager=True
+                utils.yyyymm_to_date(mes_inicio),
+                utils.yyyymm_to_date(mes_corte),
+                interval="1mo",
+                eager=True,
+            ),
+            pl.date_range(
+                utils.yyyymm_to_date(mes_inicio),
+                utils.yyyymm_to_date(mes_corte),
+                interval="1mo",
+                eager=True,
             ).dt.month_end(),
         )
     )
@@ -174,11 +191,11 @@ def read_query(file: str, save_path: str, save_format: str) -> None:
     for n_query, query in enumerate(tqdm(queries.split(sep=";"))):
         if "?" not in query:
             query = query.format(
-                mes_primera_ocurrencia=ct.INI_DATE.strftime("%Y%m"),
-                mes_corte=ct.END_DATE.strftime("%Y%m"),
-                fecha_primera_ocurrencia=ct.INI_DATE,
-                fecha_mes_corte=ct.END_DATE,
-                dia_reaseguro=ct.DIA_CARGA_REASEGURO,
+                mes_primera_ocurrencia=mes_inicio,
+                mes_corte=mes_corte,
+                fecha_primera_ocurrencia=utils.yyyymm_to_date(mes_inicio),
+                fecha_mes_corte=utils.yyyymm_to_date(mes_corte),
+                aproximar_reaseguro=aproximar_reaseguro,
             )
 
             if "{chunk_ini}" in query:
@@ -194,7 +211,7 @@ def read_query(file: str, save_path: str, save_format: str) -> None:
                 cur.execute(query)
             else:
                 df = pl.read_database(query, con)
-                df = utils.lowercase_columns(df)
+                df = pl.DataFrame(utils.lowercase_columns(df))
 
                 if tipo_query != "otro":
                     checks_final_info(tipo_query, df)

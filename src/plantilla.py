@@ -5,10 +5,11 @@ from src.metodos_plantilla import guardar_traer
 import polars as pl
 import src.constantes as ct
 import time
+from src import utils
 
 
-def preparar_plantilla(wb: xw.Book) -> None:
-    mes_corte = int(ct.END_DATE.strftime("%Y%m"))
+def preparar_plantilla(wb: xw.Book, mes_corte: int, tipo_analisis: str) -> None:
+    mes_corte = int(utils.yyyymm_to_date(mes_corte).strftime("%Y%m"))
 
     wb.sheets["Modo"]["A4"].value = "Mes corte"
     wb.sheets["Modo"]["B4"].value = mes_corte
@@ -17,12 +18,12 @@ def preparar_plantilla(wb: xw.Book) -> None:
         mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
     )
 
-    if ct.TIPO_ANALISIS == "Triangulos":
+    if tipo_analisis == "triangulos":
         wb.sheets["Plantilla_Entremes"].visible = False
         wb.sheets["Plantilla_Frec"].visible = True
         wb.sheets["Plantilla_Seve"].visible = True
         wb.sheets["Plantilla_Plata"].visible = True
-    elif ct.TIPO_ANALISIS == "Entremes":
+    elif tipo_analisis == "entremes":
         wb.sheets["Plantilla_Entremes"].visible = True
         wb.sheets["Plantilla_Frec"].visible = False
         wb.sheets["Plantilla_Seve"].visible = False
@@ -38,7 +39,7 @@ def preparar_plantilla(wb: xw.Book) -> None:
     )
 
     diagonales, expuestos, primas, atipicos = tablas_resumen.tablas_resumen(
-        ct.path_plantilla(wb), periodicidades, ct.TIPO_ANALISIS
+        ct.path_plantilla(wb), periodicidades, tipo_analisis
     )
 
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
@@ -53,7 +54,7 @@ def preparar_plantilla(wb: xw.Book) -> None:
 
 
 def generar_plantilla(
-    wb: xw.Book, plantilla: str, apertura: str, atributo: str
+    wb: xw.Book, plantilla: str, apertura: str, atributo: str, mes_corte: int
 ) -> None:
     s = time.time()
 
@@ -76,7 +77,9 @@ def generar_plantilla(
 
     NUM_OCURRENCIAS = df.shape[0]
     NUM_ALTURAS = df.shape[1] // len(cantidades)
-    MES_DEL_PERIODO = ct.mes_del_periodo(ct.END_DATE, NUM_OCURRENCIAS, NUM_ALTURAS)
+    MES_DEL_PERIODO = ct.mes_del_periodo(
+        utils.yyyymm_to_date(mes_corte), NUM_OCURRENCIAS, NUM_ALTURAS
+    )
 
     wb.sheets["Modo"]["B6"].value = MES_DEL_PERIODO
 
@@ -99,7 +102,7 @@ def generar_plantilla(
 
 
 def guardar_traer_fn(
-    wb: xw.Book, modo: str, plantilla: str, apertura: str, atributo: str
+    wb: xw.Book, modo: str, plantilla: str, apertura: str, atributo: str, mes_corte: int
 ) -> None:
     s = time.time()
 
@@ -110,7 +113,9 @@ def guardar_traer_fn(
     NUM_ALTURAS = ct.num_alturas(wb.sheets[plantilla])
 
     if plantilla == "Plantilla_Entremes":
-        MES_DEL_PERIODO = ct.mes_del_periodo(ct.END_DATE, NUM_OCURRENCIAS, NUM_ALTURAS)
+        MES_DEL_PERIODO = ct.mes_del_periodo(
+            utils.yyyymm_to_date(mes_corte), NUM_OCURRENCIAS, NUM_ALTURAS
+        )
     else:
         MES_DEL_PERIODO = 1
 
@@ -154,12 +159,12 @@ def guardar_traer_fn(
         wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-def almacenar_analisis(wb: xw.Book) -> None:
+def almacenar_analisis(wb: xw.Book, mes_corte: int) -> None:
     s = time.time()
 
     df_tips = ct.sheet_to_dataframe(wb, "Aux_Totales").with_columns(atipico=0)
     df_atips = ct.sheet_to_dataframe(wb, "Atipicos").with_columns(atipico=1)
-    df_new = pl.concat([df_tips, df_atips]).with_columns(MES_CORTE=ct.MES_CORTE)
+    df_new = pl.concat([df_tips, df_atips]).with_columns(MES_CORTE=mes_corte)
 
     wb_res = xw.Book(f"{ct.path_plantilla(wb)}/resultados.xlsx")
     df_hist = ct.sheet_to_dataframe(wb_res, "BD", df_new.collect_schema())
@@ -187,7 +192,9 @@ def almacenar_analisis(wb: xw.Book) -> None:
     wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-def traer_guardar_todo(wb: xw.Book, plantilla: str, traer: bool = False):
+def traer_guardar_todo(
+    wb: xw.Book, plantilla: str, mes_corte: int, traer: bool = False
+) -> None:
     s = time.time()
 
     aperturas = pl.read_csv("data/processed/aperturas.csv", separator="\t").get_column(
@@ -197,9 +204,9 @@ def traer_guardar_todo(wb: xw.Book, plantilla: str, traer: bool = False):
 
     for apertura in aperturas:
         for atributo in atributos:
-            generar_plantilla(wb, plantilla, apertura, atributo)
+            generar_plantilla(wb, plantilla, apertura, atributo, mes_corte)
             if traer:
-                guardar_traer_fn(wb, "traer", plantilla, apertura, atributo)
-            guardar_traer_fn(wb, "guardar", plantilla, apertura, atributo)
+                guardar_traer_fn(wb, "traer", plantilla, apertura, atributo, mes_corte)
+            guardar_traer_fn(wb, "guardar", plantilla, apertura, atributo, mes_corte)
 
     wb.sheets["Modo"]["A2"].value = time.time() - s

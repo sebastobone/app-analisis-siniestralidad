@@ -1,19 +1,18 @@
 import polars as pl
 from src.controles_informacion.controles_informacion import read_sap
-from src.constantes import END_DATE
 import xlwings as xw
 import os
 
 
-def cantidades_sap(hojas_afo: list[str]) -> pl.DataFrame:
+def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:
     return (
         read_sap(
             ["Generales", "Vida"],
             hojas_afo,
-            int(END_DATE.strftime("%Y%m")),
+            mes_corte,
         )
         .filter(
-            (pl.col("mes_mov") == int(END_DATE.strftime("%Y%m")))
+            (pl.col("mes_mov") == mes_corte)
             & (
                 pl.col("codigo_ramo_op").is_in(
                     ["025", "069", "081", "083", "084", "086", "095", "096", "181"]
@@ -39,12 +38,12 @@ def crear_hoja_segmentacion(df: pl.DataFrame, nombre_hoja: str) -> None:
     wb.sheets[nombre_hoja]["A1"].options(index=False).value = df.to_pandas()
 
 
-def sap_sinis_ced() -> None:
-    df_sinis = cantidades_sap(["pago_cedido", "aviso_cedido"])
+def sap_sinis_ced(mes_corte: int) -> None:
+    df_sinis = cantidades_sap(["pago_cedido", "aviso_cedido"], mes_corte)
     crear_hoja_segmentacion(df_sinis, "SAP_Sinis_Ced")
 
 
-def sap_primas_ced() -> None:
+def sap_primas_ced(mes_corte: int) -> None:
     df_primas = cantidades_sap(
         [
             "prima_bruta",
@@ -53,7 +52,8 @@ def sap_primas_ced() -> None:
             "prima_retenida_devengada",
             "rpnd_bruto",
             "rpnd_cedido",
-        ]
+        ],
+        mes_corte,
     ).with_columns(
         rpnd_retenido=pl.col("rpnd_bruto") - pl.col("rpnd_cedido"),
         prima_cedida=pl.col("prima_bruta") - pl.col("prima_retenida"),

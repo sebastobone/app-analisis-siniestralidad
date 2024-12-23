@@ -458,6 +458,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pandas-stubs"
+version = "2.2.3.241126"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "types-pytz" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/90/86/93c545d149c3e1fe1c4c55478cc3a69859d0ea3467e1d9892e9eb28cb1e7/pandas_stubs-2.2.3.241126.tar.gz", hash = "sha256:cf819383c6d9ae7d4dabf34cd47e1e45525bb2f312e6ad2939c2c204cb708acd", size = 104204 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6f/ab/ed42acf15bab2e86e5c49fad4aa038315233c4c2d22f41b49faa4d837516/pandas_stubs-2.2.3.241126-py3-none-any.whl", hash = "sha256:74aa79c167af374fe97068acc90776c0ebec5266a6e5c69fe11e9c2cf51f2267", size = 158280 },
+]
+
+[[package]]
 name = "pillow"
 version = "11.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -505,6 +518,7 @@ dependencies = [
     { name = "flask" },
     { name = "openpyxl" },
     { name = "pandas" },
+    { name = "pandas-stubs" },
     { name = "pillow" },
     { name = "polars" },
     { name = "pyautogui" },
@@ -512,6 +526,9 @@ dependencies = [
     { name = "pytest" },
     { name = "teradatasql" },
     { name = "tqdm" },
+    { name = "types-openpyxl" },
+    { name = "types-pyautogui" },
+    { name = "types-tqdm" },
     { name = "xlsxwriter" },
     { name = "xlwings" },
 ]
@@ -523,6 +540,7 @@ requires-dist = [
     { name = "flask", specifier = ">=3.1.0" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=2.2.3" },
+    { name = "pandas-stubs", specifier = ">=2.2.3.241126" },
     { name = "pillow", specifier = ">=11.0.0" },
     { name = "polars", specifier = ">=1.14.0" },
     { name = "pyautogui", specifier = ">=0.9.54" },
@@ -530,6 +548,9 @@ requires-dist = [
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "teradatasql", specifier = ">=20.0.0.20" },
     { name = "tqdm", specifier = ">=4.67.1" },
+    { name = "types-openpyxl", specifier = ">=3.1.5.20241126" },
+    { name = "types-pyautogui", specifier = ">=0.9.3.20240406" },
+    { name = "types-tqdm", specifier = ">=4.67.0.20241221" },
     { name = "xlsxwriter", specifier = ">=3.2.0" },
     { name = "xlwings", specifier = ">=0.33.3" },
 ]
@@ -984,6 +1005,72 @@ wheels = [
 ]
 
 [[package]]
+name = "types-openpyxl"
+version = "3.1.5.20241126"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8f/75/a5c2c3751480a12dd6fe978567e129621774cd9ad607d8d6add3320602ac/types_openpyxl-3.1.5.20241126.tar.gz", hash = "sha256:f599afab19f87aa11672ee675346401d82a0dac71988df9a5411cdb1e7477377", size = 100289 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/20/870c0ec3bfc22b3c95ba6d5122b01413c1264d967258822cc0dded0c13fc/types_openpyxl-3.1.5.20241126-py3-none-any.whl", hash = "sha256:e50ad5c2dec2c92cca521abed5c039975226e8e76389f17ab0ef813595593fbe", size = 166000 },
+]
+
+[[package]]
+name = "types-pyautogui"
+version = "0.9.3.20240406"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-pyscreeze" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/df/24/99637610ce9814924e2d98322a2441d87a6de955ed2ce6a20d32164ae251/types-PyAutoGUI-0.9.3.20240406.tar.gz", hash = "sha256:7480c27ab044976800b37ac77538086f479a0897f3046ea72e5d4fda27741f12", size = 4491 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c2/4e/e4729c335780de8769fcf7af14251a12913327bd3aab25689ef10480c885/types_PyAutoGUI-0.9.3.20240406-py3-none-any.whl", hash = "sha256:ef8691548986018e21a2e69245e815eb0b1fddde9d05b05750392aeef50e69f7", size = 4248 },
+]
+
+[[package]]
+name = "types-pyscreeze"
+version = "1.0.1.20240822"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/80/95a8fe5c3b90eaa7acd2e333296c514c62f6bce3049b681d12e8d6e9c43a/types-PyScreeze-1.0.1.20240822.tar.gz", hash = "sha256:ee44c1accffb42ec9ca2ab9f3e959077aed363c38557d979cb8bf02029c8b0e1", size = 4376 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c9/ed/95157b8f05d7a58168ef6a22459ecd828a43c5427c3a20102fa92c5c12d3/types_PyScreeze-1.0.1.20240822-py3-none-any.whl", hash = "sha256:0641ffece1006ce43e0c111a336e14d515ae16b8275e8f9c33e7e0001455a81e", size = 3921 },
+]
+
+[[package]]
+name = "types-pytz"
+version = "2024.2.0.20241221"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/54/26/516311b02b5a215e721155fb65db8a965d061372e388d6125ebce8d674b0/types_pytz-2024.2.0.20241221.tar.gz", hash = "sha256:06d7cde9613e9f7504766a0554a270c369434b50e00975b3a4a0f6eed0f2c1a9", size = 10213 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/db/c92ca6920cccd9c2998b013601542e2ac5e59bc805bcff94c94ad254b7df/types_pytz-2024.2.0.20241221-py3-none-any.whl", hash = "sha256:8fc03195329c43637ed4f593663df721fef919b60a969066e22606edf0b53ad5", size = 10008 },
+]
+
+[[package]]
+name = "types-requests"
+version = "2.32.0.20241016"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fa/3c/4f2a430c01a22abd49a583b6b944173e39e7d01b688190a5618bd59a2e22/types-requests-2.32.0.20241016.tar.gz", hash = "sha256:0d9cad2f27515d0e3e3da7134a1b6f28fb97129d86b867f24d9c726452634d95", size = 18065 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d7/01/485b3026ff90e5190b5e24f1711522e06c79f4a56c8f4b95848ac072e20f/types_requests-2.32.0.20241016-py3-none-any.whl", hash = "sha256:4195d62d6d3e043a4eaaf08ff8a62184584d2e8684e9d2aa178c7915a7da3747", size = 15836 },
+]
+
+[[package]]
+name = "types-tqdm"
+version = "4.67.0.20241221"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0d/4f/70760ecc463f3383826666837f28d6e328ff28749fea7fd250f04c861708/types_tqdm-4.67.0.20241221.tar.gz", hash = "sha256:e56046631056922385abe89aeb18af5611f471eadd7918a0ad7f34d84cd4c8cc", size = 16858 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/e9/9832ef6d017d12b6b4740d7c4dd4eab31867c92ab2c95331d5cb4632fb22/types_tqdm-4.67.0.20241221-py3-none-any.whl", hash = "sha256:a1f1c9cda5c2d8482d2c73957a5398bfdedda10f6bc7b3b4e812d5c910486d29", size = 24098 },
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 source = { registry = "https://pypi.org/simple" }
@@ -999,6 +1086,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e1/34/943888654477a574a86a98e9896bae89c7aa15078ec29f490fef2f1e5384/tzdata-2024.2.tar.gz", hash = "sha256:7d85cc416e9382e69095b7bdf4afd9e3880418a2413feec7069d533d6b4e31cc", size = 193282 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a6/ab/7e5f53c3b9d14972843a647d8d7a853969a58aecc7559cb3267302c94774/tzdata-2024.2-py2.py3-none-any.whl", hash = "sha256:a48093786cdcde33cad18c2555e8532f34422074448fbc874186f0abd79565cd", size = 346586 },
+]
+
+[[package]]
+name = "urllib3"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/aa/63/e53da845320b757bf29ef6a9062f5c669fe997973f966045cb019c3f4b66/urllib3-2.3.0.tar.gz", hash = "sha256:f8c5449b3cf0861679ce7e0503c7b44b5ec981bec0d1d3795a07f1ba96f0204d", size = 307268 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/19/4ec628951a74043532ca2cf5d97b7b14863931476d117c471e8e2b1eb39f/urllib3-2.3.0-py3-none-any.whl", hash = "sha256:1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df", size = 128369 },
 ]
 
 [[package]]

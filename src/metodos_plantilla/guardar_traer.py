@@ -1,7 +1,6 @@
 import polars as pl
 import xlwings as xw
 import src.constantes as ct
-from tkinter import messagebox
 
 
 def index(objective: str, range: xw.Range) -> int:
@@ -296,11 +295,9 @@ def traer(
                 separator="\t",
             ).rows()
         except FileNotFoundError:
-            messagebox.showerror(
-                "Error",
+            print(
                 f"""
                 No se encontraron formulas para la apertura {apertura}
                 con el atributo {atributo} en la plantilla {sheet.name}.
                 """,
             )
-            break

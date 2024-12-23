@@ -228,10 +228,12 @@ def valid_contable(
     return valid
 
 
-def cuadre_contable(df: pl.DataFrame, file: str, valid: pl.DataFrame) -> pl.LazyFrame:
+def cuadre_contable(
+    df: pl.DataFrame, file: str, valid: pl.DataFrame, negocio: str
+) -> pl.LazyFrame:
     agrups = lowercase_columns(
         pl.read_excel(
-            f"data/segmentacion_{ct.NEGOCIO}.xlsx",
+            f"data/segmentacion_{negocio}.xlsx",
             sheet_name=f"Cuadre_Contable_{file.capitalize()}",
         )
     )
@@ -249,7 +251,7 @@ def cuadre_contable(df: pl.DataFrame, file: str, valid: pl.DataFrame) -> pl.Lazy
                 pl.col("mes_mov") // pl.lit(100), pl.col("mes_mov") % pl.lit(100), 1
             )
         )
-        .join(agrups, on=["codigo_op", "codigo_ramo_op"])
+        .join(pl.DataFrame(agrups), on=["codigo_op", "codigo_ramo_op"])
         .with_columns(
             conteo_pago=0,
             conteo_incurrido=0,
@@ -308,10 +310,9 @@ def controles_informacion(
     file: str,
     group_cols: list[str],
     qtys: list[str],
+    mes_corte: int,
     estado_cuadre: str,
 ) -> pl.DataFrame:
-    mes_corte = ct.END_DATE.strftime("%Y%m")
-
     # Consistencia historica Tera
     group_tera(df, file, group_cols, qtys).collect().write_excel(
         f"data/controles_informacion/{estado_cuadre}/{file}_tera_{mes_corte}.xlsx",
@@ -445,7 +446,7 @@ def evidencias_parametros():
     # sleep(30)
 
 
-def generar_controles(file: str) -> None:
+def generar_controles(file: str, negocio: str, mes_corte: int) -> None:
     if file == "siniestros":
         qtys = ["pago_bruto", "aviso_bruto", "pago_retenido", "aviso_retenido"]
         group_cols = ["apertura_reservas", "mes_ocurr", "mes_mov"]
@@ -470,16 +471,18 @@ def generar_controles(file: str) -> None:
         file,
         group_cols,
         qtys,
+        mes_corte,
         estado_cuadre="pre_cuadre_contable",
     )
 
     if file in ("siniestros", "primas"):
         df.collect().write_csv(f"data/raw/{file}_pre_cuadre.csv", separator="\t")
-        df_cuadrado = cuadre_contable(df.collect(), file, valid_pre_cuadre)
+        df_cuadrado = cuadre_contable(df.collect(), file, valid_pre_cuadre, negocio)
         _ = controles_informacion(
             df_cuadrado,
             file,
             group_cols,
             qtys,
+            mes_corte,
             estado_cuadre="post_cuadre_contable",
         )

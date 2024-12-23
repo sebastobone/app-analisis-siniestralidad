@@ -97,9 +97,11 @@ def triangulos(
     df_tri: pl.LazyFrame,
     origin_grain: str,
     development_grain: str,
+    mes_corte: int,
+    tipo_analisis: str,
 ) -> pl.LazyFrame:
-    anno = ct.END_DATE.year
-    mes = ct.END_DATE.month
+    anno = utils.yyyymm_to_date(mes_corte).year
+    mes = utils.yyyymm_to_date(mes_corte).month
     periodicidad = ct.PERIODICIDADES[origin_grain]
 
     mes_ult_ocurr_triangulos = (
@@ -112,8 +114,8 @@ def triangulos(
         df_tri.filter(
             pl.col("fecha_registro")
             <= (
-                ct.END_DATE
-                if ct.TIPO_ANALISIS == "Entremes"
+                utils.yyyymm_to_date(mes_corte)
+                if tipo_analisis == "entremes"
                 else mes_ult_ocurr_triangulos
             )
         )
@@ -196,10 +198,14 @@ def triangulos(
 
 
 def diagonales(
-    df_tri: pl.LazyFrame, origin_grain: str, ultima_ocurr: bool = False
+    df_tri: pl.LazyFrame,
+    origin_grain: str,
+    mes_inicio: int,
+    mes_corte: int,
+    ultima_ocurr: bool = False,
 ) -> pl.LazyFrame:
-    anno = ct.END_DATE.year
-    mes = ct.END_DATE.month
+    anno = utils.yyyymm_to_date(mes_corte).year
+    mes = utils.yyyymm_to_date(mes_corte).month
     periodicidad = ct.PERIODICIDADES[origin_grain]
 
     mes_prim_ocurr_periodo_act = date(
@@ -209,7 +215,11 @@ def diagonales(
     df_diagonales = (
         df_tri.filter(
             pl.col("fecha_siniestro")
-            >= (mes_prim_ocurr_periodo_act if ultima_ocurr else ct.INI_DATE)
+            >= (
+                mes_prim_ocurr_periodo_act
+                if ultima_ocurr
+                else utils.yyyymm_to_date(mes_inicio)
+            )
         )
         .with_columns(
             periodo_ocurrencia=date_to_yyyymm(pl.col("fecha_siniestro"), "Mensual")[0],
@@ -256,31 +266,49 @@ def diagonales(
     return df_diagonales
 
 
-def bases_siniestros() -> None:
+def bases_siniestros(tipo_analisis: str, mes_inicio: int, mes_corte: int) -> None:
     df_sinis_tipicos, df_sinis_atipicos = sinis_prep()
 
-    if ct.TIPO_ANALISIS == "Triangulos":
+    if tipo_analisis == "triangulos":
         base_triangulos = pl.concat(
             [
-                triangulos(df_sinis_tipicos, "Mensual", "Mensual"),
-                triangulos(df_sinis_tipicos, "Trimestral", "Trimestral"),
-                triangulos(df_sinis_tipicos, "Semestral", "Semestral"),
-                triangulos(df_sinis_tipicos, "Anual", "Anual"),
+                triangulos(
+                    df_sinis_tipicos, "Mensual", "Mensual", mes_corte, tipo_analisis
+                ),
+                triangulos(
+                    df_sinis_tipicos,
+                    "Trimestral",
+                    "Trimestral",
+                    mes_corte,
+                    tipo_analisis,
+                ),
+                triangulos(
+                    df_sinis_tipicos, "Semestral", "Semestral", mes_corte, tipo_analisis
+                ),
+                triangulos(
+                    df_sinis_tipicos, "Anual", "Anual", mes_corte, tipo_analisis
+                ),
             ]
         )
     else:
         base_triangulos = pl.concat(
             [
-                triangulos(df_sinis_tipicos, "Trimestral", "Mensual"),
-                triangulos(df_sinis_tipicos, "Semestral", "Mensual"),
-                triangulos(df_sinis_tipicos, "Anual", "Mensual"),
+                triangulos(
+                    df_sinis_tipicos, "Trimestral", "Mensual", mes_corte, tipo_analisis
+                ),
+                triangulos(
+                    df_sinis_tipicos, "Semestral", "Mensual", mes_corte, tipo_analisis
+                ),
+                triangulos(
+                    df_sinis_tipicos, "Anual", "Mensual", mes_corte, tipo_analisis
+                ),
             ]
         )
         base_ult_ocurr = pl.concat(
             [
-                diagonales(df_sinis_tipicos, "Trimestral", True),
-                diagonales(df_sinis_tipicos, "Semestral", True),
-                diagonales(df_sinis_tipicos, "Anual", True),
+                diagonales(df_sinis_tipicos, "Trimestral", mes_inicio, mes_corte, True),
+                diagonales(df_sinis_tipicos, "Semestral", mes_inicio, mes_corte, True),
+                diagonales(df_sinis_tipicos, "Anual", mes_inicio, mes_corte, True),
             ]
         )
         base_ult_ocurr.collect().write_parquet(
@@ -288,6 +316,6 @@ def bases_siniestros() -> None:
         )
 
     base_triangulos.collect().write_parquet("data/processed/base_triangulos.parquet")
-    diagonales(df_sinis_atipicos, "Mensual").collect().write_parquet(
-        "data/processed/base_atipicos.parquet"
-    )
+    diagonales(
+        df_sinis_atipicos, "Mensual", mes_inicio, mes_corte
+    ).collect().write_parquet("data/processed/base_atipicos.parquet")

@@ -4,57 +4,116 @@ from src.extraccion.tera_connect import read_query
 from src.controles_informacion import controles_informacion as ctrl
 from src.procesamiento import base_siniestros as bsin
 from src.procesamiento import base_primas_expuestos as bpdn
-from src import plantilla
 import xlwings as xw
 
 
-def correr_query_siniestros(negocio: str) -> None:
+def correr_query_siniestros(
+    negocio: str,
+    mes_inicio: int,
+    mes_corte: int,
+    tipo_analisis: str,
+    aproximar_reaseguro: bool,
+) -> None:
     if negocio == "autonomia":
         read_query(
-            "data/queries/catalogos/planes.sql", "data/catalogos/planes", "parquet"
+            "data/queries/catalogos/planes.sql",
+            "data/catalogos/planes",
+            "parquet",
+            negocio,
+            mes_inicio,
+            mes_corte,
+            aproximar_reaseguro,
         )
         read_query(
             "data/queries/catalogos/sucursales.sql",
             "data/catalogos/sucursales",
             "parquet",
+            negocio,
+            mes_inicio,
+            mes_corte,
+            aproximar_reaseguro,
         )
-        adds.sap_sinis_ced()
+        adds.sap_sinis_ced(mes_corte)
         read_query(
             "data/queries/autonomia/siniestros_cedidos.sql",
             "data/raw/siniestros_cedidos",
             "parquet",
+            negocio,
+            mes_inicio,
+            mes_corte,
+            aproximar_reaseguro,
         )
         read_query(
             "data/queries/autonomia/siniestros_brutos.sql",
             "data/raw/siniestros_brutos",
             "parquet",
+            negocio,
+            mes_inicio,
+            mes_corte,
+            aproximar_reaseguro,
         )
-        siniestros_gen.main()
+        siniestros_gen.main(mes_inicio, mes_corte, aproximar_reaseguro)
     else:
-        read_query(f"data/queries/{negocio}/siniestros.sql")
+        read_query(
+            f"data/queries/{negocio}/siniestros.sql",
+            "data/raw/siniestros",
+            "parquet",
+            negocio,
+            mes_inicio,
+            mes_corte,
+            aproximar_reaseguro,
+        )
 
     bsin.aperturas()
-    bsin.bases_siniestros()
+    bsin.bases_siniestros(tipo_analisis, mes_inicio, mes_corte)
 
 
-def correr_query_primas(negocio: str) -> None:
+def correr_query_primas(
+    negocio: str,
+    mes_inicio: int,
+    mes_corte: int,
+    tipo_analisis: str,
+    aproximar_reaseguro: bool,
+) -> None:
     if negocio == "autonomia":
-        adds.sap_primas_ced()
-    read_query(f"data/queries/{negocio}/primas.sql", "data/raw/primas", "parquet")
+        adds.sap_primas_ced(mes_corte)
+    read_query(
+        f"data/queries/{negocio}/primas.sql",
+        "data/raw/primas",
+        "parquet",
+        negocio,
+        mes_inicio,
+        mes_corte,
+        aproximar_reaseguro,
+    )
     bpdn.bases_primas_expuestos("primas")
 
 
-def correr_query_expuestos(negocio: str) -> None:
-    read_query(f"data/queries/{negocio}/expuestos.sql", "data/raw/expuestos", "parquet")
+def correr_query_expuestos(
+    negocio: str,
+    mes_inicio: int,
+    mes_corte: int,
+    tipo_analisis: str,
+    aproximar_reaseguro: bool,
+) -> None:
+    read_query(
+        f"data/queries/{negocio}/expuestos.sql",
+        "data/raw/expuestos",
+        "parquet",
+        negocio,
+        mes_inicio,
+        mes_corte,
+        aproximar_reaseguro,
+    )
     bpdn.bases_primas_expuestos("expuestos")
 
 
-def generar_controles() -> None:
+def generar_controles(negocio: str, mes_corte: int) -> None:
     ctrl.set_permissions("data/controles_informacion", "write")
 
-    ctrl.generar_controles("siniestros")
-    ctrl.generar_controles("primas")
-    ctrl.generar_controles("expuestos")
+    ctrl.generar_controles("siniestros", negocio, mes_corte)
+    ctrl.generar_controles("primas", negocio, mes_corte)
+    ctrl.generar_controles("expuestos", negocio, mes_corte)
 
     ctrl.evidencias_parametros()
     ctrl.set_permissions("data/controles_informacion", "read")
@@ -68,29 +127,3 @@ def abrir_plantilla(plantilla_path: str) -> xw.Book:
     wb.macro("crear_modulos")
 
     return wb
-
-
-def modos_plantilla(wb: xw.Book, modo: str, plant: str | None = None) -> None:
-    if modo == "preparar":
-        plantilla.preparar_plantilla(wb)
-    elif modo == "generar":
-        plantilla.generar_plantilla(
-            wb,
-            str(plant),
-            wb.sheets["Aperturas"]["A2"].value,
-            wb.sheets["Atributos"]["A2"].value,
-        )
-    elif modo in ("guardar", "traer"):
-        plantilla.guardar_traer_fn(
-            wb,
-            modo,
-            str(plant),
-            wb.sheets["Aperturas"]["A2"].value,
-            wb.sheets["Atributos"]["A2"].value,
-        )
-    elif modo == "almacenar":
-        plantilla.almacenar_analisis(wb)
-    elif modo == "guardar_todo":
-        plantilla.traer_guardar_todo(wb, str(plant))
-    elif modo == "traer_guardar_todo":
-        plantilla.traer_guardar_todo(wb, str(plant), traer=True)

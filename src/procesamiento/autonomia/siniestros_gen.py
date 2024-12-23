@@ -1,8 +1,8 @@
 import polars as pl
 from . import base_incurrido
 from . import aprox_reaseguro
-import src.constantes as ct
 import datetime
+from src import utils
 from calendar import monthrange
 
 
@@ -42,15 +42,11 @@ def conteo(
     )
 
 
-def main() -> None:
+def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
     df_incurrido = base_incurrido.base_incurrido()
 
-    if datetime.date.today() < datetime.date(
-        ct.END_DATE.year,
-        ct.END_DATE.month,
-        monthrange(ct.END_DATE.year, ct.END_DATE.month)[1],
-    ) + datetime.timedelta(days=ct.DIA_CARGA_REASEGURO):
-        df_incurrido = aprox_reaseguro.main(df_incurrido)
+    if aproximar_reaseguro:
+        df_incurrido = aprox_reaseguro.main(df_incurrido, mes_corte)
 
     conteo_pago = conteo(
         df_incurrido,
@@ -185,8 +181,12 @@ def main() -> None:
             coalesce=True,
         )
         .with_columns(
-            pl.col("fecha_siniestro").clip(lower_bound=ct.INI_DATE).dt.month_start(),
-            pl.col("fecha_registro").clip(lower_bound=ct.INI_DATE).dt.month_start(),
+            pl.col("fecha_siniestro")
+            .clip(lower_bound=utils.yyyymm_to_date(mes_inicio))
+            .dt.month_start(),
+            pl.col("fecha_registro")
+            .clip(lower_bound=utils.yyyymm_to_date(mes_inicio))
+            .dt.month_start(),
         )
         .join(
             pl.scan_parquet("data/catalogos/planes.parquet")

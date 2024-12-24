@@ -3,7 +3,7 @@
 
 <head>
     <title>Plantilla Seguimiento Reservas</title>
-    <!-- <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}"> -->
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
 </head>
 <nav>
     <h1>Plantilla Seguimiento Reservas</h1>
@@ -11,87 +11,99 @@
 </nav>
 
 <body>
-    <h2>Parametros</h2>
-    <form method="POST" action="/ingresar-parametros">
-        <label for="negocio">Negocio:</label>
-        <select name="negocio">
-            <option value="arl">ARL</option>
-            <option value="autonomia">Autonomia</option>
-            <option value="empresariales">Empresariales</option>
-            <option value="movilidad">Movilidad</option>
-            <option value="salud">Salud</option>
-            <option value="soat">SOAT</option>
-        </select>
+    <div class="form-section">
+        <h2>Parametros</h2>
+        <form method="POST" action="/ingresar-parametros">
+            <label for="negocio">Negocio:</label>
+            <select name="negocio">
+                <option value="arl">ARL</option>
+                <option value="autonomia">Autonomia</option>
+                <option value="empresariales">Empresariales</option>
+                <option value="movilidad">Movilidad</option>
+                <option value="salud">Salud</option>
+                <option value="soat">SOAT</option>
+            </select>
+            
+            <label for="mes_inicio">Mes de la primera ocurrencia:</label>
+            <input type="text" id="mes_inicio" name="mes_inicio" placeholder="AAAAMM" required>
 
-        <label for="mes_inicio">Mes de la primera ocurrencia (AAAAMM):</label>
-        <input type="text" id="mes_inicio" name="mes_inicio" required>
+            <label for="mes_corte">Mes de corte:</label>
+            <input type="text" id="mes_corte" name="mes_corte" placeholder="AAAAMM" required>
 
-        <label for="mes_corte">Mes de corte (AAAAMM):</label>
-        <input type="text" id="mes_corte" name="mes_corte" required>
+            <label for="tipo_analisis">Tipo de analisis:</label>
+            <select name="tipo_analisis">
+                <option value="triangulos">Triangulos</option>
+                <option value="entremes">Entremes</option>
+            </select>
 
-        <label for="tipo_analisis">Tipo de analisis:</label>
-        <select name="tipo_analisis">
-            <option value="triangulos">Triangulos</option>
-            <option value="entremes">Entremes</option>
-        </select>
+            <label for="aproximar_reaseguro">Aproximar reaseguro:</label>
+            <select name="aproximar_reaseguro">
+                <option value="0">No</option>
+                <option value="1">Si</option>
+            </select>
 
-        <label for="aproximar_reaseguro">Aproximar reaseguro:</label>
-        <select name="aproximar_reaseguro">
-            <option value="0">No</option>
-            <option value="1">Si</option>
-        </select>
+            <label for="nombre_plantilla">Nombre de la plantilla:</label>
+            <input type="text" id="nombre_plantilla" name="nombre_plantilla" placeholder="Plantilla_Reservas" required>
 
-        <label for="nombre_plantilla">Nombre de la plantilla:</label>
-        <input type="text" id="nombre_plantilla" name="nombre_plantilla" required>
+            <button type="submit">Guardar parametros</button>
+        </form>
 
-        <button type="submit">Guardar parametros</button>
-    </form>
+    </div>
 
-    <h2>Extraccion de informacion</h2>
-    <form method="POST" action="/correr-query-siniestros">
-        <button type="submit">Correr query siniestros</button>
-    </form>
-    <form method="POST" action="/correr-query-primas">
-        <button type="submit">Correr query primas</button>
-    </form>
-    <form method="POST" action="/correr-query-expuestos">
-        <button type="submit">Correr query expuestos</button>
-    </form>
+    <div class="form-section">
+        <h2>Extraccion de informacion</h2>
+        <form method="POST" action="/correr-query-siniestros">
+            <button type="submit">Correr query siniestros</button>
+        </form>
+        <form method="POST" action="/correr-query-primas">
+            <button type="submit">Correr query primas</button>
+        </form>
+        <form method="POST" action="/correr-query-expuestos">
+            <button type="submit">Correr query expuestos</button>
+        </form>
+    </div>
 
-    <h2>Controles de informacion</h2>
-    <form method="POST" action="/generar-controles">
-        <button type="submit">Generar controles</button>
-    </form>
 
-    <h2>Plantilla</h2>
-    <form method="POST" action="/abrir-plantilla">
-        <button type="submit">Abrir plantilla</button>
-    </form>
-    <form method="POST" action="/preparar-plantilla">
-        <button type="submit">Preparar plantilla</button>
-    </form>
-    <form method="POST" action="/almacenar-analisis">
-        <button type="submit">Almacenar analisis</button>
-    </form>
+    <div class="form-section">
+        <h2>Controles de informacion</h2>
+        <form method="POST" action="/generar-controles">
+            <button type="submit">Generar controles</button>
+        </form>
+    </div>
 
-    <form method="POST" action="/modos-plantilla">
-        <label for="plant">Seleccione plantilla:</label>
-        <select name="plant">
-            <option value="frec">Frecuencia</option>
-            <option value="seve">Severidad</option>
-            <option value="plata">Plata</option>
-            <option value="entremes">Entremes</option>
-        </select>
 
-        <label for="modo">Seleccione modo:</label>
-        <select name="modo">
-            <option value="generar">Generar</option>
-            <option value="guardar">Guardar</option>
-            <option value="traer">Traer</option>
-        </select>
+    <div class="form-section">
+        <h2>Plantilla</h2>
+        <form method="POST" action="/abrir-plantilla">
+            <button type="submit">Abrir plantilla</button>
+        </form>
+        <form method="POST" action="/preparar-plantilla">
+            <button type="submit">Preparar plantilla</button>
+        </form>
+        <form method="POST" action="/almacenar-analisis">
+            <button type="submit">Almacenar analisis</button>
+        </form>
 
-        <button type="submit">Ejecutar</button>
-    </form>
+        <form method="POST" action="/modos-plantilla">
+            <label for="plant">Plantilla:</label>
+            <select name="plant">
+                <option value="frec">Frecuencia</option>
+                <option value="seve">Severidad</option>
+                <option value="plata">Plata</option>
+                <option value="entremes">Entremes</option>
+            </select>
+
+            <label for="modo">Modo:</label>
+            <select name="modo">
+                <option value="generar">Generar</option>
+                <option value="guardar">Guardar</option>
+                <option value="traer">Traer</option>
+            </select>
+
+            <button type="submit">Ejecutar</button>
+        </form>
+    </div>
+
 </body>
 
 </html>

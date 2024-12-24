@@ -4,8 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from src import main
 from src import plantilla
-from typing import Annotated, Literal
-from pydantic import BaseModel
+from typing import Annotated
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 from uuid import uuid4
 
@@ -164,7 +163,10 @@ async def almacenar_analisis(
 
 @app.post("/modos-plantilla")
 async def generar_plantilla(
-    plant: Annotated[str, Form()], modo: Annotated[str, Form()], session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+    plant: Annotated[str, Form()],
+    modo: Annotated[str, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:
     p = parametros_usuario(session, session_id)[0]
     wb = main.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")

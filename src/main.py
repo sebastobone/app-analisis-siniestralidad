@@ -4,9 +4,6 @@ from src.extraccion.tera_connect import correr_query
 from src.controles_informacion import controles_informacion as ctrl
 from src.procesamiento import base_siniestros as bsin
 from src.procesamiento import base_primas_expuestos as bpdn
-import xlwings as xw
-import os
-import shutil
 
 
 def correr_query_siniestros(
@@ -116,15 +113,3 @@ def generar_controles(negocio: str, mes_corte: int) -> None:
     ctrl.evidencias_parametros(negocio, mes_corte)
     ctrl.set_permissions("data/controles_informacion", "read")
 
-
-def abrir_plantilla(plantilla_path: str) -> xw.Book:
-    if not os.path.exists(plantilla_path):
-        shutil.copyfile("src/plantilla.xlsm", plantilla_path)
-
-    xw.Book(plantilla_path).set_mock_caller()
-    wb = xw.Book.caller()
-
-    wb.macro("eliminar_modulos")
-    wb.macro("crear_modulos")
-
-    return wb

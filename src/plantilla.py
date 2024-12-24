@@ -6,11 +6,11 @@ import polars as pl
 import src.constantes as ct
 import time
 from src import utils
+import os
+import shutil
 
 
 def preparar_plantilla(wb: xw.Book, mes_corte: int, tipo_analisis: str) -> None:
-    mes_corte = int(utils.yyyymm_to_date(mes_corte).strftime("%Y%m"))
-
     wb.sheets["Modo"]["A4"].value = "Mes corte"
     wb.sheets["Modo"]["B4"].value = mes_corte
     wb.sheets["Modo"]["A5"].value = "Mes anterior"
@@ -210,3 +210,16 @@ def traer_guardar_todo(
             guardar_traer_fn(wb, "guardar", plantilla, apertura, atributo, mes_corte)
 
     wb.sheets["Modo"]["A2"].value = time.time() - s
+
+
+def abrir_plantilla(plantilla_path: str) -> xw.Book:
+    if not os.path.exists(plantilla_path):
+        shutil.copyfile("src/plantilla.xlsm", plantilla_path)
+
+    xw.Book(plantilla_path).set_mock_caller()
+    wb = xw.Book.caller()
+
+    wb.macro("eliminar_modulos")
+    wb.macro("crear_modulos")
+
+    return wb

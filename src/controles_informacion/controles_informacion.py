@@ -29,9 +29,21 @@ def group_tera(
 def read_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
     month_map = pl.LazyFrame(
         {
-            "Nombre_Mes": ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", 
-                           "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"],
-            "Mes": list(range(1, 13))
+            "Nombre_Mes": [
+                "ENE",
+                "FEB",
+                "MAR",
+                "ABR",
+                "MAY",
+                "JUN",
+                "JUL",
+                "AGO",
+                "SEP",
+                "OCT",
+                "NOV",
+                "DIC",
+            ],
+            "Mes": list(range(1, 13)),
         }
     )
 
@@ -425,9 +437,7 @@ def evidencias_parametros(negocio: str, mes_corte: int):
         pyautogui.hotkey("winleft", "alt", "d")
         sleep(0.5)
 
-    pyautogui.screenshot(
-        f"data/controles_informacion/{mes_corte}_extraccion.png"
-    )
+    pyautogui.screenshot(f"data/controles_informacion/{mes_corte}_extraccion.png")
 
     if os.name == "nt":
         pyautogui.hotkey("winleft", "alt", "d")

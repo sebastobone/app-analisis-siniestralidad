@@ -7,12 +7,7 @@ from src import plantilla
 from typing import Annotated
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 from uuid import uuid4
-
-app = FastAPI()
-
-
-templates = Jinja2Templates(directory="src/templates")
-app.mount("/static", StaticFiles(directory="src/static"), name="static")
+from contextlib import asynccontextmanager
 
 
 class Parametros(SQLModel, table=True):
@@ -21,20 +16,22 @@ class Parametros(SQLModel, table=True):
     mes_inicio: int
     mes_corte: int
     tipo_analisis: str
-    aproximar_reaseguro: int
+    aproximar_reaseguro: bool
     nombre_plantilla: str
     session_id: str | None = Field(index=True)
 
 
-sqlite_file_name = "data/database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+engine = create_engine(
+    "sqlite:///data/database.db", connect_args={"check_same_thread": False}
+)
 
 
 def create_db_and_tables():
-    # SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
+
+
+def delete_db_and_tables():
+    SQLModel.metadata.drop_all(engine)
 
 
 def get_session():
@@ -49,37 +46,65 @@ SESSION_COOKIE_NAME = "session_id"
 
 def parametros_usuario(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> list[Parametros]:
-    return session.query(Parametros).filter(Parametros.session_id == session_id).all()
+):
+    return session.exec(
+        select(Parametros).where(Parametros.session_id == session_id)
+    ).all()
 
 
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     create_db_and_tables()
+    yield
+    delete_db_and_tables()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+templates = Jinja2Templates(directory="src/templates")
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
-async def generar_api(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+async def generar_base(request: Request):
+    return templates.TemplateResponse(request, "index.html")
 
 
-@app.post("/ingresar-parametros")
+# Se tuvo que formular los parametros individualmente, porque si bien FastAPI
+# permite ingresar datos de form como un modelo de Pydantic, esta
+# caracteristica no funciona igual para los modelos de SQLModel.
+@app.post("/ingresar-parametros", response_model=Parametros)
 async def ingresar_parametros(
-    parametros: Annotated[Parametros, Form()],
     session: SessionDep,
     response: Response,
+    negocio: str = Form(),
+    mes_inicio: int = Form(),
+    mes_corte: int = Form(),
+    tipo_analisis: str = Form(),
+    aproximar_reaseguro: bool = Form(),
+    nombre_plantilla: str = Form(),
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     if not session_id:
         session_id = str(uuid4())
         response.set_cookie(key=SESSION_COOKIE_NAME, value=session_id)
+
+    parametros = Parametros(
+        negocio=negocio,
+        mes_inicio=mes_inicio,
+        mes_corte=mes_corte,
+        tipo_analisis=tipo_analisis,
+        aproximar_reaseguro=aproximar_reaseguro,
+        nombre_plantilla=nombre_plantilla,
+    )
     parametros.session_id = session_id
 
     existing_data = parametros_usuario(session, session_id)
     if existing_data:
         for data in existing_data:
             session.delete(data)
-            session.commit()
+        session.commit()
 
     session.add(parametros)
     session.commit()
@@ -137,7 +162,7 @@ async def abrir_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = parametros_usuario(session, session_id)[0]
-    wb = main.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
+    _ = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -146,7 +171,7 @@ async def preparar_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = parametros_usuario(session, session_id)[0]
-    wb = main.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
+    wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
     plantilla.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -156,7 +181,7 @@ async def almacenar_analisis(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = parametros_usuario(session, session_id)[0]
-    wb = main.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
+    wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
     plantilla.almacenar_analisis(wb, p.mes_corte)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -169,7 +194,7 @@ async def generar_plantilla(
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:
     p = parametros_usuario(session, session_id)[0]
-    wb = main.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
+    wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
 
     if modo == "generar":
         plantilla.generar_plantilla(

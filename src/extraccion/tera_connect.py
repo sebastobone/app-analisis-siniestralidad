@@ -7,12 +7,122 @@ import src.constantes as ct
 from src import utils
 
 
-def sini_primas_exp(file: str) -> str:
-    query_name = file.split("/")[-1]
+def tipo_query(file: str) -> str:
+    nombre_query = file.split("/")[-1]
     for qty in ["siniestros", "primas", "expuestos"]:
-        if qty == query_name.replace(".sql", ""):
+        if qty == nombre_query.replace(".sql", ""):
             return qty
     return "otro"
+
+
+def preparar_queries(
+    file: str, mes_inicio: int, mes_corte: int, aproximar_reaseguro: int | None = None
+) -> str:
+    return (
+        open(file)
+        .read()
+        .format(
+            mes_primera_ocurrencia=mes_inicio,
+            mes_corte=mes_corte,
+            fecha_primera_ocurrencia=utils.yyyymm_to_date(mes_inicio),
+            fecha_mes_corte=utils.yyyymm_to_date(mes_corte),
+            aproximar_reaseguro=aproximar_reaseguro,
+        )
+    )
+
+
+def cargar_segmentaciones(archivo_segm: str, tipo_query: str) -> list[pl.DataFrame]:
+    segm_sheets = [
+        str(sheet)
+        for sheet in pd.ExcelFile(archivo_segm).sheet_names
+        if str(sheet).startswith("add")
+    ]
+    if len(segm_sheets) > 0:
+        check_adds_segmentacion(segm_sheets)
+
+    return [
+        pl.read_excel(archivo_segm, sheet_name=str(segm_sheet))
+        for segm_sheet in segm_sheets
+        if tipo_query[0] in segm_sheet.split("_")[1]
+    ]
+
+
+def fechas_chunks(mes_inicio: int, mes_corte: int) -> list[tuple]:
+    """
+    Limites para correr queries pesados por partes
+    """
+    return list(
+        zip(
+            pl.date_range(
+                utils.yyyymm_to_date(mes_inicio),
+                utils.yyyymm_to_date(mes_corte),
+                interval="1mo",
+                eager=True,
+            ),
+            pl.date_range(
+                utils.yyyymm_to_date(mes_inicio),
+                utils.yyyymm_to_date(mes_corte),
+                interval="1mo",
+                eager=True,
+            ).dt.month_end(),
+        )
+    )
+
+
+def ejecutar_queries(
+    queries: list[str],
+    con: td.TeradataConnection,
+    fechas_chunks: list[tuple],
+    segm: list[pl.DataFrame],
+) -> pl.DataFrame:
+    cur = con.cursor()
+    add_num = 0
+    for query in tqdm(queries):
+        if "?" not in query:
+            if "{chunk_ini}" in query:
+                for chunk_ini, chunk_fin in tqdm(fechas_chunks):
+                    cur.execute(
+                        query.format(
+                            chunk_ini=chunk_ini.strftime(format="%Y%m"),
+                            chunk_fin=chunk_fin.strftime(format="%Y%m"),
+                        )
+                    )
+            else:
+                cur.execute(query)
+        else:
+            check_numero_columnas_add(query, segm[add_num])
+            add = check_duplicados(segm[add_num])
+            check_nulls(add)
+            cur.executemany(query, add.rows())
+            add_num += 1
+
+    return pl.read_database(queries[-1], con)
+
+
+def guardar_resultados(
+    df: pl.DataFrame,
+    negocio: str,
+    save_path: str,
+    save_format: str,
+    tipo_query: str,
+) -> None:
+    df = pl.DataFrame(utils.lowercase_columns(df))
+
+    if tipo_query != "otro":
+        checks_final_info(tipo_query, df, negocio)
+
+        df = df.select(
+            utils.col_apertura_reservas(negocio),
+            pl.all(),
+        )
+        df.write_csv(f"{save_path}.csv", separator="\t")
+
+    if save_format == "parquet":
+        df.write_parquet(f"{save_path}.parquet")
+    elif save_format == "csv":
+        df.write_csv(f"{save_path}.csv", separator="\t")
+
+    print(f"""Datos almacenados en {save_path}.{save_format}.""")
 
 
 def check_adds_segmentacion(segm_sheets: list[str]) -> None:
@@ -33,34 +143,28 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
             )
 
 
-def check_suficiencia_adds(file: str, queries: str, segm_sheets: list[str]) -> None:
-    query_type = sini_primas_exp(file)
-    segm_sheets_file = [
-        segm_sheet
-        for segm_sheet in segm_sheets
-        if query_type[:1] in segm_sheet.split("_")[1]
-    ]
-    num_adds = queries.count("?);")
-    if num_adds != len(segm_sheets_file):
+def check_suficiencia_adds(file: str, queries: str, adds: list[pl.DataFrame]) -> None:
+    num_adds_necesarios = queries.count("?);")
+    if num_adds_necesarios != len(adds):
         raise Exception(
             f"""
-            Necesita {num_adds} tablas adicionales para ejecutar el query {file},
-            pero en el Excel "segmentacion.xlsx" hay {len(segm_sheets_file)} hojas
+            Necesita {num_adds_necesarios} tablas adicionales para ejecutar el query {file},
+            pero en el Excel "segmentacion.xlsx" hay {len(adds)} hojas
             de este tipo. Por favor, revise las hojas que tiene o revise que el 
             nombre de las hojas siga el formato
             "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
-            Hojas actuales: {segm_sheets_file}
+            Hojas actuales: {adds}
             """
         )
 
 
-def check_numero_columnas_add(file: str, query: str, add: pl.DataFrame) -> None:
+def check_numero_columnas_add(query: str, add: pl.DataFrame) -> None:
     num_cols = query.count("?")
     num_cols_add = len(add.collect_schema().names())
     if num_cols != num_cols_add:
         raise Exception(
             f"""
-            Error en {file} -> {query}:
+            Error en {query}:
             La tabla creada en Teradata recibe {num_cols} columnas, pero la
             tabla que esta intentando ingresar tiene {num_cols_add} columnas:
             {add}
@@ -93,7 +197,7 @@ def check_nulls(add: pl.DataFrame) -> None:
         )
 
 
-def checks_final_info(tipo_query: str, df: pl.DataFrame) -> None:
+def checks_final_info(tipo_query: str, df: pl.DataFrame, negocio: str) -> None:
     """
     Esta funcion se usa cuando se ejecuta un query de siniestros,
     primas, o expuestos que consolida la informacion necesaria para
@@ -116,7 +220,10 @@ def checks_final_info(tipo_query: str, df: pl.DataFrame) -> None:
     # Segmentaciones faltantes
     df_faltante = df.filter(
         pl.any_horizontal(
-            [(pl.col(col).is_null() | pl.col(col).eq("-1")) for col in ct.APERT_COLS]
+            [
+                (pl.col(col).is_null() | pl.col(col).eq("-1"))
+                for col in ct.columnas_aperturas(negocio)
+            ]
         )
     )
     if not df_faltante.is_empty():
@@ -124,19 +231,7 @@ def checks_final_info(tipo_query: str, df: pl.DataFrame) -> None:
         raise ValueError("""¡Alerta! Revise las segmentaciones faltantes.""")
 
 
-def col_apertura_reservas() -> pl.Expr:
-    return pl.concat_str(
-        [
-            pl.col("codigo_op"),
-            pl.col("codigo_ramo_op"),
-            pl.col("apertura_canal_desc"),
-            pl.col("apertura_amparo_desc"),
-        ],
-        separator="_",
-    ).alias("apertura_reservas")
-
-
-def read_query(
+def correr_query(
     file: str,
     save_path: str,
     save_format: str,
@@ -145,95 +240,15 @@ def read_query(
     mes_corte: int,
     aproximar_reaseguro: int | None = None,
 ) -> None:
-    tipo_query = sini_primas_exp(file)
-
-    # Tablas de segmentacion
+    tipo = tipo_query(file)
     archivo_segm = f"data/segmentacion_{negocio}.xlsx"
-    segm_sheets = [
-        str(sheet)
-        for sheet in pd.ExcelFile(archivo_segm).sheet_names
-        if str(sheet).startswith("add")
-    ]
-    if len(segm_sheets) > 0:
-        check_adds_segmentacion(segm_sheets)
+    segm = cargar_segmentaciones(archivo_segm, tipo)
 
-    segm = [
-        pl.read_excel(archivo_segm, sheet_name=str(segm_sheet))
-        for segm_sheet in segm_sheets
-        if tipo_query[0] in segm_sheet.split("_")[1]
-    ]
-
-    queries = open(file).read()
-    check_suficiencia_adds(file, queries, segm_sheets)
-
+    fchunks = fechas_chunks(mes_inicio, mes_corte)
     con = td.connect(json.dumps(ct.CREDENCIALES_TERADATA))
-    cur = con.cursor()
 
-    # Limites para correr queries pesados por partes
-    fechas_chunks = list(
-        zip(
-            pl.date_range(
-                utils.yyyymm_to_date(mes_inicio),
-                utils.yyyymm_to_date(mes_corte),
-                interval="1mo",
-                eager=True,
-            ),
-            pl.date_range(
-                utils.yyyymm_to_date(mes_inicio),
-                utils.yyyymm_to_date(mes_corte),
-                interval="1mo",
-                eager=True,
-            ).dt.month_end(),
-        )
-    )
+    queries = preparar_queries(file, mes_inicio, mes_corte, aproximar_reaseguro)
+    check_suficiencia_adds(file, queries, segm)
 
-    add_num = 0
-    for n_query, query in enumerate(tqdm(queries.split(sep=";"))):
-        if "?" not in query:
-            query = query.format(
-                mes_primera_ocurrencia=mes_inicio,
-                mes_corte=mes_corte,
-                fecha_primera_ocurrencia=utils.yyyymm_to_date(mes_inicio),
-                fecha_mes_corte=utils.yyyymm_to_date(mes_corte),
-                aproximar_reaseguro=aproximar_reaseguro,
-            )
-
-            if "{chunk_ini}" in query:
-                for chunk_ini, chunk_fin in tqdm(fechas_chunks):
-                    cur.execute(
-                        query.format(
-                            chunk_ini=chunk_ini.strftime(format="%Y%m"),
-                            chunk_fin=chunk_fin.strftime(format="%Y%m"),
-                        )
-                    )
-
-            if n_query != len(queries.split(sep=";")) - 1:
-                cur.execute(query)
-            else:
-                df = pl.read_database(query, con)
-                df = pl.DataFrame(utils.lowercase_columns(df))
-
-                if tipo_query != "otro":
-                    checks_final_info(tipo_query, df)
-
-                    df = df.select(
-                        col_apertura_reservas(),
-                        pl.all(),
-                    )
-                    df.write_csv(f"{save_path}.csv", separator="\t")
-
-                if save_format == "parquet":
-                    df.write_parquet(f"{save_path}.parquet")
-                elif save_format == "csv":
-                    df.write_csv(f"{save_path}.csv", separator="\t")
-
-                print(f"""
-                      Query {file} completado. Datos almacenados en 
-                      {save_path}.{save_format}.
-                      """)
-        else:
-            check_numero_columnas_add(file, query, segm[add_num])
-            add = check_duplicados(segm[add_num])
-            check_nulls(add)
-            cur.executemany(query, add.rows())
-            add_num += 1
+    df = ejecutar_queries(queries.split(";"), con, fchunks, segm)
+    guardar_resultados(df, negocio, save_path, save_format, tipo)

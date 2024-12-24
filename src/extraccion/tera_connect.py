@@ -129,7 +129,7 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
     for sheet in segm_sheets:
         partes = sheet.split("_")
         if (len(partes) < 3) or not any(char in partes[1] for char in "spe"):
-            raise Exception(
+            raise ValueError(
                 """
                 El nombre de las hojas con tablas a cargar debe seguir el
                 formato "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
@@ -146,7 +146,7 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
 def check_suficiencia_adds(file: str, queries: str, adds: list[pl.DataFrame]) -> None:
     num_adds_necesarios = queries.count("?);")
     if num_adds_necesarios != len(adds):
-        raise Exception(
+        raise ValueError(
             f"""
             Necesita {num_adds_necesarios} tablas adicionales para ejecutar el query {file},
             pero en el Excel "segmentacion.xlsx" hay {len(adds)} hojas
@@ -162,7 +162,7 @@ def check_numero_columnas_add(query: str, add: pl.DataFrame) -> None:
     num_cols = query.count("?")
     num_cols_add = len(add.collect_schema().names())
     if num_cols != num_cols_add:
-        raise Exception(
+        raise ValueError(
             f"""
             Error en {query}:
             La tabla creada en Teradata recibe {num_cols} columnas, pero la
@@ -189,7 +189,7 @@ def check_duplicados(add: pl.DataFrame) -> pl.DataFrame:
 def check_nulls(add: pl.DataFrame) -> None:
     num_nulls = add.null_count().max_horizontal().max()
     if isinstance(num_nulls, int) and num_nulls > 0:
-        raise Exception(
+        raise ValueError(
             f"""
             Error -> tiene valores nulos en la siguiente tabla: {add}
             Corrija estos valores antes de ejecutar el proceso.

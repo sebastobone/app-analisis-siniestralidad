@@ -113,7 +113,7 @@ def generar_controles(negocio: str, mes_corte: int) -> None:
     ctrl.generar_controles("primas", negocio, mes_corte)
     ctrl.generar_controles("expuestos", negocio, mes_corte)
 
-    ctrl.evidencias_parametros()
+    ctrl.evidencias_parametros(negocio, mes_corte)
     ctrl.set_permissions("data/controles_informacion", "read")
 
 

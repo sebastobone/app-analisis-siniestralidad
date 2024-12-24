@@ -4,11 +4,11 @@ from src.extraccion import tera_connect
 
 
 def test_check_adds_segmentacion():
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ValueError) as exc_info:
         tera_connect.check_adds_segmentacion(["add_d_Siniestros"])
     print(exc_info.value)
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ValueError) as exc_info:
         tera_connect.check_adds_segmentacion(["add_Siniestros"])
     print(exc_info.value)
 
@@ -24,17 +24,17 @@ def test_check_suficiencia_adds():
 
     """
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ValueError) as exc_info:
         tera_connect.check_suficiencia_adds("siniestros", mock_query, ["add_d_Polizas"])
     print(exc_info.value)
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ValueError) as exc_info:
         tera_connect.check_suficiencia_adds(
             "siniestros", mock_query, ["add_s_Polizas", "add_s_Sucursales"]
         )
     print(exc_info.value)
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(ValueError) as exc_info:
         tera_connect.check_suficiencia_adds(
             "siniestros",
             mock_query,
@@ -53,8 +53,8 @@ def test_check_suficiencia_adds():
 
 
 def test_check_numero_columnas_add():
-    mock_df = pl.DataFrame({"datos": [1, 1, 2, 3, 4, 5]})
+    mock_add = pl.DataFrame({"datos": [1, 1, 2, 3, 4, 5]})
     mock_query = "INSERT INTO table VALUES (?, ?)"
-    with pytest.raises(Exception) as exc_info:
-        tera_connect.check_numero_columnas_add("siniestros", mock_query, mock_df)
+    with pytest.raises(ValueError) as exc_info:
+        tera_connect.check_numero_columnas_add(mock_query, mock_add)
     print(exc_info.value)

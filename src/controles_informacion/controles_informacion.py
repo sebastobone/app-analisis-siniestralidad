@@ -28,22 +28,11 @@ def group_tera(
 
 def read_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
     month_map = pl.LazyFrame(
-        [
-            ("ENE", 1),
-            ("FEB", 2),
-            ("MAR", 3),
-            ("ABR", 4),
-            ("MAY", 5),
-            ("JUN", 6),
-            ("JUL", 7),
-            ("AGO", 8),
-            ("SEP", 9),
-            ("OCT", 10),
-            ("NOV", 11),
-            ("DIC", 12),
-        ],
-        schema=["Nombre_Mes", "Mes"],
-        orient="row",
+        {
+            "Nombre_Mes": ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", 
+                           "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"],
+            "Mes": list(range(1, 13))
+        }
     )
 
     ct = 0
@@ -394,7 +383,7 @@ def set_permissions(directory, permission="write"):
                 )
 
 
-def evidencias_parametros():
+def evidencias_parametros(negocio: str, mes_corte: int):
     from datetime import datetime
     import openpyxl as xl
     import pyautogui
@@ -415,8 +404,8 @@ def evidencias_parametros():
     if not user_yes:
         raise Exception("Proceso interrumpido, vuelva a ejecutar.")
 
-    original_file = f"data/segmentacion_{ct.NEGOCIO}.xlsx"
-    stored_file = f"data/controles_informacion/{ct.END_DATE.strftime("%Y%m")}_segmentacion_{ct.NEGOCIO}.xlsx"
+    original_file = f"data/segmentacion_{negocio}.xlsx"
+    stored_file = f"data/controles_informacion/{mes_corte}_segmentacion_{negocio}.xlsx"
 
     shutil.copyfile(original_file, stored_file)
 
@@ -437,7 +426,7 @@ def evidencias_parametros():
         sleep(0.5)
 
     pyautogui.screenshot(
-        f"data/controles_informacion/{ct.END_DATE.strftime("%Y%m")}_extraccion.png"
+        f"data/controles_informacion/{mes_corte}_extraccion.png"
     )
 
     if os.name == "nt":

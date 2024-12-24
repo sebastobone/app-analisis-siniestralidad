@@ -11,15 +11,16 @@ CREDENCIALES_TERADATA = {
     "password": "47^07Ghia0+b",
 }
 
-APERT_COLS = [
-    "codigo_op",
-    "codigo_ramo_op",
-    "apertura_canal_desc",
-    "apertura_amparo_desc",
-]
-BASE_COLS = ["ramo_desc", "apertura_canal_desc", "apertura_amparo_desc"]
-
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
+
+
+def columnas_aperturas(negocio: str) -> list[str]:
+    base = ["codigo_op", "codigo_ramo_op"]
+    if negocio == "autonomia":
+        return base + ["apertura_canal_desc", "apertura_amparo_desc"]
+    elif negocio == "mock":
+        return base + ["apertura_1", "apertura_2"]
+    return base
 
 
 def min_cols_tera(tipo_query: str) -> list[str]:

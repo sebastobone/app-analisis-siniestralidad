@@ -1,6 +1,6 @@
 from src.procesamiento.autonomia import adds
 from src.procesamiento.autonomia import siniestros_gen
-from src.extraccion.tera_connect import read_query
+from src.extraccion.tera_connect import correr_query
 from src.controles_informacion import controles_informacion as ctrl
 from src.procesamiento import base_siniestros as bsin
 from src.procesamiento import base_primas_expuestos as bpdn
@@ -17,7 +17,7 @@ def correr_query_siniestros(
     aproximar_reaseguro: bool,
 ) -> None:
     if negocio == "autonomia":
-        read_query(
+        correr_query(
             "data/queries/catalogos/planes.sql",
             "data/catalogos/planes",
             "parquet",
@@ -26,7 +26,7 @@ def correr_query_siniestros(
             mes_corte,
             aproximar_reaseguro,
         )
-        read_query(
+        correr_query(
             "data/queries/catalogos/sucursales.sql",
             "data/catalogos/sucursales",
             "parquet",
@@ -36,7 +36,7 @@ def correr_query_siniestros(
             aproximar_reaseguro,
         )
         adds.sap_sinis_ced(mes_corte)
-        read_query(
+        correr_query(
             "data/queries/autonomia/siniestros_cedidos.sql",
             "data/raw/siniestros_cedidos",
             "parquet",
@@ -45,7 +45,7 @@ def correr_query_siniestros(
             mes_corte,
             aproximar_reaseguro,
         )
-        read_query(
+        correr_query(
             "data/queries/autonomia/siniestros_brutos.sql",
             "data/raw/siniestros_brutos",
             "parquet",
@@ -56,7 +56,7 @@ def correr_query_siniestros(
         )
         siniestros_gen.main(mes_inicio, mes_corte, aproximar_reaseguro)
     else:
-        read_query(
+        correr_query(
             f"data/queries/{negocio}/siniestros.sql",
             "data/raw/siniestros",
             "parquet",
@@ -66,7 +66,7 @@ def correr_query_siniestros(
             aproximar_reaseguro,
         )
 
-    bsin.aperturas()
+    bsin.aperturas(negocio)
     bsin.bases_siniestros(tipo_analisis, mes_inicio, mes_corte)
 
 
@@ -78,7 +78,7 @@ def correr_query_primas(
 ) -> None:
     if negocio == "autonomia":
         adds.sap_primas_ced(mes_corte)
-    read_query(
+    correr_query(
         f"data/queries/{negocio}/primas.sql",
         "data/raw/primas",
         "parquet",
@@ -87,7 +87,7 @@ def correr_query_primas(
         mes_corte,
         aproximar_reaseguro,
     )
-    bpdn.bases_primas_expuestos("primas")
+    bpdn.bases_primas_expuestos("primas", negocio)
 
 
 def correr_query_expuestos(
@@ -95,7 +95,7 @@ def correr_query_expuestos(
     mes_inicio: int,
     mes_corte: int,
 ) -> None:
-    read_query(
+    correr_query(
         f"data/queries/{negocio}/expuestos.sql",
         "data/raw/expuestos",
         "parquet",
@@ -103,7 +103,7 @@ def correr_query_expuestos(
         mes_inicio,
         mes_corte,
     )
-    bpdn.bases_primas_expuestos("expuestos")
+    bpdn.bases_primas_expuestos("expuestos", negocio)
 
 
 def generar_controles(negocio: str, mes_corte: int) -> None:

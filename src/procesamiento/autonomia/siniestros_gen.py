@@ -1,9 +1,7 @@
 import polars as pl
 from . import base_incurrido
 from . import aprox_reaseguro
-import datetime
 from src import utils
-from calendar import monthrange
 
 
 def conteo(
@@ -199,15 +197,7 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
             ramo_desc=pl.when(pl.col("codigo_ramo_op") == "AAV")
             .then(pl.lit("ANEXOS VI"))
             .otherwise(pl.col("ramo_desc")),
-            apertura_reservas=pl.concat_str(
-                [
-                    pl.col("codigo_op"),
-                    pl.col("codigo_ramo_op"),
-                    pl.col("apertura_canal_desc"),
-                    pl.col("apertura_amparo_desc"),
-                ],
-                separator="_",
-            ),
+            apertura_reservas=utils.col_apertura_reservas(),
         )
         .group_by(
             [

@@ -3,7 +3,7 @@ import src.constantes as ct
 from src import utils
 
 
-def bases_primas_expuestos(qty: str) -> None:
+def bases_primas_expuestos(qty: str, negocio: str) -> None:
     def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
         return (
             (col.dt.year() * 100 + col.dt.month()).alias("Mensual"),
@@ -31,13 +31,14 @@ def bases_primas_expuestos(qty: str) -> None:
         )
         .drop(["apertura_reservas", "codigo_op", "codigo_ramo_op", "fecha_registro"])
         .unpivot(
-            index=ct.BASE_COLS + qty_cols,
+            index=["ramo_desc"] + ct.columnas_aperturas(negocio)[2:] + qty_cols,
             variable_name="periodicidad_ocurrencia",
             value_name="periodo_ocurrencia",
         )
         .with_columns(pl.col("periodo_ocurrencia").cast(pl.Int32))
         .group_by(
-            ct.BASE_COLS
+            ["ramo_desc"]
+            + ct.columnas_aperturas(negocio)[2:]
             + [
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
@@ -52,7 +53,8 @@ def bases_primas_expuestos(qty: str) -> None:
 
     return (
         df.sort(
-            ct.BASE_COLS
+            ["ramo_desc"]
+            + ct.columnas_aperturas(negocio)[2:]
             + [
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",

@@ -1,5 +1,6 @@
 import polars as pl
 from datetime import date
+from src import constantes as ct
 
 
 def lowercase_columns(df: pl.LazyFrame | pl.DataFrame) -> pl.LazyFrame | pl.DataFrame:
@@ -12,6 +13,12 @@ def col_ramo_desc() -> pl.Expr:
         pl.col("codigo_ramo_op"),
         pl.col("ramo_desc"),
         separator=" - ",
+    )
+
+
+def col_apertura_reservas(negocio) -> pl.Expr:
+    return pl.concat_str(ct.columnas_aperturas(negocio), separator="_").alias(
+        "apertura_reservas"
     )
 
 

@@ -197,3 +197,5 @@ backups
 !data/queries/backups
 
 .DS_Store
+
+data/database.db

@@ -18,9 +18,11 @@ def columnas_aperturas(negocio: str) -> list[str]:
     base = ["codigo_op", "codigo_ramo_op"]
     if negocio == "autonomia":
         return base + ["apertura_canal_desc", "apertura_amparo_desc"]
+    elif negocio == "soat":
+        return base + ["apertura_canal_desc", "apertura_amparo_desc", "tipo_vehiculo"]
     elif negocio == "mock":
         return base + ["apertura_1", "apertura_2"]
-    return base
+    return []
 
 
 def min_cols_tera(tipo_query: str) -> list[str]:

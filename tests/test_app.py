@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 from src.app import app, Parametros, get_session
 from sqlmodel import Session, create_engine, SQLModel, select
 from sqlmodel.pool import StaticPool
-from src import main
 
 
 @pytest.fixture
@@ -98,7 +97,6 @@ def test_correr_query_siniestros(
     test_session.commit()
 
     with patch("src.main.correr_query_siniestros") as mock_query:
-
         response = client.post(
             "/correr-query-siniestros", cookies={"session_id": str(params.session_id)}
         )

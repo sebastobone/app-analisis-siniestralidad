@@ -119,8 +119,8 @@ def guardar_resultados(
 
     if save_format == "parquet":
         df.write_parquet(f"{save_path}.parquet")
-    elif save_format == "csv":
-        df.write_csv(f"{save_path}.csv", separator="\t")
+    elif save_format in ("csv", "txt"):
+        df.write_csv(f"{save_path}.{save_format}", separator="\t")
 
     print(f"""Datos almacenados en {save_path}.{save_format}.""")
 

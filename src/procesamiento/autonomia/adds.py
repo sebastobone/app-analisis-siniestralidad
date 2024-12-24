@@ -28,10 +28,10 @@ def crear_hoja_segmentacion(df: pl.DataFrame, nombre_hoja: str) -> None:
     wb = xw.Book.caller()
 
     try:
-        wb.sheets.add(name=nombre_hoja, after="Parametros")
+        wb.sheets.add(name=nombre_hoja, after="CODS")
     except ValueError:
         wb.sheets[nombre_hoja].delete()
-        wb.sheets.add(name=nombre_hoja, after="Parametros")
+        wb.sheets.add(name=nombre_hoja, after="CODS")
 
     wb.sheets[nombre_hoja].range("A1:A500").number_format = "@"
     wb.sheets[nombre_hoja].range("B1:B500").number_format = "@"

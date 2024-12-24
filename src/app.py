@@ -56,7 +56,7 @@ def parametros_usuario(
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
-    delete_db_and_tables()
+    # delete_db_and_tables()
 
 
 app = FastAPI(lifespan=lifespan)

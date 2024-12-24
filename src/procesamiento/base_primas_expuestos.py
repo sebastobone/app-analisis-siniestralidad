@@ -23,22 +23,24 @@ def bases_primas_expuestos(qty: str, negocio: str) -> None:
         else ["expuestos", "vigentes"]
     )
 
+    cols_aperts = ct.columnas_aperturas(negocio)[2:]
+
     df_group = (
         pl.scan_parquet(f"data/raw/{qty}.parquet")
         .with_columns(
             fechas_pdn(pl.col("fecha_registro")),
             ramo_desc=utils.col_ramo_desc(),
         )
-        .drop(["apertura_reservas", "codigo_op", "codigo_ramo_op", "fecha_registro"])
+        .select(["ramo_desc"] + cols_aperts + qty_cols + list(ct.PERIODICIDADES.keys()))
         .unpivot(
-            index=["ramo_desc"] + ct.columnas_aperturas(negocio)[2:] + qty_cols,
+            index=["ramo_desc"] + cols_aperts + qty_cols,
             variable_name="periodicidad_ocurrencia",
             value_name="periodo_ocurrencia",
         )
         .with_columns(pl.col("periodo_ocurrencia").cast(pl.Int32))
         .group_by(
             ["ramo_desc"]
-            + ct.columnas_aperturas(negocio)[2:]
+            + cols_aperts
             + [
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
@@ -54,7 +56,7 @@ def bases_primas_expuestos(qty: str, negocio: str) -> None:
     return (
         df.sort(
             ["ramo_desc"]
-            + ct.columnas_aperturas(negocio)[2:]
+            + cols_aperts
             + [
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",

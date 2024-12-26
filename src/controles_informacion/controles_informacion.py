@@ -1,8 +1,8 @@
 import polars as pl
 from time import sleep
 import os
-import src.constantes as ct
 from src.utils import lowercase_columns
+from src import utils
 
 
 def group_tera(
@@ -445,7 +445,34 @@ def evidencias_parametros(negocio: str, mes_corte: int):
     # sleep(30)
 
 
-def generar_controles(file: str, negocio: str, mes_corte: int) -> None:
+def ajustes_fraude(df: pl.LazyFrame):
+    fraude = pl.read_excel(
+        "data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude"
+    ).lazy()
+    fraude = pl.LazyFrame(utils.lowercase_columns(fraude)).drop("tipo_ajuste")
+
+    df = (
+        pl.concat([df, fraude])
+        .group_by(
+            df.collect_schema().names()[
+                : df.collect_schema().names().index("fecha_registro") + 1
+            ]
+        )
+        .sum()
+    )
+    df.collect().write_csv("siniestros.txt", separator="\t")
+
+    return df
+
+
+def generar_controles(
+    file: str,
+    negocio: str,
+    mes_corte: int,
+    cuadre_contable_sinis: bool = False,
+    add_fraude_soat: bool = False,
+    cuadre_contable_primas: bool = False,
+) -> None:
     if file == "siniestros":
         qtys = ["pago_bruto", "aviso_bruto", "pago_retenido", "aviso_retenido"]
         group_cols = ["apertura_reservas", "mes_ocurr", "mes_mov"]
@@ -474,14 +501,28 @@ def generar_controles(file: str, negocio: str, mes_corte: int) -> None:
         estado_cuadre="pre_cuadre_contable",
     )
 
-    if file in ("siniestros", "primas"):
+    if (file == "siniestros" and cuadre_contable_sinis) or (
+        file == "primas" and cuadre_contable_primas
+    ):
         df.collect().write_csv(f"data/raw/{file}_pre_cuadre.csv", separator="\t")
-        df_cuadrado = cuadre_contable(df.collect(), file, valid_pre_cuadre, negocio)
+        df = cuadre_contable(df.collect(), file, valid_pre_cuadre, negocio)
         _ = controles_informacion(
-            df_cuadrado,
+            df,
             file,
             group_cols,
             qtys,
             mes_corte,
             estado_cuadre="post_cuadre_contable",
+        )
+
+    if negocio == "soat" and file == "siniestros" and add_fraude_soat:
+        df.collect().write_csv("data/raw/siniestros_post_cuadre.csv", separator="\t")
+        df = ajustes_fraude(df)
+        _ = controles_informacion(
+            df,
+            file,
+            group_cols,
+            qtys,
+            mes_corte,
+            estado_cuadre="post_ajustes_fraude",
         )

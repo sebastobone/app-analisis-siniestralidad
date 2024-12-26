@@ -4,6 +4,7 @@ from src.extraccion.tera_connect import correr_query
 from src.controles_informacion import controles_informacion as ctrl
 from src.procesamiento import base_siniestros as bsin
 from src.procesamiento import base_primas_expuestos as bpdn
+import polars as pl
 
 
 def correr_query_siniestros(
@@ -84,7 +85,9 @@ def correr_query_primas(
         mes_corte,
         aproximar_reaseguro,
     )
-    bpdn.bases_primas_expuestos("primas", negocio)
+    bpdn.bases_primas_expuestos(
+        pl.scan_parquet("data/raw/primas.parquet"), "primas", negocio
+    ).write_parquet("data/processed/primas.parquet")
 
 
 def correr_query_expuestos(
@@ -100,14 +103,30 @@ def correr_query_expuestos(
         mes_inicio,
         mes_corte,
     )
-    bpdn.bases_primas_expuestos("expuestos", negocio)
+    bpdn.bases_primas_expuestos(
+        pl.scan_parquet("data/raw/expuestos.parquet"), "expuestos", negocio
+    ).write_parquet("data/processed/expuestos.parquet")
 
 
-def generar_controles(negocio: str, mes_corte: int) -> None:
+def generar_controles(
+    negocio: str,
+    mes_corte: int,
+    cuadre_contable_sinis: bool,
+    add_fraude_soat: bool,
+    cuadre_contable_primas: bool,
+) -> None:
     ctrl.set_permissions("data/controles_informacion", "write")
 
-    ctrl.generar_controles("siniestros", negocio, mes_corte)
-    ctrl.generar_controles("primas", negocio, mes_corte)
+    ctrl.generar_controles(
+        "siniestros",
+        negocio,
+        mes_corte,
+        cuadre_contable_sinis=cuadre_contable_sinis,
+        add_fraude_soat=add_fraude_soat,
+    )
+    ctrl.generar_controles(
+        "primas", negocio, mes_corte, cuadre_contable_primas=cuadre_contable_primas
+    )
     ctrl.generar_controles("expuestos", negocio, mes_corte)
 
     ctrl.evidencias_parametros(negocio, mes_corte)

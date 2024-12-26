@@ -1,17 +1,21 @@
 import polars as pl
 import src.constantes as ct
 from src import utils
+from typing import Literal
 
 
-def bases_primas_expuestos(qty: str, negocio: str) -> None:
-    def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
-        return (
-            (col.dt.year() * 100 + col.dt.month()).alias("Mensual"),
-            (col.dt.year() * 100 + (col.dt.month() / 3).ceil() * 3).alias("Trimestral"),
-            (col.dt.year() * 100 + (col.dt.month() / 6).ceil() * 6).alias("Semestral"),
-            col.dt.year().alias("Anual"),
-        )
+def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
+    return (
+        (col.dt.year() * 100 + col.dt.month()).alias("Mensual"),
+        (col.dt.year() * 100 + (col.dt.month() / 3).ceil() * 3).alias("Trimestral"),
+        (col.dt.year() * 100 + (col.dt.month() / 6).ceil() * 6).alias("Semestral"),
+        col.dt.year().alias("Anual"),
+    )
 
+
+def bases_primas_expuestos(
+    df: pl.LazyFrame, qty: Literal["primas", "expuestos"], negocio: str
+) -> pl.DataFrame:
     qty_cols = (
         [
             "prima_bruta",
@@ -26,8 +30,7 @@ def bases_primas_expuestos(qty: str, negocio: str) -> None:
     cols_aperts = ct.columnas_aperturas(negocio)[2:]
 
     df_group = (
-        pl.scan_parquet(f"data/raw/{qty}.parquet")
-        .with_columns(
+        df.with_columns(
             fechas_pdn(pl.col("fecha_registro")),
             ramo_desc=utils.col_ramo_desc(),
         )
@@ -53,15 +56,11 @@ def bases_primas_expuestos(qty: str, negocio: str) -> None:
     elif qty == "expuestos":
         df = df_group.mean()
 
-    return (
-        df.sort(
-            ["ramo_desc"]
-            + cols_aperts
-            + [
-                "periodicidad_ocurrencia",
-                "periodo_ocurrencia",
-            ]
-        )
-        .collect()
-        .write_parquet(f"data/processed/{qty}.parquet")
-    )
+    return df.sort(
+        ["ramo_desc"]
+        + cols_aperts
+        + [
+            "periodicidad_ocurrencia",
+            "periodo_ocurrencia",
+        ]
+    ).collect()

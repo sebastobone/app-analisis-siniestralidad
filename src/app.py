@@ -10,17 +10,6 @@ from uuid import uuid4
 from contextlib import asynccontextmanager
 
 
-class Parametros(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    negocio: str
-    mes_inicio: int
-    mes_corte: int
-    tipo_analisis: str
-    aproximar_reaseguro: bool
-    nombre_plantilla: str
-    session_id: str | None = Field(index=True)
-
-
 engine = create_engine(
     "sqlite:///data/database.db", connect_args={"check_same_thread": False}
 )
@@ -71,6 +60,20 @@ async def generar_base(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
+class Parametros(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    negocio: str
+    mes_inicio: int
+    mes_corte: int
+    tipo_analisis: str
+    aproximar_reaseguro: bool
+    nombre_plantilla: str
+    cuadre_contable_sinis: bool
+    add_fraude_soat: bool
+    cuadre_contable_primas: bool
+    session_id: str | None = Field(index=True)
+
+
 # Se tuvo que formular los parametros individualmente, porque si bien FastAPI
 # permite ingresar datos de form como un modelo de Pydantic, esta
 # caracteristica no funciona igual para los modelos de SQLModel.
@@ -84,6 +87,9 @@ async def ingresar_parametros(
     tipo_analisis: str = Form(),
     aproximar_reaseguro: bool = Form(),
     nombre_plantilla: str = Form(),
+    cuadre_contable_sinis: bool = Form(),
+    add_fraude_soat: bool = Form(),
+    cuadre_contable_primas: bool = Form(),
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     if not session_id:
@@ -97,6 +103,9 @@ async def ingresar_parametros(
         tipo_analisis=tipo_analisis,
         aproximar_reaseguro=aproximar_reaseguro,
         nombre_plantilla=nombre_plantilla,
+        cuadre_contable_sinis=cuadre_contable_sinis,
+        add_fraude_soat=add_fraude_soat,
+        cuadre_contable_primas=cuadre_contable_primas,
     )
     parametros.session_id = session_id
 
@@ -153,7 +162,13 @@ async def generar_controles(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = parametros_usuario(session, session_id)[0]
-    main.generar_controles(p.negocio, p.mes_corte)
+    main.generar_controles(
+        p.negocio,
+        p.mes_corte,
+        p.cuadre_contable_sinis,
+        p.add_fraude_soat,
+        p.cuadre_contable_primas,
+    )
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 

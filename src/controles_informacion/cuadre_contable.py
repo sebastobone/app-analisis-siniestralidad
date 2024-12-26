@@ -47,11 +47,6 @@ def cuadre_contable_autonomia(
                 if "diferencia" in column
             ]
         )
-        .with_columns(
-            fecha_registro=pl.date(
-                pl.col("mes_mov") // pl.lit(100), pl.col("mes_mov") % pl.lit(100), 1
-            )
-        )
         .join(pl.LazyFrame(agrups), on=["codigo_op", "codigo_ramo_op"])
         .with_columns(
             conteo_pago=0,
@@ -91,9 +86,6 @@ def cuadre_contable_soat(
             }
         )
         .join(ramos, on=["codigo_op", "codigo_ramo_op"])
-        .with_columns(
-            fecha_registro=pl.date(pl.col("mes_mov") // 100, pl.col("mes_mov") % 100, 1)
-        )
     )
 
     dif = dif.drop(

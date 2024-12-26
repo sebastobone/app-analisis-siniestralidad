@@ -8,29 +8,20 @@ from src import constantes as ct
 
 
 def agrupar_tera(
-    df: pl.LazyFrame, file: str, group_cols: list[str], qtys: list[str]
+    df: pl.LazyFrame, group_cols: list[str], qtys: list[str]
 ) -> pl.LazyFrame:
-    df_agrup = df.with_columns(
-        mes_mov=pl.col("fecha_registro").dt.year() * 100
-        + pl.col("fecha_registro").dt.month()
-    )
+    return df.select(group_cols + qtys).group_by(group_cols).sum().sort(group_cols)
 
-    if file == "siniestros":
-        df_agrup = df_agrup.with_columns(
-            mes_ocurr=pl.col("fecha_siniestro").dt.year() * 100
-            + pl.col("fecha_siniestro").dt.month()
-        )
 
-    df_agrup = (
-        df_agrup.select(group_cols + qtys).group_by(group_cols).sum().sort(group_cols)
-    )
-
-    return df_agrup
+def columna_ramo_sap(qty: str) -> str:
+    if "prima" in qty or "pago" in qty:
+        return "Ramo Agr"
+    else:
+        return "Ramo"
 
 
 def leer_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
-    count = 0
-    dfs_sap = pl.LazyFrame()
+    dfs_sap = []
     for cia in cias:
         for qty in qtys:
             qty = qty.replace("retenido", "cedido")
@@ -51,15 +42,10 @@ def leer_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
                     pl.col("Nombre_Mes").str.replace_many({"PE2": "DIC", "PE1": "DIC"})
                 )
                 .join(ct.MONTH_MAP, on="Nombre_Mes")
-            )
-
-            df_sap = (
-                df_sap.drop(
+                .drop(
                     [
                         "column_1",
-                        "Ramo Agr"
-                        if "Ramo Agr" in df_sap.collect_schema().names()
-                        else "Ramo",
+                        columna_ramo_sap(qty),
                         "Resultado total",
                         "Nombre_Mes",
                     ]
@@ -81,39 +67,39 @@ def leer_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
                 )
                 .fill_null(0)
                 .with_columns(
-                    mes_mov=pl.col("Anno").cast(pl.Int32) * 100
-                    + pl.col("Mes").cast(pl.Int32)
+                    fecha_registro=pl.date(
+                        pl.col("Anno").cast(pl.Int32), pl.col("Mes"), 1
+                    )
                 )
-                .filter(pl.col("mes_mov") <= mes_corte)
-                .select(["codigo_op", "codigo_ramo_op", "mes_mov", qty])
+                .filter(pl.col("fecha_registro") <= utils.yyyymm_to_date(mes_corte))
+                .select(["codigo_op", "codigo_ramo_op", "fecha_registro", qty])
             )
 
-            if mes_corte not in df_sap.collect().get_column("mes_mov").unique():
+            if (
+                utils.yyyymm_to_date(mes_corte)
+                not in df_sap.collect().get_column("fecha_registro").unique()
+            ):
                 raise Exception(
                     f"""¡Error! No se pudo encontrar el mes {mes_corte}
                     en la hoja {qty} del AFO de {cia}. Actualizar el AFO."""
                 )
 
-            if count == 0:
-                dfs_sap = df_sap
-            else:
-                dfs_sap = pl.concat([dfs_sap, df_sap], how="diagonal")
+            dfs_sap.append(df_sap)
 
-            count += 1
-
-    dfs_sap = (
-        dfs_sap.group_by(["codigo_op", "codigo_ramo_op", "mes_mov"])
+    df_sap_full = (
+        pl.LazyFrame(pl.concat(dfs_sap, how="diagonal"))
+        .group_by(["codigo_op", "codigo_ramo_op", "fecha_registro"])
         .sum()
-        .sort(["codigo_op", "codigo_ramo_op", "mes_mov"])
+        .sort(["codigo_op", "codigo_ramo_op", "fecha_registro"])
     )
 
     if "pago_bruto" in qtys:
-        dfs_sap = dfs_sap.with_columns(
+        df_sap_full = df_sap_full.with_columns(
             pago_retenido=pl.col("pago_bruto") - pl.col("pago_cedido"),
             aviso_retenido=pl.col("aviso_bruto") - pl.col("aviso_cedido"),
         )
 
-    return dfs_sap
+    return df_sap_full
 
 
 def generar_consistencia_historica(
@@ -172,7 +158,7 @@ def comparar_sap_tera(
 ) -> pl.DataFrame:
     base_comp = df_tera.join(
         df_sap,
-        on=["codigo_op", "codigo_ramo_op", "mes_mov"],
+        on=["codigo_op", "codigo_ramo_op", "fecha_registro"],
         how="left",
         suffix="_SAP",
     ).fill_null(0)
@@ -187,7 +173,9 @@ def comparar_sap_tera(
         )
 
         comp_mes = (
-            base_comp.filter(pl.col("mes_mov") == mes_corte)
+            base_comp.filter(
+                pl.col("fecha_registro") == utils.yyyymm_to_date(mes_corte)
+            )
             .filter(pl.col(f"dif%_{qty}").abs() > 0.05)
             .collect()
         )
@@ -237,15 +225,14 @@ def controles_informacion(
     mes_corte: int,
     estado_cuadre: str,
 ) -> pl.DataFrame:
-    agrupar_tera(df, file, group_cols, qtys).collect().write_excel(
+    agrupar_tera(df, group_cols, qtys).collect().write_excel(
         f"data/controles_informacion/{estado_cuadre}/{file}_tera_{mes_corte}.xlsx",
     )
     generar_consistencia_historica(file, group_cols, qtys, estado_cuadre, fuente="tera")
 
     df_tera_ramo = agrupar_tera(
         df,
-        file,
-        group_cols=["codigo_op", "codigo_ramo_op", "mes_mov"],
+        group_cols=["codigo_op", "codigo_ramo_op", "fecha_registro"],
         qtys=qtys,
     )
 
@@ -263,7 +250,7 @@ def controles_informacion(
         )
         generar_consistencia_historica(
             file,
-            ["codigo_op", "codigo_ramo_op", "mes_mov"],
+            ["codigo_op", "codigo_ramo_op", "fecha_registro"],
             qtys,
             estado_cuadre,
             fuente="sap",
@@ -374,7 +361,7 @@ def generar_controles(
 ) -> None:
     if file == "siniestros":
         qtys = ["pago_bruto", "aviso_bruto", "pago_retenido", "aviso_retenido"]
-        group_cols = ["apertura_reservas", "mes_ocurr", "mes_mov"]
+        group_cols = ["apertura_reservas", "fecha_siniestro", "fecha_registro"]
 
     elif file == "primas":
         qtys = [
@@ -383,11 +370,11 @@ def generar_controles(
             "prima_bruta_devengada",
             "prima_retenida_devengada",
         ]
-        group_cols = ["apertura_reservas", "mes_mov"]
+        group_cols = ["apertura_reservas", "fecha_registro"]
 
     elif file == "expuestos":
         qtys = ["expuestos"]
-        group_cols = ["apertura_reservas", "mes_mov"]
+        group_cols = ["apertura_reservas", "fecha_registro"]
 
     df = pl.scan_parquet(f"data/raw/{file}.parquet")
 

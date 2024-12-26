@@ -13,7 +13,6 @@ CREDENCIALES_TERADATA = {
 
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 
-
 MONTH_MAP = pl.LazyFrame(
     {
         "Nombre_Mes": [

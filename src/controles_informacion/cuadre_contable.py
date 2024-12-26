@@ -3,7 +3,7 @@ from src import utils
 
 
 def cuadre_contable(
-    negocio: str, file: str, df: pl.DataFrame, dif_sap_vs_tera: pl.DataFrame
+    negocio: str, file: str, df: pl.LazyFrame, dif_sap_vs_tera: pl.LazyFrame
 ) -> pl.LazyFrame:
     if negocio == "soat":
         return cuadre_contable_soat(file, df, dif_sap_vs_tera)
@@ -12,7 +12,7 @@ def cuadre_contable(
     return pl.LazyFrame()
 
 
-def concat_df_dif(df: pl.DataFrame, dif: pl.DataFrame) -> pl.DataFrame:
+def concat_df_dif(df: pl.LazyFrame, dif: pl.LazyFrame) -> pl.LazyFrame:
     return (
         pl.concat([df, dif], how="vertical_relaxed")
         .group_by(
@@ -30,7 +30,7 @@ def concat_df_dif(df: pl.DataFrame, dif: pl.DataFrame) -> pl.DataFrame:
 
 
 def cuadre_contable_autonomia(
-    file: str, df: pl.DataFrame, dif_sap_vs_tera: pl.DataFrame
+    file: str, df: pl.LazyFrame, dif_sap_vs_tera: pl.LazyFrame
 ) -> pl.LazyFrame:
     agrups = utils.lowercase_columns(
         pl.read_excel(
@@ -52,7 +52,7 @@ def cuadre_contable_autonomia(
                 pl.col("mes_mov") // pl.lit(100), pl.col("mes_mov") % pl.lit(100), 1
             )
         )
-        .join(pl.DataFrame(agrups), on=["codigo_op", "codigo_ramo_op"])
+        .join(pl.LazyFrame(agrups), on=["codigo_op", "codigo_ramo_op"])
         .with_columns(
             conteo_pago=0,
             conteo_incurrido=0,
@@ -63,7 +63,7 @@ def cuadre_contable_autonomia(
         .select(df.collect_schema().names())
     )
 
-    df_cuadre = concat_df_dif(df, dif)
+    df_cuadre = concat_df_dif(df, dif).collect()
 
     df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
     df_cuadre.write_parquet(f"data/raw/{file}.parquet")
@@ -72,7 +72,7 @@ def cuadre_contable_autonomia(
 
 
 def cuadre_contable_soat(
-    file: str, df: pl.DataFrame, dif_sap_vs_tera: pl.DataFrame
+    file: str, df: pl.LazyFrame, dif_sap_vs_tera: pl.LazyFrame
 ) -> pl.LazyFrame:
     ramos = df.select(["codigo_op", "codigo_ramo_op", "ramo_desc"]).unique()
 
@@ -80,14 +80,14 @@ def cuadre_contable_soat(
         dif_sap_vs_tera.filter(pl.col("mes_mov") == pl.col("mes_mov").max())
         .rename(
             {
-                "DIFERENCIA_PRIMAS_EMI_BRUTO": "Prima_Bruta",
-                "DIFERENCIA_PRIMAS_EMI_RETENIDO": "Prima_Retenida",
-                "DIFERENCIA_PRIMAS_DEV_BRUTO": "Prima_Bruta_Devengada",
-                "DIFERENCIA_PRIMAS_DEV_RETENIDO": "Prima_Retenida_Devengada",
-                "DIFERENCIA_PAGOS_BRUTO": "Pago_Bruto",
-                "DIFERENCIA_PAGOS_RETENIDO": "Pago_Retenido",
-                "DIFERENCIA_RSA_BRUTO": "Aviso_Bruto",
-                "DIFERENCIA_RSA_RETENIDO": "Aviso_Retenido",
+                "DIFERENCIA_PRIMAS_EMI_BRUTO": "prima_bruta",
+                "DIFERENCIA_PRIMAS_EMI_RETENIDO": "prima_retenida",
+                "DIFERENCIA_PRIMAS_DEV_BRUTO": "prima_bruta_devengada",
+                "DIFERENCIA_PRIMAS_DEV_RETENIDO": "prima_retenida_devengada",
+                "DIFERENCIA_PAGOS_BRUTO": "pago_bruto",
+                "DIFERENCIA_PAGOS_RETENIDO": "pago_retenido",
+                "DIFERENCIA_RSA_BRUTO": "aviso_bruto",
+                "DIFERENCIA_RSA_RETENIDO": "aviso_retenido",
             }
         )
         .join(ramos, on=["codigo_op", "codigo_ramo_op"])
@@ -105,7 +105,7 @@ def cuadre_contable_soat(
     )
 
     # Modificable, aca se decide en que apertura vamos a meter la diferencia SAP-Tera
-    apertura_dif = pl.DataFrame(
+    apertura_dif = pl.LazyFrame(
         {
             "codigo_op": ["01"],
             "codigo_ramo_op": ["041"],
@@ -129,7 +129,7 @@ def cuadre_contable_soat(
     elif file == "primas":
         dif = dif.with_columns(prima_devengada_mod=0)
 
-    df_cuadre = concat_df_dif(df, dif)
+    df_cuadre = concat_df_dif(df, dif).collect()
 
     df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
     df_cuadre.write_parquet(f"data/raw/{file}.parquet")

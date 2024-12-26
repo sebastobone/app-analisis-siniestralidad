@@ -1,8 +1,8 @@
 import polars as pl
 from time import sleep
 import os
-from src.utils import lowercase_columns
 from src import utils
+from src.controles_informacion.cuadre_contable import cuadre_contable
 
 
 def agrupar_tera(
@@ -229,61 +229,6 @@ def comparar_sap_tera(
     return base_comp
 
 
-def cuadre_contable(
-    df: pl.DataFrame, file: str, valid: pl.DataFrame, negocio: str
-) -> pl.LazyFrame:
-    agrups = lowercase_columns(
-        pl.read_excel(
-            f"data/segmentacion_{negocio}.xlsx",
-            sheet_name=f"Cuadre_Contable_{file.capitalize()}",
-        )
-    )
-
-    dif = (
-        valid.with_columns(
-            [
-                pl.col(column).alias(column.replace("diferencia_", ""))
-                for column in valid.collect_schema().names()
-                if "diferencia" in column
-            ]
-        )
-        .with_columns(
-            fecha_registro=pl.date(
-                pl.col("mes_mov") // pl.lit(100), pl.col("mes_mov") % pl.lit(100), 1
-            )
-        )
-        .join(pl.DataFrame(agrups), on=["codigo_op", "codigo_ramo_op"])
-        .with_columns(
-            conteo_pago=0,
-            conteo_incurrido=0,
-            conteo_desistido=0,
-            atipico=0,
-            fecha_siniestro=pl.col("fecha_registro"),
-        )
-        .select(df.collect_schema().names())
-    )
-
-    df_cuadre = (
-        pl.concat([df, dif], how="vertical_relaxed")
-        .group_by(
-            df.collect_schema().names()[
-                : df.collect_schema().names().index("fecha_registro") + 1
-            ]
-        )
-        .sum()
-        .sort(
-            df.collect_schema().names()[
-                : df.collect_schema().names().index("fecha_registro") + 1
-            ]
-        )
-    )
-
-    df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
-    df_cuadre.write_parquet(f"data/raw/{file}.parquet")
-
-    return df_cuadre.lazy()
-
-
 def generar_integridad_exactitud(
     df: pl.LazyFrame, estado_cuadre: str, file: str, mes_corte: int, qtys: list[str]
 ) -> None:
@@ -487,7 +432,7 @@ def generar_controles(
         file == "primas" and cuadre_contable_primas
     ):
         df.collect().write_csv(f"data/raw/{file}_pre_cuadre.csv", separator="\t")
-        df = cuadre_contable(df.collect(), file, difs_sap_tera_pre_cuadre, negocio)
+        df = cuadre_contable(negocio, file, df.collect(), difs_sap_tera_pre_cuadre)
         _ = controles_informacion(
             df,
             file,

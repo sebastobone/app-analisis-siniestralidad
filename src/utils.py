@@ -16,7 +16,7 @@ def col_ramo_desc() -> pl.Expr:
     )
 
 
-def col_apertura_reservas(negocio) -> pl.Expr:
+def col_apertura_reservas(negocio: str) -> pl.Expr:
     return pl.concat_str(ct.columnas_aperturas(negocio), separator="_").alias(
         "apertura_reservas"
     )

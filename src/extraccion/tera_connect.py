@@ -4,7 +4,9 @@ from tqdm import tqdm
 import json
 import pandas as pd
 import src.constantes as ct
+from datetime import date
 from src import utils
+from run import logger
 
 
 def tipo_query(file: str) -> str:
@@ -16,18 +18,14 @@ def tipo_query(file: str) -> str:
 
 
 def preparar_queries(
-    file: str, mes_inicio: int, mes_corte: int, aproximar_reaseguro: int | None = None
+    file: str, mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool | None = None
 ) -> str:
-    return (
-        open(file)
-        .read()
-        .format(
-            mes_primera_ocurrencia=mes_inicio,
-            mes_corte=mes_corte,
-            fecha_primera_ocurrencia=utils.yyyymm_to_date(mes_inicio),
-            fecha_mes_corte=utils.yyyymm_to_date(mes_corte),
-            aproximar_reaseguro=aproximar_reaseguro,
-        )
+    return file.format(
+        mes_primera_ocurrencia=mes_inicio,
+        mes_corte=mes_corte,
+        fecha_primera_ocurrencia=utils.yyyymm_to_date(mes_inicio),
+        fecha_mes_corte=utils.yyyymm_to_date(mes_corte),
+        aproximar_reaseguro=aproximar_reaseguro,
     )
 
 
@@ -47,7 +45,7 @@ def cargar_segmentaciones(archivo_segm: str, tipo_query: str) -> list[pl.DataFra
     ]
 
 
-def fechas_chunks(mes_inicio: int, mes_corte: int) -> list[tuple]:
+def fechas_chunks(mes_inicio: int, mes_corte: int) -> list[tuple[date, date]]:
     """
     Limites para correr queries pesados por partes
     """
@@ -72,7 +70,7 @@ def fechas_chunks(mes_inicio: int, mes_corte: int) -> list[tuple]:
 def ejecutar_queries(
     queries: list[str],
     con: td.TeradataConnection,
-    fechas_chunks: list[tuple],
+    fechas_chunks: list[tuple[date, date]],
     segm: list[pl.DataFrame],
 ) -> pl.DataFrame:
     cur = con.cursor()
@@ -122,7 +120,7 @@ def guardar_resultados(
     elif save_format in ("csv", "txt"):
         df.write_csv(f"{save_path}.{save_format}", separator="\t")
 
-    print(f"""Datos almacenados en {save_path}.{save_format}.""")
+    logger.success(f"""Datos almacenados en {save_path}.{save_format}.""")
 
 
 def check_adds_segmentacion(segm_sheets: list[str]) -> None:
@@ -176,7 +174,7 @@ def check_numero_columnas_add(query: str, add: pl.DataFrame) -> None:
 
 def check_duplicados(add: pl.DataFrame) -> pl.DataFrame:
     if len(add) != len(add.unique()):
-        print(
+        logger.warning(
             f"""
             Alerta -> tiene registros duplicados en la siguiente tabla: {add}
             El proceso los elimina y va a continuar, pero se recomienda
@@ -238,7 +236,7 @@ def correr_query(
     negocio: str,
     mes_inicio: int,
     mes_corte: int,
-    aproximar_reaseguro: int | None = None,
+    aproximar_reaseguro: bool | None = None,
 ) -> None:
     tipo = tipo_query(file)
     archivo_segm = f"data/segmentacion_{negocio}.xlsx"
@@ -247,7 +245,9 @@ def correr_query(
     fchunks = fechas_chunks(mes_inicio, mes_corte)
     con = td.connect(json.dumps(ct.CREDENCIALES_TERADATA))
 
-    queries = preparar_queries(file, mes_inicio, mes_corte, aproximar_reaseguro)
+    queries = preparar_queries(
+        open(file).read(), mes_inicio, mes_corte, aproximar_reaseguro
+    )
     check_suficiencia_adds(file, queries, segm)
 
     df = ejecutar_queries(queries.split(";"), con, fchunks, segm)

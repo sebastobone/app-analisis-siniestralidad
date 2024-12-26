@@ -24,4 +24,5 @@ dependencies = [
     "types-tqdm>=4.67.0.20241221",
     "sqlmodel>=0.0.22",
     "pytest-cov>=6.0.0",
+    "loguru>=0.7.3",
 ]

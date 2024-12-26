@@ -1,6 +1,53 @@
 import pytest
 import polars as pl
 from src.extraccion import tera_connect
+from src.app import Parametros
+from src import utils
+from datetime import timedelta
+
+
+def test_tipo_query():
+    assert tera_connect.tipo_query("path/to/siniestros.sql") == "siniestros"
+    assert tera_connect.tipo_query("path/to/siniestros_bruto.sql") == "otro"
+
+
+def test_preparar_queries(params: Parametros):
+    mock_query = """
+        SELECT
+            {mes_primera_ocurrencia}
+            , {mes_corte}
+            , {fecha_primera_ocurrencia}
+            , {fecha_mes_corte}
+            , {aproximar_reaseguro}
+        FROM TABLE1
+    """
+
+    correct_result = f"""
+        SELECT
+            {params.mes_inicio}
+            , {params.mes_corte}
+            , {utils.yyyymm_to_date(params.mes_inicio)}
+            , {utils.yyyymm_to_date(params.mes_corte)}
+            , {params.aproximar_reaseguro}
+        FROM TABLE1
+    """
+
+    test = tera_connect.preparar_queries(
+        mock_query, params.mes_inicio, params.mes_corte, params.aproximar_reaseguro
+    )
+
+    assert test == correct_result
+
+
+def test_fechas_chunks(params: Parametros):
+    test = tera_connect.fechas_chunks(params.mes_inicio, params.mes_corte)
+    print(test[0])
+
+    mes_inicio_date = utils.yyyymm_to_date(params.mes_inicio)
+    mes_inicio_next = mes_inicio_date.replace(day=28) + timedelta(days=4)
+    mes_inicio_last_day = mes_inicio_next - timedelta(days=mes_inicio_next.day)
+
+    assert test[0] == (utils.yyyymm_to_date(params.mes_inicio), mes_inicio_last_day)
 
 
 def test_check_adds_segmentacion():

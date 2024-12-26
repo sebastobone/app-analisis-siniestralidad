@@ -5,7 +5,7 @@ from src.utils import lowercase_columns
 from src import utils
 
 
-def group_tera(
+def agrupar_tera(
     df: pl.LazyFrame, file: str, group_cols: list[str], qtys: list[str]
 ) -> pl.LazyFrame:
     df_agrup = df.with_columns(
@@ -26,7 +26,7 @@ def group_tera(
     return df_agrup
 
 
-def read_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
+def leer_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
     month_map = pl.LazyFrame(
         {
             "Nombre_Mes": [
@@ -134,7 +134,7 @@ def read_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
     return dfs_cont
 
 
-def consistencia_historica(
+def generar_consistencia_historica(
     file: str,
     group_cols: list[str],
     qtys: list[str],
@@ -183,21 +183,21 @@ def consistencia_historica(
     return dfs_eager
 
 
-def valid_contable(
-    df_agrup_ramo: pl.LazyFrame,
-    dfs_cont: pl.LazyFrame,
+def comparar_sap_tera(
+    df_tera: pl.LazyFrame,
+    df_sap: pl.LazyFrame,
     mes_corte: int,
     qtys: list[str],
 ) -> pl.LazyFrame:
-    valid = df_agrup_ramo.join(
-        dfs_cont,
+    base_comp = df_tera.join(
+        df_sap,
         on=["codigo_op", "codigo_ramo_op", "mes_mov"],
         how="left",
         suffix="_SAP",
     ).fill_null(0)
 
     for qty in qtys:
-        valid = valid.with_columns(
+        base_comp = base_comp.with_columns(
             (pl.col(f"{qty}_SAP") - pl.col(qty)).alias(f"diferencia_{qty}"),
         ).with_columns(
             (pl.col(f"diferencia_{qty}") / pl.col(f"{qty}_SAP"))
@@ -205,16 +205,16 @@ def valid_contable(
             .fill_nan(0)
         )
 
-        valid_mes = (
-            valid.filter(pl.col("mes_mov") == mes_corte)
+        comp_mes = (
+            base_comp.filter(pl.col("mes_mov") == mes_corte)
             .filter(pl.col(f"dif%_{qty}").abs() > 0.05)
             .collect()
         )
 
-        if valid_mes.shape[0] != 0:
+        if comp_mes.shape[0] != 0:
             print(f"¡Alerta! Diferencias significativas en {qty}:")
             print(
-                valid_mes.select(
+                comp_mes.select(
                     [
                         "codigo_op",
                         "codigo_ramo_op",
@@ -226,7 +226,7 @@ def valid_contable(
                 )
             )
 
-    return valid
+    return base_comp
 
 
 def cuadre_contable(
@@ -284,7 +284,7 @@ def cuadre_contable(
     return df_cuadre.lazy()
 
 
-def integridad_exactitud(
+def generar_integridad_exactitud(
     df: pl.LazyFrame, estado_cuadre: str, file: str, mes_corte: int, qtys: list[str]
 ) -> None:
     apr_cols = df.collect_schema().names()[: df.collect_schema().names().index(qtys[0])]
@@ -315,12 +315,12 @@ def controles_informacion(
     estado_cuadre: str,
 ) -> pl.DataFrame:
     # Consistencia historica Tera
-    group_tera(df, file, group_cols, qtys).collect().write_excel(
+    agrupar_tera(df, file, group_cols, qtys).collect().write_excel(
         f"data/controles_informacion/{estado_cuadre}/{file}_tera_{mes_corte}.xlsx",
     )
-    consistencia_historica(file, group_cols, qtys, estado_cuadre, fuente="tera")
+    generar_consistencia_historica(file, group_cols, qtys, estado_cuadre, fuente="tera")
 
-    df_agrup_ramo = group_tera(
+    df_agrup_ramo = agrupar_tera(
         df,
         file,
         group_cols=["codigo_op", "codigo_ramo_op", "mes_mov"],
@@ -329,7 +329,7 @@ def controles_informacion(
 
     if file in ("siniestros", "primas"):
         # Consistencia historica SAP
-        dfs_cont = read_sap(["Vida", "Generales"], qtys, int(mes_corte)).filter(
+        dfs_cont = leer_sap(["Vida", "Generales"], qtys, int(mes_corte)).filter(
             pl.col("codigo_ramo_op").is_in(
                 df.select("codigo_ramo_op")
                 .unique()
@@ -341,7 +341,7 @@ def controles_informacion(
         dfs_cont.collect().write_excel(
             f"data/controles_informacion/{estado_cuadre}/{file}_sap_{mes_corte}.xlsx",
         )
-        consistencia_historica(
+        generar_consistencia_historica(
             file,
             ["codigo_op", "codigo_ramo_op", "mes_mov"],
             qtys,
@@ -350,21 +350,21 @@ def controles_informacion(
         )
 
         # Diferencias SAP - Tera
-        valid = valid_contable(df_agrup_ramo, dfs_cont, int(mes_corte), qtys)
+        difs_sap_tera = comparar_sap_tera(df_agrup_ramo, dfs_cont, int(mes_corte), qtys)
 
-        valid.collect().write_excel(
+        difs_sap_tera.collect().write_excel(
             f"data/controles_informacion/{estado_cuadre}/{file}_sap_vs_tera_{mes_corte}.xlsx",
         )
 
     elif file == "expuestos":
-        valid = pl.LazyFrame()
+        difs_sap_tera = pl.LazyFrame()
         df_agrup_ramo.collect().write_excel(
             f"data/controles_informacion/{estado_cuadre}/expuestos_tera_ramo_{mes_corte}.xlsx",
         )
 
-    integridad_exactitud(df, estado_cuadre, file, mes_corte, qtys)
+    generar_integridad_exactitud(df, estado_cuadre, file, mes_corte, qtys)
 
-    return valid.collect()
+    return difs_sap_tera.collect()
 
 
 def set_permissions(directory, permission="write"):
@@ -400,21 +400,6 @@ def evidencias_parametros(negocio: str, mes_corte: int):
     import openpyxl as xl
     import pyautogui
     import shutil
-    import tkinter as tk
-    from tkinter import messagebox
-
-    root = tk.Tk()
-    root.attributes("-topmost", True)
-
-    user_yes = messagebox.askyesno(
-        "¿Continuar ejecución?",
-        """¿Desea continuar la ejecución? 
-        Si sí, no use el computador mientras termina de correr el proceso. 
-        Si no, deberá comenzar el proceso nuevamente.""",
-    )
-
-    if not user_yes:
-        raise Exception("Proceso interrumpido, vuelva a ejecutar.")
 
     original_file = f"data/segmentacion_{negocio}.xlsx"
     stored_file = f"data/controles_informacion/{mes_corte}_segmentacion_{negocio}.xlsx"
@@ -424,10 +409,9 @@ def evidencias_parametros(negocio: str, mes_corte: int):
     wb = xl.load_workbook(stored_file)
     sheet_name = "CONTROL_EXTRACCION"
     wb.create_sheet(title=sheet_name)
-    new_sheet = wb[sheet_name]
 
-    new_sheet["A1"] = "Fecha y hora del fin de la extraccion"
-    new_sheet["A2"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    wb[sheet_name]["A1"] = "Fecha y hora del fin de la extraccion"
+    wb[sheet_name]["A2"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     wb.save(stored_file)
     wb.close()
@@ -442,10 +426,8 @@ def evidencias_parametros(negocio: str, mes_corte: int):
     if os.name == "nt":
         pyautogui.hotkey("winleft", "alt", "d")
 
-    # sleep(30)
 
-
-def ajustes_fraude(df: pl.LazyFrame):
+def ajustar_fraude(df: pl.LazyFrame):
     fraude = pl.read_excel(
         "data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude"
     ).lazy()
@@ -492,7 +474,7 @@ def generar_controles(
 
     df = pl.scan_parquet(f"data/raw/{file}.parquet")
 
-    valid_pre_cuadre = controles_informacion(
+    difs_sap_tera_pre_cuadre = controles_informacion(
         df,
         file,
         group_cols,
@@ -505,7 +487,7 @@ def generar_controles(
         file == "primas" and cuadre_contable_primas
     ):
         df.collect().write_csv(f"data/raw/{file}_pre_cuadre.csv", separator="\t")
-        df = cuadre_contable(df.collect(), file, valid_pre_cuadre, negocio)
+        df = cuadre_contable(df.collect(), file, difs_sap_tera_pre_cuadre, negocio)
         _ = controles_informacion(
             df,
             file,
@@ -517,7 +499,7 @@ def generar_controles(
 
     if negocio == "soat" and file == "siniestros" and add_fraude_soat:
         df.collect().write_csv("data/raw/siniestros_post_cuadre.csv", separator="\t")
-        df = ajustes_fraude(df)
+        df = ajustar_fraude(df)
         _ = controles_informacion(
             df,
             file,

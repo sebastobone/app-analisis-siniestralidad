@@ -1,12 +1,12 @@
 import polars as pl
-from src.controles_informacion.controles_informacion import read_sap
+from src.controles_informacion.controles_informacion import leer_sap
 import xlwings as xw
 import os
 
 
 def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:
     return (
-        read_sap(
+        leer_sap(
             ["Generales", "Vida"],
             hojas_afo,
             mes_corte,

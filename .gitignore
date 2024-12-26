@@ -199,3 +199,6 @@ backups
 .DS_Store
 
 data/database.db
+
+logs/*
+!logs/.gitkeep

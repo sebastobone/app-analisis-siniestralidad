@@ -85,14 +85,6 @@ def sinis_prep(
     return df_sinis_tipicos, df_sinis_atipicos
 
 
-def date_to_yyyymm(column: pl.Expr, grain: str) -> pl.Expr:
-    return (
-        column.dt.year() * 100
-        + (column.dt.month() / pl.lit(ct.PERIODICIDADES[grain])).ceil()
-        * pl.lit(ct.PERIODICIDADES[grain])
-    ).cast(pl.Int32)
-
-
 def triangulos(
     df_tri: pl.LazyFrame,
     origin_grain: str,
@@ -120,8 +112,10 @@ def triangulos(
             )
         )
         .with_columns(
-            periodo_ocurrencia=date_to_yyyymm(pl.col("fecha_siniestro"), origin_grain),
-            periodo_desarrollo=date_to_yyyymm(
+            periodo_ocurrencia=utils.date_to_yyyymm(
+                pl.col("fecha_siniestro"), origin_grain
+            ),
+            periodo_desarrollo=utils.date_to_yyyymm(
                 pl.col("fecha_registro"), development_grain
             ),
         )
@@ -220,7 +214,9 @@ def diagonales(
             )
         )
         .with_columns(
-            periodo_ocurrencia=date_to_yyyymm(pl.col("fecha_siniestro"), "Mensual"),
+            periodo_ocurrencia=utils.date_to_yyyymm(
+                pl.col("fecha_siniestro"), "Mensual"
+            ),
             periodicidad_triangulo=pl.lit(origin_grain),
             periodicidad_ocurrencia=pl.lit("Mensual"),
         )

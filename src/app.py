@@ -132,7 +132,7 @@ async def correr_query_siniestros(
         p.mes_inicio,
         p.mes_corte,
         p.tipo_analisis,
-        p.aproximar_reaseguro == 1,
+        p.aproximar_reaseguro,
     )
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -143,7 +143,7 @@ async def correr_query_primas(
 ) -> RedirectResponse:
     p = parametros_usuario(session, session_id)[0]
     main.correr_query_primas(
-        p.negocio, p.mes_inicio, p.mes_corte, p.aproximar_reaseguro == 1
+        p.negocio, p.mes_inicio, p.mes_corte, p.aproximar_reaseguro
     )
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 

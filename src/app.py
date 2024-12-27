@@ -131,7 +131,6 @@ async def correr_query_siniestros(
         p.negocio,
         p.mes_inicio,
         p.mes_corte,
-        p.tipo_analisis,
         p.aproximar_reaseguro,
     )
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
@@ -168,6 +167,12 @@ async def generar_controles(
         p.cuadre_contable_sinis,
         p.add_fraude_soat,
         p.cuadre_contable_primas,
+    )
+    main.generar_bases_plantilla(
+        p.negocio,
+        p.tipo_analisis,
+        p.mes_inicio,
+        p.mes_corte,
     )
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 

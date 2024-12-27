@@ -11,7 +11,6 @@ def correr_query_siniestros(
     negocio: str,
     mes_inicio: int,
     mes_corte: int,
-    tipo_analisis: str,
     aproximar_reaseguro: bool,
 ) -> None:
     if negocio == "autonomia":
@@ -64,9 +63,6 @@ def correr_query_siniestros(
             aproximar_reaseguro,
         )
 
-    bsin.aperturas(negocio)
-    bsin.bases_siniestros(tipo_analisis, mes_inicio, mes_corte)
-
 
 def correr_query_primas(
     negocio: str,
@@ -85,9 +81,6 @@ def correr_query_primas(
         mes_corte,
         aproximar_reaseguro,
     )
-    bpdn.bases_primas_expuestos(
-        pl.scan_parquet("data/raw/primas.parquet"), "primas", negocio
-    ).write_parquet("data/processed/primas.parquet")
 
 
 def correr_query_expuestos(
@@ -103,9 +96,6 @@ def correr_query_expuestos(
         mes_inicio,
         mes_corte,
     )
-    bpdn.bases_primas_expuestos(
-        pl.scan_parquet("data/raw/expuestos.parquet"), "expuestos", negocio
-    ).write_parquet("data/processed/expuestos.parquet")
 
 
 def generar_controles(
@@ -129,5 +119,20 @@ def generar_controles(
     )
     ctrl.generar_controles("expuestos", negocio, mes_corte)
 
-    ctrl.evidencias_parametros(negocio, mes_corte)
+    ctrl.generar_evidencias_parametros(negocio, mes_corte)
     ctrl.set_permissions("data/controles_informacion", "read")
+
+
+def generar_bases_plantilla(
+    negocio: str, tipo_analisis: str, mes_inicio: int, mes_corte: int
+) -> None:
+    bsin.aperturas(negocio)
+    bsin.bases_siniestros(tipo_analisis, mes_inicio, mes_corte)
+
+    bpdn.bases_primas_expuestos(
+        pl.scan_parquet("data/raw/primas.parquet"), "primas", negocio
+    ).write_parquet("data/processed/primas.parquet")
+
+    bpdn.bases_primas_expuestos(
+        pl.scan_parquet("data/raw/expuestos.parquet"), "expuestos", negocio
+    ).write_parquet("data/processed/expuestos.parquet")

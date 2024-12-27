@@ -7,5 +7,5 @@ correr_query(
     "autonomia",
     201401,
     202410,
-    0,
+    False,
 )

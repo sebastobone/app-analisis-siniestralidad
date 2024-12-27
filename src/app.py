@@ -1,25 +1,25 @@
-from fastapi import FastAPI, Form, Request, status, Depends, Cookie, Response
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-from src import main
-from src import plantilla
-from typing import Annotated
-from sqlmodel import Field, Session, SQLModel, create_engine, select
-from uuid import uuid4
 from contextlib import asynccontextmanager
+from typing import Annotated
+from uuid import uuid4
 
+from fastapi import Cookie, Depends, FastAPI, Form, Request, Response, status
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from sqlmodel import Field, Session, SQLModel, create_engine, select
+
+from src import main, plantilla
 
 engine = create_engine(
     "sqlite:///data/database.db", connect_args={"check_same_thread": False}
 )
 
 
-def create_db_and_tables():
+def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
 
 
-def delete_db_and_tables():
+def delete_db_and_tables() -> None:
     SQLModel.metadata.drop_all(engine)
 
 

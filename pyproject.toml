@@ -26,3 +26,104 @@ dependencies = [
     "pytest-cov>=6.0.0",
     "loguru>=0.7.3",
 ]
+
+
+[tool.mypy]
+files = ["src/**/*.py", "tests/**/*.py"]
+plugins = [ "pydantic.mypy" ]
+exclude = [".venv"]
+no_namespace_packages = true
+allow_redefinition = false
+check_untyped_defs = true
+disallow_any_explicit = false
+disallow_any_generics = true
+disallow_untyped_calls = true
+ignore_errors = false
+ignore_missing_imports = true
+ignore_missing_imports_per_module = true
+implicit_reexport = false
+local_partial_types = true
+strict_optional = true
+strict_equality = true
+no_implicit_optional = true
+warn_no_return = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = "xlwings"
+ignore_missing_imports = true
+
+
+[tool.ruff]
+line-length = 88
+src = ["src", "test"]
+
+[tool.ruff.lint]
+select = [
+  "A",   # builtins
+  "B",   # bugbear
+  "COM", # commas
+  "C90", # mccabe
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "D",   # pydocstyle
+  "I",   # isort
+  "N",   # naming
+  "PL",  # pylint
+  "UP",  # pyupgrade
+  "S",   # bandit
+]
+ignore = [
+  "COM812", # trailing comma missing ...
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "S101", # asserts allowed in tests
+]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"__init__.py" = ["D104"] # allow missing docstring in public package
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "lf"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint.isort]
+known-first-party = ["configuracion", "logger"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 6
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+
+[tool.sqlfluff]
+dialect = "teradata"
+large_file_skip_byte_limit = 0
+
+[tool.sqlfluff.layout.type.comma]
+line_position = "leading"
+
+[tool.sqlfluff.rules.capitalisation.keywords]
+capitalisation_policy = "upper"
+
+[tool.sqlfluff.rules.capitalisation.identifiers]
+extended_capitalisation_policy = "lower"
+
+[tool.sqlfluff.rules.capitalisation.functions]
+extended_capitalisation_policy = "upper"
+
+[tool.sqlfluff.rules.capitalisation.literals]
+capitalisation_policy = "lower"
+
+[tool.sqlfluff.rules.capitalisation.types]
+extended_capitalisation_policy = "upper"

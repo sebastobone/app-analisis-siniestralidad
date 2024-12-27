@@ -1,6 +1,5 @@
-import pytest
-from src.procesamiento import base_primas_expuestos as base
 import polars as pl
+from src.procesamiento import base_primas_expuestos as base
 
 
 def test_primas(mock_primas: pl.LazyFrame):

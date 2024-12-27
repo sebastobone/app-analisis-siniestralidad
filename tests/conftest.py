@@ -1,10 +1,11 @@
-import sys
 import os
-import pytest
-import polars as pl
-import numpy as np
-from src import utils
+import sys
 from datetime import date, timedelta
+
+import numpy as np
+import polars as pl
+import pytest
+from src import utils
 from src.app import Parametros
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))

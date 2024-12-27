@@ -1,6 +1,5 @@
-import pytest
-from src.procesamiento import base_siniestros as base
 import polars as pl
+from src.procesamiento import base_siniestros as base
 
 
 def test_triangulo(mock_siniestros: pl.LazyFrame):

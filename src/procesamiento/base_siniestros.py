@@ -1,6 +1,8 @@
-import polars as pl
 from datetime import date
-from math import floor, ceil
+from math import ceil, floor
+
+import polars as pl
+
 import src.constantes as ct
 from src import utils
 

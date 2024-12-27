@@ -1,9 +1,10 @@
-import pytest
-import polars as pl
-from src.extraccion import tera_connect
-from src.app import Parametros
-from src import utils
 from datetime import timedelta
+
+import polars as pl
+import pytest
+from src import utils
+from src.app import Parametros
+from src.extraccion import tera_connect
 
 
 def test_tipo_query():

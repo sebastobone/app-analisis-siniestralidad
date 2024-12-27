@@ -1,12 +1,14 @@
-import teradatasql as td
-import polars as pl
-from tqdm import tqdm
 import json
-import pandas as pd
-import src.constantes as ct
 from datetime import date
+
+import pandas as pd
+import polars as pl
+import teradatasql as td
+from tqdm import tqdm
+
+import src.constantes as ct
 from src import utils
-from run import logger
+from src.logger_config import logger
 
 
 def tipo_query(file: str) -> str:
@@ -46,9 +48,7 @@ def cargar_segmentaciones(archivo_segm: str, tipo_query: str) -> list[pl.DataFra
 
 
 def fechas_chunks(mes_inicio: int, mes_corte: int) -> list[tuple[date, date]]:
-    """
-    Limites para correr queries pesados por partes
-    """
+    """Limites para correr queries pesados por partes"""
     return list(
         zip(
             pl.date_range(
@@ -63,6 +63,7 @@ def fechas_chunks(mes_inicio: int, mes_corte: int) -> list[tuple[date, date]]:
                 interval="1mo",
                 eager=True,
             ).dt.month_end(),
+            strict=False,
         )
     )
 
@@ -196,8 +197,7 @@ def check_nulls(add: pl.DataFrame) -> None:
 
 
 def checks_final_info(tipo_query: str, df: pl.DataFrame, negocio: str) -> None:
-    """
-    Esta funcion se usa cuando se ejecuta un query de siniestros,
+    """Esta funcion se usa cuando se ejecuta un query de siniestros,
     primas, o expuestos que consolida la informacion necesaria para
     pasar a las transformaciones de la plantilla, sin necesidad de
     hacer procesamiento extra.

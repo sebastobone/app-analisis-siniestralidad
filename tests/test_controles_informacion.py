@@ -1,12 +1,12 @@
-import polars as pl
-from unittest.mock import patch
-from src.controles_informacion import controles_informacion as ctrl
-from src.app import Parametros
 from datetime import date
-from src import utils
-from src import constantes as ct
+
 import numpy as np
+import polars as pl
 import pytest
+from src import constantes as ct
+from src import utils
+from src.app import Parametros
+from src.controles_informacion import controles_informacion as ctrl
 
 
 def fechas_sap(params: Parametros) -> list[date]:

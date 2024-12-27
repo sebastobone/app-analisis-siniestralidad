@@ -1,9 +1,9 @@
-import xlwings as xw
-import polars as pl
-import pandas as pd
-from math import ceil
 from datetime import date
+from math import ceil
 
+import pandas as pd
+import polars as pl
+import xlwings as xw
 
 CREDENCIALES_TERADATA = {
     "host": "teradata.suranet.com",
@@ -36,7 +36,7 @@ MONTH_MAP = pl.DataFrame(
 NOMBRE_MES = {
     mes: nombre_mes
     for (mes, nombre_mes) in zip(
-        MONTH_MAP.get_column("Mes"), MONTH_MAP.get_column("Nombre_Mes")
+        MONTH_MAP.get_column("Mes"), MONTH_MAP.get_column("Nombre_Mes"), strict=False
     )
 }
 
@@ -53,8 +53,7 @@ def columnas_aperturas(negocio: str) -> list[str]:
 
 
 def min_cols_tera(tipo_query: str) -> list[str]:
-    """
-    Define las columnas minimas que tienen que salir de un query
+    """Define las columnas minimas que tienen que salir de un query
     que consolida la informacion de primas, siniestros, o expuestos.
     """
     if tipo_query == "siniestros":

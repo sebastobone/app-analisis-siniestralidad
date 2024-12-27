@@ -1,6 +1,8 @@
 import polars as pl
-from . import segmentaciones
+
 from src import utils
+
+from . import segmentaciones
 
 
 def base_incurrido() -> pl.LazyFrame:

@@ -1,10 +1,13 @@
-import polars as pl
-from time import sleep
 import os
+from time import sleep
+from typing import Literal
+
+import polars as pl
+
+from src import constantes as ct
 from src import utils
 from src.controles_informacion.cuadre_contable import cuadre_contable
-from run import logger
-from src import constantes as ct
+from src.logger_config import logger
 
 
 def agrupar_tera(
@@ -288,7 +291,9 @@ def controles_informacion(
     return difs_sap_tera
 
 
-def set_permissions(directory, permission="write"):
+def set_permissions(
+    directory: str, permission: Literal["read", "write"] = "write"
+) -> None:
     import stat
 
     for dirpath, dirnames, filenames in os.walk(directory):
@@ -317,10 +322,11 @@ def set_permissions(directory, permission="write"):
 
 
 def generar_evidencias_parametros(negocio: str, mes_corte: int):
+    import shutil
     from datetime import datetime
+
     import openpyxl as xl
     import pyautogui
-    import shutil
 
     original_file = f"data/segmentacion_{negocio}.xlsx"
     stored_file = f"data/controles_informacion/{mes_corte}_segmentacion_{negocio}.xlsx"

@@ -1,7 +1,9 @@
+from typing import Literal
+
 import polars as pl
+
 import src.constantes as ct
 from src import utils
-from typing import Literal
 
 
 def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:

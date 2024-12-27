@@ -1,5 +1,7 @@
-import polars as pl
 from datetime import date
+
+import polars as pl
+
 from src import constantes as ct
 
 

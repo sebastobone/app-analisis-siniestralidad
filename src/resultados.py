@@ -1,8 +1,9 @@
-import xlwings as xw
-import polars as pl
-import constantes as ct
-
 import time
+
+import polars as pl
+import xlwings as xw
+
+import constantes as ct
 
 
 def main():

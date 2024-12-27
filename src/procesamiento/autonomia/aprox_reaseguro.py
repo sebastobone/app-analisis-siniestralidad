@@ -1,7 +1,10 @@
-import polars as pl
 from datetime import date
-from . import segmentaciones
+
+import polars as pl
+
 from src import utils
+
+from . import segmentaciones
 
 
 def dif_vida_grupo() -> pl.Expr:

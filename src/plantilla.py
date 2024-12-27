@@ -1,13 +1,13 @@
-import xlwings as xw
-from src.metodos_plantilla import base_plantillas
-from src.metodos_plantilla import tablas_resumen
-from src.metodos_plantilla import guardar_traer
-import polars as pl
-import src.constantes as ct
-import time
-from src import utils
 import os
 import shutil
+import time
+
+import polars as pl
+import xlwings as xw
+
+import src.constantes as ct
+from src import utils
+from src.metodos_plantilla import base_plantillas, guardar_traer, tablas_resumen
 
 
 def preparar_plantilla(wb: xw.Book, mes_corte: int, tipo_analisis: str) -> None:

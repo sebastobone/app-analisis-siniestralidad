@@ -1,10 +1,11 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from src.app import app, Parametros, get_session
-from sqlmodel import Session, create_engine, SQLModel, select
+from sqlmodel import Session, SQLModel, create_engine, select
 from sqlmodel.pool import StaticPool
+from src.app import Parametros, app, get_session
 
 
 @pytest.fixture

@@ -1,10 +1,10 @@
-from src.procesamiento.autonomia import adds
-from src.procesamiento.autonomia import siniestros_gen
-from src.extraccion.tera_connect import correr_query
-from src.controles_informacion import controles_informacion as ctrl
-from src.procesamiento import base_siniestros as bsin
-from src.procesamiento import base_primas_expuestos as bpdn
 import polars as pl
+
+from src.controles_informacion import controles_informacion as ctrl
+from src.extraccion.tera_connect import correr_query
+from src.procesamiento import base_primas_expuestos as bpdn
+from src.procesamiento import base_siniestros as bsin
+from src.procesamiento.autonomia import adds, siniestros_gen
 
 
 def correr_query_siniestros(

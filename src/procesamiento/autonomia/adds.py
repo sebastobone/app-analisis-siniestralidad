@@ -1,7 +1,9 @@
-import polars as pl
-from src.controles_informacion.controles_informacion import consolidar_sap
-import xlwings as xw
 import os
+
+import polars as pl
+import xlwings as xw
+
+from src.controles_informacion.controles_informacion import consolidar_sap
 
 
 def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:

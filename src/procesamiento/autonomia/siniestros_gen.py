@@ -1,7 +1,8 @@
 import polars as pl
-from . import base_incurrido
-from . import aprox_reaseguro
+
 from src import utils
+
+from . import aprox_reaseguro, base_incurrido
 
 
 def conteo(
@@ -194,10 +195,10 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
             how="left",
         )
         .with_columns(
+            utils.col_apertura_reservas("autonomia"),
             ramo_desc=pl.when(pl.col("codigo_ramo_op") == "AAV")
             .then(pl.lit("ANEXOS VI"))
             .otherwise(pl.col("ramo_desc")),
-            apertura_reservas=utils.col_apertura_reservas(),
         )
         .group_by(
             [

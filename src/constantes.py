@@ -13,7 +13,7 @@ CREDENCIALES_TERADATA = {
 
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 
-MONTH_MAP = pl.LazyFrame(
+MONTH_MAP = pl.DataFrame(
     {
         "Nombre_Mes": [
             "ENE",
@@ -32,6 +32,13 @@ MONTH_MAP = pl.LazyFrame(
         "Mes": list(range(1, 13)),
     }
 )
+
+NOMBRE_MES = {
+    mes: nombre_mes
+    for (mes, nombre_mes) in zip(
+        MONTH_MAP.get_column("Mes"), MONTH_MAP.get_column("Nombre_Mes")
+    )
+}
 
 
 def columnas_aperturas(negocio: str) -> list[str]:

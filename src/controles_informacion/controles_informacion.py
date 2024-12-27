@@ -20,69 +20,75 @@ def columna_ramo_sap(qty: str) -> str:
         return "Ramo"
 
 
-def leer_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
+def signo_sap(qty: str) -> int:
+    return -1 if qty in ["pago_cedido", "aviso_bruto"] or "prima" in qty else 1
+
+
+def transformar_hoja_afo(
+    df: pl.DataFrame, cia: str, qty: str, mes_corte: int
+) -> pl.LazyFrame:
+    if (
+        f"{ct.NOMBRE_MES[mes_corte % 100]} {mes_corte // 100}"
+        not in df.get_column("Ejercicio/Período").unique()
+    ):
+        err = f"""¡Error! No se pudo encontrar el mes {mes_corte}
+                    en la hoja {qty} del AFO de {cia}. Actualizar el AFO."""
+        logger.error(err)
+        raise ValueError
+
+    return (
+        df.lazy()
+        .fill_null(0)
+        .with_columns(
+            pl.col("Ejercicio/Período")
+            .str.replace("Período 00", "DIC")
+            .str.split(" ")
+            .cast(pl.Array(pl.String, 2))
+            .arr.to_struct(),
+        )
+        .unnest("Ejercicio/Período")
+        .rename({"field_0": "Nombre_Mes", "field_1": "Anno"})
+        .with_columns(
+            pl.col("Nombre_Mes").str.replace_many({"PE2": "DIC", "PE1": "DIC"})
+        )
+        .join(ct.MONTH_MAP.lazy(), on="Nombre_Mes")
+        .drop(
+            [
+                "column_1",
+                columna_ramo_sap(qty),
+                "Resultado total",
+                "Nombre_Mes",
+            ]
+        )
+        .unpivot(
+            index=["Anno", "Mes"],
+            variable_name="codigo_ramo_op",
+            value_name=qty,
+        )
+        .filter(pl.col(qty) != 0)
+        .with_columns(
+            pl.col(qty) * signo_sap(qty),
+            codigo_op=pl.lit("01") if cia == "Generales" else pl.lit("02"),
+        )
+        .fill_null(0)
+        .with_columns(fecha_registro=pl.date(pl.col("Anno"), pl.col("Mes"), 1))
+        .filter(pl.col("fecha_registro") <= utils.yyyymm_to_date(mes_corte))
+        .select(["codigo_op", "codigo_ramo_op", "fecha_registro", qty])
+    )
+
+
+def consolidar_sap(cias: list[str], qtys: list[str], mes_corte: int):
     dfs_sap = []
     for cia in cias:
         for qty in qtys:
-            qty = qty.replace("retenido", "cedido")
-            df_sap = (
-                pl.read_excel(f"data/afo/{cia}.xlsx", sheet_name=qty)
-                .lazy()
-                .fill_null(0)
-                .with_columns(
-                    pl.col("Ejercicio/Período")
-                    .str.replace("Período 00", "DIC")
-                    .str.split(" ")
-                    .cast(pl.Array(pl.String, 2))
-                    .arr.to_struct(),
-                )
-                .unnest("Ejercicio/Período")
-                .rename({"field_0": "Nombre_Mes", "field_1": "Anno"})
-                .with_columns(
-                    pl.col("Nombre_Mes").str.replace_many({"PE2": "DIC", "PE1": "DIC"})
-                )
-                .join(ct.MONTH_MAP, on="Nombre_Mes")
-                .drop(
-                    [
-                        "column_1",
-                        columna_ramo_sap(qty),
-                        "Resultado total",
-                        "Nombre_Mes",
-                    ]
-                )
-                .unpivot(
-                    index=["Anno", "Mes"],
-                    variable_name="codigo_ramo_op",
-                    value_name=qty,
-                )
-                .filter(pl.col(qty) != 0)
-                .with_columns(
-                    pl.col(qty)
-                    * (
-                        -1
-                        if qty in ["pago_cedido", "aviso_bruto"] or "prima" in qty
-                        else 1
-                    ),
-                    codigo_op=pl.lit("01") if cia == "Generales" else pl.lit("02"),
-                )
-                .fill_null(0)
-                .with_columns(
-                    fecha_registro=pl.date(
-                        pl.col("Anno").cast(pl.Int32), pl.col("Mes"), 1
-                    )
-                )
-                .filter(pl.col("fecha_registro") <= utils.yyyymm_to_date(mes_corte))
-                .select(["codigo_op", "codigo_ramo_op", "fecha_registro", qty])
+            df_sap = transformar_hoja_afo(
+                pl.read_excel(f"data/afo/{cia}.xlsx", sheet_name=qty),
+                cia,
+                # Este cambio de retenido por cedido solo aplica para pagos y aviso
+                # (Las primas serian "retenida")
+                qty.replace("retenido", "cedido"),
+                mes_corte,
             )
-
-            if (
-                utils.yyyymm_to_date(mes_corte)
-                not in df_sap.collect().get_column("fecha_registro").unique()
-            ):
-                raise Exception(
-                    f"""¡Error! No se pudo encontrar el mes {mes_corte}
-                    en la hoja {qty} del AFO de {cia}. Actualizar el AFO."""
-                )
 
             dfs_sap.append(df_sap)
 
@@ -98,6 +104,8 @@ def leer_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
             pago_retenido=pl.col("pago_bruto") - pl.col("pago_cedido"),
             aviso_retenido=pl.col("aviso_bruto") - pl.col("aviso_cedido"),
         )
+
+    logger.success("Hojas del AFO leidas sin errores.")
 
     return df_sap_full
 
@@ -145,8 +153,14 @@ def generar_consistencia_historica(
                 )
             )
 
+    save_path = f"data/controles_informacion/{estado_cuadre}/{file}_{fuente}_consistencia_historica.xlsx"
     dfs.sort(group_cols).collect().write_excel(
-        f"data/controles_informacion/{estado_cuadre}/{file}_{fuente}_consistencia_historica.xlsx",
+        save_path,
+    )
+
+    logger.success(
+        f"""Archivo de consistencia historica para {fuente} 
+        generado exitosamente. Ubicacion: {save_path}"""
     )
 
 
@@ -160,6 +174,7 @@ def comparar_sap_tera(
         df_sap,
         on=["codigo_op", "codigo_ramo_op", "fecha_registro"],
         how="left",
+        validate="1:1",
         suffix="_SAP",
     ).fill_null(0)
 
@@ -237,7 +252,7 @@ def controles_informacion(
     )
 
     if file in ("siniestros", "primas"):
-        df_sap = leer_sap(["Vida", "Generales"], qtys, int(mes_corte)).filter(
+        df_sap = consolidar_sap(["Vida", "Generales"], qtys, int(mes_corte)).filter(
             pl.col("codigo_ramo_op").is_in(
                 df.select("codigo_ramo_op")
                 .unique()
@@ -265,6 +280,10 @@ def controles_informacion(
         difs_sap_tera = pl.DataFrame()
 
     generar_integridad_exactitud(df, estado_cuadre, file, mes_corte, qtys)
+
+    logger.success(
+        f"Revisiones de informacion y generacion de controles terminada para el estado {estado_cuadre}"
+    )
 
     return difs_sap_tera
 
@@ -327,6 +346,8 @@ def generar_evidencias_parametros(negocio: str, mes_corte: int):
 
     if os.name == "nt":
         pyautogui.hotkey("winleft", "alt", "d")
+
+    logger.success("Evidencias de controles generadas exitosamente.")
 
 
 def ajustar_fraude(df: pl.LazyFrame):

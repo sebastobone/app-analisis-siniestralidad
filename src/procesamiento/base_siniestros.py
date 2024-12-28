@@ -1,16 +1,27 @@
 from datetime import date
 from math import ceil, floor
+from typing import Literal
 
 import polars as pl
 
 import src.constantes as ct
 from src import utils
 
+COLUMNAS_QTYS = [
+    "pago_bruto",
+    "pago_retenido",
+    "incurrido_bruto",
+    "incurrido_retenido",
+    "conteo_pago",
+    "conteo_incurrido",
+    "conteo_desistido",
+]
+
 
 def aperturas(negocio: str) -> None:
     return (
         pl.scan_parquet("data/raw/siniestros.parquet")
-        .with_columns(ramo_desc=utils.col_ramo_desc())
+        .with_columns(ramo_desc=utils.complementar_col_ramo_desc())
         .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
         .select(["apertura_reservas", "ramo_desc"] + ct.columnas_aperturas(negocio))
         .drop(["codigo_op", "codigo_ramo_op"])
@@ -21,12 +32,12 @@ def aperturas(negocio: str) -> None:
     )
 
 
-def sinis_prep(
+def preparar_base_siniestros(
     df: pl.LazyFrame, mes_inicio: int, mes_corte: int
 ) -> tuple[pl.LazyFrame, pl.LazyFrame]:
     df_sinis = df.with_columns(
         pl.col("fecha_siniestro").clip(upper_bound=pl.col("fecha_registro")),
-        ramo_desc=utils.col_ramo_desc(),
+        ramo_desc=utils.complementar_col_ramo_desc(),
     )
 
     df_sinis = df_sinis.with_columns(
@@ -43,14 +54,8 @@ def sinis_prep(
             "atipico",
             "fecha_siniestro",
             "fecha_registro",
-            "pago_bruto",
-            "pago_retenido",
-            "incurrido_bruto",
-            "incurrido_retenido",
-            "conteo_pago",
-            "conteo_incurrido",
-            "conteo_desistido",
         ]
+        + COLUMNAS_QTYS
     )
 
     df_sinis_tipicos = df_sinis.filter(pl.col("atipico") == 0).drop("atipico")
@@ -87,37 +92,45 @@ def sinis_prep(
     return df_sinis_tipicos, df_sinis_atipicos
 
 
-def triangulos(
-    df_tri: pl.LazyFrame,
-    origin_grain: str,
-    development_grain: str,
-    mes_corte: int,
-    tipo_analisis: str,
-) -> pl.LazyFrame:
-    anno = utils.yyyymm_to_date(mes_corte).year
-    mes = utils.yyyymm_to_date(mes_corte).month
+def mes_ult_ocurr_triangulos(mes_corte: date, origin_grain: str) -> date:
+    anno = mes_corte.year
+    mes = mes_corte.month
     periodicidad = ct.PERIODICIDADES[origin_grain]
-
-    mes_ult_ocurr_triangulos = (
+    return (
         date(anno - 1, 12, 1)
         if mes < periodicidad
         else date(anno, floor(mes / periodicidad) * periodicidad, 1)
     )
 
+
+def mes_prim_ocurr_periodo_act(mes_corte: date, origin_grain: str) -> date:
+    anno = mes_corte.year
+    mes = mes_corte.month
+    periodicidad = ct.PERIODICIDADES[origin_grain]
+    return date(anno, ceil(mes / periodicidad) * periodicidad - (periodicidad - 1), 1)
+
+
+def construir_triangulos(
+    df_tri: pl.LazyFrame,
+    origin_grain: str,
+    development_grain: str,
+    mes_corte: date,
+    tipo_analisis: str,
+) -> pl.LazyFrame:
     df_tri = (
         df_tri.filter(
             pl.col("fecha_registro")
             <= (
-                utils.yyyymm_to_date(mes_corte)
+                mes_corte
                 if tipo_analisis == "entremes"
-                else mes_ult_ocurr_triangulos
+                else mes_ult_ocurr_triangulos(mes_corte, origin_grain)
             )
         )
         .with_columns(
-            periodo_ocurrencia=utils.date_to_yyyymm(
+            periodo_ocurrencia=utils.date_to_yyyymm_pl(
                 pl.col("fecha_siniestro"), origin_grain
             ),
-            periodo_desarrollo=utils.date_to_yyyymm(
+            periodo_desarrollo=utils.date_to_yyyymm_pl(
                 pl.col("fecha_registro"), development_grain
             ),
         )
@@ -136,15 +149,7 @@ def triangulos(
                 pl.col(qty_column)
                 .cum_sum()
                 .over(["apertura_reservas", "periodo_ocurrencia"])
-                for qty_column in [
-                    "pago_bruto",
-                    "pago_retenido",
-                    "incurrido_bruto",
-                    "incurrido_retenido",
-                    "conteo_pago",
-                    "conteo_incurrido",
-                    "conteo_desistido",
-                ]
+                for qty_column in COLUMNAS_QTYS
             ],
             index_desarrollo=pl.col("periodo_desarrollo")
             .cum_count()
@@ -177,65 +182,39 @@ def triangulos(
                 "periodo_desarrollo",
                 "diagonal",
                 "index_desarrollo",
-                "pago_bruto",
-                "pago_retenido",
-                "incurrido_bruto",
-                "incurrido_retenido",
-                "conteo_pago",
-                "conteo_incurrido",
-                "conteo_desistido",
             ]
+            + COLUMNAS_QTYS
         )
     )
 
     return df_tri
 
 
-def diagonales(
+def construir_diagonales_triangulo(
     df_tri: pl.LazyFrame,
     origin_grain: str,
     mes_inicio: int,
-    mes_corte: int,
-    ultima_ocurr: bool = False,
+    mes_corte: date,
+    base_output: Literal["atipicos", "ultima_ocurrencia"],
 ) -> pl.LazyFrame:
-    anno = utils.yyyymm_to_date(mes_corte).year
-    mes = utils.yyyymm_to_date(mes_corte).month
-    periodicidad = ct.PERIODICIDADES[origin_grain]
-
-    mes_prim_ocurr_periodo_act = date(
-        anno, ceil(mes / periodicidad) * periodicidad - (periodicidad - 1), 1
-    )
-
     df_diagonales = (
         df_tri.filter(
-            pl.col("fecha_siniestro")
-            >= (
-                mes_prim_ocurr_periodo_act
-                if ultima_ocurr
-                else utils.yyyymm_to_date(mes_inicio)
+            (
+                pl.col("fecha_siniestro")
+                >= (
+                    mes_prim_ocurr_periodo_act(mes_corte, origin_grain)
+                    if base_output == "ultima_ocurrencia"
+                    else utils.yyyymm_to_date(mes_inicio)
+                )
             )
+            & (pl.col("fecha_registro") <= mes_corte)
         )
         .with_columns(
-            periodo_ocurrencia=utils.date_to_yyyymm(
+            periodo_ocurrencia=utils.date_to_yyyymm_pl(
                 pl.col("fecha_siniestro"), "Mensual"
             ),
             periodicidad_triangulo=pl.lit(origin_grain),
             periodicidad_ocurrencia=pl.lit("Mensual"),
-        )
-        .select(
-            [
-                "apertura_reservas",
-                "periodicidad_triangulo",
-                "periodicidad_ocurrencia",
-                "periodo_ocurrencia",
-                "pago_bruto",
-                "incurrido_bruto",
-                "pago_retenido",
-                "incurrido_retenido",
-                "conteo_pago",
-                "conteo_incurrido",
-                "conteo_desistido",
-            ]
         )
         .group_by(
             [
@@ -245,7 +224,7 @@ def diagonales(
                 "periodo_ocurrencia",
             ]
         )
-        .sum()
+        .agg([pl.col(qty_column).sum() for qty_column in COLUMNAS_QTYS])
         .sort(
             [
                 "apertura_reservas",
@@ -256,64 +235,105 @@ def diagonales(
         )
     )
 
-    if not ultima_ocurr:
+    if base_output == "atipicos":
         df_diagonales = df_diagonales.drop("periodicidad_triangulo")
 
     return df_diagonales
 
 
-def bases_siniestros(tipo_analisis: str, mes_inicio: int, mes_corte: int) -> None:
-    df_sinis_tipicos, df_sinis_atipicos = sinis_prep(
-        pl.scan_parquet("data/raw/siniestros.parquet"), mes_inicio, mes_corte
+def guardar_archivos(df: pl.DataFrame, nombre_archivo: str) -> None:
+    df.write_parquet(f"data/processed/{nombre_archivo}.parquet")
+
+
+def generar_bases_siniestros(
+    df: pl.LazyFrame, tipo_analisis: str, mes_inicio: int, mes_corte: int
+) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
+    df_sinis_tipicos, df_sinis_atipicos = preparar_base_siniestros(
+        df, mes_inicio, mes_corte
     )
+
+    mes_corte_dt = utils.yyyymm_to_date(mes_corte)
 
     if tipo_analisis == "triangulos":
         base_triangulos = pl.concat(
             [
-                triangulos(
-                    df_sinis_tipicos, "Mensual", "Mensual", mes_corte, tipo_analisis
+                construir_triangulos(
+                    df_sinis_tipicos, "Mensual", "Mensual", mes_corte_dt, tipo_analisis
                 ),
-                triangulos(
+                construir_triangulos(
                     df_sinis_tipicos,
                     "Trimestral",
                     "Trimestral",
-                    mes_corte,
+                    mes_corte_dt,
                     tipo_analisis,
                 ),
-                triangulos(
-                    df_sinis_tipicos, "Semestral", "Semestral", mes_corte, tipo_analisis
+                construir_triangulos(
+                    df_sinis_tipicos,
+                    "Semestral",
+                    "Semestral",
+                    mes_corte_dt,
+                    tipo_analisis,
                 ),
-                triangulos(
-                    df_sinis_tipicos, "Anual", "Anual", mes_corte, tipo_analisis
+                construir_triangulos(
+                    df_sinis_tipicos, "Anual", "Anual", mes_corte_dt, tipo_analisis
                 ),
             ]
-        )
+        ).collect()
+        base_ult_ocurr = pl.DataFrame(schema=base_triangulos.schema)
     else:
         base_triangulos = pl.concat(
             [
-                triangulos(
-                    df_sinis_tipicos, "Trimestral", "Mensual", mes_corte, tipo_analisis
+                construir_triangulos(
+                    df_sinis_tipicos,
+                    "Trimestral",
+                    "Mensual",
+                    mes_corte_dt,
+                    tipo_analisis,
                 ),
-                triangulos(
-                    df_sinis_tipicos, "Semestral", "Mensual", mes_corte, tipo_analisis
+                construir_triangulos(
+                    df_sinis_tipicos,
+                    "Semestral",
+                    "Mensual",
+                    mes_corte_dt,
+                    tipo_analisis,
                 ),
-                triangulos(
-                    df_sinis_tipicos, "Anual", "Mensual", mes_corte, tipo_analisis
+                construir_triangulos(
+                    df_sinis_tipicos, "Anual", "Mensual", mes_corte_dt, tipo_analisis
                 ),
             ]
-        )
+        ).collect()
         base_ult_ocurr = pl.concat(
             [
-                diagonales(df_sinis_tipicos, "Trimestral", mes_inicio, mes_corte, True),
-                diagonales(df_sinis_tipicos, "Semestral", mes_inicio, mes_corte, True),
-                diagonales(df_sinis_tipicos, "Anual", mes_inicio, mes_corte, True),
+                construir_diagonales_triangulo(
+                    df_sinis_tipicos,
+                    "Trimestral",
+                    mes_inicio,
+                    mes_corte_dt,
+                    "ultima_ocurrencia",
+                ),
+                construir_diagonales_triangulo(
+                    df_sinis_tipicos,
+                    "Semestral",
+                    mes_inicio,
+                    mes_corte_dt,
+                    "ultima_ocurrencia",
+                ),
+                construir_diagonales_triangulo(
+                    df_sinis_tipicos,
+                    "Anual",
+                    mes_inicio,
+                    mes_corte_dt,
+                    "ultima_ocurrencia",
+                ),
             ]
-        )
-        base_ult_ocurr.collect().write_parquet(
-            "data/processed/base_ultima_ocurrencia.parquet"
-        )
+        ).collect()
+        guardar_archivos(base_ult_ocurr, "base_ultima_ocurrencia")
 
-    base_triangulos.collect().write_parquet("data/processed/base_triangulos.parquet")
-    diagonales(
-        df_sinis_atipicos, "Mensual", mes_inicio, mes_corte
-    ).collect().write_parquet("data/processed/base_atipicos.parquet")
+    guardar_archivos(base_triangulos, "base_triangulos")
+
+    base_atipicos = construir_diagonales_triangulo(
+        df_sinis_atipicos, "Mensual", mes_inicio, mes_corte_dt, "atipicos"
+    ).collect()
+    guardar_archivos(base_atipicos, "base_atipicos")
+
+    return base_triangulos, base_ult_ocurr, base_atipicos

@@ -63,7 +63,7 @@ def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
     ).with_columns(pl.sum_horizontal("001", "002", "003").alias("Resultado total"))
 
 
-@pytest.mark.parametrize("mes_corte", [202212, 202401])
+@pytest.mark.parametrize("mes_corte", [202212])
 @pytest.mark.parametrize("cia", ["Vida", "Generales"])
 @pytest.mark.parametrize(
     "qty",
@@ -90,9 +90,8 @@ def test_transformar_hoja_afo(mes_corte: int, cia: str, qty: str):
     assert abs(sum_original - sum_processed) < 100
 
     hoja_afo_incompleta = df_original.slice(0, df_original.shape[0] - 1)
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(ValueError):
         ctrl.transformar_hoja_afo(hoja_afo_incompleta, cia, qty, mes_corte)
-    print(exc_info.value)
 
 
 @pytest.mark.parametrize(

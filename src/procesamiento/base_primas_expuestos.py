@@ -34,7 +34,7 @@ def bases_primas_expuestos(
     df_group = (
         df.with_columns(
             fechas_pdn(pl.col("fecha_registro")),
-            ramo_desc=utils.col_ramo_desc(),
+            ramo_desc=utils.complementar_col_ramo_desc(),
         )
         .select(["ramo_desc"] + cols_aperts + qty_cols + list(ct.PERIODICIDADES.keys()))
         .unpivot(

@@ -10,6 +10,8 @@ from src.app import Parametros
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
+MES_INICIO_MOCK = 201001
+
 
 @pytest.fixture
 def mock_siniestros() -> pl.LazyFrame:
@@ -26,7 +28,7 @@ def mock_siniestros() -> pl.LazyFrame:
                 "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
                 "atipico": np.random.choice([0, 1], size=num_rows, p=[0.95, 0.05]),
                 "fecha_siniestro": [
-                    date(2010, 1, 1)
+                    utils.yyyymm_to_date(MES_INICIO_MOCK)
                     + timedelta(np.random.randint(low=0, high=365 * 20))
                     for _ in range(num_rows)
                 ],
@@ -81,7 +83,8 @@ def mock_primas() -> pl.LazyFrame:
             "apertura_1": np.random.choice(["A", "B", "C"], size=num_rows),
             "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
             "fecha_registro": [
-                date(2010, 1, 1) + timedelta(np.random.randint(low=0, high=365 * 20))
+                utils.yyyymm_to_date(MES_INICIO_MOCK)
+                + timedelta(np.random.randint(low=0, high=365 * 20))
                 for _ in range(num_rows)
             ],
             "prima_bruta": np.random.random(size=num_rows) * 1e8,
@@ -115,7 +118,7 @@ def mock_expuestos() -> pl.LazyFrame:
                 "apertura_1": np.random.choice(["A", "B", "C"], size=num_rows),
                 "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
                 "fecha_registro": [
-                    date(2010, 1, 1)
+                    utils.yyyymm_to_date(MES_INICIO_MOCK)
                     + timedelta(np.random.randint(low=0, high=365 * 20))
                     for _ in range(num_rows)
                 ],

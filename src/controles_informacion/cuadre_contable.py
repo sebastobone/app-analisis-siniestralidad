@@ -1,3 +1,5 @@
+from typing import Literal
+
 import polars as pl
 
 from src import utils
@@ -5,7 +7,10 @@ from src.logger_config import logger
 
 
 def cuadre_contable(
-    negocio: str, file: str, df: pl.LazyFrame, dif_sap_vs_tera: pl.LazyFrame
+    negocio: str,
+    file: Literal["siniestros", "primas", "expuestos"],
+    df: pl.LazyFrame,
+    dif_sap_vs_tera: pl.LazyFrame,
 ) -> pl.LazyFrame:
     if negocio == "soat":
         return cuadre_contable_soat(file, df, dif_sap_vs_tera)
@@ -21,24 +26,26 @@ def cuadre_contable(
 
 
 def concat_df_dif(df: pl.LazyFrame, dif: pl.LazyFrame) -> pl.LazyFrame:
+    columns = df.collect_schema().names()
     return (
         pl.concat([df, dif], how="vertical_relaxed")
-        .group_by(
-            df.collect_schema().names()[
-                : df.collect_schema().names().index("fecha_registro") + 1
-            ]
-        )
+        .group_by(columns[: columns.index("fecha_registro") + 1])
         .sum()
-        .sort(
-            df.collect_schema().names()[
-                : df.collect_schema().names().index("fecha_registro") + 1
-            ]
-        )
+        .sort(columns[: columns.index("fecha_registro") + 1])
     )
 
 
+def guardar_archivos(
+    file: Literal["siniestros", "primas", "expuestos"], df_cuadre: pl.DataFrame
+) -> None:
+    df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
+    df_cuadre.write_parquet(f"data/raw/{file}.parquet")
+
+
 def cuadre_contable_autonomia(
-    file: str, df: pl.LazyFrame, dif_sap_vs_tera: pl.LazyFrame
+    file: Literal["siniestros", "primas", "expuestos"],
+    df: pl.LazyFrame,
+    dif_sap_vs_tera: pl.LazyFrame,
 ) -> pl.LazyFrame:
     agrups = utils.lowercase_columns(
         pl.read_excel(
@@ -89,41 +96,22 @@ def apertura_dif_soat() -> pl.LazyFrame:
 
 
 def cuadre_contable_soat(
-    file: str, df: pl.LazyFrame, dif_sap_vs_tera: pl.LazyFrame
+    file: Literal["siniestros", "primas", "expuestos"],
+    df: pl.LazyFrame,
+    dif_sap_vs_tera: pl.LazyFrame,
 ) -> pl.LazyFrame:
-    ramos = df.select(["codigo_op", "codigo_ramo_op", "ramo_desc"]).unique()
-
+    dif_cols = [
+        col for col in dif_sap_vs_tera.collect_schema().names() if "diferencia" in col
+    ]
     dif = (
         dif_sap_vs_tera.filter(
             pl.col("fecha_registro") == pl.col("fecha_registro").max()
         )
-        .select(
-            ["codigo_op", "codigo_ramo_op", "fecha_registro"]
-            + [
-                col
-                for col in dif_sap_vs_tera.collect_schema().names()
-                if "diferencia" in col
-            ]
-        )
-        .rename(
-            {
-                col: col.replace("diferencia_", "")
-                for col in dif_sap_vs_tera.collect_schema().names()
-                if "diferencia" in col
-            }
-        )
-        .join(ramos, on=["codigo_op", "codigo_ramo_op"])
+        .select(["codigo_op", "codigo_ramo_op", "fecha_registro"] + dif_cols)
+        .rename({col: col.replace("diferencia_", "") for col in dif_cols})
+        .with_columns(ramo_desc=pl.lit("AUTOS OBLIGATORIO"))
+        .join(apertura_dif_soat(), on=["codigo_op", "codigo_ramo_op"])
     )
-
-    dif = dif.drop(
-        [
-            column
-            for column in dif.collect_schema().names()
-            if column not in df.collect_schema().names()
-        ]
-    )
-
-    dif = dif.join(apertura_dif_soat(), on=["codigo_op", "codigo_ramo_op"])
 
     if file == "siniestros":
         dif = dif.with_columns(
@@ -138,7 +126,7 @@ def cuadre_contable_soat(
 
     df_cuadre = concat_df_dif(df, dif.select(df.collect_schema().names())).collect()
 
-    df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
-    df_cuadre.write_parquet(f"data/raw/{file}.parquet")
+    guardar_archivos(file, df_cuadre)
+    logger.success(f"Cuadre contable para {file} realizado exitosamente.")
 
     return df_cuadre.lazy()

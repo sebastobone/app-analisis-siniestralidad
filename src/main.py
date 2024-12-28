@@ -127,7 +127,12 @@ def generar_bases_plantilla(
     negocio: str, tipo_analisis: str, mes_inicio: int, mes_corte: int
 ) -> None:
     bsin.aperturas(negocio)
-    bsin.bases_siniestros(tipo_analisis, mes_inicio, mes_corte)
+    _, _, _ = bsin.generar_bases_siniestros(
+        pl.scan_parquet("data/raw/siniestros.parquet"),
+        tipo_analisis,
+        mes_inicio,
+        mes_corte,
+    )
 
     bpdn.bases_primas_expuestos(
         pl.scan_parquet("data/raw/primas.parquet"), "primas", negocio

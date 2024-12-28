@@ -1,4 +1,5 @@
 from datetime import date
+from math import ceil
 
 import polars as pl
 
@@ -9,7 +10,7 @@ def lowercase_columns(df: pl.LazyFrame | pl.DataFrame) -> pl.LazyFrame | pl.Data
     return df.rename({column: column.lower() for column in df.collect_schema().names()})
 
 
-def col_ramo_desc() -> pl.Expr:
+def complementar_col_ramo_desc() -> pl.Expr:
     return pl.concat_str(
         pl.col("codigo_op"),
         pl.col("codigo_ramo_op"),
@@ -28,7 +29,14 @@ def yyyymm_to_date(mes_yyyymm: int) -> date:
     return date(mes_yyyymm // 100, mes_yyyymm % 100, 1)
 
 
-def date_to_yyyymm(column: pl.Expr, grain: str = "Month") -> pl.Expr:
+def date_to_yyyymm(mes_date: date, grain: str = "Mensual") -> int:
+    return (
+        mes_date.year * 100
+        + ceil(mes_date.month / ct.PERIODICIDADES[grain]) * ct.PERIODICIDADES[grain]
+    )
+
+
+def date_to_yyyymm_pl(column: pl.Expr, grain: str = "Mensual") -> pl.Expr:
     return (
         column.dt.year() * 100
         + (column.dt.month() / pl.lit(ct.PERIODICIDADES[grain])).ceil()

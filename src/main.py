@@ -1,5 +1,6 @@
 import polars as pl
 
+from src import utils
 from src.controles_informacion import controles_informacion as ctrl
 from src.extraccion.tera_connect import correr_query
 from src.procesamiento import base_primas_expuestos as bpdn
@@ -130,8 +131,8 @@ def generar_bases_plantilla(
     _, _, _ = bsin.generar_bases_siniestros(
         pl.scan_parquet("data/raw/siniestros.parquet"),
         tipo_analisis,
-        mes_inicio,
-        mes_corte,
+        utils.yyyymm_to_date(mes_inicio),
+        utils.yyyymm_to_date(mes_corte),
     )
 
     bpdn.bases_primas_expuestos(

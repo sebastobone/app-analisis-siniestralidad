@@ -33,7 +33,7 @@ def aperturas(negocio: str) -> None:
 
 
 def preparar_base_siniestros(
-    df: pl.LazyFrame, mes_inicio: int, mes_corte: int
+    df: pl.LazyFrame, mes_inicio: date, mes_corte: date
 ) -> tuple[pl.LazyFrame, pl.LazyFrame]:
     df_sinis = df.with_columns(
         pl.col("fecha_siniestro").clip(upper_bound=pl.col("fecha_registro")),
@@ -66,8 +66,8 @@ def preparar_base_siniestros(
         bases_fechas.append(
             pl.LazyFrame(
                 pl.date_range(
-                    utils.yyyymm_to_date(mes_inicio),
-                    utils.yyyymm_to_date(mes_corte),
+                    mes_inicio,
+                    mes_corte,
                     interval="1mo",
                     eager=True,
                 ).alias(tipo_fecha)
@@ -193,7 +193,7 @@ def construir_triangulos(
 def construir_diagonales_triangulo(
     df_tri: pl.LazyFrame,
     origin_grain: str,
-    mes_inicio: int,
+    mes_inicio: date,
     mes_corte: date,
     base_output: Literal["atipicos", "ultima_ocurrencia"],
 ) -> pl.LazyFrame:
@@ -204,7 +204,7 @@ def construir_diagonales_triangulo(
                 >= (
                     mes_prim_ocurr_periodo_act(mes_corte, origin_grain)
                     if base_output == "ultima_ocurrencia"
-                    else utils.yyyymm_to_date(mes_inicio)
+                    else mes_inicio
                 )
             )
             & (pl.col("fecha_registro") <= mes_corte)
@@ -246,36 +246,30 @@ def guardar_archivos(df: pl.DataFrame, nombre_archivo: str) -> None:
 
 
 def generar_bases_siniestros(
-    df: pl.LazyFrame, tipo_analisis: str, mes_inicio: int, mes_corte: int
+    df: pl.LazyFrame, tipo_analisis: str, mes_inicio: date, mes_corte: date
 ) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
     df_sinis_tipicos, df_sinis_atipicos = preparar_base_siniestros(
         df, mes_inicio, mes_corte
     )
 
-    mes_corte_dt = utils.yyyymm_to_date(mes_corte)
-
     if tipo_analisis == "triangulos":
         base_triangulos = pl.concat(
             [
                 construir_triangulos(
-                    df_sinis_tipicos, "Mensual", "Mensual", mes_corte_dt, tipo_analisis
+                    df_sinis_tipicos, "Mensual", "Mensual", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
                     df_sinis_tipicos,
                     "Trimestral",
                     "Trimestral",
-                    mes_corte_dt,
+                    mes_corte,
                     tipo_analisis,
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos,
-                    "Semestral",
-                    "Semestral",
-                    mes_corte_dt,
-                    tipo_analisis,
+                    df_sinis_tipicos, "Semestral", "Semestral", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos, "Anual", "Anual", mes_corte_dt, tipo_analisis
+                    df_sinis_tipicos, "Anual", "Anual", mes_corte, tipo_analisis
                 ),
             ]
         ).collect()
@@ -287,18 +281,18 @@ def generar_bases_siniestros(
                     df_sinis_tipicos,
                     "Trimestral",
                     "Mensual",
-                    mes_corte_dt,
+                    mes_corte,
                     tipo_analisis,
                 ),
                 construir_triangulos(
                     df_sinis_tipicos,
                     "Semestral",
                     "Mensual",
-                    mes_corte_dt,
+                    mes_corte,
                     tipo_analisis,
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos, "Anual", "Mensual", mes_corte_dt, tipo_analisis
+                    df_sinis_tipicos, "Anual", "Mensual", mes_corte, tipo_analisis
                 ),
             ]
         ).collect()
@@ -308,21 +302,21 @@ def generar_bases_siniestros(
                     df_sinis_tipicos,
                     "Trimestral",
                     mes_inicio,
-                    mes_corte_dt,
+                    mes_corte,
                     "ultima_ocurrencia",
                 ),
                 construir_diagonales_triangulo(
                     df_sinis_tipicos,
                     "Semestral",
                     mes_inicio,
-                    mes_corte_dt,
+                    mes_corte,
                     "ultima_ocurrencia",
                 ),
                 construir_diagonales_triangulo(
                     df_sinis_tipicos,
                     "Anual",
                     mes_inicio,
-                    mes_corte_dt,
+                    mes_corte,
                     "ultima_ocurrencia",
                 ),
             ]
@@ -332,7 +326,7 @@ def generar_bases_siniestros(
     guardar_archivos(base_triangulos, "base_triangulos")
 
     base_atipicos = construir_diagonales_triangulo(
-        df_sinis_atipicos, "Mensual", mes_inicio, mes_corte_dt, "atipicos"
+        df_sinis_atipicos, "Mensual", mes_inicio, mes_corte, "atipicos"
     ).collect()
     guardar_archivos(base_atipicos, "base_atipicos")
 

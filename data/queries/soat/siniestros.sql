@@ -543,13 +543,6 @@ CREATE MULTISET VOLATILE TABLE siniestros_final AS (
         , COALESCE(base.tipo_vehiculo, '-1') AS tipo_vehiculo
         , base.atipico
 
-        , CONCAT(
-            base.codigo_ramo_op, '_'
-            , agrcanal.apertura_canal_cd, '_'
-            , agrclas.tipo_vehiculo_cd, '_'
-            , agrampa.apertura_amparo_cd
-        ) AS agrupacion_reservas
-
         , GREATEST(CAST('{fecha_primera_ocurrencia}' AS DATE), focurr.mes_id)
             AS fecha_siniestro
         , GREATEST(CAST('{fecha_primera_ocurrencia}' AS DATE), fmov.mes_id)
@@ -592,32 +585,12 @@ CREATE MULTISET VOLATILE TABLE siniestros_final AS (
             AND (base.atipico = contd.atipico)
 
     LEFT JOIN
-        (SELECT DISTINCT
-            apertura_canal_desc
-            , apertura_canal_cd
-        FROM sucursales) AS agrcanal
-        ON (base.apertura_canal_desc = agrcanal.apertura_canal_desc)
-    LEFT JOIN
-        (SELECT DISTINCT
-            tipo_vehiculo
-            , tipo_vehiculo_cd
-        FROM clases) AS agrclas
-        ON (base.tipo_vehiculo = agrclas.tipo_vehiculo)
-    LEFT JOIN
-        (SELECT DISTINCT
-            apertura_amparo_desc
-            , apertura_amparo_cd
-        FROM amparos) AS agrampa
-        ON (base.apertura_amparo_desc = agrampa.apertura_amparo_desc)
-
-
-    LEFT JOIN
         mdb_seguros_colombia.v_ramo AS ramo
         ON (base.codigo_ramo_op = ramo.codigo_ramo_op)
     INNER JOIN fechas AS focurr ON (base.fecha_siniestro = focurr.dia_dt)
     INNER JOIN fechas AS fmov ON (base.fecha_registro = fmov.dia_dt)
 
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
 
     HAVING NOT (
         ZEROIFNULL(SUM(contp.conteo_pago)) = 0
@@ -634,7 +607,6 @@ CREATE MULTISET VOLATILE TABLE siniestros_final AS (
     , apertura_canal_desc
     , apertura_amparo_desc
     , tipo_vehiculo
-    , agrupacion_reservas
     , fecha_siniestro
     , fecha_registro
 ) ON COMMIT PRESERVE ROWS;

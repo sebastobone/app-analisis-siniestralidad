@@ -418,13 +418,11 @@ def generar_evidencias_parametros(negocio: str, mes_corte: int):
 
 def ajustar_fraude(df: pl.LazyFrame):
     fraude = pl.LazyFrame(
-        utils.lowercase_columns(
-            pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")
-        )
+        pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")
     ).drop("tipo_ajuste")
 
     df = (
-        pl.concat([df, fraude])
+        pl.concat([df, fraude], how="vertical_relaxed")
         .group_by(
             df.collect_schema().names()[
                 : df.collect_schema().names().index("fecha_registro") + 1

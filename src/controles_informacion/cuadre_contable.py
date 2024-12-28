@@ -15,7 +15,8 @@ def cuadre_contable(
         logger.error(
             f"""Definio hacer el cuadre contable, pero el negocio 
             {negocio} no tiene ninguna estrategia de cuadre implementada.
-            """)
+            """
+        )
         raise ValueError
 
 
@@ -79,17 +80,13 @@ def cuadre_contable_soat(
     ramos = df.select(["codigo_op", "codigo_ramo_op", "ramo_desc"]).unique()
 
     dif = (
-        dif_sap_vs_tera.filter(pl.col("mes_mov") == pl.col("mes_mov").max())
+        dif_sap_vs_tera.filter(
+            pl.col("fecha_registro") == pl.col("fecha_registro").max()
+        )
         .rename(
             {
-                "DIFERENCIA_PRIMAS_EMI_BRUTO": "prima_bruta",
-                "DIFERENCIA_PRIMAS_EMI_RETENIDO": "prima_retenida",
-                "DIFERENCIA_PRIMAS_DEV_BRUTO": "prima_bruta_devengada",
-                "DIFERENCIA_PRIMAS_DEV_RETENIDO": "prima_retenida_devengada",
-                "DIFERENCIA_PAGOS_BRUTO": "pago_bruto",
-                "DIFERENCIA_PAGOS_RETENIDO": "pago_retenido",
-                "DIFERENCIA_RSA_BRUTO": "aviso_bruto",
-                "DIFERENCIA_RSA_RETENIDO": "aviso_retenido",
+                col: col.replace("diferencia", "")
+                for col in dif_sap_vs_tera.collect_schema().names()
             }
         )
         .join(ramos, on=["codigo_op", "codigo_ramo_op"])
@@ -128,7 +125,7 @@ def cuadre_contable_soat(
     elif file == "primas":
         dif = dif.with_columns(prima_devengada_mod=0)
 
-    df_cuadre = concat_df_dif(df, dif).collect()
+    df_cuadre = concat_df_dif(df, dif.select(df.collect_schema().names())).collect()
 
     df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
     df_cuadre.write_parquet(f"data/raw/{file}.parquet")

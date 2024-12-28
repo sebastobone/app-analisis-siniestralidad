@@ -112,14 +112,16 @@ def test_transformar_hoja_afo(mes_corte: int, cia: str, qty: str):
         ),
     ],
 )
-@patch("src.controles_informacion.controles_informacion.pl.read_excel")
-def test_consolidar_sap(mock_read_excel, cias, qtys, mes_corte, expected_columns):
-    mock_read_excel.return_value = mock_hoja_afo(mes_corte, "prima_bruta")
+def test_consolidar_sap(cias, qtys, mes_corte, expected_columns):
+    with patch(
+        "src.controles_informacion.controles_informacion.pl.read_excel"
+    ) as mock_read_excel:
+        mock_read_excel.return_value = mock_hoja_afo(mes_corte, "prima_bruta")
 
-    result = ctrl.consolidar_sap(cias, qtys, mes_corte).collect()
+        result = ctrl.consolidar_sap(cias, qtys, mes_corte)
 
-    assert (
-        result.collect_schema().names()
-        == ["codigo_op", "codigo_ramo_op", "fecha_registro"] + expected_columns
-    )
-    assert result.shape[0] > 0
+        assert (
+            result.collect_schema().names()
+            == ["codigo_op", "codigo_ramo_op", "fecha_registro"] + expected_columns
+        )
+        assert result.shape[0] > 0

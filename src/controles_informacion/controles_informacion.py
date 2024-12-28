@@ -57,9 +57,10 @@ def transformar_hoja_afo(
         f"{ct.NOMBRE_MES[mes_corte % 100]} {mes_corte // 100}"
         not in df.get_column("Ejercicio/Período").unique()
     ):
-        err = f"""¡Error! No se pudo encontrar el mes {mes_corte}
-                    en la hoja {qty} del AFO de {cia}. Actualizar el AFO."""
-        logger.error(err)
+        logger.error(
+            f"""¡Error! No se pudo encontrar el mes {mes_corte}
+            en la hoja {qty} del AFO de {cia}. Actualizar el AFO."""
+        )
         raise ValueError
 
     return (
@@ -121,7 +122,7 @@ def crear_columnas_faltantes_sap(df: pl.LazyFrame) -> pl.LazyFrame:
     return df
 
 
-def consolidar_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
+def consolidar_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.DataFrame:
     dfs_sap = []
     for cia in cias:
         for hoja_afo in definir_hojas_afo(qtys):
@@ -142,9 +143,11 @@ def consolidar_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyF
     )
 
     df_sap_full = crear_columnas_faltantes_sap(df_sap_full)
-    logger.success("Hojas del AFO leidas sin errores.")
+    logger.success(f"Cantidades {qtys} leidas del AFO sin errores.")
 
-    return df_sap_full.select(["codigo_op", "codigo_ramo_op", "fecha_registro"] + qtys)
+    return df_sap_full.select(
+        ["codigo_op", "codigo_ramo_op", "fecha_registro"] + qtys
+    ).collect()
 
 
 def generar_consistencia_historica(
@@ -190,16 +193,12 @@ def generar_consistencia_historica(
                 )
             )
 
-    save_path = f"""
-        data/controles_informacion/{estado_cuadre}/{file}_{fuente}_consistencia_historica.xlsx
-        """
     dfs.sort(group_cols).collect().write_excel(
-        save_path,
+        f"data/controles_informacion/{estado_cuadre}/{file}_{fuente}_consistencia_historica.xlsx"
     )
 
     logger.success(
-        f"""Archivo de consistencia historica para {fuente} 
-        generado exitosamente. Ubicacion: {save_path}"""
+        f"Archivo de consistencia historica para {file} - {fuente} generado exitosamente."
     )
 
 
@@ -308,7 +307,7 @@ def controles_informacion(
     )
     generar_consistencia_historica(file, group_cols, qtys, estado_cuadre, fuente="tera")
 
-    df_tera_ramo = agrupar_tera(
+    df_tera = agrupar_tera(
         df,
         group_cols=["codigo_op", "codigo_ramo_op", "fecha_registro"],
         qtys=qtys,
@@ -323,7 +322,7 @@ def controles_informacion(
                 .get_column("codigo_ramo_op")
             )
         )
-        df_sap.collect().write_excel(
+        df_sap.write_excel(
             f"data/controles_informacion/{estado_cuadre}/{file}_sap_{mes_corte}.xlsx",
         )
         generar_consistencia_historica(
@@ -334,7 +333,7 @@ def controles_informacion(
             fuente="sap",
         )
 
-        difs_sap_tera = comparar_sap_tera(df_tera_ramo, df_sap, int(mes_corte), qtys)
+        difs_sap_tera = comparar_sap_tera(df_tera, df_sap.lazy(), int(mes_corte), qtys)
         difs_sap_tera.write_excel(
             f"data/controles_informacion/{estado_cuadre}/{file}_sap_vs_tera_{mes_corte}.xlsx",
         )

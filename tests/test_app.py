@@ -32,7 +32,7 @@ def client(test_session: Session):
 
 def test_generar_base(client: TestClient):
     response = client.get("/")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_ingresar_parametros(
@@ -83,7 +83,6 @@ def test_correr_query_siniestros(
             params.negocio,
             params.mes_inicio,
             params.mes_corte,
-            params.tipo_analisis,
             params.aproximar_reaseguro,
         )
 

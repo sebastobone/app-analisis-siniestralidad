@@ -27,6 +27,29 @@ def signo_sap(qty: str) -> int:
     return -1 if qty in ["pago_cedido", "aviso_bruto"] or "prima" in qty else 1
 
 
+def definir_hojas_afo(qtys: list[str]) -> set[str]:
+    hojas_afo = set()
+    for qty in qtys:
+        if "prima" in qty:
+            hojas_afo.update(
+                set(
+                    (
+                        "prima_bruta",
+                        "prima_retenida",
+                        "prima_bruta_devengada",
+                        "prima_retenida_devengada",
+                    )
+                )
+            )
+        elif "pago" in qty:
+            hojas_afo.update(set(("pago_bruto", "pago_cedido")))
+        elif "aviso" in qty:
+            hojas_afo.update(set(("aviso_bruto", "aviso_cedido")))
+        elif "rpnd" in qty:
+            hojas_afo.update(set(("rpnd_bruto", "rpnd_cedido")))
+    return hojas_afo
+
+
 def transformar_hoja_afo(
     df: pl.DataFrame, cia: str, qty: str, mes_corte: int
 ) -> pl.LazyFrame:
@@ -80,37 +103,48 @@ def transformar_hoja_afo(
     )
 
 
-def consolidar_sap(cias: list[str], qtys: list[str], mes_corte: int):
-    dfs_sap = []
-    for cia in cias:
-        for qty in qtys:
-            df_sap = transformar_hoja_afo(
-                pl.read_excel(f"data/afo/{cia}.xlsx", sheet_name=qty),
-                cia,
-                # Este cambio de retenido por cedido solo aplica para pagos y aviso
-                # (Las primas serian "retenida")
-                qty.replace("retenido", "cedido"),
-                mes_corte,
+def crear_columnas_faltantes_sap(df: pl.LazyFrame) -> pl.LazyFrame:
+    for qty in df.collect_schema().names():
+        if "retenid" in qty:
+            df = df.with_columns(
+                (pl.col(qty.replace("retenid", "brut")) - pl.col(qty)).alias(
+                    qty.replace("retenid", "cedid")
+                )
+            )
+        elif "cedid" in qty:
+            df = df.with_columns(
+                (pl.col(qty.replace("cedid", "brut")) - pl.col(qty)).alias(
+                    qty.replace("cedid", "retenid")
+                )
             )
 
-            dfs_sap.append(df_sap)
+    return df
+
+
+def consolidar_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.LazyFrame:
+    dfs_sap = []
+    for cia in cias:
+        for hoja_afo in definir_hojas_afo(qtys):
+            dfs_sap.append(
+                transformar_hoja_afo(
+                    pl.read_excel(f"data/afo/{cia}.xlsx", sheet_name=hoja_afo),
+                    cia,
+                    hoja_afo,
+                    mes_corte,
+                )
+            )
 
     df_sap_full = (
-        pl.LazyFrame(pl.concat(dfs_sap, how="diagonal"))
+        pl.concat(dfs_sap, how="diagonal")
         .group_by(["codigo_op", "codigo_ramo_op", "fecha_registro"])
         .sum()
         .sort(["codigo_op", "codigo_ramo_op", "fecha_registro"])
     )
 
-    if "pago_bruto" in qtys:
-        df_sap_full = df_sap_full.with_columns(
-            pago_retenido=pl.col("pago_bruto") - pl.col("pago_cedido"),
-            aviso_retenido=pl.col("aviso_bruto") - pl.col("aviso_cedido"),
-        )
-
+    df_sap_full = crear_columnas_faltantes_sap(df_sap_full)
     logger.success("Hojas del AFO leidas sin errores.")
 
-    return df_sap_full
+    return df_sap_full.select(["codigo_op", "codigo_ramo_op", "fecha_registro"] + qtys)
 
 
 def generar_consistencia_historica(
@@ -156,7 +190,9 @@ def generar_consistencia_historica(
                 )
             )
 
-    save_path = f"data/controles_informacion/{estado_cuadre}/{file}_{fuente}_consistencia_historica.xlsx"
+    save_path = f"""
+        data/controles_informacion/{estado_cuadre}/{file}_{fuente}_consistencia_historica.xlsx
+        """
     dfs.sort(group_cols).collect().write_excel(
         save_path,
     )
@@ -235,14 +271,38 @@ def generar_integridad_exactitud(
     )
 
 
+def definir_cantidades_control(
+    file: Literal["siniestros", "primas", "expuestos"],
+) -> tuple[list[str], list[str]]:
+    if file == "siniestros":
+        qtys = ["pago_bruto", "aviso_bruto", "pago_retenido", "aviso_retenido"]
+        group_cols = ["apertura_reservas", "fecha_siniestro", "fecha_registro"]
+
+    elif file == "primas":
+        qtys = [
+            "prima_bruta",
+            "prima_retenida",
+            "prima_bruta_devengada",
+            "prima_retenida_devengada",
+        ]
+        group_cols = ["apertura_reservas", "fecha_registro"]
+
+    elif file == "expuestos":
+        qtys = ["expuestos"]
+        group_cols = ["apertura_reservas", "fecha_registro"]
+
+    return qtys, group_cols
+
+
 def controles_informacion(
     df: pl.LazyFrame,
-    file: str,
-    group_cols: list[str],
-    qtys: list[str],
+    file: Literal["siniestros", "primas", "expuestos"],
     mes_corte: int,
-    estado_cuadre: str,
+    estado_cuadre: Literal[
+        "pre_cuadre_contable", "post_cuadre_contable", "post_ajustes_fraude"
+    ],
 ) -> pl.DataFrame:
+    qtys, group_cols = definir_cantidades_control(file)
     agrupar_tera(df, group_cols, qtys).collect().write_excel(
         f"data/controles_informacion/{estado_cuadre}/{file}_tera_{mes_corte}.xlsx",
     )
@@ -285,7 +345,8 @@ def controles_informacion(
     generar_integridad_exactitud(df, estado_cuadre, file, mes_corte, qtys)
 
     logger.success(
-        f"Revisiones de informacion y generacion de controles terminada para el estado {estado_cuadre}"
+        f"""Revisiones de informacion y generacion de controles
+        terminada para el estado {estado_cuadre}"""
     )
 
     return difs_sap_tera
@@ -379,37 +440,18 @@ def ajustar_fraude(df: pl.LazyFrame):
 
 
 def generar_controles(
-    file: str,
+    file: Literal["siniestros", "primas", "expuestos"],
     negocio: str,
     mes_corte: int,
     cuadre_contable_sinis: bool = False,
     add_fraude_soat: bool = False,
     cuadre_contable_primas: bool = False,
 ) -> None:
-    if file == "siniestros":
-        qtys = ["pago_bruto", "aviso_bruto", "pago_retenido", "aviso_retenido"]
-        group_cols = ["apertura_reservas", "fecha_siniestro", "fecha_registro"]
-
-    elif file == "primas":
-        qtys = [
-            "prima_bruta",
-            "prima_retenida",
-            "prima_bruta_devengada",
-            "prima_retenida_devengada",
-        ]
-        group_cols = ["apertura_reservas", "fecha_registro"]
-
-    elif file == "expuestos":
-        qtys = ["expuestos"]
-        group_cols = ["apertura_reservas", "fecha_registro"]
-
     df = pl.scan_parquet(f"data/raw/{file}.parquet")
 
     difs_sap_tera_pre_cuadre = controles_informacion(
         df,
         file,
-        group_cols,
-        qtys,
         mes_corte,
         estado_cuadre="pre_cuadre_contable",
     )
@@ -422,8 +464,6 @@ def generar_controles(
         _ = controles_informacion(
             df,
             file,
-            group_cols,
-            qtys,
             mes_corte,
             estado_cuadre="post_cuadre_contable",
         )
@@ -434,8 +474,6 @@ def generar_controles(
         _ = controles_informacion(
             df,
             file,
-            group_cols,
-            qtys,
             mes_corte,
             estado_cuadre="post_ajustes_fraude",
         )

@@ -52,10 +52,6 @@ warn_redundant_casts = true
 warn_unused_configs = true
 warn_unreachable = true
 
-[[tool.mypy.overrides]]
-module = "xlwings"
-ignore_missing_imports = true
-
 
 [tool.ruff]
 line-length = 88
@@ -63,21 +59,23 @@ src = ["src", "test"]
 
 [tool.ruff.lint]
 select = [
-  "A",   # builtins
-  "B",   # bugbear
-  "COM", # commas
-  "C90", # mccabe
-  "E",   # pycodestyle
-  "F",   # pyflakes
-  "D",   # pydocstyle
-  "I",   # isort
-  "N",   # naming
-  "PL",  # pylint
-  "UP",  # pyupgrade
-  "S",   # bandit
+  "A",    # builtins
+  "B",    # bugbear
+  "COM",  # commas 
+  "C90",  # mccabe
+  "E",    # pycodestyle
+  "F",    # pyflakes
+  # "D",    # pydocstyle
+  "I",    # isort
+  "N",    # naming
+  "PL",   # pylint
+  "UP",   # pyupgrade
+  "S",    # bandit
+  "FAST", # fastapi
 ]
 ignore = [
   "COM812", # trailing comma missing ...
+  "PLR2004", # magic value comparison
 ]
 
 [tool.ruff.lint.per-file-ignores]

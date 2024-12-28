@@ -1,6 +1,7 @@
 import polars as pl
 
 from src import utils
+from src.logger_config import logger
 
 
 def cuadre_contable(
@@ -10,7 +11,12 @@ def cuadre_contable(
         return cuadre_contable_soat(file, df, dif_sap_vs_tera)
     elif negocio == "autonomia":
         return cuadre_contable_autonomia(file, df, dif_sap_vs_tera)
-    return pl.LazyFrame()
+    else:
+        logger.error(
+            f"""Definio hacer el cuadre contable, pero el negocio 
+            {negocio} no tiene ninguna estrategia de cuadre implementada.
+            """)
+        raise ValueError
 
 
 def concat_df_dif(df: pl.LazyFrame, dif: pl.LazyFrame) -> pl.LazyFrame:

@@ -173,6 +173,9 @@ data/controles_informacion/pre_cuadre_contable/*
 !data/controles_informacion/post_cuadre_contable
 data/controles_informacion/post_cuadre_contable/*
 !data/controles_informacion/post_cuadre_contable/.gitkeep
+!data/controles_informacion/post_ajustes_fraude
+data/controles_informacion/post_ajustes_fraude/*
+!data/controles_informacion/post_ajustes_fraude/.gitkeep
 
 data/db/*
 !data/db/.gitkeep

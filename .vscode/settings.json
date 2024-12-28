@@ -17,5 +17,10 @@
             "username": "sebatoec",
             "password": "47^07Ghia0+b"
         }
-    ]
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

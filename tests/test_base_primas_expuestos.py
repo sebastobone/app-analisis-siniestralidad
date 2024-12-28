@@ -4,7 +4,7 @@ from src.procesamiento import base_primas_expuestos as base
 
 def test_primas(mock_primas: pl.LazyFrame):
     processed_data = (
-        base.bases_primas_expuestos(mock_primas, "primas", "mock")
+        base.generar_base_primas_expuestos(mock_primas, "primas", "mock")
         .filter(pl.col("periodicidad_ocurrencia") == "Mensual")
         .get_column("prima_bruta")
         .sum()
@@ -15,7 +15,7 @@ def test_primas(mock_primas: pl.LazyFrame):
 
 def test_expuestos(mock_expuestos: pl.LazyFrame):
     processed_data = (
-        base.bases_primas_expuestos(mock_expuestos, "expuestos", "mock")
+        base.generar_base_primas_expuestos(mock_expuestos, "expuestos", "mock")
         .filter(pl.col("periodicidad_ocurrencia") == "Mensual")
         .get_column("expuestos")
         .sum()

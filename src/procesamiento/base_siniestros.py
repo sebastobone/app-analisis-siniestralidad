@@ -7,30 +7,6 @@ import polars as pl
 import src.constantes as ct
 from src import utils
 
-COLUMNAS_QTYS = [
-    "pago_bruto",
-    "pago_retenido",
-    "incurrido_bruto",
-    "incurrido_retenido",
-    "conteo_pago",
-    "conteo_incurrido",
-    "conteo_desistido",
-]
-
-
-def aperturas(negocio: str) -> None:
-    return (
-        pl.scan_parquet("data/raw/siniestros.parquet")
-        .with_columns(ramo_desc=utils.complementar_col_ramo_desc())
-        .filter(pl.col("fecha_registro") >= pl.col("fecha_siniestro"))
-        .select(["apertura_reservas", "ramo_desc"] + ct.columnas_aperturas(negocio))
-        .drop(["codigo_op", "codigo_ramo_op"])
-        .unique()
-        .sort("apertura_reservas")
-        .collect()
-        .write_csv("data/processed/aperturas.csv", separator="\t")
-    )
-
 
 def preparar_base_siniestros(
     df: pl.LazyFrame, mes_inicio: date, mes_corte: date
@@ -55,7 +31,7 @@ def preparar_base_siniestros(
             "fecha_siniestro",
             "fecha_registro",
         ]
-        + COLUMNAS_QTYS
+        + ct.COLUMNAS_QTYS
     )
 
     df_sinis_tipicos = df_sinis.filter(pl.col("atipico") == 0).drop("atipico")
@@ -149,7 +125,7 @@ def construir_triangulos(
                 pl.col(qty_column)
                 .cum_sum()
                 .over(["apertura_reservas", "periodo_ocurrencia"])
-                for qty_column in COLUMNAS_QTYS
+                for qty_column in ct.COLUMNAS_QTYS
             ],
             index_desarrollo=pl.col("periodo_desarrollo")
             .cum_count()
@@ -183,7 +159,7 @@ def construir_triangulos(
                 "diagonal",
                 "index_desarrollo",
             ]
-            + COLUMNAS_QTYS
+            + ct.COLUMNAS_QTYS
         )
     )
 
@@ -224,7 +200,7 @@ def construir_diagonales_triangulo(
                 "periodo_ocurrencia",
             ]
         )
-        .agg([pl.col(qty_column).sum() for qty_column in COLUMNAS_QTYS])
+        .agg([pl.col(qty_column).sum() for qty_column in ct.COLUMNAS_QTYS])
         .sort(
             [
                 "apertura_reservas",
@@ -273,7 +249,15 @@ def generar_bases_siniestros(
                 ),
             ]
         ).collect()
-        base_ult_ocurr = pl.DataFrame(schema=base_triangulos.schema)
+        base_ult_ocurr = pl.DataFrame(
+            schema=[
+                "apertura_reservas",
+                "periodicidad_triangulo",
+                "periodicidad_ocurrencia",
+                "periodo_ocurrencia",
+            ]
+            + ct.COLUMNAS_QTYS,
+        )
     else:
         base_triangulos = pl.concat(
             [

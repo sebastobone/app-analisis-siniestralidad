@@ -147,7 +147,7 @@ def mock_expuestos(params: Parametros) -> pl.LazyFrame:
 def params_form() -> dict[str, str]:
     return {
         "negocio": "autonomia",
-        "mes_inicio": "202301",
+        "mes_inicio": "201812",
         "mes_corte": "202312",
         "tipo_analisis": "triangulos",
         "aproximar_reaseguro": "False",

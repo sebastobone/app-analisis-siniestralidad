@@ -1,22 +1,76 @@
 import polars as pl
+import xlwings as xw
+
+from src import constantes as ct
+from src import utils
+
+
+def df_aperturas() -> pl.LazyFrame:
+    return pl.scan_parquet("data/raw/siniestros.parquet")
+
+
+def aperturas(negocio: str) -> pl.DataFrame:
+    return (
+        df_aperturas()
+        .with_columns(ramo_desc=utils.complementar_col_ramo_desc())
+        .select(["apertura_reservas", "ramo_desc"] + ct.columnas_aperturas(negocio))
+        .drop(["codigo_op", "codigo_ramo_op"])
+        .unique()
+        .sort("apertura_reservas")
+        .collect()
+    )
+
+
+def generar_tabla(
+    sheet: xw.Sheet, df: pl.DataFrame, table_name: str, loc: tuple[int, int]
+) -> None:
+    df_pd = df.to_pandas()
+    if table_name in [table.name for table in sheet.tables]:
+        sheet.tables[table_name].update(df_pd, index=False)
+    else:
+        _ = sheet.tables.add(
+            source=sheet.cells(loc[0], loc[1]), name=table_name
+        ).update(df_pd, index=False)
+
+
+def df_diagonales(path_plantilla: str) -> pl.LazyFrame:
+    return pl.scan_parquet(
+        f"{path_plantilla}/../data/processed/base_triangulos.parquet"
+    )
+
+
+def df_ult_ocurr(path_plantilla: str) -> pl.LazyFrame:
+    return pl.scan_parquet(
+        f"{path_plantilla}/../data/processed/base_ultima_ocurrencia.parquet"
+    )
+
+
+def df_atipicos(path_plantilla: str) -> pl.LazyFrame:
+    return pl.scan_parquet(f"{path_plantilla}/../data/processed/base_atipicos.parquet")
+
+
+def df_expuestos(path_plantilla: str) -> pl.LazyFrame:
+    return pl.scan_parquet(f"{path_plantilla}/../data/processed/expuestos.parquet")
+
+
+def df_primas(path_plantilla: str) -> pl.LazyFrame:
+    return pl.scan_parquet(f"{path_plantilla}/../data/processed/primas.parquet")
 
 
 def tablas_resumen(
-    path_plantilla: str, periodicidades: list[list[str]], tipo_analisis: str
+    path_plantilla: str,
+    periodicidades: list[list[str]],
+    tipo_analisis: str,
+    aperturas: pl.LazyFrame,
 ) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, pl.DataFrame]:
-    diagonales = pl.scan_parquet(
-        f"{path_plantilla}/../data/processed/base_triangulos.parquet"
-    )
-    atipicos = pl.scan_parquet(
-        f"{path_plantilla}/../data/processed/base_atipicos.parquet"
-    )
-    aperts = pl.scan_csv(
-        f"{path_plantilla}/../data/processed/aperturas.csv", separator="\t"
-    )
-    expuestos = pl.scan_parquet(f"{path_plantilla}/../data/processed/expuestos.parquet")
-    primas = pl.scan_parquet(f"{path_plantilla}/../data/processed/primas.parquet")
+    diagonales = df_diagonales(path_plantilla)
+    atipicos = df_atipicos(path_plantilla)
+    expuestos = df_expuestos(path_plantilla)
+    primas = df_primas(path_plantilla)
 
-    BASE_COLS = aperts.collect_schema().names()[1:]
+    base_cols = aperturas.collect_schema().names()[1:]
+
+    print(diagonales.collect().get_column("periodicidad_ocurrencia").unique())
 
     diagonales = (
         diagonales.filter(pl.col("diagonal") == 1)
@@ -33,22 +87,14 @@ def tablas_resumen(
                 "apertura_reservas",
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
-                "pago_bruto",
-                "incurrido_bruto",
-                "pago_retenido",
-                "incurrido_retenido",
-                "conteo_pago",
-                "conteo_incurrido",
-                "conteo_desistido",
             ]
+            + ct.COLUMNAS_QTYS
         )
     )
 
-    if tipo_analisis == "Entremes":
+    if tipo_analisis == "entremes":
         ult_ocurr = (
-            pl.scan_parquet(
-                f"{path_plantilla}/../data/processed/base_ultima_ocurrencia.parquet"
-            )
+            df_ult_ocurr(path_plantilla)
             .join(
                 pl.LazyFrame(
                     periodicidades,
@@ -71,32 +117,26 @@ def tablas_resumen(
         )
 
     diagonales_df = (
-        diagonales.join(aperts, on="apertura_reservas")
+        diagonales.join(aperturas, on="apertura_reservas")
         .select(
             [
                 "apertura_reservas",
             ]
-            + aperts.collect_schema().names()[1:]
+            + aperturas.collect_schema().names()[1:]
             + [
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
-                "pago_bruto",
-                "incurrido_bruto",
-                "pago_retenido",
-                "incurrido_retenido",
-                "conteo_pago",
-                "conteo_incurrido",
-                "conteo_desistido",
             ]
+            + ct.COLUMNAS_QTYS
         )
         .join(
             expuestos.drop("vigentes"),
-            on=BASE_COLS + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
+            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
             how="left",
         )
         .join(
             primas,
-            on=BASE_COLS + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
+            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
             how="left",
         )
         .fill_null(0)
@@ -121,32 +161,26 @@ def tablas_resumen(
     )
 
     atipicos_df = (
-        atipicos.join(aperts, on="apertura_reservas")
+        atipicos.join(aperturas, on="apertura_reservas")
         .select(
             [
                 "apertura_reservas",
             ]
-            + aperts.collect_schema().names()[1:]
+            + aperturas.collect_schema().names()[1:]
             + [
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
-                "pago_bruto",
-                "incurrido_bruto",
-                "pago_retenido",
-                "incurrido_retenido",
-                "conteo_pago",
-                "conteo_incurrido",
-                "conteo_desistido",
             ]
+            + ct.COLUMNAS_QTYS
         )
         .join(
             expuestos.drop("vigentes"),
-            on=BASE_COLS + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
+            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
             how="left",
         )
         .join(
             primas,
-            on=BASE_COLS + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
+            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
             how="left",
         )
         .fill_null(0)

@@ -15,7 +15,7 @@ def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
     )
 
 
-def bases_primas_expuestos(
+def generar_base_primas_expuestos(
     df: pl.LazyFrame, qty: Literal["primas", "expuestos"], negocio: str
 ) -> pl.DataFrame:
     qty_cols = (

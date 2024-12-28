@@ -41,6 +41,17 @@ NOMBRE_MES = {
 }
 
 
+COLUMNAS_QTYS = [
+    "pago_bruto",
+    "pago_retenido",
+    "incurrido_bruto",
+    "incurrido_retenido",
+    "conteo_pago",
+    "conteo_incurrido",
+    "conteo_desistido",
+]
+
+
 def columnas_aperturas(negocio: str) -> list[str]:
     base = ["codigo_op", "codigo_ramo_op"]
     if negocio == "autonomia":

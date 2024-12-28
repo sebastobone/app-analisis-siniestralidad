@@ -10,11 +10,15 @@ from src import utils
 from src.metodos_plantilla import base_plantillas, guardar_traer, tablas_resumen
 
 
-def preparar_plantilla(wb: xw.Book, mes_corte: int, tipo_analisis: str) -> None:
-    wb.sheets["Modo"]["A4"].value = "Mes corte"
-    wb.sheets["Modo"]["B4"].value = mes_corte
-    wb.sheets["Modo"]["A5"].value = "Mes anterior"
-    wb.sheets["Modo"]["B5"].value = (
+def preparar_plantilla(
+    wb: xw.Book, mes_corte: int, tipo_analisis: str, negocio: str
+) -> xw.Book:
+    s = time.time()
+
+    wb.sheets["Main"]["A4"].value = "Mes corte"
+    wb.sheets["Main"]["B4"].value = mes_corte
+    wb.sheets["Main"]["A5"].value = "Mes anterior"
+    wb.sheets["Main"]["B5"].value = (
         mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
     )
 
@@ -32,14 +36,22 @@ def preparar_plantilla(wb: xw.Book, mes_corte: int, tipo_analisis: str) -> None:
     for sheet in ["Aux_Totales", "Aux_Expuestos", "Aux_Primas", "Atipicos"]:
         wb.sheets[sheet].clear_contents()
 
-    s = time.time()
+    aperturas = tablas_resumen.aperturas(negocio)
 
-    periodicidades = (
-        wb.sheets["Aperturas"].tables["periodicidades"].data_body_range.value
+    tablas_resumen.generar_tabla(wb.sheets["Main"], aperturas, "aperturas", (1, 4))
+    tablas_resumen.generar_tabla(
+        wb.sheets["Main"],
+        aperturas.select("apertura_reservas").with_columns(
+            periodicidad=pl.lit("Trimestral")
+        ),
+        "periodicidades",
+        (1, 4 + len(aperturas.collect_schema().names()) + 1),
     )
 
+    periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
+
     diagonales, expuestos, primas, atipicos = tablas_resumen.tablas_resumen(
-        ct.path_plantilla(wb), periodicidades, tipo_analisis
+        ct.path_plantilla(wb), periodicidades, tipo_analisis, aperturas.lazy()
     )
 
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
@@ -50,7 +62,10 @@ def preparar_plantilla(wb: xw.Book, mes_corte: int, tipo_analisis: str) -> None:
     wb.sheets["Aux_Primas"]["A1"].options(index=False).value = primas.to_pandas()
     wb.sheets["Atipicos"]["A1"].options(index=False).value = atipicos.to_pandas()
 
-    wb.sheets["Modo"]["A2"].value = time.time() - s
+    wb.sheets["Main"]["A1"].value = "PREPARAR_PLANTILLA"
+    wb.sheets["Main"]["A2"].value = time.time() - s
+
+    return wb
 
 
 def generar_plantilla(

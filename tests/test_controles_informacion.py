@@ -56,9 +56,9 @@ def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
             ],
             "column_1": ["Importe ML" for _ in range(num_rows)],
             ctrl.columna_ramo_sap(qty): ["COP" for _ in range(num_rows)],
-            "001": np.random.random(size=num_rows) * signo * 1e8,
-            "002": np.random.random(size=num_rows) * signo * 1e8,
-            "003": np.random.random(size=num_rows) * signo * 1e8,
+            "001": np.random.random(size=num_rows) * signo * 1e9,
+            "002": np.random.random(size=num_rows) * signo * 1e9,
+            "003": np.random.random(size=num_rows) * signo * 1e9,
         }
     ).with_columns(pl.sum_horizontal("001", "002", "003").alias("Resultado total"))
 

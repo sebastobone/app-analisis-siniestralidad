@@ -74,6 +74,20 @@ def cuadre_contable_autonomia(
     return df_cuadre.lazy()
 
 
+def apertura_dif_soat() -> pl.LazyFrame:
+    """Modificable, aca se decide en que apertura vamos a meter la diferencia SAP-Tera"""
+    return pl.LazyFrame(
+        {
+            "codigo_op": ["01"],
+            "codigo_ramo_op": ["041"],
+            "ramo_desc": ["AUTOS OBLIGATORIO"],
+            "apertura_canal_desc": ["DIGITAL"],
+            "apertura_amparo_desc": ["Total"],
+            "tipo_vehiculo": ["MOTO"],
+        }
+    ).with_columns(utils.col_apertura_reservas("soat"))
+
+
 def cuadre_contable_soat(
     file: str, df: pl.LazyFrame, dif_sap_vs_tera: pl.LazyFrame
 ) -> pl.LazyFrame:
@@ -83,10 +97,19 @@ def cuadre_contable_soat(
         dif_sap_vs_tera.filter(
             pl.col("fecha_registro") == pl.col("fecha_registro").max()
         )
+        .select(
+            ["codigo_op", "codigo_ramo_op", "fecha_registro"]
+            + [
+                col
+                for col in dif_sap_vs_tera.collect_schema().names()
+                if "diferencia" in col
+            ]
+        )
         .rename(
             {
-                col: col.replace("diferencia", "")
+                col: col.replace("diferencia_", "")
                 for col in dif_sap_vs_tera.collect_schema().names()
+                if "diferencia" in col
             }
         )
         .join(ramos, on=["codigo_op", "codigo_ramo_op"])
@@ -100,19 +123,7 @@ def cuadre_contable_soat(
         ]
     )
 
-    # Modificable, aca se decide en que apertura vamos a meter la diferencia SAP-Tera
-    apertura_dif = pl.LazyFrame(
-        {
-            "codigo_op": ["01"],
-            "codigo_ramo_op": ["041"],
-            "ramo_desc": ["AUTOS OBLIGATORIO"],
-            "apertura_canal_desc": ["DIGITAL"],
-            "apertura_amparo_desc": ["Total"],
-            "tipo_vehiculo": ["MOTO"],
-        }
-    ).with_columns(utils.col_apertura_reservas("soat"))
-
-    dif = dif.join(apertura_dif, on=["codigo_op", "codigo_ramo_op"])
+    dif = dif.join(apertura_dif_soat(), on=["codigo_op", "codigo_ramo_op"])
 
     if file == "siniestros":
         dif = dif.with_columns(

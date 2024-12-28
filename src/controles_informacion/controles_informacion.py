@@ -198,7 +198,7 @@ def generar_consistencia_historica(
     )
 
     logger.success(
-        f"Archivo de consistencia historica para {file} - {fuente} generado exitosamente."
+        f"Archivo de consistencia historica para {file} - {fuente} - {estado_cuadre} generado exitosamente."
     )
 
 
@@ -344,8 +344,7 @@ def controles_informacion(
     generar_integridad_exactitud(df, estado_cuadre, file, mes_corte, qtys)
 
     logger.success(
-        f"""Revisiones de informacion y generacion de controles
-        terminada para el estado {estado_cuadre}"""
+        f"""Revisiones de informacion y generacion de controles terminada para {file} en el estado {estado_cuadre}."""
     )
 
     return difs_sap_tera

@@ -113,28 +113,15 @@ def params_form() -> dict[str, str]:
         "mes_inicio": "202301",
         "mes_corte": "202312",
         "tipo_analisis": "triangulos",
-        "aproximar_reaseguro": "0",
+        "aproximar_reaseguro": "False",
         "nombre_plantilla": "plantilla",
-        "cuadre_contable_sinis": "0",
-        "add_fraude_soat": "0",
-        "cuadre_contable_primas": "0",
+        "cuadre_contable_sinis": "False",
+        "add_fraude_soat": "False",
+        "cuadre_contable_primas": "False",
     }
 
 
-# No se le puede pasar el diccionario desenvuelto (**params_form)
-# porque, al ser un modelo SQLModel y no un modelo de Pydantic, no
-# hace la conversion de los tipos automaticamente.
 @pytest.fixture
 def params(params_form: dict[str, str]) -> Parametros:
-    return Parametros(
-        negocio=params_form["negocio"],
-        mes_inicio=int(params_form["mes_inicio"]),
-        mes_corte=int(params_form["mes_corte"]),
-        tipo_analisis=params_form["tipo_analisis"],
-        aproximar_reaseguro=bool(params_form["aproximar_reaseguro"]),
-        nombre_plantilla=params_form["nombre_plantilla"],
-        cuadre_contable_sinis=bool(params_form["cuadre_contable_sinis"]),
-        add_fraude_soat=bool(params_form["add_fraude_soat"]),
-        cuadre_contable_primas=bool(params_form["cuadre_contable_primas"]),
-        session_id="test-session-id",
-    )
+    params = Parametros(**params_form, session_id="test-session-id")
+    return Parametros.model_validate(params)

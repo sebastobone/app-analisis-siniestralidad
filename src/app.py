@@ -74,39 +74,18 @@ class Parametros(SQLModel, table=True):
     session_id: str | None = Field(index=True)
 
 
-# Se tuvo que formular los parametros individualmente, porque si bien FastAPI
-# permite ingresar datos de form como un modelo de Pydantic, esta
-# caracteristica no funciona igual para los modelos de SQLModel.
 @app.post("/ingresar-parametros", response_model=Parametros)
 async def ingresar_parametros(
     session: SessionDep,
     response: Response,
-    negocio: str = Form(),
-    mes_inicio: int = Form(),
-    mes_corte: int = Form(),
-    tipo_analisis: str = Form(),
-    aproximar_reaseguro: bool = Form(),
-    nombre_plantilla: str = Form(),
-    cuadre_contable_sinis: bool = Form(),
-    add_fraude_soat: bool = Form(),
-    cuadre_contable_primas: bool = Form(),
+    params: Annotated[Parametros, Form()],
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     if not session_id:
         session_id = str(uuid4())
         response.set_cookie(key=SESSION_COOKIE_NAME, value=session_id)
 
-    parametros = Parametros(
-        negocio=negocio,
-        mes_inicio=mes_inicio,
-        mes_corte=mes_corte,
-        tipo_analisis=tipo_analisis,
-        aproximar_reaseguro=aproximar_reaseguro,
-        nombre_plantilla=nombre_plantilla,
-        cuadre_contable_sinis=cuadre_contable_sinis,
-        add_fraude_soat=add_fraude_soat,
-        cuadre_contable_primas=cuadre_contable_primas,
-    )
+    parametros = Parametros.model_validate(params)
     parametros.session_id = session_id
 
     existing_data = parametros_usuario(session, session_id)

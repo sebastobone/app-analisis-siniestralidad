@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 from sqlmodel import Session, SQLModel, create_engine, select
 from sqlmodel.pool import StaticPool
 from src.app import Parametros, app, get_session
@@ -51,19 +52,14 @@ def test_ingresar_parametros(
     assert params_in_db[0].mes_inicio == int(params_form["mes_inicio"])
 
 
-def test_ingresar_parametros_malos(client: TestClient):
-    params_malos = {
-        "negocio": "autonomia",
-        "mes_inicio": "lorem",
-        "mes_corte": "ipsum",
-        "tipo_analisis": "1",
-        "aproximar_reaseguro": "0",
-        "nombre_plantilla": "plantilla",
-    }
+def test_ingresar_parametros_malos(client: TestClient, params_form: dict[str, str]):
+    params_malos = params_form.copy()
+    params_malos["mes_inicio"] = "lorem"
+    params_malos["mes_corte"] = "ipsum"
+    params_malos["aproximar_reaseguro"] = "sit"
 
-    response = client.post("/ingresar-parametros", data=params_malos)
-
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    with pytest.raises(ValidationError):
+        client.post("/ingresar-parametros", data=params_malos)
 
 
 def test_correr_query_siniestros(

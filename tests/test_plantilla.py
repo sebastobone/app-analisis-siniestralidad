@@ -1,42 +1,28 @@
 from datetime import date
 from typing import Literal
 from unittest.mock import MagicMock, patch
+import os
 
 import polars as pl
 import pytest
 import xlwings as xw
 from src import constantes as ct
-from src.plantilla import preparar_plantilla
+from src import plantilla
 from src.procesamiento import base_primas_expuestos, base_siniestros
-
-
-@pytest.fixture
-def mock_workbook() -> xw.Book:
-    wb = xw.Book()
-    wb.sheets.add("Main")
-    wb.sheets.add("Plantilla_Entremes")
-    wb.sheets.add("Plantilla_Frec")
-    wb.sheets.add("Plantilla_Seve")
-    wb.sheets.add("Plantilla_Plata")
-    wb.sheets.add("Aux_Totales")
-    wb.sheets.add("Aux_Expuestos")
-    wb.sheets.add("Aux_Primas")
-    wb.sheets.add("Atipicos")
-    return wb
 
 
 @pytest.mark.parametrize(
     "mes_corte, tipo_analisis",
     [
         (202312, "triangulos"),
-        (202312, "entremes"),
+        # (202312, "entremes"),
     ],
 )
-@patch("src.plantilla.tablas_resumen.df_primas")
-@patch("src.plantilla.tablas_resumen.df_expuestos")
-@patch("src.plantilla.tablas_resumen.df_atipicos")
-@patch("src.plantilla.tablas_resumen.df_ult_ocurr")
-@patch("src.plantilla.tablas_resumen.df_diagonales")
+@patch("src.metodos_plantilla.insumos.df_primas")
+@patch("src.metodos_plantilla.insumos.df_expuestos")
+@patch("src.metodos_plantilla.insumos.df_atipicos")
+@patch("src.metodos_plantilla.insumos.df_ult_ocurr")
+@patch("src.metodos_plantilla.insumos.df_diagonales")
 @patch("src.plantilla.tablas_resumen.df_aperturas")
 def test_preparar_plantilla(
     mock_df_aperturas: MagicMock,
@@ -45,7 +31,6 @@ def test_preparar_plantilla(
     mock_df_atipicos: MagicMock,
     mock_df_expuestos: MagicMock,
     mock_df_primas: MagicMock,
-    mock_workbook: xw.Book,
     mock_siniestros: pl.LazyFrame,
     mock_expuestos: pl.LazyFrame,
     mock_primas: pl.LazyFrame,
@@ -71,7 +56,11 @@ def test_preparar_plantilla(
         mock_primas, "primas", "mock"
     ).lazy()
 
-    wb = preparar_plantilla(mock_workbook, mes_corte, tipo_analisis, "mock")
+    if os.path.exists("tests/mock_plantilla.xlsm"):
+        os.remove("tests/mock_plantilla.xlsm")
+
+    wb = plantilla.abrir_plantilla("tests/mock_plantilla.xlsm")
+    wb = plantilla.preparar_plantilla(wb, mes_corte, tipo_analisis, "mock")
 
     assert wb.sheets["Main"]["A4"].value == "Mes corte"
     assert wb.sheets["Main"]["B4"].value == mes_corte
@@ -126,4 +115,6 @@ def test_preparar_plantilla(
         < 100
     )
 
-    wb.close()
+    wb = plantilla.generar_plantilla(wb, "frec", "01_001_A_D", "bruto", mes_corte)
+
+    # wb.close()

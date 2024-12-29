@@ -4,6 +4,7 @@ import time
 
 import polars as pl
 import xlwings as xw
+from typing import Literal
 
 import src.constantes as ct
 from src import utils
@@ -11,7 +12,10 @@ from src.metodos_plantilla import base_plantillas, guardar_traer, tablas_resumen
 
 
 def preparar_plantilla(
-    wb: xw.Book, mes_corte: int, tipo_analisis: str, negocio: str
+    wb: xw.Book,
+    mes_corte: int,
+    tipo_analisis: Literal["triangulos", "entremes"],
+    negocio: str,
 ) -> xw.Book:
     s = time.time()
 
@@ -69,51 +73,60 @@ def preparar_plantilla(
 
 
 def generar_plantilla(
-    wb: xw.Book, plantilla: str, apertura: str, atributo: str, mes_corte: int
-) -> None:
+    wb: xw.Book,
+    plantilla: Literal["frec", "seve", "plata", "entremes"],
+    apertura: str,
+    atributo: Literal["bruto", "retenido"],
+    mes_corte: int,
+) -> xw.Book:
     s = time.time()
 
-    plantilla = f"Plantilla_{plantilla.capitalize()}"
+    plantilla_name = f"Plantilla_{plantilla.capitalize()}"
 
-    atributo = atributo if plantilla != "Plantilla_Frec" else "bruto"
+    atributo = atributo if plantilla_name != "Plantilla_Frec" else "bruto"
     cantidades = (
         ["pago", "incurrido"]
-        if plantilla != "Plantilla_Frec"
+        if plantilla_name != "Plantilla_Frec"
         else ["conteo_pago", "conteo_incurrido"]
     )
 
-    periodicidades = (
-        wb.sheets["Aperturas"].tables["periodicidades"].data_body_range.value
-    )
+    periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
     df = base_plantillas.base_plantillas(
         ct.path_plantilla(wb), apertura, atributo, periodicidades, cantidades
     )
 
-    NUM_OCURRENCIAS = df.shape[0]
-    NUM_ALTURAS = df.shape[1] // len(cantidades)
-    MES_DEL_PERIODO = ct.mes_del_periodo(
-        utils.yyyymm_to_date(mes_corte), NUM_OCURRENCIAS, NUM_ALTURAS
+    num_ocurrencias = df.shape[0]
+    num_alturas = df.shape[1] // len(cantidades)
+    mes_del_periodo = ct.mes_del_periodo(
+        utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
     )
 
-    wb.sheets["Modo"]["B6"].value = MES_DEL_PERIODO
+    wb.sheets["Main"]["B6"].value = "Mes del periodo"
+    wb.sheets["Main"]["B6"].value = mes_del_periodo
 
-    wb.macro("limpiar_plantilla")(plantilla)
+    wb.macro("limpiar_plantilla")(plantilla_name)
 
-    wb.sheets[plantilla]["F7"].value = df
+    wb.sheets[plantilla_name].cells(
+        ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS
+    ).value = df
 
-    wb.macro(f"generar_{plantilla}")(
-        NUM_OCURRENCIAS,
-        NUM_ALTURAS,
+    wb.macro(f"generar_{plantilla_name}")(
+        num_ocurrencias,
+        num_alturas,
         ct.HEADER_TRIANGULOS,
         ct.SEP_TRIANGULOS,
         ct.FILA_INI_PLANTILLAS,
         ct.COL_OCURRS_PLANTILLAS,
+        apertura,
         atributo,
-        MES_DEL_PERIODO,
+        mes_del_periodo,
     )
 
-    wb.sheets["Modo"]["A2"].value = time.time() - s
+    wb.sheets["Main"]["A1"].value = "GENERAR_PLANTILLA"
+    wb.sheets["Main"]["A2"].value = time.time() - s
+
+    return wb
 
 
 def guardar_traer_fn(
@@ -124,24 +137,24 @@ def guardar_traer_fn(
     plantilla = f"Plantilla_{plantilla.capitalize()}"
     atributo = atributo if plantilla != "Plantilla_Frec" else "bruto"
 
-    NUM_OCURRENCIAS = ct.num_ocurrencias(wb.sheets[plantilla])
-    NUM_ALTURAS = ct.num_alturas(wb.sheets[plantilla])
+    num_ocurrencias = ct.num_ocurrencias(wb.sheets[plantilla])
+    num_alturas = ct.num_alturas(wb.sheets[plantilla])
 
     if plantilla == "Plantilla_Entremes":
-        MES_DEL_PERIODO = ct.mes_del_periodo(
-            utils.yyyymm_to_date(mes_corte), NUM_OCURRENCIAS, NUM_ALTURAS
+        mes_del_periodo = ct.mes_del_periodo(
+            utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
         )
     else:
-        MES_DEL_PERIODO = 1
+        mes_del_periodo = 1
 
     if modo == "guardar":
         guardar_traer.guardar(
             wb.sheets[plantilla],
             apertura,
             atributo,
-            NUM_OCURRENCIAS,
-            NUM_ALTURAS,
-            MES_DEL_PERIODO,
+            num_ocurrencias,
+            num_alturas,
+            mes_del_periodo,
         )
 
         cols_ultimate = {
@@ -153,8 +166,8 @@ def guardar_traer_fn(
 
         wb.macro("guardar_ultimate")(
             plantilla,
-            NUM_OCURRENCIAS,
-            MES_DEL_PERIODO,
+            num_ocurrencias,
+            mes_del_periodo,
             cols_ultimate[plantilla],
             atributo,
         )
@@ -166,9 +179,9 @@ def guardar_traer_fn(
             wb.sheets[plantilla],
             apertura,
             atributo,
-            NUM_OCURRENCIAS,
-            NUM_ALTURAS,
-            MES_DEL_PERIODO,
+            num_ocurrencias,
+            num_alturas,
+            mes_del_periodo,
         )
 
         wb.sheets["Modo"]["A2"].value = time.time() - s
@@ -231,8 +244,7 @@ def abrir_plantilla(plantilla_path: str) -> xw.Book:
     if not os.path.exists(plantilla_path):
         shutil.copyfile("src/plantilla.xlsm", plantilla_path)
 
-    xw.Book(plantilla_path).set_mock_caller()
-    wb = xw.Book.caller()
+    wb = xw.Book(plantilla_path, ignore_read_only_recommended=True)
 
     wb.macro("eliminar_modulos")
     wb.macro("crear_modulos")

@@ -1,15 +1,7 @@
 ' HOJAS
 
-Function ws_modo() As Worksheet
-    Set ws_modo = Worksheets("Modo")
-End Function
-
-Function ws_aperturas() As Worksheet
-    Set ws_aperturas = Worksheets("Aperturas")
-End Function
-
-Function ws_atributos() As Worksheet
-    Set ws_atributos = Worksheets("Atributos")
+Function ws_main() As Worksheet
+    Set ws_main = Worksheets("Main")
 End Function
 
 Function ws_frec() As Worksheet
@@ -50,22 +42,6 @@ End Function
 
 Function atributo_fem(atributo) As String
     atributo_fem = WorksheetFunction.Substitute(WorksheetFunction.Substitute(atributo, "bruto", "bruta"), "retenido", "retenida")
-End Function
-
-Function apertura_unica() As Boolean
-    If ws_aperturas.Cells(3, 1).value <> "" Then
-        apertura_unica = False
-    Else
-        apertura_unica = True
-    End If
-End Function
-
-Function atributo_unico() As Boolean
-    If ws_atributos.Cells(3, 1).value <> "" Then
-        atributo_unico = False
-    Else
-        atributo_unico = True
-    End If
 End Function
 
 

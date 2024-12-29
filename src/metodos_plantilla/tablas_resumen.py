@@ -3,6 +3,9 @@ import xlwings as xw
 
 from src import constantes as ct
 from src import utils
+from typing import Literal
+
+from src.metodos_plantilla import insumos as ins
 
 
 def df_aperturas() -> pl.LazyFrame:
@@ -33,40 +36,16 @@ def generar_tabla(
         ).update(df_pd, index=False)
 
 
-def df_diagonales(path_plantilla: str) -> pl.LazyFrame:
-    return pl.scan_parquet(
-        f"{path_plantilla}/../data/processed/base_triangulos.parquet"
-    )
-
-
-def df_ult_ocurr(path_plantilla: str) -> pl.LazyFrame:
-    return pl.scan_parquet(
-        f"{path_plantilla}/../data/processed/base_ultima_ocurrencia.parquet"
-    )
-
-
-def df_atipicos(path_plantilla: str) -> pl.LazyFrame:
-    return pl.scan_parquet(f"{path_plantilla}/../data/processed/base_atipicos.parquet")
-
-
-def df_expuestos(path_plantilla: str) -> pl.LazyFrame:
-    return pl.scan_parquet(f"{path_plantilla}/../data/processed/expuestos.parquet")
-
-
-def df_primas(path_plantilla: str) -> pl.LazyFrame:
-    return pl.scan_parquet(f"{path_plantilla}/../data/processed/primas.parquet")
-
-
 def tablas_resumen(
     path_plantilla: str,
     periodicidades: list[list[str]],
-    tipo_analisis: str,
+    tipo_analisis: Literal["triangulos", "entremes"],
     aperturas: pl.LazyFrame,
 ) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, pl.DataFrame]:
-    diagonales = df_diagonales(path_plantilla)
-    atipicos = df_atipicos(path_plantilla)
-    expuestos = df_expuestos(path_plantilla)
-    primas = df_primas(path_plantilla)
+    diagonales = ins.df_diagonales(path_plantilla)
+    atipicos = ins.df_atipicos(path_plantilla)
+    expuestos = ins.df_expuestos(path_plantilla)
+    primas = ins.df_primas(path_plantilla)
 
     base_cols = aperturas.collect_schema().names()[1:]
 
@@ -94,7 +73,7 @@ def tablas_resumen(
 
     if tipo_analisis == "entremes":
         ult_ocurr = (
-            df_ult_ocurr(path_plantilla)
+            ins.df_ult_ocurr(path_plantilla)
             .join(
                 pl.LazyFrame(
                     periodicidades,

@@ -91,7 +91,7 @@ End Sub
 
 
 
-Sub generar_Plantilla_Frec(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, atributo, mes_del_periodo)
+Sub generar_Plantilla_Frec(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo)
 
     Application.ScreenUpdating = False
     Application.Calculation = xlCalculationManual
@@ -100,14 +100,9 @@ Sub generar_Plantilla_Frec(num_ocurrencias, num_alturas, header_triangulos, sep_
 
     Call color_columnas_triangulo(ws, num_alturas)
 
-    If Not apertura_unica() Then
-        MsgBox "Seleccione una sola apertura."
-        Exit Sub
-    End If
-
     desref_filas = desref_filas_triangulo(num_ocurrencias, header_triangulos, sep_triangulos)
 
-    Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Frecuencia", "=IF(R[" & desref_filas & "]C = """", """", IFERROR(R[" & desref_filas & "]C / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC" & col_ocurrs_plantillas & ", Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0))", "0.0000%")
+    Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Frecuencia", "=IF(R[" & desref_filas & "]C = """", """", IFERROR(R[" & desref_filas & "]C / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC" & col_ocurrs_plantillas & ", Aux_Totales!C" & col_auxtot("apertura_reservas") & ", " & apertura & "), 0))", "0.0000%")
     Call estructura_factores(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas)
 
     Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Evolucion Chain-Ladder", "=+IF(R[" & desref_filas * 4 - sep_triangulos * 2 - 16 & "]C = """", RC[-1] * R[" & desref_filas & "]C[-1], R[" & desref_filas * 4 - sep_triangulos * 2 - 16 & "]C)", "#,##0.0000%")
@@ -132,11 +127,6 @@ Sub generar_Plantilla_Seve(num_ocurrencias, num_alturas, header_triangulos, sep_
     Set ws = ws_seve()
 
     Call color_columnas_triangulo(ws, num_alturas)
-    
-    If Not (apertura_unica And atributo_unico) Then
-        MsgBox "Seleccione una sola apertura."
-        Exit Sub
-    End If
     
     tipo_index = ws.Range("C3").value
     medida_index = ws.Range("C4").value
@@ -222,11 +212,6 @@ Sub generar_Plantilla_Plata(num_ocurrencias, num_alturas, header_triangulos, sep
     Set ws = ws_plat()
 
     Call color_columnas_triangulo(ws, num_alturas)
-    
-    If Not (apertura_unica And atributo_unico) Then
-        MsgBox "Seleccione una sola apertura."
-        Exit Sub
-    End If
     
     desref_filas = desref_filas_triangulo(num_ocurrencias, header_triangulos, sep_triangulos)
 

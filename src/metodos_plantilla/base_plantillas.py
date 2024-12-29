@@ -1,16 +1,18 @@
 import pandas as pd
 import polars as pl
+from src.metodos_plantilla import insumos as ins
+from typing import Literal
 
 
 def base_plantillas(
     path_plantilla: str,
     apertura: str,
-    atributo: str,
+    atributo: Literal["bruto", "retenido"],
     periodicidades: list[list[str]],
     cantidades: list[str],
 ) -> pd.DataFrame:
     return (
-        pl.scan_parquet(f"{path_plantilla}/../data/processed/base_triangulos.parquet")
+        ins.df_diagonales(path_plantilla)
         .filter(pl.col("apertura_reservas") == apertura)
         .join(
             pl.LazyFrame(

@@ -307,8 +307,8 @@ Sub limpiar_plantilla(ws_name)
         co.Delete
     Next co
     ws.Cells.FormatConditions.Delete
-    ws.Range(ws.Cells(7, 1), ws.Cells(1000, 1000)).Clear
-    ' ws.Range(ws.Cells(7, 6), ws.Cells(1000, 1000)).Delete Shift:=xlUp
+    ' ws.Range(ws.Cells(7, 1), ws.Cells(1000, 1000)).Clear
+    ws.Range(ws.Cells(7, 1), ws.Cells(1000, 1000)).Delete Shift:=xlUp
 End Sub
 
 

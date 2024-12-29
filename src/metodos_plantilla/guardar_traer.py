@@ -1,7 +1,10 @@
+from typing import Literal
+
 import polars as pl
 import xlwings as xw
 
 import src.constantes as ct
+from src.logger_config import logger
 
 
 def index(objective: str, range: xw.Range) -> int:
@@ -29,7 +32,14 @@ def objective_range(
 
 
 def parameter_ranges(
-    sheet: xw.Sheet, num_ocurrencias: int, num_alturas: int, mes_del_periodo: int
+    sheet: xw.Sheet,
+    num_ocurrencias: int,
+    num_alturas: int,
+    mes_del_periodo: int,
+    metodo_indexacion: Literal[
+        "Ninguna", "Por fecha de ocurrencia", "Por fecha de pago"
+    ],
+    metodo_ult_ocurrencia: Literal["% Siniestralidad", "Frecuencia y Severidad"],
 ) -> dict[str, xw.Range]:
     ranges = {
         "MET_PAGO_INCURRIDO": sheet.range(sheet.cells(2, 3), sheet.cells(2, 4)),
@@ -105,7 +115,7 @@ def parameter_ranges(
                 }
             )
 
-            if sheet["C4"].value != "Ninguna":
+            if metodo_indexacion != "Ninguna":
                 ranges.update(
                     {
                         "UNIDAD_INDEXACION": objective_range(
@@ -175,7 +185,7 @@ def parameter_ranges(
             }
         )
 
-        if sheet["C3"].value == "% Siniestralidad":
+        if metodo_ult_ocurrencia == "% Siniestralidad":
             ranges.update(
                 {
                     "ULTIMATE_NUEVO_PERIODO": objective_range(
@@ -217,7 +227,7 @@ def parameter_ranges(
                 }
             )
 
-        if sheet["C3"] == "Frecuencia y Severidad":
+        if metodo_ult_ocurrencia == "Frecuencia y Severidad":
             ranges.update(
                 {
                     "ULTIMATE_FRECUENCIA": objective_range(
@@ -271,7 +281,12 @@ def guardar(
     mes_del_periodo: int,
 ) -> None:
     for range_name, range_values in parameter_ranges(
-        sheet, num_ocurrencias, num_alturas, mes_del_periodo
+        sheet,
+        num_ocurrencias,
+        num_alturas,
+        mes_del_periodo,
+        sheet["C4"].value,
+        sheet["C3"].value,
     ).items():
         pl.DataFrame(range_values.formula).transpose().write_csv(
             f"data/db/{apertura}_{atributo}_{sheet.name}_{range_name}.csv",
@@ -288,7 +303,12 @@ def traer(
     mes_del_periodo: int,
 ) -> None:
     for range_name, range_values in parameter_ranges(
-        sheet, num_ocurrencias, num_alturas, mes_del_periodo
+        sheet,
+        num_ocurrencias,
+        num_alturas,
+        mes_del_periodo,
+        sheet["C4"].value,
+        sheet["C3"].value,
     ).items():
         try:
             range_values.formula = pl.read_csv(
@@ -296,9 +316,10 @@ def traer(
                 separator="\t",
             ).rows()
         except FileNotFoundError:
-            print(
+            logger.exception(
                 f"""
                 No se encontraron formulas para la apertura {apertura}
                 con el atributo {atributo} en la plantilla {sheet.name}.
                 """,
             )
+            raise

@@ -1,11 +1,11 @@
-Function guardar_ultimate(ws_name, num_ocurrencias, mes_del_periodo, nombre_col_ultimate, atributo)
+Function guardar_ultimate(ws_name, num_ocurrencias, mes_del_periodo, nombre_col_ultimate, apertura, atributo)
 
     Set ws = Worksheets(ws_name)
 
     fila_tabla = WorksheetFunction.Match("Ultimate", ws.Range("D:D"), 0)
     ws.Range(ws.Cells(fila_tabla + 1, 4), ws.Cells(fila_tabla + num_ocurrencias + mes_del_periodo - 1, 4)).Copy
 
-    fila_obj = WorksheetFunction.Match(apertura(), ws_auxtot.Range("A:A"), 0)
+    fila_obj = WorksheetFunction.Match(apertura, ws_auxtot.Range("A:A"), 0)
     ws_auxtot.Cells(fila_obj, col_auxtot(nombre_col_ultimate)).PasteSpecial Paste:=xlPasteValues
 
     col_plata_ultimate = col_auxtot("plata_ultimate_" & atributo)

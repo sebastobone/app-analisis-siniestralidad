@@ -117,10 +117,10 @@ End Function
 Function factores_desarrollo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, fila_ind_altura)
     
     fila_factores = last_row(ws, col_ocurrs_plantillas) + sep_triangulos + 1
-    
-    Cells(fila_factores, col_ocurrs_plantillas - 4).value = "Periodo inicial"
-    Cells(fila_factores, col_ocurrs_plantillas - 3).value = "Periodo final"
-    Cells(fila_factores, col_ocurrs_plantillas - 2).value = "Percentil"
+
+    ws.Cells(fila_factores, col_ocurrs_plantillas - 4).value = "Periodo inicial"
+    ws.Cells(fila_factores, col_ocurrs_plantillas - 3).value = "Periodo final"
+    ws.Cells(fila_factores, col_ocurrs_plantillas - 2).value = "Percentil"
     
     Set Rng = ws.Range(ws.Cells(fila_factores, col_ocurrs_plantillas - 4), ws.Cells(fila_factores, col_ocurrs_plantillas - 2))
     Call color_format(Rng)

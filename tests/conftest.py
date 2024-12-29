@@ -42,11 +42,11 @@ def mock_siniestros(params: Parametros) -> pl.LazyFrame:
             ),
             "pago_bruto": np.random.random(size=num_rows) * 1e8,
             "pago_retenido": np.random.random(size=num_rows) * 1e8,
-            "aviso_bruto": np.random.random(size=num_rows) * 1e8,
-            "aviso_retenido": np.random.random(size=num_rows) * 1e8,
+            "aviso_bruto": np.random.random(size=num_rows) * 1e7,
+            "aviso_retenido": np.random.random(size=num_rows) * 1e7,
             "conteo_pago": np.random.randint(0, 100, size=num_rows),
-            "conteo_incurrido": np.random.randint(0, 100, size=num_rows),
-            "conteo_desistido": np.random.randint(0, 100, size=num_rows),
+            "conteo_incurrido": np.random.randint(0, 110, size=num_rows),
+            "conteo_desistido": np.random.randint(0, 10, size=num_rows),
         }
     ).with_columns(
         utils.col_apertura_reservas("mock"),

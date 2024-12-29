@@ -1,13 +1,15 @@
+from typing import Literal
+
 import pandas as pd
 import polars as pl
+
 from src.metodos_plantilla import insumos as ins
-from typing import Literal
 
 
 def base_plantillas(
     path_plantilla: str,
     apertura: str,
-    atributo: Literal["bruto", "retenido"],
+    atributo: str,
     periodicidades: list[list[str]],
     cantidades: list[str],
 ) -> pd.DataFrame:

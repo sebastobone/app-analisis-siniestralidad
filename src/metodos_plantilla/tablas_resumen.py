@@ -1,10 +1,10 @@
+from typing import Literal
+
 import polars as pl
 import xlwings as xw
 
 from src import constantes as ct
 from src import utils
-from typing import Literal
-
 from src.metodos_plantilla import insumos as ins
 
 

@@ -1,20 +1,21 @@
+import os
 from datetime import date
 from typing import Literal
 from unittest.mock import MagicMock, patch
-import os
 
 import polars as pl
 import pytest
-import xlwings as xw
 from src import constantes as ct
-from src import plantilla
+from src import plantilla as plant
 from src.procesamiento import base_primas_expuestos, base_siniestros
 
 
 @pytest.mark.parametrize(
-    "mes_corte, tipo_analisis",
+    "mes_corte, tipo_analisis, plantilla",
     [
-        (202312, "triangulos"),
+        (202312, "triangulos", "frec"),
+        (202312, "triangulos", "seve"),
+        (202312, "triangulos", "plata"),
         # (202312, "entremes"),
     ],
 )
@@ -36,6 +37,7 @@ def test_preparar_plantilla(
     mock_primas: pl.LazyFrame,
     mes_corte: int,
     tipo_analisis: Literal["triangulos", "entremes"],
+    plantilla: Literal["frec", "seve", "plata", "entremes"],
 ):
     base_triangulos, base_ult_ocurr, base_atipicos = (
         base_siniestros.generar_bases_siniestros(
@@ -59,8 +61,8 @@ def test_preparar_plantilla(
     if os.path.exists("tests/mock_plantilla.xlsm"):
         os.remove("tests/mock_plantilla.xlsm")
 
-    wb = plantilla.abrir_plantilla("tests/mock_plantilla.xlsm")
-    wb = plantilla.preparar_plantilla(wb, mes_corte, tipo_analisis, "mock")
+    wb = plant.abrir_plantilla("tests/mock_plantilla.xlsm")
+    wb = plant.preparar_plantilla(wb, mes_corte, tipo_analisis, "mock")
 
     assert wb.sheets["Main"]["A4"].value == "Mes corte"
     assert wb.sheets["Main"]["B4"].value == mes_corte
@@ -115,6 +117,6 @@ def test_preparar_plantilla(
         < 100
     )
 
-    wb = plantilla.generar_plantilla(wb, "frec", "01_001_A_D", "bruto", mes_corte)
+    wb = plant.generar_plantilla(wb, plantilla, "01_001_A_D", "bruto", mes_corte)
 
     # wb.close()

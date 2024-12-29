@@ -1,14 +1,18 @@
 import os
 import shutil
 import time
+from typing import Literal
 
 import polars as pl
 import xlwings as xw
-from typing import Literal
 
 import src.constantes as ct
 from src import utils
-from src.metodos_plantilla import base_plantillas, guardar_traer, tablas_resumen
+from src.metodos_plantilla import (
+    base_plantillas,
+    guardar_traer,
+    tablas_resumen,
+)
 
 
 def preparar_plantilla(
@@ -76,7 +80,7 @@ def generar_plantilla(
     wb: xw.Book,
     plantilla: Literal["frec", "seve", "plata", "entremes"],
     apertura: str,
-    atributo: Literal["bruto", "retenido"],
+    atributo: str,
     mes_corte: int,
 ) -> xw.Book:
     s = time.time()
@@ -102,7 +106,7 @@ def generar_plantilla(
         utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
     )
 
-    wb.sheets["Main"]["B6"].value = "Mes del periodo"
+    wb.sheets["Main"]["A6"].value = "Mes del periodo"
     wb.sheets["Main"]["B6"].value = mes_del_periodo
 
     wb.macro("limpiar_plantilla")(plantilla_name)
@@ -187,6 +191,32 @@ def guardar_traer_fn(
         wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
+def traer_guardar_todo(
+    wb: xw.Book,
+    plantilla: Literal["frec", "seve", "plata", "entremes"],
+    mes_corte: int,
+    traer: bool = False,
+) -> None:
+    s = time.time()
+
+    plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+    aperturas = pl.read_csv("data/processed/aperturas.csv", separator="\t").get_column(
+        "apertura_reservas"
+    )
+    atributos = (
+        ["bruto", "retenido"] if plantilla_name != "Plantilla_Frec" else ["bruto"]
+    )
+
+    for apertura in aperturas:
+        for atributo in atributos:
+            generar_plantilla(wb, plantilla, apertura, atributo, mes_corte)
+            if traer:
+                guardar_traer_fn(wb, "traer", plantilla, apertura, atributo, mes_corte)
+            guardar_traer_fn(wb, "guardar", plantilla, apertura, atributo, mes_corte)
+
+    wb.sheets["Modo"]["A2"].value = time.time() - s
+
+
 def almacenar_analisis(wb: xw.Book, mes_corte: int) -> None:
     s = time.time()
 
@@ -220,33 +250,13 @@ def almacenar_analisis(wb: xw.Book, mes_corte: int) -> None:
     wb.sheets["Modo"]["A2"].value = time.time() - s
 
 
-def traer_guardar_todo(
-    wb: xw.Book, plantilla: str, mes_corte: int, traer: bool = False
-) -> None:
-    s = time.time()
-
-    aperturas = pl.read_csv("data/processed/aperturas.csv", separator="\t").get_column(
-        "apertura_reservas"
-    )
-    atributos = ["bruto", "retenido"] if plantilla != "Plantilla_Frec" else ["bruto"]
-
-    for apertura in aperturas:
-        for atributo in atributos:
-            generar_plantilla(wb, plantilla, apertura, atributo, mes_corte)
-            if traer:
-                guardar_traer_fn(wb, "traer", plantilla, apertura, atributo, mes_corte)
-            guardar_traer_fn(wb, "guardar", plantilla, apertura, atributo, mes_corte)
-
-    wb.sheets["Modo"]["A2"].value = time.time() - s
-
-
 def abrir_plantilla(plantilla_path: str) -> xw.Book:
     if not os.path.exists(plantilla_path):
         shutil.copyfile("src/plantilla.xlsm", plantilla_path)
 
     wb = xw.Book(plantilla_path, ignore_read_only_recommended=True)
 
-    wb.macro("eliminar_modulos")
-    wb.macro("crear_modulos")
+    wb.macro("eliminar_modulos")()
+    wb.macro("crear_modulos")()
 
     return wb

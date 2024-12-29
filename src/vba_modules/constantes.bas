@@ -36,10 +36,6 @@ End Function
 
 ' APERTURAS
 
-Function apertura() As String
-    apertura = ws_aperturas.Cells(2, 1).value
-End Function
-
 Function atributo_fem(atributo) As String
     atributo_fem = WorksheetFunction.Substitute(WorksheetFunction.Substitute(atributo, "bruto", "bruta"), "retenido", "retenida")
 End Function
@@ -60,10 +56,6 @@ End Function
 
 Function desref_filas_triangulo(num_ocurrencias, header_triangulos, sep_triangulos) As Integer
     desref_filas_triangulo = - (num_ocurrencias + header_triangulos + sep_triangulos)
-End Function
-
-Function fila_tabla_fn(ws)
-    fila_tabla_fn = WorksheetFunction.Match("Ocurrencia", ws.Range("A:A"), 0)
 End Function
 
 
@@ -87,11 +79,11 @@ Function num_filas_auxtot() As Integer
 End Function
 
 Function mes_actual() As Double
-    mes_actual = ws_modo.Cells(4, 2).value
+    mes_actual = ws_main.Cells(4, 2).value
 End Function
 
 Function mes_anterior() As Double
-    mes_anterior = ws_modo.Cells(5, 2).value
+    mes_anterior = ws_main.Cells(5, 2).value
 End Function
 
 Function num_meses_periodo_fn(num_ocurrencias, num_alturas) As Integer

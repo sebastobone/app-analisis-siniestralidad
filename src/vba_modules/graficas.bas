@@ -1,8 +1,6 @@
 Function grafica_ultimate(ws, num_ocurrencias, nombre_cantidad)
 	
-	Dim grafUlt As Shape
-	
-	fila_tabla = fila_tabla_fn(ws)
+	fila_tabla = WorksheetFunction.Match("Ocurrencia", ws.Range("A:A"), 0)
 
 	Set chartRange = ws.Range(ws.Cells(fila_tabla + 2, 2), ws.Cells(fila_tabla + num_ocurrencias, 4))
 	Set chartObj = ws.ChartObjects.Add(Left:=ws.Cells(fila_tabla - num_ocurrencias, 1).Left, Top:=ws.Cells(fila_tabla - num_ocurrencias, 1).Top, Width:=400, Height:=300)

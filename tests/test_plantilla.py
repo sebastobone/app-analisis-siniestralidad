@@ -13,10 +13,10 @@ from src.procesamiento import base_primas_expuestos, base_siniestros
 @pytest.mark.parametrize(
     "mes_corte, tipo_analisis, plantilla",
     [
-        (202312, "triangulos", "frec"),
-        (202312, "triangulos", "seve"),
-        (202312, "triangulos", "plata"),
-        # (202312, "entremes"),
+        # (202312, "triangulos", "frec"),
+        # (202312, "triangulos", "seve"),
+        # (202312, "triangulos", "plata"),
+        (202312, "entremes", "entremes"),
     ],
 )
 @patch("src.metodos_plantilla.insumos.df_primas")

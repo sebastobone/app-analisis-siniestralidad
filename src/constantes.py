@@ -137,11 +137,12 @@ def num_alturas(sheet: xw.Sheet) -> int:
 def mes_del_periodo(mes_corte: date, num_ocurrencias: int, num_alturas: int) -> int:
     periodicidad = ceil(num_alturas / num_ocurrencias)
 
-    if mes_corte.month < periodicidad:
+    if mes_corte.month <= periodicidad:
         mes_periodo = mes_corte.month
     else:
         mes_periodo = int(mes_corte.strftime("%Y%m")) - (
-            mes_corte.year * 100 + (mes_corte.month // periodicidad) * periodicidad
+            mes_corte.year * 100
+            + ((mes_corte.month - 1) // periodicidad) * periodicidad
         )
     return mes_periodo
 

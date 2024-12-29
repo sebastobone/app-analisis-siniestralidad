@@ -307,7 +307,6 @@ Sub limpiar_plantilla(ws_name)
         co.Delete
     Next co
     ws.Cells.FormatConditions.Delete
-    ' ws.Range(ws.Cells(7, 1), ws.Cells(1000, 1000)).Clear
     ws.Range(ws.Cells(7, 1), ws.Cells(1000, 1000)).Delete Shift:=xlUp
 End Sub
 
@@ -322,7 +321,7 @@ Function estructura_factores(ws, num_ocurrencias, num_alturas, header_triangulos
     Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Exclusiones", "=IF(OR(R[" & desref_filas * 2 & "]C[1] = """", R" & fila_ind_altura & "C[1] < R" & fila_ind_altura & "C), """", 1)", "#,##0")
     Call factores_desarrollo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, fila_ind_altura)
     
-    If Not InStr(ActiveSheet.Name, "Entremes") <> 0 Then
+    If Not InStr(ws.Name, "Entremes") <> 0 Then
         fila_fact_sel = WorksheetFunction.Match("FACTORES SELECCIONADOS", ws.Range("F:F"), 0)
         Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Base", "=IF(R[" & (desref_filas - sep_triangulos) * 2 - 16 & "]C = """", R" & fila_fact_sel & "C,R[" & (desref_filas - sep_triangulos) * 2 - 16 & "]C)", "#,##0.0000")
     End If

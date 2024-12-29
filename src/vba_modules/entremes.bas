@@ -40,19 +40,14 @@ End Function
 
 
 
-Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, atributo, mes_del_periodo)
+Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo)
 
-	Application.ScreenUpdating = False
+	' Application.ScreenUpdating = False
 	Application.Calculation = xlCalculationManual
 	
 	Set ws = ws_entremes()
 
 	Call color_columnas_triangulo(ws, num_alturas)
-	
-	If Not (apertura_unica And atributo_unico) Then
-		MsgBox "Seleccione una sola apertura."
-		Exit Sub
-	End If
 
 	Call estructura_factores(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas)
 
@@ -79,9 +74,10 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 	''' BASE
 	fila_tabla = WorksheetFunction.Match("DESARROLLO", ws.Range("F:F"), 0) + sep_triangulos * 2 + 1
 	
-	Call columnas_entremes("Ocurrencia", "=FILTER(Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", Aux_Totales!C" & col_auxtot("apertura_reservas") & " = Aperturas!R2C1)", "", 2, False, 0, fila_tabla)
-	Call columnas_entremes("Pagos", "=SUMIFS(Aux_Totales!C" & col_auxtot("pago_" & atributo) & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1)", "$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
-	Call columnas_entremes("Incurrido", "=SUMIFS(Aux_Totales!C" & col_auxtot("incurrido_" & atributo) & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1)", "$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
+	ws.Activate
+	Call columnas_entremes("Ocurrencia", "=FILTER(Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", Aux_Totales!C" & col_auxtot("apertura_reservas") & " = """& apertura &""")", "", 2, False, 0, fila_tabla)
+	Call columnas_entremes("Pagos", "=SUMIFS(Aux_Totales!C" & col_auxtot("pago_" & atributo) & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &""")", "$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
+	Call columnas_entremes("Incurrido", "=SUMIFS(Aux_Totales!C" & col_auxtot("incurrido_" & atributo) & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &""")", "$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 	Call columnas_entremes("Ultimate", "=0", "$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 	
 	Call grafica_ultimate(ws, num_ocurrencias + mes_del_periodo - 1, "Plata " + atributo)
@@ -99,7 +95,7 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 	End With
 	
 	col_primas = col_auxtot("prima_" & atributo_fem(atributo) & "_devengada")
-	Call columnas_entremes("Prima Devengada", "=SUMIFS(Aux_Totales!C" & col_primas & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1)", "$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
+	Call columnas_entremes("Prima Devengada", "=SUMIFS(Aux_Totales!C" & col_primas & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &""")", "$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 	col_prim = 6
 	Call columnas_entremes("% SUE", "=IFERROR(RC[-3] / RC[-1], 0)", "0.00%", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 	Call columnas_entremes("Ajuste SUE", "=RC[-4] - RC[4]", "#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
@@ -111,7 +107,7 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 
 
 
-	''' INFORMACION DEL CIERRE ANTERIOR
+	'' INFORMACION DEL CIERRE ANTERIOR
 	col_primas_ant = col_auxant("Suma de prima_" & atributo_fem(atributo) & "_devengada")
 	col_ultim_ant = col_auxant("Suma de plata_ultimate_" & atributo)
 	col_ultim_cont_ant = col_auxant("Suma de plata_ultimate_contable_" & atributo)
@@ -121,10 +117,10 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 	col_mes_corte_ant = col_auxant("mes_corte")
 
 	Call columnas_entremes("Ultim Actuarial Ant", _
-		"=SUMIFS(Aux_Anterior!C" & col_ultim_ant & ", Aux_Anterior!C" & col_ocurrs_ant & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", Aperturas!R2C1, Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & ", Aux_Anterior!C" & col_atipicos_ant & ", 0)", _
+		"=SUMIFS(Aux_Anterior!C" & col_ultim_ant & ", Aux_Anterior!C" & col_ocurrs_ant & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & ", Aux_Anterior!C" & col_atipicos_ant & ", 0)", _
 		"$#,##0", num_ocurrencias + mes_del_periodo - 1, False, 2, fila_tabla)
-	Call columnas_entremes("Ultim Contable Ant", "=SUMIFS(Aux_Anterior!C" & col_ultim_cont_ant & ", Aux_Anterior!C" & col_ocurrs_ant & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", Aperturas!R2C1, Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & ", Aux_Anterior!C" & col_atipicos_ant & ", 0)", "$#,##0", num_ocurrencias + mes_del_periodo - 1, False, 1, fila_tabla)
-	Call columnas_entremes("Prima Dev Anterior", "=SUMIFS(Aux_Anterior!C" & col_primas_ant & ", Aux_Anterior!C" & col_ocurrs_ant & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", Aperturas!R2C1, Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & ", Aux_Anterior!C" & col_atipicos_ant & ", 0)", "$#,##0", num_ocurrencias + mes_del_periodo - 1, False, 1, fila_tabla)
+	Call columnas_entremes("Ultim Contable Ant", "=SUMIFS(Aux_Anterior!C" & col_ultim_cont_ant & ", Aux_Anterior!C" & col_ocurrs_ant & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & ", Aux_Anterior!C" & col_atipicos_ant & ", 0)", "$#,##0", num_ocurrencias + mes_del_periodo - 1, False, 1, fila_tabla)
+	Call columnas_entremes("Prima Dev Anterior", "=SUMIFS(Aux_Anterior!C" & col_primas_ant & ", Aux_Anterior!C" & col_ocurrs_ant & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & ", Aux_Anterior!C" & col_atipicos_ant & ", 0)", "$#,##0", num_ocurrencias + mes_del_periodo - 1, False, 1, fila_tabla)
 	Call columnas_entremes("% SUE Anterior", "=IFERROR(RC[-3] / RC[-1],0)", "0.00%", num_ocurrencias + mes_del_periodo - 1, False, 1, fila_tabla)
 
 
@@ -193,15 +189,15 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 		End With
 		
 		Call columnas_entremes("Frecuencia Pagos", _
-			"=IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1) / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0) ", _
+			"=IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &""") / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0) ", _
 			"0.0000%", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		Call columnas_entremes("Frecuencia Incurridos", _
-			"=IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1) / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0) ", _
+			"=IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &""") / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0) ", _
 			"0.0000%", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		
 		Call columnas_entremes("Frecuencia Ultimate", _
 			"=IF(R4C3 = ""Severidad"", " & _
-			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de frec_ultimate") & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", Aperturas!R2C1, Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0), " & _
+			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de frec_ultimate") & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0), " & _
 			"IFERROR(R[" & - sep_tabla & "]C / (RC[6] * RC[9]), 0))", _
 			"0.0000%", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		
@@ -219,16 +215,16 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 		Call columnas_entremes("Periodo", "=RC1", "", num_ocurrencias + mes_del_periodo, False, 2, fila_tabla)
 		
 		Call columnas_entremes("Severidad Pagos", _
-			"=IFERROR(R[" & - sep_tabla & "]C2 / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0) ", _
+			"=IFERROR(R[" & - sep_tabla & "]C2 / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0) ", _
 			"$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		
 		Call columnas_entremes("Severidad Incurridos", _
-			"=IFERROR(R[" & - sep_tabla & "]C3 / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0) ", _
+			"=IFERROR(R[" & - sep_tabla & "]C3 / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0) ", _
 			"$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		
 		Call columnas_entremes("Severidad Ultimate", _
 			"=IF(R4C3 = ""Frecuencia"", " & _
-			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de seve_ultimate_" & atributo) & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", Aperturas!R2C1, Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0), " & _
+			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de seve_ultimate_" & atributo) & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0), " & _
 			"IFERROR(R[" & - sep_tabla & "]C[-6] / (RC[-6] * RC[3]), 0))", _
 			"$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		
@@ -243,7 +239,7 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 		
 		Call columnas_entremes("Comentarios Sv.", "", "#,##0", num_ocurrencias + mes_del_periodo, True, 1, fila_tabla)
 		
-		Call columnas_entremes("Expuestos", "=IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0) ", "#,##0", num_ocurrencias + mes_del_periodo, False, 2, fila_tabla)
+		Call columnas_entremes("Expuestos", "=IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0) ", "#,##0", num_ocurrencias + mes_del_periodo, False, 2, fila_tabla)
 		
 		'NUEVA OCURRENCIA PLATA
 		ws.Range(ws.Cells(fila_tabla - sep_tabla + num_ocurrencias, 4), ws.Cells(fila_tabla - sep_tabla + num_ocurrencias + mes_del_periodo - 1, 4)).FormulaR1C1 = "=IF(RC[1] = ""Mantener"", RC[8], IFERROR(R[" & num_ocurrencias + sep_tabla & "]C * R[" & num_ocurrencias + sep_tabla & "]C[6] * R[" & num_ocurrencias + sep_tabla & "]C[9],0))"
@@ -257,19 +253,19 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 		
 		Call columnas_entremes("Pagos", _
 			"=IF(R4C3 = ""Severidad"", " & _
-			"IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1) / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0), " & _
-			"IFERROR(R[" & - sep_tabla & "]C / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0))", _
+			"IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &""") / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0), " & _
+			"IFERROR(R[" & - sep_tabla & "]C / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0))", _
 			"", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		Call columnas_entremes("Incurridos", _
 			"=IF(R4C3 = ""Severidad"", " & _
-			"IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1) / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0), " & _
-			"IFERROR(R[" & - sep_tabla & "]C / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", Aperturas!R2C1), 0))", _
+			"IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &""") / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0), " & _
+			"IFERROR(R[" & - sep_tabla & "]C / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0))", _
 			"", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		
 		Call columnas_entremes("Ultimate", _
 			"=IF( R4C3 = ""Severidad"", " & _
-			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de frec_ultimate") & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", Aperturas!R2C1, Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0), " & _
-			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de seve_ultimate_" & atributo) & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", Aperturas!R2C1, Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0))", _
+			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de frec_ultimate") & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0), " & _
+			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de seve_ultimate_" & atributo) & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0))", _
 			"", num_ocurrencias + mes_del_periodo, True, 1, fila_tabla)
 		
 		'NUEVA OCURRENCIA FREC/SEVE

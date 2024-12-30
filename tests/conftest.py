@@ -10,9 +10,33 @@ from src.app import Parametros
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
+INI_MOCK = date(2010, 1, 1)
+END_MOCK = date(2040, 1, 1)
+
 
 @pytest.fixture
-def mock_siniestros(params: Parametros) -> pl.LazyFrame:
+def params_form() -> dict[str, str]:
+    return {
+        "negocio": "autonomia",
+        "mes_inicio": "201001",
+        "mes_corte": "203012",
+        "tipo_analisis": "triangulos",
+        "aproximar_reaseguro": "False",
+        "nombre_plantilla": "plantilla",
+        "cuadre_contable_sinis": "False",
+        "add_fraude_soat": "False",
+        "cuadre_contable_primas": "False",
+    }
+
+
+@pytest.fixture
+def params(params_form: dict[str, str]) -> Parametros:
+    params = Parametros(**params_form, session_id="test-session-id")
+    return Parametros.model_validate(params)
+
+
+@pytest.fixture
+def mock_siniestros() -> pl.LazyFrame:
     num_rows = 100000
     return pl.LazyFrame(
         {
@@ -24,8 +48,8 @@ def mock_siniestros(params: Parametros) -> pl.LazyFrame:
             "atipico": np.random.choice([0, 1], size=num_rows, p=[0.95, 0.05]),
             "fecha_siniestro": np.random.choice(
                 pl.date_range(
-                    utils.yyyymm_to_date(params.mes_inicio),
-                    date(2030, 1, 1),
+                    INI_MOCK,
+                    END_MOCK,
                     interval="1mo",
                     eager=True,
                 ),
@@ -33,8 +57,8 @@ def mock_siniestros(params: Parametros) -> pl.LazyFrame:
             ),
             "fecha_registro": np.random.choice(
                 pl.date_range(
-                    utils.yyyymm_to_date(params.mes_inicio),
-                    date(2030, 1, 1),
+                    INI_MOCK,
+                    END_MOCK,
                     interval="1mo",
                     eager=True,
                 ),
@@ -59,7 +83,7 @@ def mock_siniestros(params: Parametros) -> pl.LazyFrame:
 
 
 @pytest.fixture
-def mock_primas(params: Parametros) -> pl.LazyFrame:
+def mock_primas() -> pl.LazyFrame:
     num_rows = 10000
     return pl.LazyFrame(
         {
@@ -70,8 +94,8 @@ def mock_primas(params: Parametros) -> pl.LazyFrame:
             "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
             "fecha_registro": np.random.choice(
                 pl.date_range(
-                    utils.yyyymm_to_date(params.mes_inicio),
-                    date(2030, 1, 1),
+                    INI_MOCK,
+                    END_MOCK,
                     interval="1mo",
                     eager=True,
                 ),
@@ -93,7 +117,7 @@ def mock_primas(params: Parametros) -> pl.LazyFrame:
 
 
 @pytest.fixture
-def mock_expuestos(params: Parametros) -> pl.LazyFrame:
+def mock_expuestos() -> pl.LazyFrame:
     num_rows = 10000
     return (
         pl.LazyFrame(
@@ -109,8 +133,8 @@ def mock_expuestos(params: Parametros) -> pl.LazyFrame:
                 "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
                 "fecha_registro": np.random.choice(
                     pl.date_range(
-                        utils.yyyymm_to_date(params.mes_inicio),
-                        date(2030, 1, 1),
+                        INI_MOCK,
+                        END_MOCK,
                         interval="1mo",
                         eager=True,
                     ),
@@ -141,24 +165,3 @@ def mock_expuestos(params: Parametros) -> pl.LazyFrame:
         )
         .mean()
     )
-
-
-@pytest.fixture
-def params_form() -> dict[str, str]:
-    return {
-        "negocio": "autonomia",
-        "mes_inicio": "201812",
-        "mes_corte": "202312",
-        "tipo_analisis": "triangulos",
-        "aproximar_reaseguro": "False",
-        "nombre_plantilla": "plantilla",
-        "cuadre_contable_sinis": "False",
-        "add_fraude_soat": "False",
-        "cuadre_contable_primas": "False",
-    }
-
-
-@pytest.fixture
-def params(params_form: dict[str, str]) -> Parametros:
-    params = Parametros(**params_form, session_id="test-session-id")
-    return Parametros.model_validate(params)

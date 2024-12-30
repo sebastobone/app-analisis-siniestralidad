@@ -125,3 +125,10 @@ capitalisation_policy = "lower"
 
 [tool.sqlfluff.rules.capitalisation.types]
 extended_capitalisation_policy = "upper"
+
+
+[tool.pytest.ini_options]
+markers = [
+    "plantilla: tests que requieren abrir una plantilla (deselect with '-m \"not plantilla\"')",
+    "serial",
+]

@@ -16,11 +16,13 @@ def generar_bases_mock(
     mock_primas: pl.LazyFrame,
     tipo_analisis: Literal["triangulos", "entremes"],
 ) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, pl.DataFrame, pl.DataFrame]:
-    base_triangulos, base_ult_ocurr, base_atipicos = (
-        base_siniestros.generar_bases_siniestros(
-            mock_siniestros, tipo_analisis, date(2018, 12, 1), date(2023, 12, 1)
+    with patch("src.procesamiento.base_siniestros.guardar_archivos"):
+        base_triangulos, base_ult_ocurr, base_atipicos = (
+            base_siniestros.generar_bases_siniestros(
+                mock_siniestros, tipo_analisis, date(2018, 12, 1), date(2023, 12, 1)
+            )
         )
-    )
+
     base_expuestos = base_primas_expuestos.generar_base_primas_expuestos(
         mock_expuestos, "expuestos", "mock"
     )
@@ -31,6 +33,7 @@ def generar_bases_mock(
     return base_triangulos, base_ult_ocurr, base_atipicos, base_expuestos, base_primas
 
 
+@pytest.mark.plantilla
 @pytest.mark.parametrize(
     "mes_corte, tipo_analisis, plantilla",
     [
@@ -44,11 +47,11 @@ def generar_bases_mock(
 @patch("src.metodos_plantilla.insumos.df_expuestos")
 @patch("src.metodos_plantilla.insumos.df_atipicos")
 @patch("src.metodos_plantilla.insumos.df_ult_ocurr")
-@patch("src.metodos_plantilla.insumos.df_diagonales")
+@patch("src.metodos_plantilla.insumos.df_triangulos")
 @patch("src.plantilla.tablas_resumen.df_aperturas")
 def test_preparar_y_generar_plantilla(
     mock_df_aperturas: MagicMock,
-    mock_df_diagonales: MagicMock,
+    mock_df_triangulos: MagicMock,
     mock_df_ult_ocurr: MagicMock,
     mock_df_atipicos: MagicMock,
     mock_df_expuestos: MagicMock,
@@ -65,7 +68,7 @@ def test_preparar_y_generar_plantilla(
     )
 
     mock_df_aperturas.return_value = mock_siniestros
-    mock_df_diagonales.return_value = base_triangulos.lazy()
+    mock_df_triangulos.return_value = base_triangulos.lazy()
     mock_df_ult_ocurr.return_value = base_ult_ocurr.lazy()
     mock_df_atipicos.return_value = base_atipicos.lazy()
     mock_df_expuestos.return_value = base_expuestos.lazy()
@@ -135,6 +138,7 @@ def test_preparar_y_generar_plantilla(
     wb.close()
 
 
+@pytest.mark.plantilla
 @pytest.mark.parametrize(
     "mes_corte, tipo_analisis, plantilla, rangos_adicionales",
     [
@@ -174,11 +178,11 @@ def test_preparar_y_generar_plantilla(
 @patch("src.metodos_plantilla.insumos.df_expuestos")
 @patch("src.metodos_plantilla.insumos.df_atipicos")
 @patch("src.metodos_plantilla.insumos.df_ult_ocurr")
-@patch("src.metodos_plantilla.insumos.df_diagonales")
+@patch("src.metodos_plantilla.insumos.df_triangulos")
 @patch("src.plantilla.tablas_resumen.df_aperturas")
 def test_guardar_traer(
     mock_df_aperturas: MagicMock,
-    mock_df_diagonales: MagicMock,
+    mock_df_triangulos: MagicMock,
     mock_df_ult_ocurr: MagicMock,
     mock_df_atipicos: MagicMock,
     mock_df_expuestos: MagicMock,
@@ -196,7 +200,7 @@ def test_guardar_traer(
     )
 
     mock_df_aperturas.return_value = mock_siniestros
-    mock_df_diagonales.return_value = base_triangulos.lazy()
+    mock_df_triangulos.return_value = base_triangulos.lazy()
     mock_df_ult_ocurr.return_value = base_ult_ocurr.lazy()
     mock_df_atipicos.return_value = base_atipicos.lazy()
     mock_df_expuestos.return_value = base_expuestos.lazy()

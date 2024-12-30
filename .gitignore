@@ -180,6 +180,9 @@ data/controles_informacion/post_ajustes_fraude/*
 data/db/*
 !data/db/.gitkeep
 
+data/catalogos/*
+!data/catalogos/.gitkeep
+
 data/processed/*
 !data/processed/.gitkeep
 

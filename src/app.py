@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import uuid4
 
 from fastapi import Cookie, Depends, FastAPI, Form, Request, Response, status
@@ -171,7 +171,7 @@ async def preparar_plantilla(
 ) -> RedirectResponse:
     p = parametros_usuario(session, session_id)[0]
     wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
-    plantilla.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis)
+    plantilla.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -187,7 +187,7 @@ async def almacenar_analisis(
 
 @app.post("/modos-plantilla")
 async def generar_plantilla(
-    plant: Annotated[str, Form()],
+    plant: Annotated[Literal["frec", "seve", "plata", "entremes"], Form()],
     modo: Annotated[str, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,

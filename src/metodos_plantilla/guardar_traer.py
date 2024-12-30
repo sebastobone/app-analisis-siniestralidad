@@ -7,8 +7,8 @@ import src.constantes as ct
 from src.logger_config import logger
 
 
-def index(objective: str, range: xw.Range) -> int:
-    return range.value.index(objective) + 1
+def index(objective: str, sheet_range: xw.Range) -> int:
+    return sheet_range.value.index(objective) + 1
 
 
 def objective_range(

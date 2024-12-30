@@ -1,7 +1,7 @@
 import polars as pl
 
 
-def df_diagonales(path_plantilla: str) -> pl.LazyFrame:
+def df_triangulos(path_plantilla: str) -> pl.LazyFrame:
     return pl.scan_parquet(
         f"{path_plantilla}/../data/processed/base_triangulos.parquet"
     )

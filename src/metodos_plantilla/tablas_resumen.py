@@ -42,14 +42,12 @@ def tablas_resumen(
     tipo_analisis: Literal["triangulos", "entremes"],
     aperturas: pl.LazyFrame,
 ) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, pl.DataFrame]:
-    diagonales = ins.df_diagonales(path_plantilla)
+    diagonales = ins.df_triangulos(path_plantilla)
     atipicos = ins.df_atipicos(path_plantilla)
     expuestos = ins.df_expuestos(path_plantilla)
     primas = ins.df_primas(path_plantilla)
 
     base_cols = aperturas.collect_schema().names()[1:]
-
-    print(diagonales.collect().get_column("periodicidad_ocurrencia").unique())
 
     diagonales = (
         diagonales.filter(pl.col("diagonal") == 1)

@@ -12,7 +12,7 @@ def base_plantillas(
     cantidades: list[str],
 ) -> pd.DataFrame:
     return (
-        ins.df_diagonales(path_plantilla)
+        ins.df_triangulos(path_plantilla)
         .filter(pl.col("apertura_reservas") == apertura)
         .join(
             pl.LazyFrame(

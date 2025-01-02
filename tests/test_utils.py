@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from src import constantes as ct
+from src import utils
 
 
 @pytest.mark.parametrize(
@@ -35,6 +35,6 @@ def test_mes_del_periodo(
     mes_corte: date, num_ocurrencias: int, num_alturas: int, resultado_esperado: int
 ):
     assert (
-        ct.mes_del_periodo(mes_corte, num_ocurrencias, num_alturas)
+        utils.mes_del_periodo(mes_corte, num_ocurrencias, num_alturas)
         == resultado_esperado
     )

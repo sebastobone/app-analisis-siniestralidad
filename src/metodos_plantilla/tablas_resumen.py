@@ -16,7 +16,7 @@ def aperturas(negocio: str) -> pl.DataFrame:
     return (
         df_aperturas()
         .with_columns(ramo_desc=utils.complementar_col_ramo_desc())
-        .select(["apertura_reservas", "ramo_desc"] + ct.columnas_aperturas(negocio))
+        .select(["apertura_reservas", "ramo_desc"] + utils.columnas_aperturas(negocio))
         .drop(["codigo_op", "codigo_ramo_op"])
         .unique()
         .sort("apertura_reservas")

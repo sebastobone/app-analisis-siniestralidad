@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import polars as pl
 import pytest
 from src import constantes as ct
+from src import utils
 from src import plantilla as plant
 from src.procesamiento import base_primas_expuestos, base_siniestros
 
@@ -120,7 +121,7 @@ def test_preparar_y_generar_plantilla(
             ).drop("periodicidad_triangulo")
         )
 
-    df_plantilla = ct.sheet_to_dataframe(wb, "Aux_Totales").collect()
+    df_plantilla = utils.sheet_to_dataframe(wb, "Aux_Totales").collect()
 
     assert df_original.shape[0] == df_plantilla.shape[0]
     assert (

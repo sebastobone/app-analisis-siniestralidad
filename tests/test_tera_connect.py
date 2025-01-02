@@ -150,7 +150,7 @@ def test_check_final_info(mock_siniestros: pl.LazyFrame):
         )
 
     df_falt = df.slice(0, 2).with_columns(
-        [pl.lit(None).alias(col) for col in ct.columnas_aperturas("mock")]
+        [pl.lit(None).alias(col) for col in utils.columnas_aperturas("mock")]
     )
     with pytest.raises(ValueError) as exc_info:
         tera_connect.check_final_info(tipo_query, pl.concat([df, df_falt]), "mock")

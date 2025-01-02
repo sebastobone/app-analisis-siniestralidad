@@ -29,7 +29,7 @@ def generar_base_primas_expuestos(
         else ["expuestos", "vigentes"]
     )
 
-    cols_aperts = ct.columnas_aperturas(negocio)[2:]
+    cols_aperts = utils.columnas_aperturas(negocio)[2:]
 
     df_group = (
         df.with_columns(

@@ -21,7 +21,6 @@ def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:
                 )
             )
         )
-        .collect()
     )
 
 

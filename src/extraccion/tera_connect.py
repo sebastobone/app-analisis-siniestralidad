@@ -224,7 +224,7 @@ def check_final_info(tipo_query: str, df: pl.DataFrame, negocio: str) -> None:
     """
     cols = df.collect_schema().names()
 
-    for column in ct.min_cols_tera(tipo_query):
+    for column in utils.min_cols_tera(tipo_query):
         if column not in cols:
             raise ValueError(f"""¡Falta la columna {column}!""")
 
@@ -241,7 +241,7 @@ def check_final_info(tipo_query: str, df: pl.DataFrame, negocio: str) -> None:
         pl.any_horizontal(
             [
                 (pl.col(col).is_null() | pl.col(col).eq("-1"))
-                for col in ct.columnas_aperturas(negocio)
+                for col in utils.columnas_aperturas(negocio)
             ]
         )
     )

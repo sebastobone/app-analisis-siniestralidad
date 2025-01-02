@@ -59,7 +59,7 @@ def preparar_plantilla(
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
     diagonales, expuestos, primas, atipicos = tablas_resumen.tablas_resumen(
-        ct.path_plantilla(wb), periodicidades, tipo_analisis, aperturas.lazy()
+        utils.path_plantilla(wb), periodicidades, tipo_analisis, aperturas.lazy()
     )
 
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
@@ -95,12 +95,12 @@ def generar_plantilla(
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
     df = base_plantillas.base_plantillas(
-        ct.path_plantilla(wb), apertura, atributo, periodicidades, cantidades
+        utils.path_plantilla(wb), apertura, atributo, periodicidades, cantidades
     )
 
     num_ocurrencias = df.shape[0]
     num_alturas = df.shape[1] // len(cantidades)
-    mes_del_periodo = ct.mes_del_periodo(
+    mes_del_periodo = utils.mes_del_periodo(
         utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
     )
 
@@ -142,11 +142,11 @@ def guardar_traer_fn(
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
     atributo = atributo if plantilla_name != "Plantilla_Frec" else "bruto"
 
-    num_ocurrencias = ct.num_ocurrencias(wb.sheets[plantilla_name])
-    num_alturas = ct.num_alturas(wb.sheets[plantilla_name])
+    num_ocurrencias = utils.num_ocurrencias(wb.sheets[plantilla_name])
+    num_alturas = utils.num_alturas(wb.sheets[plantilla_name])
 
     if plantilla_name == "Plantilla_Entremes":
-        mes_del_periodo = ct.mes_del_periodo(
+        mes_del_periodo = utils.mes_del_periodo(
             utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
         )
     else:
@@ -221,14 +221,14 @@ def traer_guardar_todo(
 
 def almacenar_analisis(wb: xw.Book, mes_corte: int) -> None:
     s = time.time()
-    
+
     df_resultados_tipicos = (
-        ct.sheet_to_dataframe(wb, "Aux_Totales")
+        utils.sheet_to_dataframe(wb, "Aux_Totales")
         .with_columns(atipico=0, mes_corte=mes_corte)
         .collect()
     )
     df_resultados_atipicos = (
-        ct.sheet_to_dataframe(wb, "Atipicos")
+        utils.sheet_to_dataframe(wb, "Atipicos")
         .with_columns(atipico=1, mes_corte=mes_corte)
         .collect()
     )

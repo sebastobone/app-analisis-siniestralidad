@@ -130,5 +130,6 @@ extended_capitalisation_policy = "upper"
 [tool.pytest.ini_options]
 markers = [
     "plantilla: tests que requieren abrir una plantilla (deselect with '-m \"not plantilla\"')",
+    "unit",
     "serial",
 ]

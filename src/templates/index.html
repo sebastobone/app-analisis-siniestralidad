@@ -99,9 +99,6 @@
         <form method="POST" action="/preparar-plantilla">
             <button type="submit">Preparar plantilla</button>
         </form>
-        <form method="POST" action="/almacenar-analisis">
-            <button type="submit">Almacenar analisis</button>
-        </form>
 
         <form method="POST" action="/modos-plantilla">
             <label for="plant">Plantilla:</label>
@@ -120,6 +117,20 @@
             </select>
 
             <button type="submit">Ejecutar</button>
+        </form>
+
+        <form method="POST" action="/almacenar-analisis">
+            <button type="submit">Almacenar analisis</button>
+        </form>
+    </div>
+
+    <div class="form-section">
+        <h2>Resultados</h2>
+        <form method="POST" action="/actualizar-wb-resultados">
+            <button type="submit">Actualizar y abrir archivo resultados</button>
+        </form>
+        <form method="POST" action="/generar-informe-ar">
+            <button type="submit">Generar informe Actuario Responsable</button>
         </form>
     </div>
 

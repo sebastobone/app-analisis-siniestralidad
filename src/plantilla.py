@@ -221,33 +221,19 @@ def traer_guardar_todo(
 
 def almacenar_analisis(wb: xw.Book, mes_corte: int) -> None:
     s = time.time()
-
-    df_tips = ct.sheet_to_dataframe(wb, "Aux_Totales").with_columns(atipico=0)
-    df_atips = ct.sheet_to_dataframe(wb, "Atipicos").with_columns(atipico=1)
-    df_new = pl.concat([df_tips, df_atips]).with_columns(MES_CORTE=mes_corte)
-
-    wb_res = xw.Book(f"{ct.path_plantilla(wb)}/resultados.xlsx")
-    df_hist = ct.sheet_to_dataframe(wb_res, "BD", df_new.collect_schema())
-
-    # Quitar versiones anteriores del analisis del mes actual para la apertura-reserva
-    info_eliminar = df_new.select(["apertura_reservas", "ct.MES_CORTE"]).with_columns(
-        eliminar=1
+    
+    df_resultados_tipicos = (
+        ct.sheet_to_dataframe(wb, "Aux_Totales")
+        .with_columns(atipico=0, mes_corte=mes_corte)
+        .collect()
     )
-
-    df_hist = (
-        df_hist.join(
-            info_eliminar, on=["apertura_reservas", "ct.MES_CORTE"], how="left"
-        )
-        .filter(pl.col("eliminar").is_null())
-        .drop("eliminar")
+    df_resultados_atipicos = (
+        ct.sheet_to_dataframe(wb, "Atipicos")
+        .with_columns(atipico=1, mes_corte=mes_corte)
+        .collect()
     )
-
-    df = pl.concat([df_hist, df_new])
-
-    wb_res.sheets["BD"].clear_contents()
-    # Por si falla, que no borre los nombres de las columnas
-    wb_res.sheets["BD"]["A1"].value = df.collect_schema().names()
-    wb_res.sheets["BD"]["A1"].options(index=False).value = df.collect().to_pandas()
+    df_resultados = pl.concat([df_resultados_tipicos, df_resultados_atipicos])
+    df_resultados.write_parquet(f"output/resultados_{wb.name}_{mes_corte}.parquet")
 
     wb.sheets["Main"]["A2"].value = time.time() - s
 

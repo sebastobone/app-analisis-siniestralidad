@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Field, Session, SQLModel, String, create_engine, select
 
-from src import main, plantilla
+from src import main, plantilla, resultados
 
 
 class Parametros(SQLModel, table=True):
@@ -184,16 +184,6 @@ async def preparar_plantilla(
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.post("/almacenar-analisis")
-async def almacenar_analisis(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> RedirectResponse:
-    p = obtener_parametros_usuario(session, session_id)
-    wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
-    plantilla.almacenar_analisis(wb, p.mes_corte)
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
-
-
 @app.post("/modos-plantilla")
 async def generar_plantilla(
     plant: Annotated[Literal["frec", "seve", "plata", "entremes"], Form()],
@@ -221,4 +211,32 @@ async def generar_plantilla(
             wb.sheets["Atributos"]["A2"].value,
             p.mes_corte,
         )
+    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.post("/almacenar-analisis")
+async def almacenar_analisis(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> RedirectResponse:
+    p = obtener_parametros_usuario(session, session_id)
+    wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
+    plantilla.almacenar_analisis(wb, p.mes_corte)
+    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.post("/actualizar-wb-resultados")
+async def actualizar_wb_resultados() -> RedirectResponse:
+    _ = resultados.actualizar_wb_resultados()
+    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.post("/generar-informe-ar")
+async def generar_informe_actuario_responsable(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> RedirectResponse:
+    p = obtener_parametros_usuario(session, session_id)
+    df_ar = resultados.generar_informe_actuario_responsable(p.mes_corte)
+    df_ar.write_excel(
+        f"output/informe_ar_{p.negocio}_{p.mes_corte}.xlsx", worksheet="AR"
+    )
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)

@@ -6,7 +6,6 @@ import polars as pl
 import teradatasql as td
 from tqdm import tqdm
 
-import src.constantes as ct
 from src import utils
 from src.configuracion import configuracion
 from src.logger_config import logger

@@ -4,31 +4,29 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
-from sqlmodel import Session, SQLModel, create_engine, select
-from sqlmodel.pool import StaticPool
-from src.app import Parametros, app, get_session
+from sqlmodel import Session, select
+from src.app import Parametros
 
 
 @pytest.fixture
-def test_session():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
+def params_form() -> dict[str, str]:
+    return {
+        "negocio": "autonomia",
+        "mes_inicio": "201001",
+        "mes_corte": "203012",
+        "tipo_analisis": "triangulos",
+        "aproximar_reaseguro": "False",
+        "nombre_plantilla": "plantilla",
+        "cuadre_contable_sinis": "False",
+        "add_fraude_soat": "False",
+        "cuadre_contable_primas": "False",
+    }
 
 
 @pytest.fixture
-def client(test_session: Session):
-    def get_test_session():
-        return test_session
-
-    app.dependency_overrides[get_session] = get_test_session
-
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
+def params(params_form: dict[str, str]) -> Parametros:
+    params = Parametros(**params_form, session_id="test-session-id")
+    return Parametros.model_validate(params)
 
 
 def test_generar_base(client: TestClient):

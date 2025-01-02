@@ -5,34 +5,16 @@ from datetime import date
 import numpy as np
 import polars as pl
 import pytest
+from fastapi.testclient import TestClient
+from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel.pool import StaticPool
 from src import utils
-from src.app import Parametros
+from src.app import app, get_session
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 INI_MOCK = date(2010, 1, 1)
 END_MOCK = date(2040, 1, 1)
-
-
-@pytest.fixture
-def params_form() -> dict[str, str]:
-    return {
-        "negocio": "autonomia",
-        "mes_inicio": "201001",
-        "mes_corte": "203012",
-        "tipo_analisis": "triangulos",
-        "aproximar_reaseguro": "False",
-        "nombre_plantilla": "plantilla",
-        "cuadre_contable_sinis": "False",
-        "add_fraude_soat": "False",
-        "cuadre_contable_primas": "False",
-    }
-
-
-@pytest.fixture
-def params(params_form: dict[str, str]) -> Parametros:
-    params = Parametros(**params_form, session_id="test-session-id")
-    return Parametros.model_validate(params)
 
 
 @pytest.fixture
@@ -165,3 +147,25 @@ def mock_expuestos() -> pl.LazyFrame:
         )
         .mean()
     )
+
+
+@pytest.fixture
+def test_session():
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
+
+
+@pytest.fixture
+def client(test_session: Session):
+    def get_test_session():
+        return test_session
+
+    app.dependency_overrides[get_session] = get_test_session
+
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()

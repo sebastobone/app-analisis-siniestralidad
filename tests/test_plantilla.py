@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 import polars as pl
 import pytest
 from src import constantes as ct
-from src import utils
 from src import plantilla as plant
+from src import utils
 from src.procesamiento import base_primas_expuestos, base_siniestros
 
 

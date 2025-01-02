@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import polars as pl
 import pytest
-from src import constantes as ct
 from src import utils
 from src.app import Parametros
 from src.extraccion import tera_connect

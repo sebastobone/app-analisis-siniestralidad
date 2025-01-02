@@ -7,18 +7,15 @@ from src.controles_informacion.controles_informacion import consolidar_sap
 
 
 def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:
-    return (
-        consolidar_sap(
-            ["Generales", "Vida"],
-            hojas_afo,
-            mes_corte,
-        )
-        .filter(
-            (pl.col("mes_mov") == mes_corte)
-            & (
-                pl.col("codigo_ramo_op").is_in(
-                    ["025", "069", "081", "083", "084", "086", "095", "096", "181"]
-                )
+    return consolidar_sap(
+        ["Generales", "Vida"],
+        hojas_afo,
+        mes_corte,
+    ).filter(
+        (pl.col("mes_mov") == mes_corte)
+        & (
+            pl.col("codigo_ramo_op").is_in(
+                ["025", "069", "081", "083", "084", "086", "095", "096", "181"]
             )
         )
     )

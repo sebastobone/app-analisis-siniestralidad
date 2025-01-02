@@ -156,12 +156,6 @@ async def generar_controles(
         p.add_fraude_soat,
         p.cuadre_contable_primas,
     )
-    main.generar_bases_plantilla(
-        p.negocio,
-        p.tipo_analisis,
-        p.mes_inicio,
-        p.mes_corte,
-    )
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -179,13 +173,19 @@ async def preparar_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
+    main.generar_bases_plantilla(
+        p.negocio,
+        p.tipo_analisis,
+        p.mes_inicio,
+        p.mes_corte,
+    )
     wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
     plantilla.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/modos-plantilla")
-async def generar_plantilla(
+async def modos_plantilla(
     plant: Annotated[Literal["frec", "seve", "plata", "entremes"], Form()],
     modo: Annotated[str, Form()],
     session: SessionDep,
@@ -211,6 +211,10 @@ async def generar_plantilla(
             wb.sheets["Atributos"]["A2"].value,
             p.mes_corte,
         )
+    elif modo == "guardar_todo":
+        plantilla.traer_guardar_todo(wb, plant, p.mes_corte)
+    elif modo == "traer_guardar_todo":
+        plantilla.traer_guardar_todo(wb, plant, p.mes_corte, traer=True)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 

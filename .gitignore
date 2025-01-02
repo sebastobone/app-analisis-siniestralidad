@@ -208,3 +208,5 @@ data/database.db
 
 logs/*
 !logs/.gitkeep
+
+.env.private

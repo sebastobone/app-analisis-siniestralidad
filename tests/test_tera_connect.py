@@ -14,6 +14,7 @@ def test_tipo_query():
     assert tera_connect.tipo_query("path/to/siniestros.sql") == "siniestros"
     assert tera_connect.tipo_query("path/to/siniestros_bruto.sql") == "otro"
 
+
 @pytest.mark.unit
 def test_preparar_queries(params: Parametros):
     mock_query = """
@@ -42,6 +43,7 @@ def test_preparar_queries(params: Parametros):
 
     assert test == correct_result
 
+
 @pytest.mark.unit
 def test_fechas_chunks(params: Parametros):
     test = tera_connect.fechas_chunks(params.mes_inicio, params.mes_corte)
@@ -52,6 +54,7 @@ def test_fechas_chunks(params: Parametros):
     mes_inicio_last_day = mes_inicio_next - timedelta(days=mes_inicio_next.day)
 
     assert test[0] == (utils.yyyymm_to_date(params.mes_inicio), mes_inicio_last_day)
+
 
 @pytest.mark.unit
 @patch("src.extraccion.tera_connect.pd.ExcelFile")
@@ -72,6 +75,7 @@ def test_cargar_segmentaciones(mock_read_excel: MagicMock, mock_excel_file: Magi
     )
     mock_excel_file.assert_called_once_with("test_file.xlsx")
 
+
 @pytest.mark.unit
 def test_check_adds_segmentacion():
     with pytest.raises(ValueError):
@@ -81,6 +85,7 @@ def test_check_adds_segmentacion():
         tera_connect.check_adds_segmentacion(["add_Siniestros"])
 
     tera_connect.check_adds_segmentacion(["add_s_Siniestros"])
+
 
 @pytest.mark.unit
 def test_check_suficiencia_adds():
@@ -95,6 +100,7 @@ def test_check_suficiencia_adds():
 
     tera_connect.check_suficiencia_adds("_", mock_query, [pl.DataFrame()] * 3)
 
+
 @pytest.mark.unit
 def test_check_numero_columnas_add():
     mock_query = "INSERT INTO table VALUES (?, ?)"
@@ -106,6 +112,7 @@ def test_check_numero_columnas_add():
 
     tera_connect.check_numero_columnas_add(mock_query, mock_add_bueno)
 
+
 @pytest.mark.unit
 def test_check_nulls():
     mock_add_malo = pl.DataFrame({"datos": [None, 1, 2, 3, 4, 5]})
@@ -115,6 +122,7 @@ def test_check_nulls():
         tera_connect.check_nulls(mock_add_malo)
 
     tera_connect.check_nulls(mock_add_bueno)
+
 
 @pytest.mark.unit
 def test_check_final_info(mock_siniestros: pl.LazyFrame):

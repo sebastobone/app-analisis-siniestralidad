@@ -91,7 +91,7 @@ def construir_triangulos(
     origin_grain: str,
     development_grain: str,
     mes_corte: date,
-    tipo_analisis: str,
+    tipo_analisis: Literal["triangulos", "entremes"],
 ) -> pl.LazyFrame:
     df_tri = (
         df_tri.filter(
@@ -222,7 +222,10 @@ def guardar_archivos(df: pl.DataFrame, nombre_archivo: str) -> None:
 
 
 def generar_bases_siniestros(
-    df: pl.LazyFrame, tipo_analisis: str, mes_inicio: date, mes_corte: date
+    df: pl.LazyFrame,
+    tipo_analisis: Literal["triangulos", "entremes"],
+    mes_inicio: date,
+    mes_corte: date,
 ) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
     df_sinis_tipicos, df_sinis_atipicos = preparar_base_siniestros(
         df, mes_inicio, mes_corte

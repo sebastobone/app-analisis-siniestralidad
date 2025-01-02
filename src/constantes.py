@@ -5,12 +5,6 @@ import pandas as pd
 import polars as pl
 import xlwings as xw
 
-CREDENCIALES_TERADATA = {
-    "host": "teradata.suranet.com",
-    "user": "sebatoec",
-    "password": "47^07Ghia0+b",
-}
-
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 
 MONTH_MAP = pl.DataFrame(

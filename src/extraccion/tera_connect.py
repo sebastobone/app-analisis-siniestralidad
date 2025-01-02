@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 import src.constantes as ct
 from src import utils
+from src.configuracion import configuracion
 from src.logger_config import logger
 
 
@@ -70,12 +71,17 @@ def fechas_chunks(mes_inicio: int, mes_corte: int) -> list[tuple[date, date]]:
 
 def ejecutar_queries(
     queries: list[str],
-    creds: dict[str, str],
     fechas_chunks: list[tuple[date, date]],
     segm: list[pl.DataFrame],
 ) -> pl.DataFrame:
-    con = td.connect(json.dumps(creds))
-    cur = con.cursor()
+    creds = {
+        "host": configuracion.teradata_host,
+        "user": configuracion.teradata_user,
+        "password": configuracion.teradata_password,
+    }
+
+    con = td.connect(json.dumps(creds))  # type: ignore
+    cur = con.cursor()  # type: ignore
     add_num = 0
     for query in tqdm(queries):
         if "?" not in query:
@@ -131,8 +137,8 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
         if (len(partes) < 3) or not any(char in partes[1] for char in "spe"):
             logger.error(
                 """
-                El nombre de las hojas con tablas a cargar debe seguir el
-                formato "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
+                El nombre de las hojas con tablas a cargar debe seguir el formato
+                "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
                 El indicador se escribe de la siguiente forma:
                     siniestros -> s
                     primas -> p
@@ -237,7 +243,6 @@ def check_final_info(tipo_query: str, df: pl.DataFrame, negocio: str) -> None:
 
 
 def correr_query(
-    creds: dict[str, str],
     file: str,
     save_path: str,
     save_format: str,
@@ -257,5 +262,5 @@ def correr_query(
     )
     check_suficiencia_adds(file, queries, segm)
 
-    df = ejecutar_queries(queries.split(";"), creds, fchunks, segm)
+    df = ejecutar_queries(queries.split(";"), fchunks, segm)
     guardar_resultados(df, negocio, save_path, save_format, tipo)

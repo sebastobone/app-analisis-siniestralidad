@@ -25,6 +25,7 @@ dependencies = [
     "sqlmodel>=0.0.22",
     "pytest-cov>=6.0.0",
     "loguru>=0.7.3",
+    "pydantic-settings>=2.7.1",
 ]
 
 

@@ -35,12 +35,10 @@ def generar_bases_mock(
 
 @pytest.mark.plantilla
 @pytest.mark.parametrize(
-    "mes_corte, tipo_analisis, plantilla",
+    "mes_corte, tipo_analisis, plantillas",
     [
-        (202312, "triangulos", "frec"),
-        (202312, "triangulos", "seve"),
-        (202312, "triangulos", "plata"),
-        (202312, "entremes", "entremes"),
+        (202312, "triangulos", ["frec", "seve", "plata"]),
+        (202312, "entremes", ["entremes"]),
     ],
 )
 @patch("src.metodos_plantilla.insumos.df_primas")
@@ -61,7 +59,7 @@ def test_preparar_y_generar_plantilla(
     mock_primas: pl.LazyFrame,
     mes_corte: int,
     tipo_analisis: Literal["triangulos", "entremes"],
-    plantilla: Literal["frec", "seve", "plata", "entremes"],
+    plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
 ):
     base_triangulos, base_ult_ocurr, base_atipicos, base_expuestos, base_primas = (
         generar_bases_mock(mock_siniestros, mock_expuestos, mock_primas, tipo_analisis)
@@ -133,44 +131,49 @@ def test_preparar_y_generar_plantilla(
         < 100
     )
 
-    plant.generar_plantilla(wb, plantilla, "01_001_A_D", "bruto", mes_corte)
+    for plantilla in plantillas:
+        plant.generar_plantilla(wb, plantilla, "01_001_A_D", "bruto", mes_corte)
 
     wb.close()
 
 
 @pytest.mark.plantilla
 @pytest.mark.parametrize(
-    "mes_corte, tipo_analisis, plantilla, rangos_adicionales",
+    "mes_corte, tipo_analisis, plantillas, rangos_adicionales",
     [
-        (202312, "triangulos", "frec", ["BASE", "INDICADOR", "COMENTARIOS"]),
         (
             202312,
             "triangulos",
-            "seve",
-            [
-                "BASE",
-                "INDICADOR",
-                "COMENTARIOS",
-                "TIPO_INDEXACION",
-                "MEDIDA_INDEXACION",
-            ],
+            ["frec", "seve", "plata"],
+            {
+                "frec": ["BASE", "INDICADOR", "COMENTARIOS"],
+                "seve": [
+                    "BASE",
+                    "INDICADOR",
+                    "COMENTARIOS",
+                    "TIPO_INDEXACION",
+                    "MEDIDA_INDEXACION",
+                ],
+                "plata": ["BASE", "INDICADOR", "COMENTARIOS"],
+            },
         ),
-        (202312, "triangulos", "plata", ["BASE", "INDICADOR", "COMENTARIOS"]),
         (
             202312,
             "entremes",
-            "entremes",
-            [
-                "FREC_SEV_ULTIMA_OCURRENCIA",
-                "VARIABLE_DESPEJADA",
-                "COMENTARIOS",
-                "FACTOR_COMPLETITUD",
-                "PCT_SUE_BF",
-                "VELOCIDAD_BF",
-                "PCT_SUE_NUEVO",
-                "AJUSTE_PARCIAL",
-                "COMENTARIOS_AJUSTE",
-            ],
+            ["entremes"],
+            {
+                "entremes": [
+                    "FREC_SEV_ULTIMA_OCURRENCIA",
+                    "VARIABLE_DESPEJADA",
+                    "COMENTARIOS",
+                    "FACTOR_COMPLETITUD",
+                    "PCT_SUE_BF",
+                    "VELOCIDAD_BF",
+                    "PCT_SUE_NUEVO",
+                    "AJUSTE_PARCIAL",
+                    "COMENTARIOS_AJUSTE",
+                ]
+            },
         ),
     ],
 )
@@ -192,8 +195,8 @@ def test_guardar_traer(
     mock_primas: pl.LazyFrame,
     mes_corte: int,
     tipo_analisis: Literal["triangulos", "entremes"],
-    plantilla: Literal["frec", "seve", "plata", "entremes"],
-    rangos_adicionales: list[str],
+    plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
+    rangos_adicionales: dict[Literal["frec", "seve", "plata", "entremes"], list[str]],
 ):
     base_triangulos, base_ult_ocurr, base_atipicos, base_expuestos, base_primas = (
         generar_bases_mock(mock_siniestros, mock_expuestos, mock_primas, tipo_analisis)
@@ -211,7 +214,9 @@ def test_guardar_traer(
 
     wb = plant.abrir_plantilla("tests/mock_plantilla.xlsm")
     plant.preparar_plantilla(wb, mes_corte, tipo_analisis, "mock")
-    plant.generar_plantilla(wb, plantilla, "01_001_A_D", "bruto", mes_corte)
+
+    for plantilla in plantillas:
+        plant.generar_plantilla(wb, plantilla, "01_001_A_D", "bruto", mes_corte)
 
     map_plantillas = {
         "frec": "Plantilla_Frec",
@@ -229,27 +234,34 @@ def test_guardar_traer(
         "METODOLOGIA",
     ]
 
-    archivos_guardados = [
-        f"01_001_A_D_bruto_{map_plantillas[plantilla]}_{nombre_rango}"
-        for nombre_rango in rangos_comunes + rangos_adicionales
-    ]
+    for plantilla in plantillas:
+        archivos_guardados = [
+            f"01_001_A_D_bruto_{map_plantillas[plantilla]}_{nombre_rango}"
+            for nombre_rango in rangos_comunes + rangos_adicionales[plantilla]
+        ]
 
-    with pytest.raises(FileNotFoundError):
-        plant.guardar_traer_fn(wb, "traer", plantilla, "01_001_A_D", "bruto", mes_corte)
+        with pytest.raises(FileNotFoundError):
+            plant.guardar_traer_fn(
+                wb, "traer", plantilla, "01_001_A_D", "bruto", mes_corte
+            )
 
-    with patch("src.plantilla.guardar_traer.pl.DataFrame.write_csv") as mock_guardar:
-        plant.guardar_traer_fn(
-            wb, "guardar", plantilla, "01_001_A_D", "bruto", mes_corte
-        )
-        for archivo in archivos_guardados:
-            mock_guardar.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
+        with patch(
+            "src.plantilla.guardar_traer.pl.DataFrame.write_csv"
+        ) as mock_guardar:
+            plant.guardar_traer_fn(
+                wb, "guardar", plantilla, "01_001_A_D", "bruto", mes_corte
+            )
+            for archivo in archivos_guardados:
+                mock_guardar.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
 
-    with patch("src.plantilla.guardar_traer.pl.read_csv") as mock_leer:
-        mock_leer.return_value = pl.DataFrame(
-            [("ABCDEFG", "HIJKLMN"), ("ABCDEFG", "HIJKLMN")]
-        )
-        plant.guardar_traer_fn(wb, "traer", plantilla, "01_001_A_D", "bruto", mes_corte)
-        for archivo in archivos_guardados:
-            mock_leer.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
+        with patch("src.plantilla.guardar_traer.pl.read_csv") as mock_leer:
+            mock_leer.return_value = pl.DataFrame(
+                [("ABCDEFG", "HIJKLMN"), ("ABCDEFG", "HIJKLMN")]
+            )
+            plant.guardar_traer_fn(
+                wb, "traer", plantilla, "01_001_A_D", "bruto", mes_corte
+            )
+            for archivo in archivos_guardados:
+                mock_leer.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
 
     wb.close()

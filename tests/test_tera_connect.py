@@ -1,5 +1,6 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
+from typing import Literal
 
 import polars as pl
 import pytest
@@ -57,22 +58,30 @@ def test_fechas_chunks(params: Parametros):
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    "tipo_query, hoja_segm",
+    [
+        ("siniestros", "add_s_Amparos"),
+        ("primas", "add_pe_Canales"),
+        ("expuestos", "add_pe_Canales"),
+    ],
+)
 @patch("src.extraccion.tera_connect.pd.ExcelFile")
 @patch("src.extraccion.tera_connect.pl.read_excel")
-def test_cargar_segmentaciones(mock_read_excel: MagicMock, mock_excel_file: MagicMock):
-    mock_excel_file.return_value.sheet_names = [
-        "add_s_Amparos",
-        "add_pe_Canales",
-    ]
+def test_cargar_segmentaciones(
+    mock_read_excel: MagicMock,
+    mock_excel_file: MagicMock,
+    tipo_query: Literal["siniestros", "primas", "expuestos"],
+    hoja_segm: str,
+):
+    mock_excel_file.return_value.sheet_names = [hoja_segm]
 
     mock_read_excel.return_value = pl.DataFrame({"col1": [1, 2, 3]})
 
-    result = tera_connect.cargar_segmentaciones("test_file.xlsx", "siniestros")
+    result = tera_connect.cargar_segmentaciones("test_file.xlsx", tipo_query)
 
     assert len(result) == 1
-    mock_read_excel.assert_called_once_with(
-        "test_file.xlsx", sheet_name="add_s_Amparos"
-    )
+    mock_read_excel.assert_called_once_with("test_file.xlsx", sheet_name=hoja_segm)
     mock_excel_file.assert_called_once_with("test_file.xlsx")
 
 

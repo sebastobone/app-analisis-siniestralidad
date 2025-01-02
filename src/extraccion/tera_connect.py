@@ -21,9 +21,12 @@ def tipo_query(file: str) -> str:
 
 
 def preparar_queries(
-    file: str, mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool | None = None
+    queries: str,
+    mes_inicio: int,
+    mes_corte: int,
+    aproximar_reaseguro: bool | None = None,
 ) -> str:
-    return file.format(
+    return queries.format(
         mes_primera_ocurrencia=mes_inicio,
         mes_corte=mes_corte,
         fecha_primera_ocurrencia=utils.yyyymm_to_date(mes_inicio),
@@ -32,10 +35,12 @@ def preparar_queries(
     )
 
 
-def cargar_segmentaciones(archivo_segm: str, tipo_query: str) -> list[pl.DataFrame]:
+def cargar_segmentaciones(
+    path_archivo_segm: str, tipo_query: str
+) -> list[pl.DataFrame]:
     hojas_segm = [
         str(hoja)
-        for hoja in pd.ExcelFile(archivo_segm).sheet_names
+        for hoja in pd.ExcelFile(path_archivo_segm).sheet_names
         if str(hoja).startswith("add")
     ]
     if hojas_segm:
@@ -44,7 +49,8 @@ def cargar_segmentaciones(archivo_segm: str, tipo_query: str) -> list[pl.DataFra
     hojas_query = [hoja for hoja in hojas_segm if tipo_query[0] in hoja.split("_")[1]]
 
     return [
-        pl.read_excel(archivo_segm, sheet_name=hoja_query) for hoja_query in hojas_query
+        pl.read_excel(path_archivo_segm, sheet_name=hoja_query)
+        for hoja_query in hojas_query
     ]
 
 
@@ -150,13 +156,15 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
             raise ValueError
 
 
-def check_suficiencia_adds(file: str, queries: str, adds: list[pl.DataFrame]) -> None:
+def check_suficiencia_adds(
+    file_path: str, queries: str, adds: list[pl.DataFrame]
+) -> None:
     num_adds_necesarios = queries.count("?);")
     if num_adds_necesarios != len(adds):
         logger.error(
             f"""
             Necesita {num_adds_necesarios} tablas adicionales para 
-            ejecutar el query {file},
+            ejecutar el query {file_path},
             pero en el Excel "segmentacion.xlsx" hay {len(adds)} hojas
             de este tipo. Por favor, revise las hojas que tiene o revise que el 
             nombre de las hojas siga el formato
@@ -243,7 +251,7 @@ def check_final_info(tipo_query: str, df: pl.DataFrame, negocio: str) -> None:
 
 
 def correr_query(
-    file: str,
+    file_path: str,
     save_path: str,
     save_format: str,
     negocio: str,
@@ -251,16 +259,15 @@ def correr_query(
     mes_corte: int,
     aproximar_reaseguro: bool | None = None,
 ) -> None:
-    tipo = tipo_query(file)
-    archivo_segm = f"data/segmentacion_{negocio}.xlsx"
-    segm = cargar_segmentaciones(archivo_segm, tipo)
+    tipo = tipo_query(file_path)
+    segm = cargar_segmentaciones(f"data/segmentacion_{negocio}.xlsx", tipo)
 
     fchunks = fechas_chunks(mes_inicio, mes_corte)
 
     queries = preparar_queries(
-        open(file).read(), mes_inicio, mes_corte, aproximar_reaseguro
+        open(file_path).read(), mes_inicio, mes_corte, aproximar_reaseguro
     )
-    check_suficiencia_adds(file, queries, segm)
+    check_suficiencia_adds(file_path, queries, segm)
 
     df = ejecutar_queries(queries.split(";"), fchunks, segm)
     guardar_resultados(df, negocio, save_path, save_format, tipo)

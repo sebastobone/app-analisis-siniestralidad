@@ -20,7 +20,7 @@ Function guardar_ultimate(ws_name, num_ocurrencias, mes_del_periodo, nombre_col_
         ws.Range(ws.Cells(fila_tabla + 1, col_ult_cont_entremes), ws.Cells(fila_tabla + num_ocurrencias + mes_del_periodo - 1, col_ult_cont_entremes)).Copy
         ws_auxtot.Cells(fila_obj, col_plata_ultimate_contable).PasteSpecial Paste:=xlPasteValues
 
-        If ws.Cells(3, 3) = "Frecuencia y Severidad" Or ws.Cells(4, 3) = "Severidad" Then
+        If ws.Cells(5, 3) = "Frecuencia y Severidad" Or ws.Cells(6, 3) = "Severidad" Then
             fila_tabla = WorksheetFunction.Match("Frecuencia Ultimate", ws.Range("D:D"), 0)
             ws.Range(ws.Cells(fila_tabla + 1, 4), ws.Cells(fila_tabla + num_ocurrencias + mes_del_periodo - 1, 4)).Copy
             ws_auxtot.Cells(fila_obj, col_auxtot("frec_ultimate")).PasteSpecial Paste:=xlPasteValues

@@ -229,8 +229,12 @@ def test_guardar_traer(
     ]
 
     for plantilla in plantillas:
+        plantilla_name = plantilla.capitalize()
+        apertura = str(wb.sheets[plantilla_name]["C2"].value)
+        atributo = str(wb.sheets[plantilla_name]["C3"].value).lower()
+
         archivos_guardados = [
-            f"01_001_A_D_Bruto_Plantilla_{plantilla.capitalize()}_{nombre_rango}"
+            f"{apertura}_{atributo}_Plantilla_{plantilla.capitalize()}_{nombre_rango}"
             for nombre_rango in rangos_comunes + rangos_adicionales[plantilla]
         ]
 
@@ -252,4 +256,4 @@ def test_guardar_traer(
             for archivo in archivos_guardados:
                 mock_leer.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
 
-    wb.close()
+    # wb.close()

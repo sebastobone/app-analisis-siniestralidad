@@ -130,7 +130,6 @@ Sub generar_Plantilla_Seve(num_ocurrencias, num_alturas, header_triangulos, sep_
 	
 	tipo_index = ws.Range("C5").value
 	medida_index = ws.Range("C6").value
-	col_medida_index = WorksheetFunction.Match(medida_index, Range("Vectores_Index!1:1"), 0)
 	
 	
 	'''TRIANGULOS INSUMO
@@ -138,11 +137,13 @@ Sub generar_Plantilla_Seve(num_ocurrencias, num_alturas, header_triangulos, sep_
 	desfase_triangulo_frec = 1
 	
 	' If tipo_index = "Por fecha de ocurrencia" Then
+	'   col_medida_index = WorksheetFunction.Match(medida_index, Range("Vectores_Index!1:1"), 0)
 	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Unidad Indexacion", "=+XLOOKUP(VALUE(RC" & col_ocurrs_plantillas & "), Vectores_Index!C1, Vectores_Index!C" & col_medida_index & ")", "#,##0")
 	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Severidad Base", "=+IF(R[" & desref_filas * 2 & "]C = """", """", IFERROR(R[" & desref_filas * 2 & "]C / R[" & desref_filas & "]C, 0))", "#,##0")
 	' 	desfase_triangulo_frec = 3
 		
 	' ElseIf tipo_index = "Por fecha de pago" Then
+	'   col_medida_index = WorksheetFunction.Match(medida_index, Range("Vectores_Index!1:1"), 0)
 	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Plata Desacumulada", "=+IF(R[" & desref_filas & "]C = """", """", IF(R9C = 0, R[" & desref_filas & "]C, R[" & desref_filas & "]C - R[" & desref_filas & "]C[-1]))", "#,##0")
 	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Unidad Indexacion", "=+XLOOKUP(YEAR(EOMONTH(DATE(LEFT(RC" & col_ocurrs_plantillas & ", 4), RIGHT(RC" & col_ocurrs_plantillas & ", 2), 1), R9C * " & num_meses_periodo & ")) * 100 + MONTH(EOMONTH(DATE(LEFT(RC" & col_ocurrs_plantillas & ", 4), RIGHT(RC" & col_ocurrs_plantillas & ", 2), 1), R9C * " & num_meses_periodo & ")), Vectores_Index!C1,Vectores_Index!C" & col_medida_index & ")", "#,##0")
 	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Plata Desacumulada Unitaria", "=+IF(R[" & desref_filas * 2 & "]C = """", """", R[" & desref_filas * 2 & "]C / R[" & desref_filas & "]C)", "#,##0")
@@ -206,7 +207,7 @@ End Sub
 
 Sub generar_Plantilla_Plata(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo)
 
-	' Application.ScreenUpdating = False
+	Application.ScreenUpdating = False
 	Application.Calculation = xlCalculationManual
 
 	Set ws = ws_plat()

@@ -37,15 +37,14 @@ def generar_tabla(
 
 
 def tablas_resumen(
-    path_plantilla: str,
     periodicidades: list[list[str]],
     tipo_analisis: Literal["triangulos", "entremes"],
     aperturas: pl.LazyFrame,
 ) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, pl.DataFrame]:
-    diagonales = ins.df_triangulos(path_plantilla)
-    atipicos = ins.df_atipicos(path_plantilla)
-    expuestos = ins.df_expuestos(path_plantilla)
-    primas = ins.df_primas(path_plantilla)
+    diagonales = ins.df_triangulos()
+    atipicos = ins.df_atipicos()
+    expuestos = ins.df_expuestos()
+    primas = ins.df_primas()
 
     base_cols = aperturas.collect_schema().names()[1:]
 
@@ -71,7 +70,7 @@ def tablas_resumen(
 
     if tipo_analisis == "entremes":
         ult_ocurr = (
-            ins.df_ult_ocurr(path_plantilla)
+            ins.df_ult_ocurr()
             .join(
                 pl.LazyFrame(
                     periodicidades,

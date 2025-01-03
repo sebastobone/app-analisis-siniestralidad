@@ -315,6 +315,6 @@ def traer(
                 f"""
                 No se encontraron formulas para la apertura {apertura}
                 con el atributo {atributo} en la plantilla {sheet.name}.
-                """,
+                """.replace("\n", " "),
             )
             raise

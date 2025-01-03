@@ -56,6 +56,6 @@ def sap_primas_ced(mes_corte: int) -> None:
     ).with_columns(
         rpnd_retenido=pl.col("rpnd_bruto") - pl.col("rpnd_cedido"),
         prima_cedida=pl.col("prima_bruta") - pl.col("prima_retenida"),
-        fecha_registro=pl.col("fecha_registro").dt.strftime("%Y%m").cast(pl.Int32)
+        fecha_registro=pl.col("fecha_registro").dt.strftime("%Y%m").cast(pl.Int32),
     )
     crear_hoja_segmentacion(df_primas, "add_p_SAP_Primas_Ced")

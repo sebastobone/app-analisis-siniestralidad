@@ -5,14 +5,13 @@ from src.metodos_plantilla import insumos as ins
 
 
 def base_plantillas(
-    path_plantilla: str,
     apertura: str,
     atributo: str,
     periodicidades: list[list[str]],
     cantidades: list[str],
 ) -> pd.DataFrame:
     return (
-        ins.df_triangulos(path_plantilla)
+        ins.df_triangulos()
         .filter(pl.col("apertura_reservas") == apertura)
         .join(
             pl.LazyFrame(

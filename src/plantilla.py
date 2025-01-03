@@ -57,7 +57,7 @@ def crear_dropdown(
             formula1=";".join(dropdown_content),
         )
 
-    formatear_llave_valor(sheet, loc, dropdown_name, dropdown_content[-1])
+    formatear_llave_valor(sheet, loc, dropdown_name, dropdown_content[0])
 
 
 def generar_dropdowns(wb: xw.Book, aperturas: list[str]) -> None:
@@ -140,7 +140,7 @@ def preparar_plantilla(
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
     diagonales, expuestos, primas, atipicos = tablas_resumen.tablas_resumen(
-        utils.path_plantilla(wb), periodicidades, tipo_analisis, aperturas.lazy()
+        periodicidades, tipo_analisis, aperturas.lazy()
     )
 
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
@@ -165,7 +165,7 @@ def generar_plantilla(
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
 
     apertura = str(wb.sheets[plantilla_name]["C2"].value)
-    atributo = str(wb.sheets[plantilla_name]["C3"].value)
+    atributo = str(wb.sheets[plantilla_name]["C3"].value).lower()
     cantidades = (
         ["pago", "incurrido"]
         if plantilla_name != "Plantilla_Frec"
@@ -174,9 +174,7 @@ def generar_plantilla(
 
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
-    df = base_plantillas.base_plantillas(
-        utils.path_plantilla(wb), apertura, atributo.lower(), periodicidades, cantidades
-    )
+    df = base_plantillas.base_plantillas(apertura, atributo, periodicidades, cantidades)
 
     num_ocurrencias = df.shape[0]
     num_alturas = df.shape[1] // len(cantidades)
@@ -184,10 +182,9 @@ def generar_plantilla(
         utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
     )
 
-    wb.sheets["Main"]["A6"].value = "Mes del periodo"
-    wb.sheets["Main"]["B6"].value = mes_del_periodo
+    formatear_llave_valor(wb.sheets["Main"], (6, 1), "Mes del periodo", mes_del_periodo)
 
-    wb.macro("limpiar_plantilla")(plantilla_name)
+    wb.macro("limpiar_plantilla")(plantilla_name, ct.FILA_INI_PLANTILLAS)
 
     wb.sheets[plantilla_name].cells(
         ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS
@@ -220,7 +217,7 @@ def guardar_traer_fn(
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
 
     apertura = str(wb.sheets[plantilla_name]["C2"].value)
-    atributo = str(wb.sheets[plantilla_name]["C3"].value)
+    atributo = str(wb.sheets[plantilla_name]["C3"].value).lower()
 
     num_ocurrencias = utils.num_ocurrencias(wb.sheets[plantilla_name])
     num_alturas = utils.num_alturas(wb.sheets[plantilla_name])
@@ -244,9 +241,9 @@ def guardar_traer_fn(
 
         cols_ultimate = {
             "Plantilla_Frec": "frec_ultimate",
-            "Plantilla_Seve": f"seve_ultimate_{atributo.lower()}",
-            "Plantilla_Plata": f"plata_ultimate_{atributo.lower()}",
-            "Plantilla_Entremes": f"plata_ultimate_{atributo.lower()}",
+            "Plantilla_Seve": f"seve_ultimate_{atributo}",
+            "Plantilla_Plata": f"plata_ultimate_{atributo}",
+            "Plantilla_Entremes": f"plata_ultimate_{atributo}",
         }
 
         wb.macro("guardar_ultimate")(
@@ -255,7 +252,7 @@ def guardar_traer_fn(
             mes_del_periodo,
             cols_ultimate[plantilla_name],
             apertura,
-            atributo.lower(),
+            atributo,
         )
 
         wb.sheets["Main"]["A2"].value = time.time() - s

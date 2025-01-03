@@ -52,7 +52,7 @@ SESSION_COOKIE_NAME = "session_id"
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
-    delete_db_and_tables()
+    # delete_db_and_tables()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -97,8 +97,7 @@ async def ingresar_parametros(
     try:
         existing_data = obtener_parametros_usuario(session, session_id)
         if existing_data:
-            for data in existing_data:
-                session.delete(data)
+            session.delete(existing_data)
             session.commit()
     except IndexError:
         pass
@@ -164,7 +163,7 @@ async def abrir_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
-    _ = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
+    _ = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -179,7 +178,7 @@ async def preparar_plantilla(
         p.mes_inicio,
         p.mes_corte,
     )
-    wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
+    wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     plantilla.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -192,7 +191,7 @@ async def modos_plantilla(
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
-    wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
+    wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     if modo == "generar":
         plantilla.generar_plantilla(
@@ -212,9 +211,9 @@ async def modos_plantilla(
             p.mes_corte,
         )
     elif modo == "guardar_todo":
-        plantilla.traer_guardar_todo(wb, plant, p.mes_corte)
+        plantilla.traer_guardar_todo(wb, plant, p.mes_corte, p.negocio)
     elif modo == "traer_guardar_todo":
-        plantilla.traer_guardar_todo(wb, plant, p.mes_corte, traer=True)
+        plantilla.traer_guardar_todo(wb, plant, p.mes_corte, p.negocio, traer=True)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -223,7 +222,7 @@ async def almacenar_analisis(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
-    wb = plantilla.abrir_plantilla(f"src/{p.nombre_plantilla}.xlsm")
+    wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     plantilla.almacenar_analisis(wb, p.mes_corte)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 

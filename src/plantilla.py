@@ -15,6 +15,85 @@ from src.metodos_plantilla import (
 )
 
 
+def formatear_llave_valor(
+    sheet: xw.Sheet,
+    loc_llave: tuple[int, int],
+    valor_llave: str,
+    valor_valor: str | int,
+) -> None:
+    rng_llave = sheet.range(loc_llave)
+    rng_llave.color = "#73A0FF"
+    rng_llave.font.bold = True
+    rng_llave.font.color = "#FFFFFF"
+    rng_llave.value = valor_llave
+
+    rng_valor = sheet.range((loc_llave[0], loc_llave[1] + 1))
+    rng_valor.value = "#F2F2F2"
+    rng_valor.value = valor_valor
+
+
+def crear_dropdown(
+    dropdown_name: str,
+    sheet: xw.Sheet,
+    loc: tuple[int, int],
+    dropdown_content: list[str],
+) -> None:
+    rng = sheet.range((loc[0], loc[1] + 1))
+
+    if os.name == "nt":
+        rng.api.Validation.Delete()
+        rng.api.Validation.Add(
+            Type=3,
+            AlertStyle=1,
+            Operator=0,  # xlBetween
+            Formula1=";".join(dropdown_content),
+            Formula2="",
+        )
+    elif os.name == "posix":
+        rng.api.validation.delete()
+        rng.api.validation.add_data_validation(
+            type=3,
+            alert_style=1,
+            formula1=";".join(dropdown_content),
+        )
+
+    formatear_llave_valor(sheet, loc, dropdown_name, dropdown_content[-1])
+
+
+def generar_dropdowns(wb: xw.Book, aperturas: list[str]) -> None:
+    for plantilla in ["frec", "seve", "plata", "entremes"]:
+        hoja = wb.sheets[f"Plantilla_{plantilla.capitalize()}"]
+
+        crear_dropdown("Apertura", hoja, (2, 2), aperturas)
+        hoja.range((2, 3)).value = aperturas[0]
+        crear_dropdown(
+            "Atributo",
+            hoja,
+            (3, 2),
+            ["Bruto", "Retenido"] if hoja.name != "Plantilla_Frec" else ["Bruto"],
+        )
+        crear_dropdown("Metodologia", hoja, (4, 2), ["Pago", "Incurrido"])
+
+    crear_dropdown(
+        "Tipo de indexacion",
+        wb.sheets["Plantilla_Seve"],
+        (5, 2),
+        ["Ninguna", "Por fecha de ocurrencia", "Por fecha de pago"],
+    )
+
+    formatear_llave_valor(
+        wb.sheets["Plantilla_Seve"], (6, 2), "Medida de indexacion", "Ninguna"
+    )
+
+    crear_dropdown(
+        "Ultima ocurrencia",
+        hoja,
+        (5, 2),
+        ["% Siniestralidad", "Frecuencia y Severidad"],
+    )
+    crear_dropdown("Variable a despejar", hoja, (6, 2), ["Frecuencia", "Severidad"])
+
+
 def preparar_plantilla(
     wb: xw.Book,
     mes_corte: int,
@@ -23,28 +102,30 @@ def preparar_plantilla(
 ) -> None:
     s = time.time()
 
-    wb.sheets["Main"]["A4"].value = "Mes corte"
-    wb.sheets["Main"]["B4"].value = mes_corte
-    wb.sheets["Main"]["A5"].value = "Mes anterior"
-    wb.sheets["Main"]["B5"].value = (
+    mes_anterior = (
         mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
     )
+    formatear_llave_valor(wb.sheets["Main"], (4, 1), "Mes corte", mes_corte)
+    formatear_llave_valor(wb.sheets["Main"], (5, 1), "Mes anterior", mes_anterior)
+
+    aperturas = tablas_resumen.aperturas(negocio)
+
+    generar_dropdowns(wb, aperturas.get_column("apertura_reservas").to_list())
 
     if tipo_analisis == "triangulos":
         wb.sheets["Plantilla_Entremes"].visible = False
-        wb.sheets["Plantilla_Frec"].visible = True
-        wb.sheets["Plantilla_Seve"].visible = True
-        wb.sheets["Plantilla_Plata"].visible = True
+        for plantilla in ["frec", "seve", "plata"]:
+            plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+            wb.sheets[plantilla_name].visible = True
+
     elif tipo_analisis == "entremes":
         wb.sheets["Plantilla_Entremes"].visible = True
-        wb.sheets["Plantilla_Frec"].visible = False
-        wb.sheets["Plantilla_Seve"].visible = False
-        wb.sheets["Plantilla_Plata"].visible = False
+        for plantilla in ["frec", "seve", "plata"]:
+            plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+            wb.sheets[plantilla_name].visible = False
 
     for sheet in ["Aux_Totales", "Aux_Expuestos", "Aux_Primas", "Atipicos"]:
         wb.sheets[sheet].clear_contents()
-
-    aperturas = tablas_resumen.aperturas(negocio)
 
     tablas_resumen.generar_tabla(wb.sheets["Main"], aperturas, "aperturas", (1, 4))
     tablas_resumen.generar_tabla(
@@ -197,14 +278,13 @@ def traer_guardar_todo(
     wb: xw.Book,
     plantilla: Literal["frec", "seve", "plata", "entremes"],
     mes_corte: int,
+    negocio: str,
     traer: bool = False,
 ) -> None:
     s = time.time()
 
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-    aperturas = pl.read_csv("data/processed/aperturas.csv", separator="\t").get_column(
-        "apertura_reservas"
-    )
+    aperturas = tablas_resumen.aperturas(negocio).get_column("apertura_reservas")
     atributos = (
         ["bruto", "retenido"] if plantilla_name != "Plantilla_Frec" else ["bruto"]
     )
@@ -240,7 +320,7 @@ def almacenar_analisis(wb: xw.Book, mes_corte: int) -> None:
 
 def abrir_plantilla(plantilla_path: str) -> xw.Book:
     if not os.path.exists(plantilla_path):
-        shutil.copyfile("src/plantilla.xlsm", plantilla_path)
+        shutil.copyfile("plantillas/plantilla.xlsm", plantilla_path)
 
     wb = xw.Book(plantilla_path, ignore_read_only_recommended=True)
 

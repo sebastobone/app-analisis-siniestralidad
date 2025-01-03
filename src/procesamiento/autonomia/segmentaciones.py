@@ -13,4 +13,4 @@ def segm() -> dict[str, pl.DataFrame]:
             "Inc_Ced_Atipicos",
             "SAP_Sinis_Ced",
         ],
-    )
+    )  # type: ignore

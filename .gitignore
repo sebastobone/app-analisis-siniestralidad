@@ -210,3 +210,6 @@ logs/*
 !logs/.gitkeep
 
 .env.private
+
+plantillas/
+!plantillas/plantilla.xlsm

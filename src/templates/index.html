@@ -15,7 +15,7 @@
         <h2>Parametros</h2>
         <form method="POST" action="/ingresar-parametros">
             <label for="negocio">Negocio:</label>
-            <select name="negocio">
+            <select id="negocio" name="negocio">
                 <option value="arl">ARL</option>
                 <option value="autonomia">Autonomia</option>
                 <option value="empresariales">Empresariales</option>
@@ -31,31 +31,31 @@
             <input type="text" id="mes_corte" name="mes_corte" placeholder="AAAAMM" required>
 
             <label for="tipo_analisis">Tipo de analisis:</label>
-            <select name="tipo_analisis">
+            <select id="tipo_analisis" name="tipo_analisis">
                 <option value="triangulos">Triangulos</option>
                 <option value="entremes">Entremes</option>
             </select>
 
             <label for="aproximar_reaseguro">Aproximar reaseguro:</label>
-            <select name="aproximar_reaseguro">
+            <select id="aproximar_reaseguro" name="aproximar_reaseguro">
                 <option value="0">No</option>
                 <option value="1">Si</option>
             </select>
 
             <label for="cuadre_contable_sinis">Cuadrar siniestros contra SAP</label>
-            <select name="cuadre_contable_sinis">
+            <select id="cuadre_contable_sinis" name="cuadre_contable_sinis">
                 <option value="0">No</option>
                 <option value="1">Si</option>
             </select>
 
             <label for="add_fraude_soat">Añadir fraude a siniestros (SOAT)</label>
-            <select name="add_fraude_soat">
+            <select id="add_fraude_soat" name="add_fraude_soat">
                 <option value="0">No</option>
                 <option value="1">Si</option>
             </select>
 
             <label for="cuadre_contable_primas">Cuadrar primas contra SAP</label>
-            <select name="cuadre_contable_primas">
+            <select id="cuadre_contable_primas" name="cuadre_contable_primas">
                 <option value="0">No</option>
                 <option value="1">Si</option>
             </select>
@@ -102,7 +102,7 @@
 
         <form method="POST" action="/modos-plantilla">
             <label for="plant">Plantilla:</label>
-            <select name="plant">
+            <select id="plant" name="plant">
                 <option value="frec">Frecuencia</option>
                 <option value="seve">Severidad</option>
                 <option value="plata" selected="selected">Plata</option>
@@ -110,7 +110,7 @@
             </select>
 
             <label for="modo">Modo:</label>
-            <select name="modo">
+            <select id="modo" name="modo">
                 <option value="generar">Generar</option>
                 <option value="guardar">Guardar</option>
                 <option value="traer">Traer</option>

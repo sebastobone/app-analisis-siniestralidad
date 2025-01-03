@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 from uuid import uuid4
 
-from fastapi import Cookie, Depends, FastAPI, Form, Request, Response, status
+from fastapi import Cookie, Depends, FastAPI, Form, Request, status
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -84,10 +84,10 @@ def obtener_parametros_usuario(
 @app.post("/ingresar-parametros", response_model=Parametros)
 async def ingresar_parametros(
     session: SessionDep,
-    response: Response,
     params: Annotated[Parametros, Form()],
     session_id: Annotated[str | None, Cookie()] = None,
 ):
+    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
     if not session_id:
         session_id = str(uuid4())
         response.set_cookie(key=SESSION_COOKIE_NAME, value=session_id)
@@ -107,7 +107,7 @@ async def ingresar_parametros(
     session.commit()
     session.refresh(parametros)
     logger.info(session.exec(select(Parametros)).all())
-    return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+    return response
 
 
 @app.post("/correr-query-siniestros")

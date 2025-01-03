@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import polars as pl
 import pytest
 from src import utils
-from src.app import Parametros
 from src.extraccion import tera_connect
+from src.models import Parametros
 
 
 @pytest.mark.unit
@@ -33,7 +33,7 @@ def test_preparar_queries(params: Parametros):
             , {params.mes_corte}
             , {utils.yyyymm_to_date(params.mes_inicio)}
             , {utils.yyyymm_to_date(params.mes_corte)}
-            , {params.aproximar_reaseguro}
+            , {int(params.aproximar_reaseguro)}
         FROM TABLE1
     """
 

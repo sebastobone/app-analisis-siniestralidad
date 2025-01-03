@@ -5,28 +5,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlmodel import Session, select
-from src.app import Parametros
-
-
-@pytest.fixture
-def params_form() -> dict[str, str]:
-    return {
-        "negocio": "autonomia",
-        "mes_inicio": "201001",
-        "mes_corte": "203012",
-        "tipo_analisis": "triangulos",
-        "aproximar_reaseguro": "False",
-        "nombre_plantilla": "plantilla",
-        "cuadre_contable_sinis": "False",
-        "add_fraude_soat": "False",
-        "cuadre_contable_primas": "False",
-    }
-
-
-@pytest.fixture
-def params(params_form: dict[str, str]) -> Parametros:
-    params = Parametros(**params_form, session_id="test-session-id")
-    return Parametros.model_validate(params)
+from src.models import Parametros
 
 
 def test_generar_base(client: TestClient):
@@ -67,18 +46,11 @@ def test_correr_query_siniestros(
     test_session.commit()
 
     with patch("src.main.correr_query_siniestros") as mock_query:
-        response = client.post(
-            "/correr-query-siniestros", cookies={"session_id": str(params.session_id)}
-        )
+        response = client.post("/correr-query-siniestros")
 
         assert response.status_code == status.HTTP_200_OK
 
-        mock_query.assert_called_once_with(
-            params.negocio,
-            params.mes_inicio,
-            params.mes_corte,
-            params.aproximar_reaseguro,
-        )
+        mock_query.assert_called_once_with(params)
 
         params_in_db = test_session.exec(select(Parametros)).all()
         assert len(params_in_db) == 1
@@ -91,18 +63,11 @@ def test_correr_query_primas(
     test_session.commit()
 
     with patch("src.main.correr_query_primas") as mock_query:
-        response = client.post(
-            "/correr-query-primas", cookies={"session_id": str(params.session_id)}
-        )
+        response = client.post("/correr-query-primas")
 
         assert response.status_code == status.HTTP_200_OK
 
-        mock_query.assert_called_once_with(
-            params.negocio,
-            params.mes_inicio,
-            params.mes_corte,
-            params.aproximar_reaseguro,
-        )
+        mock_query.assert_called_once_with(params)
 
         params_in_db = test_session.exec(select(Parametros)).all()
         assert len(params_in_db) == 1
@@ -115,17 +80,11 @@ def test_correr_query_expuestos(
     test_session.commit()
 
     with patch("src.main.correr_query_expuestos") as mock_query:
-        response = client.post(
-            "/correr-query-expuestos", cookies={"session_id": str(params.session_id)}
-        )
+        response = client.post("/correr-query-expuestos")
 
         assert response.status_code == status.HTTP_200_OK
 
-        mock_query.assert_called_once_with(
-            params.negocio,
-            params.mes_inicio,
-            params.mes_corte,
-        )
+        mock_query.assert_called_once_with(params)
 
         params_in_db = test_session.exec(select(Parametros)).all()
         assert len(params_in_db) == 1

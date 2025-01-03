@@ -6,25 +6,11 @@ from fastapi import Cookie, Depends, FastAPI, Form, Request, status
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlmodel import Field, Session, SQLModel, String, create_engine, select
+from sqlmodel import Session, SQLModel, create_engine, select
 
 from src import main, plantilla, resultados
 from src.logger_config import logger
-
-
-class Parametros(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    negocio: str
-    mes_inicio: int
-    mes_corte: int
-    tipo_analisis: Literal["triangulos", "entremes"] = Field(sa_type=String)
-    aproximar_reaseguro: bool
-    nombre_plantilla: str
-    cuadre_contable_sinis: bool
-    add_fraude_soat: bool
-    cuadre_contable_primas: bool
-    session_id: str | None = Field(index=True)
-
+from src.models import Parametros
 
 engine = create_engine(
     "sqlite:///data/database.db", connect_args={"check_same_thread": False}
@@ -114,13 +100,8 @@ async def ingresar_parametros(
 async def correr_query_siniestros(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
-    p = obtener_parametros_usuario(session, session_id)
-    main.correr_query_siniestros(
-        p.negocio,
-        p.mes_inicio,
-        p.mes_corte,
-        p.aproximar_reaseguro,
-    )
+    params = obtener_parametros_usuario(session, session_id)
+    main.correr_query_siniestros(params)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -128,10 +109,8 @@ async def correr_query_siniestros(
 async def correr_query_primas(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
-    p = obtener_parametros_usuario(session, session_id)
-    main.correr_query_primas(
-        p.negocio, p.mes_inicio, p.mes_corte, p.aproximar_reaseguro
-    )
+    params = obtener_parametros_usuario(session, session_id)
+    main.correr_query_primas(params)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -139,8 +118,8 @@ async def correr_query_primas(
 async def correr_query_expuestos(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
-    p = obtener_parametros_usuario(session, session_id)
-    main.correr_query_expuestos(p.negocio, p.mes_inicio, p.mes_corte)
+    params = obtener_parametros_usuario(session, session_id)
+    main.correr_query_expuestos(params)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -148,14 +127,8 @@ async def correr_query_expuestos(
 async def generar_controles(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
-    p = obtener_parametros_usuario(session, session_id)
-    main.generar_controles(
-        p.negocio,
-        p.mes_corte,
-        p.cuadre_contable_sinis,
-        p.add_fraude_soat,
-        p.cuadre_contable_primas,
-    )
+    params = obtener_parametros_usuario(session, session_id)
+    main.generar_controles(params)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 

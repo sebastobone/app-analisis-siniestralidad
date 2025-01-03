@@ -7,6 +7,7 @@ import teradatasql as td
 from tqdm import tqdm
 
 from src import utils
+from src.models import Parametros
 from src.configuracion import configuracion
 from src.logger_config import logger
 
@@ -23,14 +24,14 @@ def preparar_queries(
     queries: str,
     mes_inicio: int,
     mes_corte: int,
-    aproximar_reaseguro: bool | None = None,
+    aproximar_reaseguro: bool,
 ) -> str:
     return queries.format(
         mes_primera_ocurrencia=mes_inicio,
         mes_corte=mes_corte,
         fecha_primera_ocurrencia=utils.yyyymm_to_date(mes_inicio),
         fecha_mes_corte=utils.yyyymm_to_date(mes_corte),
-        aproximar_reaseguro=int(aproximar_reaseguro),
+        aproximar_reaseguro=1 if aproximar_reaseguro else 0,
     )
 
 
@@ -258,21 +259,18 @@ def correr_query(
     file_path: str,
     save_path: str,
     save_format: str,
-    negocio: str,
-    mes_inicio: int,
-    mes_corte: int,
-    aproximar_reaseguro: bool | None = None,
+    p: Parametros,
 ) -> None:
     tipo = tipo_query(file_path)
-    segm = cargar_segmentaciones(f"data/segmentacion_{negocio}.xlsx", tipo)
+    segm = cargar_segmentaciones(f"data/segmentacion_{p.negocio}.xlsx", tipo)
 
-    fchunks = fechas_chunks(mes_inicio, mes_corte)
+    fchunks = fechas_chunks(p.mes_inicio, p.mes_corte)
 
     queries = preparar_queries(
-        open(file_path).read(), mes_inicio, mes_corte, aproximar_reaseguro
+        open(file_path).read(), p.mes_inicio, p.mes_corte, p.aproximar_reaseguro
     )
     check_suficiencia_adds(file_path, queries, segm)
 
     df = ejecutar_queries(queries.split(";"), fchunks, segm)
     logger.debug(df)
-    # guardar_resultados(df, negocio, save_path, save_format, tipo)
+    guardar_resultados(df, p.negocio, save_path, save_format, tipo)

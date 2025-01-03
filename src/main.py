@@ -5,124 +5,85 @@ import polars as pl
 from src import utils
 from src.controles_informacion import controles_informacion as ctrl
 from src.extraccion.tera_connect import correr_query
+from src.models import Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
 from src.procesamiento import base_siniestros as bsin
 from src.procesamiento.autonomia import adds, siniestros_gen
 
 
-def correr_query_siniestros(
-    negocio: str,
-    mes_inicio: int,
-    mes_corte: int,
-    aproximar_reaseguro: bool,
-) -> None:
-    if negocio == "autonomia":
+def correr_query_siniestros(p: Parametros) -> None:
+    if p.negocio == "autonomia":
         correr_query(
             "data/queries/catalogos/planes.sql",
             "data/catalogos/planes",
             "parquet",
-            negocio,
-            mes_inicio,
-            mes_corte,
-            aproximar_reaseguro,
+            p,
         )
         correr_query(
             "data/queries/catalogos/sucursales.sql",
             "data/catalogos/sucursales",
             "parquet",
-            negocio,
-            mes_inicio,
-            mes_corte,
-            aproximar_reaseguro,
+            p,
         )
-        adds.sap_sinis_ced(mes_corte)
+        adds.sap_sinis_ced(p.mes_corte)
         correr_query(
             "data/queries/autonomia/siniestros_cedidos.sql",
             "data/raw/siniestros_cedidos",
             "parquet",
-            negocio,
-            mes_inicio,
-            mes_corte,
-            aproximar_reaseguro,
+            p,
         )
         correr_query(
             "data/queries/autonomia/siniestros_brutos.sql",
             "data/raw/siniestros_brutos",
             "parquet",
-            negocio,
-            mes_inicio,
-            mes_corte,
-            aproximar_reaseguro,
+            p,
         )
-        siniestros_gen.main(mes_inicio, mes_corte, aproximar_reaseguro)
+        siniestros_gen.main(p.mes_inicio, p.mes_corte, p.aproximar_reaseguro)
     else:
         correr_query(
-            f"data/queries/{negocio}/siniestros.sql",
+            f"data/queries/{p.negocio}/siniestros.sql",
             "data/raw/siniestros",
             "parquet",
-            negocio,
-            mes_inicio,
-            mes_corte,
-            aproximar_reaseguro,
+            p,
         )
 
 
-def correr_query_primas(
-    negocio: str,
-    mes_inicio: int,
-    mes_corte: int,
-    aproximar_reaseguro: bool,
-) -> None:
-    if negocio == "autonomia":
-        adds.sap_primas_ced(mes_corte)
+def correr_query_primas(p: Parametros) -> None:
+    if p.negocio == "autonomia":
+        adds.sap_primas_ced(p.mes_corte)
     correr_query(
-        f"data/queries/{negocio}/primas.sql",
-        "data/raw/primas",
-        "parquet",
-        negocio,
-        mes_inicio,
-        mes_corte,
-        aproximar_reaseguro,
+        f"data/queries/{p.negocio}/primas.sql", "data/raw/primas", "parquet", p
     )
 
 
-def correr_query_expuestos(
-    negocio: str,
-    mes_inicio: int,
-    mes_corte: int,
-) -> None:
+def correr_query_expuestos(p: Parametros) -> None:
     correr_query(
-        f"data/queries/{negocio}/expuestos.sql",
+        f"data/queries/{p.negocio}/expuestos.sql",
         "data/raw/expuestos",
         "parquet",
-        negocio,
-        mes_inicio,
-        mes_corte,
+        p,
     )
 
 
-def generar_controles(
-    negocio: str,
-    mes_corte: int,
-    cuadre_contable_sinis: bool,
-    add_fraude_soat: bool,
-    cuadre_contable_primas: bool,
-) -> None:
+def generar_controles(p: Parametros) -> None:
     ctrl.set_permissions("data/controles_informacion", "write")
 
     ctrl.generar_controles(
         "siniestros",
-        negocio,
-        mes_corte,
-        cuadre_contable_sinis=cuadre_contable_sinis,
-        add_fraude_soat=add_fraude_soat,
+        p.negocio,
+        p.mes_corte,
+        cuadre_contable_sinis=p.cuadre_contable_sinis,
+        add_fraude_soat=p.add_fraude_soat,
     )
     ctrl.generar_controles(
-        "primas", negocio, mes_corte, cuadre_contable_primas=cuadre_contable_primas
+        "primas",
+        p.negocio,
+        p.mes_corte,
+        cuadre_contable_primas=p.cuadre_contable_primas,
     )
-    ctrl.generar_controles("expuestos", negocio, mes_corte)
+    ctrl.generar_controles("expuestos", p.negocio, p.mes_corte)
 
-    ctrl.generar_evidencias_parametros(negocio, mes_corte)
+    ctrl.generar_evidencias_parametros(p.negocio, p.mes_corte)
     ctrl.set_permissions("data/controles_informacion", "read")
 
 

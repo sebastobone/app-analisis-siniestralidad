@@ -494,7 +494,7 @@ CREATE MULTISET VOLATILE TABLE base_primas AS
                 WHEN
                     COALESCE(rtdc.mes_id, evpro.mes_id)
                     = CAST('{mes_corte}' AS INTEGER)
-                    AND CAST('{aproximar_reaseguro}' AS BOOLEAN)
+                    AND CAST('{aproximar_reaseguro}' AS INTEGER) = 1
                     THEN evpro.prima_bruta
                 ELSE rtdc.prima_bruta
             END
@@ -504,7 +504,7 @@ CREATE MULTISET VOLATILE TABLE base_primas AS
                 WHEN
                     COALESCE(rtdc.mes_id, evpro.mes_id)
                     = CAST('{mes_corte}' AS INTEGER)
-                    AND CAST('{aproximar_reaseguro}' AS BOOLEAN)
+                    AND CAST('{aproximar_reaseguro}' AS INTEGER) = 1
                     THEN evpro.prima_bruta - ZEROIFNULL(sap.prima_cedida)
                 ELSE rtdc.prima_retenida
             END
@@ -1016,7 +1016,7 @@ CREATE MULTISET VOLATILE TABLE primas_final AS
         , CASE
             WHEN
                 base.mes_id = CAST('{mes_corte}' AS INTEGER)
-                AND CAST('{aproximar_reaseguro}' AS BOOLEAN)
+                AND CAST('{aproximar_reaseguro}' AS INTEGER) = 1
                 THEN
                     base.prima_bruta
                     + ZEROIFNULL(dev.mov_rpnd_bruto)
@@ -1026,7 +1026,7 @@ CREATE MULTISET VOLATILE TABLE primas_final AS
         , CASE
             WHEN
                 base.mes_id = CAST('{mes_corte}' AS INTEGER)
-                AND CAST('{aproximar_reaseguro}' AS BOOLEAN)
+                AND CAST('{aproximar_reaseguro}' AS INTEGER) = 1
                 THEN
                     base.prima_retenida
                     + ZEROIFNULL(dev.mov_rpnd_retenido)

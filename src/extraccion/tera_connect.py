@@ -30,7 +30,7 @@ def preparar_queries(
         mes_corte=mes_corte,
         fecha_primera_ocurrencia=utils.yyyymm_to_date(mes_inicio),
         fecha_mes_corte=utils.yyyymm_to_date(mes_corte),
-        aproximar_reaseguro=aproximar_reaseguro,
+        aproximar_reaseguro=int(aproximar_reaseguro),
     )
 
 
@@ -89,23 +89,28 @@ def ejecutar_queries(
     cur = con.cursor()  # type: ignore
     add_num = 0
     for query in tqdm(queries):
-        if "?" not in query:
-            if "{chunk_ini}" in query:
-                for chunk_ini, chunk_fin in tqdm(fechas_chunks):
-                    cur.execute(
-                        query.format(
-                            chunk_ini=chunk_ini.strftime(format="%Y%m"),
-                            chunk_fin=chunk_fin.strftime(format="%Y%m"),
+        try:
+            if "?" not in query:
+                if "{chunk_ini}" in query:
+                    for chunk_ini, chunk_fin in tqdm(fechas_chunks):
+                        cur.execute(
+                            query.format(
+                                chunk_ini=chunk_ini.strftime(format="%Y%m"),
+                                chunk_fin=chunk_fin.strftime(format="%Y%m"),
+                            )
                         )
-                    )
+                else:
+                    cur.execute(query)
             else:
-                cur.execute(query)
-        else:
-            check_numero_columnas_add(query, segm[add_num])
-            add = check_duplicados(segm[add_num])
-            check_nulls(add)
-            cur.executemany(query, add.rows())
-            add_num += 1
+                check_numero_columnas_add(query, segm[add_num])
+                add = check_duplicados(segm[add_num])
+                check_nulls(add)
+                cur.executemany(query, add.rows())
+                add_num += 1
+
+        except td.OperationalError:
+            logger.exception(f"Error en {query[:100]}")
+            raise
 
     return pl.read_database(queries[-1], con)
 
@@ -269,4 +274,5 @@ def correr_query(
     check_suficiencia_adds(file_path, queries, segm)
 
     df = ejecutar_queries(queries.split(";"), fchunks, segm)
-    guardar_resultados(df, negocio, save_path, save_format, tipo)
+    logger.debug(df)
+    # guardar_resultados(df, negocio, save_path, save_format, tipo)

@@ -8,34 +8,22 @@ from . import aprox_reaseguro, base_incurrido
 def conteo(
     df_incurrido: pl.LazyFrame, cond: pl.Expr, agg_col: str, column_name: str
 ) -> pl.LazyFrame:
+    cols_fijas = [
+        "fecha_siniestro",
+        "codigo_op",
+        "codigo_ramo_op",
+        "apertura_canal_desc",
+        "apertura_amparo_desc",
+        "atipico",
+    ]
     return (
         df_incurrido.filter(
             (~pl.col("tipo_estado_siniestro_cd").is_in(["N", "O", "D", "C"])) & cond
         )
-        .group_by(
-            [
-                "fecha_siniestro",
-                "codigo_op",
-                "codigo_ramo_op",
-                "apertura_canal_desc",
-                "apertura_amparo_desc",
-                "siniestro_id",
-                "atipico",
-            ]
-        )
+        .group_by(cols_fijas + ["siniestro_id"])
         .agg([pl.col("fecha_registro").min(), pl.col(agg_col).sum()])
         .filter(pl.col(agg_col) > 1000)
-        .group_by(
-            [
-                "fecha_siniestro",
-                "codigo_op",
-                "codigo_ramo_op",
-                "apertura_canal_desc",
-                "apertura_amparo_desc",
-                "fecha_registro",
-                "atipico",
-            ]
-        )
+        .group_by(cols_fijas + ["fecha_registro"])
         .agg(pl.col("siniestro_id").n_unique())
         .rename({"siniestro_id": column_name})
     )
@@ -60,16 +48,15 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
         "conteo_incurrido",
     )
 
+    cols_base_desist = [
+        "siniestro_id",
+        "codigo_op",
+        "codigo_ramo_op",
+        "apertura_amparo_desc",
+        "atipico",
+    ]
     en_rva = (
-        df_incurrido.group_by(
-            [
-                "siniestro_id",
-                "codigo_op",
-                "codigo_ramo_op",
-                "apertura_amparo_desc",
-                "atipico",
-            ]
-        )
+        df_incurrido.group_by(cols_base_desist)
         .agg(pl.col("aviso_bruto").sum())
         .filter(pl.col("aviso_bruto") > 1000)
         .with_columns(en_reserva=1)
@@ -78,25 +65,11 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
     sin_pagos_bruto = (
         df_incurrido.join(
             en_rva,
-            on=[
-                "siniestro_id",
-                "codigo_op",
-                "codigo_ramo_op",
-                "apertura_amparo_desc",
-                "atipico",
-            ],
+            on=cols_base_desist,
             how="left",
         )
         .filter(pl.col("en_reserva").is_null())
-        .group_by(
-            [
-                "codigo_op",
-                "codigo_ramo_op",
-                "siniestro_id",
-                "apertura_amparo_desc",
-                "atipico",
-            ]
-        )
+        .group_by(cols_base_desist)
         .agg(pl.col("pago_bruto").abs().max())
         .filter(pl.col("pago_bruto") < 1000)
     )
@@ -104,30 +77,24 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
     conteo_desistido = conteo(
         df_incurrido.join(
             sin_pagos_bruto,
-            on=[
-                "codigo_op",
-                "codigo_ramo_op",
-                "siniestro_id",
-                "apertura_amparo_desc",
-                "atipico",
-            ],
+            on=cols_base_desist,
         ),
         ~((pl.col("pago_bruto") == 0) & (pl.col("aviso_bruto") == 0)),
         "incurrido_bruto",
         "conteo_desistido",
     )
 
-    base_pagos_aviso = df_incurrido.group_by(
-        [
-            "fecha_siniestro",
-            "codigo_op",
-            "codigo_ramo_op",
-            "fecha_registro",
-            "apertura_canal_desc",
-            "apertura_amparo_desc",
-            "atipico",
-        ]
-    ).agg(
+    cols_base = [
+        "fecha_siniestro",
+        "codigo_op",
+        "codigo_ramo_op",
+        "fecha_registro",
+        "apertura_canal_desc",
+        "apertura_amparo_desc",
+        "atipico",
+    ]
+
+    base_pagos_aviso = df_incurrido.group_by(cols_base).agg(
         [
             pl.col("pago_bruto").sum(),
             pl.col("pago_retenido").sum(),
@@ -136,46 +103,34 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
         ]
     )
 
+    cols_finales = [
+        "apertura_reservas",
+        "codigo_op",
+        "codigo_ramo_op",
+        "ramo_desc",
+        "apertura_canal_desc",
+        "apertura_amparo_desc",
+        "atipico",
+        "fecha_siniestro",
+        "fecha_registro",
+    ]
+
     consolidado = (
         base_pagos_aviso.join(
             conteo_pago,
-            on=[
-                "fecha_siniestro",
-                "codigo_op",
-                "codigo_ramo_op",
-                "fecha_registro",
-                "apertura_canal_desc",
-                "apertura_amparo_desc",
-                "atipico",
-            ],
+            on=cols_base,
             how="full",
             coalesce=True,
         )
         .join(
             conteo_incurrido,
-            on=[
-                "fecha_siniestro",
-                "codigo_op",
-                "codigo_ramo_op",
-                "fecha_registro",
-                "apertura_canal_desc",
-                "apertura_amparo_desc",
-                "atipico",
-            ],
+            on=cols_base,
             how="full",
             coalesce=True,
         )
         .join(
             conteo_desistido,
-            on=[
-                "fecha_siniestro",
-                "codigo_op",
-                "codigo_ramo_op",
-                "fecha_registro",
-                "apertura_canal_desc",
-                "apertura_amparo_desc",
-                "atipico",
-            ],
+            on=cols_base,
             how="full",
             coalesce=True,
         )
@@ -200,33 +155,9 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
             .then(pl.lit("ANEXOS VI"))
             .otherwise(pl.col("ramo_desc")),
         )
-        .group_by(
-            [
-                "apertura_reservas",
-                "codigo_op",
-                "codigo_ramo_op",
-                "ramo_desc",
-                "apertura_canal_desc",
-                "apertura_amparo_desc",
-                "atipico",
-                "fecha_siniestro",
-                "fecha_registro",
-            ]
-        )
+        .group_by(cols_finales)
         .sum()
-        .sort(
-            [
-                "apertura_reservas",
-                "codigo_op",
-                "codigo_ramo_op",
-                "ramo_desc",
-                "apertura_canal_desc",
-                "apertura_amparo_desc",
-                "atipico",
-                "fecha_siniestro",
-                "fecha_registro",
-            ]
-        )
+        .sort(cols_finales)
         .collect()
     )
 

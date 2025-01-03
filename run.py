@@ -7,4 +7,4 @@ if __name__ == "__main__":
     def main(dev: bool):
         uvicorn.run("src.app:app", reload=dev)
 
-    main(False)
+    main(True)

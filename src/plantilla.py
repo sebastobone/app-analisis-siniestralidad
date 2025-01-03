@@ -158,15 +158,14 @@ def preparar_plantilla(
 def generar_plantilla(
     wb: xw.Book,
     plantilla: Literal["frec", "seve", "plata", "entremes"],
-    apertura: str,
-    atributo: str,
     mes_corte: int,
 ) -> None:
     s = time.time()
 
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
 
-    atributo = atributo if plantilla_name != "Plantilla_Frec" else "bruto"
+    apertura = str(wb.sheets[plantilla_name]["C2"].value)
+    atributo = str(wb.sheets[plantilla_name]["C3"].value)
     cantidades = (
         ["pago", "incurrido"]
         if plantilla_name != "Plantilla_Frec"
@@ -176,7 +175,7 @@ def generar_plantilla(
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
     df = base_plantillas.base_plantillas(
-        utils.path_plantilla(wb), apertura, atributo, periodicidades, cantidades
+        utils.path_plantilla(wb), apertura, atributo.lower(), periodicidades, cantidades
     )
 
     num_ocurrencias = df.shape[0]
@@ -214,14 +213,14 @@ def guardar_traer_fn(
     wb: xw.Book,
     modo: str,
     plantilla: Literal["frec", "seve", "plata", "entremes"],
-    apertura: str,
-    atributo: str,
     mes_corte: int,
 ) -> None:
     s = time.time()
 
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-    atributo = atributo if plantilla_name != "Plantilla_Frec" else "bruto"
+
+    apertura = str(wb.sheets[plantilla_name]["C2"].value)
+    atributo = str(wb.sheets[plantilla_name]["C3"].value)
 
     num_ocurrencias = utils.num_ocurrencias(wb.sheets[plantilla_name])
     num_alturas = utils.num_alturas(wb.sheets[plantilla_name])
@@ -245,9 +244,9 @@ def guardar_traer_fn(
 
         cols_ultimate = {
             "Plantilla_Frec": "frec_ultimate",
-            "Plantilla_Seve": f"seve_ultimate_{atributo}",
-            "Plantilla_Plata": f"plata_ultimate_{atributo}",
-            "Plantilla_Entremes": f"plata_ultimate_{atributo}",
+            "Plantilla_Seve": f"seve_ultimate_{atributo.lower()}",
+            "Plantilla_Plata": f"plata_ultimate_{atributo.lower()}",
+            "Plantilla_Entremes": f"plata_ultimate_{atributo.lower()}",
         }
 
         wb.macro("guardar_ultimate")(
@@ -256,7 +255,7 @@ def guardar_traer_fn(
             mes_del_periodo,
             cols_ultimate[plantilla_name],
             apertura,
-            atributo,
+            atributo.lower(),
         )
 
         wb.sheets["Main"]["A2"].value = time.time() - s
@@ -286,15 +285,17 @@ def traer_guardar_todo(
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
     aperturas = tablas_resumen.aperturas(negocio).get_column("apertura_reservas")
     atributos = (
-        ["bruto", "retenido"] if plantilla_name != "Plantilla_Frec" else ["bruto"]
+        ["Bruto", "Retenido"] if plantilla_name != "Plantilla_Frec" else ["Bruto"]
     )
 
-    for apertura in aperturas:
+    for apertura in aperturas.to_list():
         for atributo in atributos:
-            generar_plantilla(wb, plantilla, apertura, atributo, mes_corte)
+            wb.sheets[plantilla_name]["C2"].value = apertura
+            wb.sheets[plantilla_name]["C3"].value = atributo
+            generar_plantilla(wb, plantilla, mes_corte)
             if traer:
-                guardar_traer_fn(wb, "traer", plantilla, apertura, atributo, mes_corte)
-            guardar_traer_fn(wb, "guardar", plantilla, apertura, atributo, mes_corte)
+                guardar_traer_fn(wb, "traer", plantilla, mes_corte)
+            guardar_traer_fn(wb, "guardar", plantilla, mes_corte)
 
     wb.sheets["Main"]["A2"].value = time.time() - s
 

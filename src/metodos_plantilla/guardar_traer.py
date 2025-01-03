@@ -41,8 +41,9 @@ def parameter_ranges(
     ],
     metodo_ult_ocurrencia: Literal["% Siniestralidad", "Frecuencia y Severidad"],
 ) -> dict[str, xw.Range]:
+    ini = ct.FILA_INI_PARAMS
     ranges = {
-        "MET_PAGO_INCURRIDO": sheet.range(sheet.cells(2, 3), sheet.cells(2, 4)),
+        "MET_PAGO_INCURRIDO": sheet.range((ini, 3), (ini, 4)),
         "EXCLUSIONES": objective_range(
             sheet,
             "Exclusiones",
@@ -106,12 +107,8 @@ def parameter_ranges(
         if sheet.name == "Plantilla_Seve":
             ranges.update(
                 {
-                    "TIPO_INDEXACION": sheet.range(
-                        sheet.cells(3, 3), sheet.cells(3, 4)
-                    ),
-                    "MEDIDA_INDEXACION": sheet.range(
-                        sheet.cells(4, 3), sheet.cells(4, 4)
-                    ),
+                    "TIPO_INDEXACION": sheet.range((ini + 1, 3), (ini + 1, 4)),
+                    "MEDIDA_INDEXACION": sheet.range((ini + 2, 3), (ini + 2, 4)),
                 }
             )
 
@@ -133,10 +130,8 @@ def parameter_ranges(
     elif sheet.name == "Plantilla_Entremes":
         ranges.update(
             {
-                "FREC_SEV_ULTIMA_OCURRENCIA": sheet.range(
-                    sheet.cells(3, 3), sheet.cells(3, 4)
-                ),
-                "VARIABLE_DESPEJADA": sheet.range(sheet.cells(4, 3), sheet.cells(4, 4)),
+                "FREC_SEV_ULTIMA_OCURRENCIA": sheet.range((ini + 1, 3), (ini + 1, 4)),
+                "VARIABLE_DESPEJADA": sheet.range((ini + 2, 3), (ini + 2, 4)),
                 "COMENTARIOS": objective_range(
                     sheet,
                     "Comentarios",

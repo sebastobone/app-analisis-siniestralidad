@@ -44,17 +44,17 @@ Sub consolidado_triangulos(ws, num_ocurrencias, num_alturas, header_triangulos, 
 	Call columna_consolidado(ws, num_ocurrencias, fila_tabla, 2, "Pagos", "=INDEX(R" & fila_val & "C" & col_ocurrs_plantillas + 1 & ":R" & fila_val + num_ocurrencias - 1 & "C" & col_ocurrs_plantillas + num_alturas & ", " + num_indice + ", " & num_alturas & " - (" + num_indice + " - 1))", formato)
 	Call columna_consolidado(ws, num_ocurrencias, fila_tabla, 3, "Incurridos", "=INDEX(R" & fila_val & "C" & col_ocurrs_plantillas + num_alturas + 1 & ":R" & fila_val + num_ocurrencias - 1 & "C" & col_ocurrs_plantillas + num_alturas * 2 & ", " + num_indice + ", " & num_alturas & " - (" + num_indice + " - 1))", formato)
 	
-	desref_filas_diagonal = " IF(R2C3 = ""Pago"", " & num_alturas & ", " & num_alturas * 2 & ") - " + num_indice + " + 1 "
+	desref_filas_diagonal = " IF(R4C3 = ""Pago"", " & num_alturas & ", " & num_alturas * 2 & ") - " + num_indice + " + 1 "
 	pct_desarrollo = "INDEX(R" & fila_dllo & "C" & col_ocurrs_plantillas + 1 & " : R" & fila_dllo & "C" & col_ocurrs_plantillas + num_alturas * 2 & ", 1, " + desref_filas_diagonal + ")"
 	
 	desref_filas_tri = desref_filas_triangulo(num_ocurrencias, header_triangulos, sep_triangulos)
-	ult_chain_ladder = "IF(R2C3 = ""Pago"", R[" & desref_filas_tri * 2 + 1 & "]C" & col_ocurrs_plantillas + num_alturas & ", R[" & desref_filas_tri * 2 + 1 & "]C" & col_ocurrs_plantillas + num_alturas * 2 & ")"
+	ult_chain_ladder = "IF(R4C3 = ""Pago"", R[" & desref_filas_tri * 2 + 1 & "]C" & col_ocurrs_plantillas + num_alturas & ", R[" & desref_filas_tri * 2 + 1 & "]C" & col_ocurrs_plantillas + num_alturas * 2 & ")"
 	
 	formula_ult = _
 		"=IF(RC5 = ""Chain-Ladder"", " & _
 		ult_chain_ladder + ", " & _
 		"IF(RC5 = ""Bornhuetter-Ferguson"", " & _
-		" IF(R2C3 = ""Pago"", RC2, RC3) + RC[2] * (1 - " + pct_desarrollo + "), " & _
+		" IF(R4C3 = ""Pago"", RC2, RC3) + RC[2] * (1 - " + pct_desarrollo + "), " & _
 		"RC[2]" & _
 		"))"
 	
@@ -74,7 +74,7 @@ Sub consolidado_triangulos(ws, num_ocurrencias, num_alturas, header_triangulos, 
 			"=IF(RC5 = ""Chain-Ladder"", " & _
 			ult_chain_ladder + ", " & _
 			"IF(RC5 = ""Bornhuetter-Ferguson"", " & _
-			" IF(R2C3 = ""Pago"", RC2, RC3) + RC[2] * RC[4] * (1 - " + pct_desarrollo + "), " & _
+			" IF(R4C3 = ""Pago"", RC2, RC3) + RC[2] * RC[4] * (1 - " + pct_desarrollo + "), " & _
 			"RC[2] * RC[4]" & _
 			"))"
 
@@ -98,7 +98,7 @@ Sub generar_Plantilla_Frec(num_ocurrencias, num_alturas, header_triangulos, sep_
 
 	Set ws = ws_frec()
 
-	Call color_columnas_triangulo(ws, num_alturas)
+	Call color_columnas_triangulo(ws, fila_ini_plantillas, col_ocurrs_plantillas, num_alturas)
 
 	desref_filas = desref_filas_triangulo(num_ocurrencias, header_triangulos, sep_triangulos)
 
@@ -126,10 +126,10 @@ Sub generar_Plantilla_Seve(num_ocurrencias, num_alturas, header_triangulos, sep_
 
 	Set ws = ws_seve()
 
-	Call color_columnas_triangulo(ws, num_alturas)
+	Call color_columnas_triangulo(ws, fila_ini_plantillas, col_ocurrs_plantillas, num_alturas)
 	
-	tipo_index = ws.Range("C3").value
-	medida_index = ws.Range("C4").value
+	tipo_index = ws.Range("C5").value
+	medida_index = ws.Range("C6").value
 	col_medida_index = WorksheetFunction.Match(medida_index, Range("Vectores_Index!1:1"), 0)
 	
 	
@@ -137,19 +137,19 @@ Sub generar_Plantilla_Seve(num_ocurrencias, num_alturas, header_triangulos, sep_
 	desref_filas = desref_filas_triangulo(num_ocurrencias, header_triangulos, sep_triangulos)
 	desfase_triangulo_frec = 1
 	
-	If tipo_index = "Por fecha de ocurrencia" Then
-		Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Unidad Indexacion", "=+XLOOKUP(VALUE(RC" & col_ocurrs_plantillas & "), Vectores_Index!C1, Vectores_Index!C" & col_medida_index & ")", "#,##0")
-		Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Severidad Base", "=+IF(R[" & desref_filas * 2 & "]C = """", """", IFERROR(R[" & desref_filas * 2 & "]C / R[" & desref_filas & "]C, 0))", "#,##0")
-		desfase_triangulo_frec = 3
+	' If tipo_index = "Por fecha de ocurrencia" Then
+	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Unidad Indexacion", "=+XLOOKUP(VALUE(RC" & col_ocurrs_plantillas & "), Vectores_Index!C1, Vectores_Index!C" & col_medida_index & ")", "#,##0")
+	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Severidad Base", "=+IF(R[" & desref_filas * 2 & "]C = """", """", IFERROR(R[" & desref_filas * 2 & "]C / R[" & desref_filas & "]C, 0))", "#,##0")
+	' 	desfase_triangulo_frec = 3
 		
-	ElseIf tipo_index = "Por fecha de pago" Then
-		Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Plata Desacumulada", "=+IF(R[" & desref_filas & "]C = """", """", IF(R9C = 0, R[" & desref_filas & "]C, R[" & desref_filas & "]C - R[" & desref_filas & "]C[-1]))", "#,##0")
-		Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Unidad Indexacion", "=+XLOOKUP(YEAR(EOMONTH(DATE(LEFT(RC" & col_ocurrs_plantillas & ", 4), RIGHT(RC" & col_ocurrs_plantillas & ", 2), 1), R9C * " & num_meses_periodo & ")) * 100 + MONTH(EOMONTH(DATE(LEFT(RC" & col_ocurrs_plantillas & ", 4), RIGHT(RC" & col_ocurrs_plantillas & ", 2), 1), R9C * " & num_meses_periodo & ")), Vectores_Index!C1,Vectores_Index!C" & col_medida_index & ")", "#,##0")
-		Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Plata Desacumulada Unitaria", "=+IF(R[" & desref_filas * 2 & "]C = """", """", R[" & desref_filas * 2 & "]C / R[" & desref_filas & "]C)", "#,##0")
-		Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Plata Acumulada Unitaria", "=+IF(R[" & desref_filas & "]C = """", """", IF(R9C = 0, R[" & desref_filas & "]C, R[" & desref_filas & "]C + RC[-1]))", "#,##0")
-		desfase_triangulo_frec = 5
+	' ElseIf tipo_index = "Por fecha de pago" Then
+	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Plata Desacumulada", "=+IF(R[" & desref_filas & "]C = """", """", IF(R9C = 0, R[" & desref_filas & "]C, R[" & desref_filas & "]C - R[" & desref_filas & "]C[-1]))", "#,##0")
+	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Unidad Indexacion", "=+XLOOKUP(YEAR(EOMONTH(DATE(LEFT(RC" & col_ocurrs_plantillas & ", 4), RIGHT(RC" & col_ocurrs_plantillas & ", 2), 1), R9C * " & num_meses_periodo & ")) * 100 + MONTH(EOMONTH(DATE(LEFT(RC" & col_ocurrs_plantillas & ", 4), RIGHT(RC" & col_ocurrs_plantillas & ", 2), 1), R9C * " & num_meses_periodo & ")), Vectores_Index!C1,Vectores_Index!C" & col_medida_index & ")", "#,##0")
+	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Plata Desacumulada Unitaria", "=+IF(R[" & desref_filas * 2 & "]C = """", """", R[" & desref_filas * 2 & "]C / R[" & desref_filas & "]C)", "#,##0")
+	' 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Plata Acumulada Unitaria", "=+IF(R[" & desref_filas & "]C = """", """", IF(R9C = 0, R[" & desref_filas & "]C, R[" & desref_filas & "]C + RC[-1]))", "#,##0")
+	' 	desfase_triangulo_frec = 5
 		
-	End If
+	' End If
 
 	Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Severidad", "=+IF(R[" & desref_filas & "]C = """", """", IFERROR(R[" & desref_filas & "]C / Plantilla_Frec!R[" & desref_filas * desfase_triangulo_frec & "]C, 0))", "#,##0")
 	
@@ -211,7 +211,7 @@ Sub generar_Plantilla_Plata(num_ocurrencias, num_alturas, header_triangulos, sep
 
 	Set ws = ws_plat()
 
-	Call color_columnas_triangulo(ws, num_alturas)
+	Call color_columnas_triangulo(ws, fila_ini_plantillas, col_ocurrs_plantillas, num_alturas)
 	
 	desref_filas = desref_filas_triangulo(num_ocurrencias, header_triangulos, sep_triangulos)
 

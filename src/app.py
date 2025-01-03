@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Field, Session, SQLModel, String, create_engine, select
 
 from src import main, plantilla, resultados
+from src.logger_config import logger
 
 
 class Parametros(SQLModel, table=True):
@@ -105,7 +106,7 @@ async def ingresar_parametros(
     session.add(parametros)
     session.commit()
     session.refresh(parametros)
-    print(session.exec(select(Parametros)).all())
+    logger.info(session.exec(select(Parametros)).all())
     return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -194,22 +195,9 @@ async def modos_plantilla(
     wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     if modo == "generar":
-        plantilla.generar_plantilla(
-            wb,
-            plant,
-            wb.sheets["Aperturas"]["A2"].value,
-            wb.sheets["Atributos"]["A2"].value,
-            p.mes_corte,
-        )
+        plantilla.generar_plantilla(wb, plant, p.mes_corte)
     elif modo in ["guardar", "traer"]:
-        plantilla.guardar_traer_fn(
-            wb,
-            modo,
-            plant,
-            wb.sheets["Aperturas"]["A2"].value,
-            wb.sheets["Atributos"]["A2"].value,
-            p.mes_corte,
-        )
+        plantilla.guardar_traer_fn(wb, modo, plant, p.mes_corte)
     elif modo == "guardar_todo":
         plantilla.traer_guardar_todo(wb, plant, p.mes_corte, p.negocio)
     elif modo == "traer_guardar_todo":

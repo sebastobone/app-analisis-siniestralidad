@@ -133,7 +133,7 @@ def test_preparar_y_generar_plantilla(
     )
 
     for plantilla in plantillas:
-        plant.generar_plantilla(wb, plantilla, "01_001_A_D", "bruto", mes_corte)
+        plant.generar_plantilla(wb, plantilla, mes_corte)
 
     wb.close()
 
@@ -217,14 +217,7 @@ def test_guardar_traer(
     plant.preparar_plantilla(wb, mes_corte, tipo_analisis, "mock")
 
     for plantilla in plantillas:
-        plant.generar_plantilla(wb, plantilla, "01_001_A_D", "bruto", mes_corte)
-
-    map_plantillas = {
-        "frec": "Plantilla_Frec",
-        "seve": "Plantilla_Seve",
-        "plata": "Plantilla_Plata",
-        "entremes": "Plantilla_Entremes",
-    }
+        plant.generar_plantilla(wb, plantilla, mes_corte)
 
     rangos_comunes = [
         "MET_PAGO_INCURRIDO",
@@ -237,21 +230,17 @@ def test_guardar_traer(
 
     for plantilla in plantillas:
         archivos_guardados = [
-            f"01_001_A_D_bruto_{map_plantillas[plantilla]}_{nombre_rango}"
+            f"01_001_A_D_Bruto_Plantilla_{plantilla.capitalize()}_{nombre_rango}"
             for nombre_rango in rangos_comunes + rangos_adicionales[plantilla]
         ]
 
         with pytest.raises(FileNotFoundError):
-            plant.guardar_traer_fn(
-                wb, "traer", plantilla, "01_001_A_D", "bruto", mes_corte
-            )
+            plant.guardar_traer_fn(wb, "traer", plantilla, mes_corte)
 
         with patch(
             "src.plantilla.guardar_traer.pl.DataFrame.write_csv"
         ) as mock_guardar:
-            plant.guardar_traer_fn(
-                wb, "guardar", plantilla, "01_001_A_D", "bruto", mes_corte
-            )
+            plant.guardar_traer_fn(wb, "guardar", plantilla, mes_corte)
             for archivo in archivos_guardados:
                 mock_guardar.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
 
@@ -259,9 +248,7 @@ def test_guardar_traer(
             mock_leer.return_value = pl.DataFrame(
                 [("ABCDEFG", "HIJKLMN"), ("ABCDEFG", "HIJKLMN")]
             )
-            plant.guardar_traer_fn(
-                wb, "traer", plantilla, "01_001_A_D", "bruto", mes_corte
-            )
+            plant.guardar_traer_fn(wb, "traer", plantilla, mes_corte)
             for archivo in archivos_guardados:
                 mock_leer.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
 

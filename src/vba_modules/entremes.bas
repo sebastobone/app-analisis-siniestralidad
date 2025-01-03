@@ -47,7 +47,7 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 	
 	Set ws = ws_entremes()
 
-	Call color_columnas_triangulo(ws, num_alturas)
+	Call color_columnas_triangulo(ws, fila_ini_plantillas, col_ocurrs_plantillas, num_alturas)
 
 	Call estructura_factores(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas)
 
@@ -128,10 +128,10 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 	fila_val = fila_valores(ws, fila_ini_plantillas, header_triangulos)
 	Call columnas_entremes("Pagos Triangulo", "=INDEX(R" & fila_val & "C" & col_ocurrs_plantillas + 1 & ":R" & fila_val + num_ocurrencias - 1 & "C" & col_ocurrs_plantillas + num_alturas & ", COUNTA(R" & fila_tabla + 1 & "C1:RC1), " & num_alturas & " - (COUNTA(R" & fila_tabla + 1 & "C1:RC1) - 1) * " & num_meses_periodo & " - " & mes_del_periodo & ")", "$#,##0", num_ocurrencias, False, 2, fila_tabla)
 	Call columnas_entremes("Incurridos Triangulo", "=INDEX(R" & fila_val & "C" & col_ocurrs_plantillas + num_alturas + 1 & ":R" & fila_val + num_ocurrencias - 1 & "C" & col_ocurrs_plantillas + num_alturas * 2 & ", COUNTA(R" & fila_tabla + 1 & "C1:RC1), " & num_alturas & " - (COUNTA(R" & fila_tabla + 1 & "C1:RC1) - 1) * " & num_meses_periodo & " - " & mes_del_periodo & ")", "$#,##0", num_ocurrencias, False, 1, fila_tabla)
-	Call columnas_entremes("Velocidad Triangulo", "=IFERROR(IF(R2C3 = ""Pago"", R[-1]C[-2], R[-1]C[-1]) / R[-1]C[-7], 100%)", "0.00%", num_ocurrencias, False, 1, fila_tabla)
+	Call columnas_entremes("Velocidad Triangulo", "=IFERROR(IF(R4C3 = ""Pago"", R[-1]C[-2], R[-1]C[-1]) / R[-1]C[-7], 100%)", "0.00%", num_ocurrencias, False, 1, fila_tabla)
 	
-	Call columnas_entremes("Factor completitud", "=IFERROR(INDEX(IF(R2C3 = ""Pago"", R" & fila_tabla - 3 & "C7:R" & fila_tabla - 3 & "C" & 6 + num_alturas & ", R" & fila_tabla - 3 & "C" & 7 + num_alturas & ":R" & fila_tabla - 3 & "C" & 6 + num_alturas * 2 & "), 1, (COUNTA(R" & fila_tabla + num_ocurrencias & "C1:RC1) - 1) * " & num_meses_periodo & " + " & mes_del_periodo & "), 100%)", "0.00%", num_ocurrencias, True, 1, fila_tabla)
-	Call columnas_entremes("Diagonal completa", "=IF(R2C3 = ""Pago"", RC2, RC3) / RC[-1]", "$#,##0", num_ocurrencias, False, 1, fila_tabla)
+	Call columnas_entremes("Factor completitud", "=IFERROR(INDEX(IF(R4C3 = ""Pago"", R" & fila_tabla - 3 & "C7:R" & fila_tabla - 3 & "C" & 6 + num_alturas & ", R" & fila_tabla - 3 & "C" & 7 + num_alturas & ":R" & fila_tabla - 3 & "C" & 6 + num_alturas * 2 & "), 1, (COUNTA(R" & fila_tabla + num_ocurrencias & "C1:RC1) - 1) * " & num_meses_periodo & " + " & mes_del_periodo & "), 100%)", "0.00%", num_ocurrencias, True, 1, fila_tabla)
+	Call columnas_entremes("Diagonal completa", "=IF(R4C3 = ""Pago"", RC2, RC3) / RC[-1]", "$#,##0", num_ocurrencias, False, 1, fila_tabla)
 	Call columnas_entremes("Velocidad actual", "=RC[-2] * RC[-3]", "0.00%", num_ocurrencias, False, 1, fila_tabla)
 	
 	Call columnas_entremes("Ultimate", "=RC[-2] / RC[-4]", "$#,##0", num_ocurrencias, False, 1, fila_tabla)
@@ -144,7 +144,7 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 	''' METODOLOGIA 2: BF
 	Call columnas_entremes("% SUE BF", "=RC[-12]", "0.00%", num_ocurrencias, True, 2, fila_tabla)
 	Call columnas_entremes("Velocidad BF", "=RC[-6]", "0.00%", num_ocurrencias, True, 1, fila_tabla)
-	Call columnas_entremes("Ultimate", "=IF(R2C3 = ""Pago"", RC2, RC3) + RC[-2] * RC" & col_prim & " * (1 - RC[-1])", "$#,##0", num_ocurrencias, False, 1, fila_tabla)
+	Call columnas_entremes("Ultimate", "=IF(R4C3 = ""Pago"", RC2, RC3) + RC[-2] * RC" & col_prim & " * (1 - RC[-1])", "$#,##0", num_ocurrencias, False, 1, fila_tabla)
 	Call columnas_entremes("% SUE", "=IFERROR(RC[-1] / RC" & col_prim & ", 0) ", "0.00%", num_ocurrencias, False, 1, fila_tabla)
 	Call columnas_entremes("Ajuste SUE", "=RC[-2] - RC[-19]", "$#,##0", num_ocurrencias, False, 1, fila_tabla)
 	
@@ -181,7 +181,7 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 	sep_tabla = num_ocurrencias + mes_del_periodo + sep_triangulos
 	fila_tabla = fila_tabla + sep_tabla
 	
-	If ws.Cells(3, 3) = "Frecuencia y Severidad" Then
+	If ws.Cells(5, 3) = "Frecuencia y Severidad" Then
 		
 		With ws.Cells(fila_tabla, 1)
 			.PasteSpecial Paste : = xlPasteValues
@@ -196,7 +196,7 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 			"0.0000%", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		
 		Call columnas_entremes("Frecuencia Ultimate", _
-			"=IF(R4C3 = ""Severidad"", " & _
+			"=IF(R6C3 = ""Severidad"", " & _
 			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de frec_ultimate") & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0), " & _
 			"IFERROR(R[" & - sep_tabla & "]C / (RC[6] * RC[9]), 0))", _
 			"0.0000%", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
@@ -223,7 +223,7 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 			"$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		
 		Call columnas_entremes("Severidad Ultimate", _
-			"=IF(R4C3 = ""Frecuencia"", " & _
+			"=IF(R6C3 = ""Frecuencia"", " & _
 			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de seve_ultimate_" & atributo) & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0), " & _
 			"IFERROR(R[" & - sep_tabla & "]C[-6] / (RC[-6] * RC[3]), 0))", _
 			"$#,##0", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
@@ -252,25 +252,25 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 		End With
 		
 		Call columnas_entremes("Pagos", _
-			"=IF(R4C3 = ""Severidad"", " & _
+			"=IF(R6C3 = ""Severidad"", " & _
 			"IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &""") / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0), " & _
 			"IFERROR(R[" & - sep_tabla & "]C / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_pago") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0))", _
 			"", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		Call columnas_entremes("Incurridos", _
-			"=IF(R4C3 = ""Severidad"", " & _
+			"=IF(R6C3 = ""Severidad"", " & _
 			"IFERROR(SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &""") / SUMIFS(Aux_Totales!C" & col_auxtot("expuestos") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0), " & _
 			"IFERROR(R[" & - sep_tabla & "]C / SUMIFS(Aux_Totales!C" & col_auxtot("conteo_incurrido") & ", Aux_Totales!C" & col_auxtot("periodo_ocurrencia") & ", RC1, Aux_Totales!C" & col_auxtot("apertura_reservas") & ", """& apertura &"""), 0))", _
 			"", num_ocurrencias + mes_del_periodo, False, 1, fila_tabla)
 		
 		Call columnas_entremes("Ultimate", _
-			"=IF( R4C3 = ""Severidad"", " & _
+			"=IF( R6C3 = ""Severidad"", " & _
 			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de frec_ultimate") & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0), " & _
 			"IFERROR(SUMIFS(Aux_Anterior!C" & col_auxant("Suma de seve_ultimate_" & atributo) & ", Aux_Anterior!C" & col_auxant("periodo_ocurrencia") & ", RC1, Aux_Anterior!C" & col_aperturas_ant & ", """& apertura &""", Aux_Anterior!C" & col_mes_corte_ant & ", " & mes_anterior() & "), 0))", _
 			"", num_ocurrencias + mes_del_periodo, True, 1, fila_tabla)
 		
 		'NUEVA OCURRENCIA FREC/SEVE
 		With ws.Range(ws.Cells(fila_tabla + num_ocurrencias, 4), ws.Cells(fila_tabla + num_ocurrencias + mes_del_periodo - 1, 4))
-			.FormulaR1C1 = "=R" & fila_tabla + num_ocurrencias - 1 & "C * IF(R4C3 = ""Severidad"", 1 / " & num_meses_periodo & ", 1) "
+			.FormulaR1C1 = "=R" & fila_tabla + num_ocurrencias - 1 & "C * IF(R6C3 = ""Severidad"", 1 / " & num_meses_periodo & ", 1) "
 			.Font.Bold = True
 			.Interior.ThemeColor = xlThemeColorAccent4
 			.Interior.TintAndShade = 0.799981688894314
@@ -278,10 +278,10 @@ Sub generar_Plantilla_Entremes(num_ocurrencias, num_alturas, header_triangulos, 
 		
 		Call columnas_entremes("Comentarios", "", "#,##0", num_ocurrencias + mes_del_periodo, True, 1, fila_tabla)
 		
-		ws.Cells(fila_tabla, 2).FormulaR1C1 = "=IF(R4C3=""Frecuencia"", ""Severidad"", ""Frecuencia"") & "" Pagos"" "
-		ws.Cells(fila_tabla, 3).FormulaR1C1 = "=IF(R4C3=""Frecuencia"", ""Severidad"", ""Frecuencia"") & "" Incurridos"" "
-		ws.Cells(fila_tabla, 4).FormulaR1C1 = "=IF(R4C3=""Frecuencia"", ""Severidad"", ""Frecuencia"") & "" Ultimate"" "
-		ws.Cells(fila_tabla, 5).FormulaR1C1 = "=""Comentarios"" & IF(R4C3=""Frecuencia"", "" Sv."", "" Fr."")"
+		ws.Cells(fila_tabla, 2).FormulaR1C1 = "=IF(R6C3=""Frecuencia"", ""Severidad"", ""Frecuencia"") & "" Pagos"" "
+		ws.Cells(fila_tabla, 3).FormulaR1C1 = "=IF(R6C3=""Frecuencia"", ""Severidad"", ""Frecuencia"") & "" Incurridos"" "
+		ws.Cells(fila_tabla, 4).FormulaR1C1 = "=IF(R6C3=""Frecuencia"", ""Severidad"", ""Frecuencia"") & "" Ultimate"" "
+		ws.Cells(fila_tabla, 5).FormulaR1C1 = "=""Comentarios"" & IF(R6C3=""Frecuencia"", "" Sv."", "" Fr."")"
 		
 		'NUEVA OCURRENCIA PLATA
 		With ws.Range(ws.Cells(fila_tabla - sep_tabla + num_ocurrencias, 4), ws.Cells(fila_tabla - sep_tabla + num_ocurrencias + mes_del_periodo - 1, 4))

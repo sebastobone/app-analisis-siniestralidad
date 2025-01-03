@@ -10,19 +10,19 @@ End Function
 
 
 
-Function color_columnas_triangulo(ws, num_alturas)
+Function color_columnas_triangulo(ws, fila_ini_plantillas, col_ocurrs_plantillas, num_alturas)
 
-    With ws.Range(ws.Cells(7, 6), ws.Cells(8, 6)).Interior
+    With ws.Range(ws.Cells(fila_ini_plantillas, col_ocurrs_plantillas), ws.Cells(fila_ini_plantillas + 1, col_ocurrs_plantillas)).Interior
         .ThemeColor = xlThemeColorAccent1
         .TintAndShade = 0.799981688894314
     End With
 
-    With ws.Range(ws.Cells(7, 7), ws.Cells(8, 7 + num_alturas - 1)).Interior
+    With ws.Range(ws.Cells(fila_ini_plantillas, col_ocurrs_plantillas + 1), ws.Cells(fila_ini_plantillas + 1, col_ocurrs_plantillas + num_alturas)).Interior
         .ThemeColor = xlThemeColorAccent3
         .TintAndShade = 0.599999
     End With
     
-    With ws.Range(ws.Cells(7, 7 + num_alturas), ws.Cells(8, 7 + num_alturas * 2 - 1)).Interior
+    With ws.Range(ws.Cells(fila_ini_plantillas, col_ocurrs_plantillas + 1 + num_alturas), ws.Cells(fila_ini_plantillas + 1, col_ocurrs_plantillas + num_alturas * 2)).Interior
         .ThemeColor = xlThemeColorAccent2
         .TintAndShade = 0.599999
     End With
@@ -231,7 +231,7 @@ Function factores_desarrollo(ws, num_ocurrencias, num_alturas, header_triangulos
     array_exclus = " R" & fila_exclusiones & "C : R" & fila_exclusiones + num_ocurrencias - 1 & "C "
     array_valores_C1 = " R" & fila_val & "C[1] : R" & fila_val + num_ocurrencias - 1 & "C[1] "
     array_valores_C0 = " R" & fila_val & "C    : R" & fila_val + num_ocurrencias - 1 & "C    "
-    num_indice = " COUNT(" & array_valores_C1 & ") "
+    num_indice = " COUNT(" & array_exclus & ") "
     
     'Vector con factores filtrados por exclusiones
     base_full = "FILTER(" + array_ratios + ", " + array_exclus + " > 0)"
@@ -301,13 +301,14 @@ End Function
 
 
 
-Sub limpiar_plantilla(ws_name)
+Sub limpiar_plantilla(ws_name, fila_ini_plantillas)
     Set ws = Worksheets(ws_name)
     For Each co In ws.ChartObjects
         co.Delete
     Next co
     ws.Cells.FormatConditions.Delete
-    ws.Range(ws.Cells(7, 1), ws.Cells(1000, 1000)).Delete Shift:=xlUp
+    ws.Range(ws.Cells(fila_ini_plantillas, 4), ws.Cells(1000, 1000)).Delete Shift:=xlUp
+    ws.Range(ws.Cells(10, 1), ws.Cells(1000, 1000)).Delete Shift:=xlUp
 End Sub
 
 
@@ -327,32 +328,6 @@ Function estructura_factores(ws, num_ocurrencias, num_alturas, header_triangulos
     End If
 
 End Function
-
-
-
-Sub excluir_factor()
-
-    Dim celda_actual As Range
-    Dim celda_modificar As Range
-    
-    Set celda_actual = ActiveCell
-    Set celda_modificar = celda_actual.Offset(num_ocurrencias + sep_triangulos, 0)
-    celda_modificar.value = 0
-
-End Sub
-
-
-
-Sub incluir_factor()
-
-    Dim celda_actual As Range
-    Dim celda_modificar As Range
-    
-    Set celda_actual = ActiveCell
-    Set celda_modificar = celda_actual.Offset(num_ocurrencias + 5, 0)
-    celda_modificar.value = 1
-
-End Sub
 
 
 

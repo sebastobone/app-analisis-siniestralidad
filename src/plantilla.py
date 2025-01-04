@@ -15,85 +15,6 @@ from src.metodos_plantilla import (
 )
 
 
-def formatear_llave_valor(
-    sheet: xw.Sheet,
-    loc_llave: tuple[int, int],
-    valor_llave: str,
-    valor_valor: str | int,
-) -> None:
-    rng_llave = sheet.range(loc_llave)
-    rng_llave.color = "#73A0FF"
-    rng_llave.font.bold = True
-    rng_llave.font.color = "#FFFFFF"
-    rng_llave.value = valor_llave
-
-    rng_valor = sheet.range((loc_llave[0], loc_llave[1] + 1))
-    rng_valor.value = "#F2F2F2"
-    rng_valor.value = valor_valor
-
-
-def crear_dropdown(
-    dropdown_name: str,
-    sheet: xw.Sheet,
-    loc: tuple[int, int],
-    dropdown_content: list[str],
-) -> None:
-    rng = sheet.range((loc[0], loc[1] + 1))
-
-    if os.name == "nt":
-        rng.api.Validation.Delete()
-        rng.api.Validation.Add(
-            Type=3,
-            AlertStyle=1,
-            Operator=0,  # xlBetween
-            Formula1=";".join(dropdown_content),
-            Formula2="",
-        )
-    elif os.name == "posix":
-        rng.api.validation.delete()
-        rng.api.validation.add_data_validation(
-            type=3,
-            alert_style=1,
-            formula1=";".join(dropdown_content),
-        )
-
-    formatear_llave_valor(sheet, loc, dropdown_name, dropdown_content[0])
-
-
-def generar_dropdowns(wb: xw.Book, aperturas: list[str]) -> None:
-    for plantilla in ["frec", "seve", "plata", "entremes"]:
-        hoja = wb.sheets[f"Plantilla_{plantilla.capitalize()}"]
-
-        crear_dropdown("Apertura", hoja, (2, 2), aperturas)
-        hoja.range((2, 3)).value = aperturas[0]
-        crear_dropdown(
-            "Atributo",
-            hoja,
-            (3, 2),
-            ["Bruto", "Retenido"] if hoja.name != "Plantilla_Frec" else ["Bruto"],
-        )
-        crear_dropdown("Metodologia", hoja, (4, 2), ["Pago", "Incurrido"])
-
-    crear_dropdown(
-        "Tipo de indexacion",
-        wb.sheets["Plantilla_Seve"],
-        (5, 2),
-        ["Ninguna", "Por fecha de ocurrencia", "Por fecha de pago"],
-    )
-
-    formatear_llave_valor(
-        wb.sheets["Plantilla_Seve"], (6, 2), "Medida de indexacion", "Ninguna"
-    )
-
-    crear_dropdown(
-        "Ultima ocurrencia",
-        hoja,
-        (5, 2),
-        ["% Siniestralidad", "Frecuencia y Severidad"],
-    )
-    crear_dropdown("Variable a despejar", hoja, (6, 2), ["Frecuencia", "Severidad"])
-
-
 def preparar_plantilla(
     wb: xw.Book,
     mes_corte: int,
@@ -102,15 +23,15 @@ def preparar_plantilla(
 ) -> None:
     s = time.time()
 
-    mes_anterior = (
+    wb.macro("formatear_parametro")("Main", "Mes corte", 4, 1)
+    wb.sheets["Main"].range((4, 2)).value = mes_corte
+
+    wb.macro("formatear_parametro")("Main", "Mes anterior", 5, 1)
+    wb.sheets["Main"].range((5, 2)).value = (
         mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
     )
-    formatear_llave_valor(wb.sheets["Main"], (4, 1), "Mes corte", mes_corte)
-    formatear_llave_valor(wb.sheets["Main"], (5, 1), "Mes anterior", mes_anterior)
 
     aperturas = tablas_resumen.aperturas(negocio)
-
-    generar_dropdowns(wb, aperturas.get_column("apertura_reservas").to_list())
 
     if tipo_analisis == "triangulos":
         wb.sheets["Plantilla_Entremes"].visible = False
@@ -159,10 +80,18 @@ def generar_plantilla(
     wb: xw.Book,
     plantilla: Literal["frec", "seve", "plata", "entremes"],
     mes_corte: int,
+    negocio: str,
 ) -> None:
     s = time.time()
 
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+
+    aperturas = (
+        tablas_resumen.aperturas(negocio).get_column("apertura_reservas").to_list()
+    )
+
+    wb.macro("limpiar_plantilla")(plantilla_name)
+    wb.macro("generar_parametros")(plantilla_name, ",".join(aperturas), aperturas[0])
 
     apertura = str(wb.sheets[plantilla_name]["C2"].value)
     atributo = str(wb.sheets[plantilla_name]["C3"].value).lower()
@@ -182,9 +111,8 @@ def generar_plantilla(
         utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
     )
 
-    formatear_llave_valor(wb.sheets["Main"], (6, 1), "Mes del periodo", mes_del_periodo)
-
-    wb.macro("limpiar_plantilla")(plantilla_name, ct.FILA_INI_PLANTILLAS)
+    wb.macro("formatear_parametro")("Main", "Mes del periodo", 6, 1)
+    wb.sheets["Main"].range((6, 2)).value = mes_del_periodo
 
     wb.sheets[plantilla_name].cells(
         ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS
@@ -255,6 +183,7 @@ def guardar_traer_fn(
             atributo,
         )
 
+        wb.sheets["Main"]["A1"].value = "GUARDAR_PLANTILLA"
         wb.sheets["Main"]["A2"].value = time.time() - s
 
     elif modo == "traer":
@@ -267,6 +196,7 @@ def guardar_traer_fn(
             mes_del_periodo,
         )
 
+        wb.sheets["Main"]["A1"].value = "TRAER_PLANTILLA"
         wb.sheets["Main"]["A2"].value = time.time() - s
 
 
@@ -289,11 +219,12 @@ def traer_guardar_todo(
         for atributo in atributos:
             wb.sheets[plantilla_name]["C2"].value = apertura
             wb.sheets[plantilla_name]["C3"].value = atributo
-            generar_plantilla(wb, plantilla, mes_corte)
+            generar_plantilla(wb, plantilla, mes_corte, negocio)
             if traer:
                 guardar_traer_fn(wb, "traer", plantilla, mes_corte)
             guardar_traer_fn(wb, "guardar", plantilla, mes_corte)
 
+    wb.sheets["Main"]["A1"].value = "TRAER_GUARDAR_TODO" if traer else "GUARDAR_TODO"
     wb.sheets["Main"]["A2"].value = time.time() - s
 
 
@@ -313,6 +244,7 @@ def almacenar_analisis(wb: xw.Book, mes_corte: int) -> None:
     df_resultados = pl.concat([df_resultados_tipicos, df_resultados_atipicos])
     df_resultados.write_parquet(f"output/resultados_{wb.name}_{mes_corte}.parquet")
 
+    wb.sheets["Main"]["A1"].value = "ALMACENAR_ANALISIS"
     wb.sheets["Main"]["A2"].value = time.time() - s
 
 

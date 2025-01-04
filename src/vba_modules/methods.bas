@@ -301,16 +301,87 @@ End Function
 
 
 
-Sub limpiar_plantilla(ws_name, fila_ini_plantillas)
+Sub limpiar_plantilla(ws_name)
     Set ws = Worksheets(ws_name)
     For Each co In ws.ChartObjects
         co.Delete
     Next co
     ws.Cells.FormatConditions.Delete
-    ws.Range(ws.Cells(fila_ini_plantillas, 4), ws.Cells(1000, 1000)).Delete Shift:=xlUp
-    ws.Range(ws.Cells(10, 1), ws.Cells(1000, 1000)).Delete Shift:=xlUp
+    ws.Range(ws.Cells(1, 1), ws.Cells(1000, 1000)).Delete Shift:=xlUp
 End Sub
 
+
+
+Sub formatear_parametro(ws_name As String, nombre As String, fila As Integer, columna As Integer)
+
+    Set ws = Worksheets(ws_name)
+
+    With ws.Cells(fila, columna)
+        .Interior.Color = RGB(115, 160, 255)
+        .Font.Bold = True
+        .Font.Color = RGB(255, 255, 255)
+        .Value = nombre
+    End With
+
+    ws.Cells(fila, columna + 1).Interior.Color = RGB(242, 242, 242)
+
+End Sub
+
+
+
+Function crear_dropdown(ws, nombre As String, fila As Integer, columna As Integer, contenido As String, valor_defecto As String)
+
+    With ws.Cells(fila, columna - 1)
+        .Interior.Color = RGB(115, 160, 255)
+        .Font.Bold = True
+        .Font.Color = RGB(255, 255, 255)
+        .Value = nombre
+    End With
+
+    With ws.Cells(fila, columna)
+        .Interior.Color = RGB(242, 242, 242)
+        .Validation.Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=contenido
+        .Value = valor_defecto
+    End With
+
+End Function
+
+
+
+Sub generar_parametros(ws_name As String, aperturas As String, apertura_defecto As String)
+
+    Set ws = Worksheets(ws_name)
+    Select Case ws.Name
+        Case "Plantilla_Frec"
+            Call crear_dropdown(ws, "Apertura", 2, 3, aperturas, apertura_defecto)
+            Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto", "Bruto")
+            Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
+
+        Case "Plantilla_Seve"
+            Call crear_dropdown(ws, "Apertura", 2, 3, aperturas, apertura_defecto)
+            Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto,Retenido", "Bruto")
+            Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
+
+            Call crear_dropdown(ws, "Tipo de indexacion", 5, 3, "Ninguna,Por fecha de ocurrencia,Por fecha de pago", "Ninguna")
+
+            Call formatear_parametro(ws.Name, "Medida de indexacion", 6, 2)
+            ws.Cells(6, 3).Value = "Ninguna"
+
+        Case "Plantilla_Plata"
+            Call crear_dropdown(ws, "Apertura", 2, 3, aperturas, apertura_defecto)
+            Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto,Retenido", "Bruto")
+            Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
+
+        Case "Plantilla_Entremes"
+            Call crear_dropdown(ws, "Apertura", 2, 3, aperturas, apertura_defecto)
+            Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto,Retenido", "Bruto")
+            Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
+            Call crear_dropdown(ws, "Ultima ocurrencia", 5, 3, "% Siniestralidad,Frecuencia y Severidad", "% Siniestralidad")
+            Call crear_dropdown(ws, "Variable a despejar", 6, 3, "Frecuencia,Severidad", "Severidad")
+
+    End Select
+
+End Sub
 
 
 Function estructura_factores(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas)

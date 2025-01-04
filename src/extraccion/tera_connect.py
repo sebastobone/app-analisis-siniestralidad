@@ -7,9 +7,9 @@ import teradatasql as td
 from tqdm import tqdm
 
 from src import utils
-from src.models import Parametros
 from src.configuracion import configuracion
 from src.logger_config import logger
+from src.models import Parametros
 
 
 def tipo_query(file: str) -> str:

@@ -112,7 +112,7 @@ def parameter_ranges(
                 }
             )
 
-            if metodo_indexacion != "Ninguna":
+            if metodo_indexacion in ("Por fecha de ocurrencia", "Por fecha de pago"):
                 ranges.update(
                     {
                         "UNIDAD_INDEXACION": objective_range(

@@ -1,5 +1,4 @@
 import os
-from datetime import date
 from typing import Literal
 from unittest.mock import MagicMock, patch
 
@@ -8,30 +7,42 @@ import pytest
 from src import constantes as ct
 from src import plantilla as plant
 from src import utils
+from src.metodos_plantilla import base_plantillas
 from src.procesamiento import base_primas_expuestos, base_siniestros
+
+from tests.conftest import END_MOCK, INI_MOCK
 
 
 def generar_bases_mock(
     mock_siniestros: pl.LazyFrame,
-    mock_expuestos: pl.LazyFrame,
-    mock_primas: pl.LazyFrame,
     tipo_analisis: Literal["triangulos", "entremes"],
-) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, pl.DataFrame, pl.DataFrame]:
+) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
     with patch("src.procesamiento.base_siniestros.guardar_archivos"):
         base_triangulos, base_ult_ocurr, base_atipicos = (
             base_siniestros.generar_bases_siniestros(
-                mock_siniestros, tipo_analisis, date(2018, 12, 1), date(2023, 12, 1)
+                mock_siniestros, tipo_analisis, INI_MOCK, END_MOCK
             )
         )
+    return base_triangulos, base_ult_ocurr, base_atipicos
 
-    base_expuestos = base_primas_expuestos.generar_base_primas_expuestos(
-        mock_expuestos, "expuestos", "mock"
-    )
-    base_primas = base_primas_expuestos.generar_base_primas_expuestos(
-        mock_primas, "primas", "mock"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("tipo_analisis", ["triangulos", "entremes"])
+@patch("src.metodos_plantilla.insumos.df_triangulos")
+def test_base_plantillas(
+    mock_df_triangulos: MagicMock,
+    mock_siniestros: pl.LazyFrame,
+    tipo_analisis: Literal["triangulos", "entremes"],
+):
+    base_triangulos, _, _ = generar_bases_mock(mock_siniestros, tipo_analisis)
+    mock_df_triangulos.return_value = base_triangulos.lazy()
+
+    df = base_plantillas.base_plantillas(
+        "01_001_A_D", "bruto", [["01_001_A_D", "Trimestral"]], ["pago", "incurrido"]
     )
 
-    return base_triangulos, base_ult_ocurr, base_atipicos, base_expuestos, base_primas
+    assert df.shape[0] <= df.shape[1] // 2
 
 
 @pytest.mark.plantilla
@@ -62,16 +73,22 @@ def test_preparar_y_generar_plantilla(
     tipo_analisis: Literal["triangulos", "entremes"],
     plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
 ):
-    base_triangulos, base_ult_ocurr, base_atipicos, base_expuestos, base_primas = (
-        generar_bases_mock(mock_siniestros, mock_expuestos, mock_primas, tipo_analisis)
+    base_triangulos, base_ult_ocurr, base_atipicos = generar_bases_mock(
+        mock_siniestros, tipo_analisis
     )
 
     mock_df_aperturas.return_value = mock_siniestros
     mock_df_triangulos.return_value = base_triangulos.lazy()
     mock_df_ult_ocurr.return_value = base_ult_ocurr.lazy()
     mock_df_atipicos.return_value = base_atipicos.lazy()
-    mock_df_expuestos.return_value = base_expuestos.lazy()
-    mock_df_primas.return_value = base_primas.lazy()
+    mock_df_expuestos.return_value = (
+        base_primas_expuestos.generar_base_primas_expuestos(
+            mock_expuestos, "expuestos", "mock"
+        ).lazy()
+    )
+    mock_df_primas.return_value = base_primas_expuestos.generar_base_primas_expuestos(
+        mock_primas, "primas", "mock"
+    ).lazy()
 
     if os.path.exists("tests/mock_plantilla.xlsm"):
         os.remove("tests/mock_plantilla.xlsm")
@@ -133,7 +150,11 @@ def test_preparar_y_generar_plantilla(
     )
 
     for plantilla in plantillas:
-        plant.generar_plantilla(wb, plantilla, mes_corte)
+        plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+        plant.generar_plantilla(wb, plantilla, mes_corte, "mock")
+
+        assert wb.sheets[plantilla_name]["C2"].value == "01_001_A_D"
+        assert wb.sheets[plantilla_name]["C3"].value == "Bruto"
 
     wb.close()
 
@@ -199,16 +220,22 @@ def test_guardar_traer(
     plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
     rangos_adicionales: dict[Literal["frec", "seve", "plata", "entremes"], list[str]],
 ):
-    base_triangulos, base_ult_ocurr, base_atipicos, base_expuestos, base_primas = (
-        generar_bases_mock(mock_siniestros, mock_expuestos, mock_primas, tipo_analisis)
+    base_triangulos, base_ult_ocurr, base_atipicos = generar_bases_mock(
+        mock_siniestros, tipo_analisis
     )
 
     mock_df_aperturas.return_value = mock_siniestros
     mock_df_triangulos.return_value = base_triangulos.lazy()
     mock_df_ult_ocurr.return_value = base_ult_ocurr.lazy()
     mock_df_atipicos.return_value = base_atipicos.lazy()
-    mock_df_expuestos.return_value = base_expuestos.lazy()
-    mock_df_primas.return_value = base_primas.lazy()
+    mock_df_expuestos.return_value = (
+        base_primas_expuestos.generar_base_primas_expuestos(
+            mock_expuestos, "expuestos", "mock"
+        ).lazy()
+    )
+    mock_df_primas.return_value = base_primas_expuestos.generar_base_primas_expuestos(
+        mock_primas, "primas", "mock"
+    ).lazy()
 
     if os.path.exists("tests/mock_plantilla.xlsm"):
         os.remove("tests/mock_plantilla.xlsm")
@@ -217,7 +244,7 @@ def test_guardar_traer(
     plant.preparar_plantilla(wb, mes_corte, tipo_analisis, "mock")
 
     for plantilla in plantillas:
-        plant.generar_plantilla(wb, plantilla, mes_corte)
+        plant.generar_plantilla(wb, plantilla, mes_corte, "mock")
 
     rangos_comunes = [
         "MET_PAGO_INCURRIDO",
@@ -229,7 +256,8 @@ def test_guardar_traer(
     ]
 
     for plantilla in plantillas:
-        plantilla_name = plantilla.capitalize()
+        plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+
         apertura = str(wb.sheets[plantilla_name]["C2"].value)
         atributo = str(wb.sheets[plantilla_name]["C3"].value).lower()
 
@@ -256,4 +284,4 @@ def test_guardar_traer(
             for archivo in archivos_guardados:
                 mock_leer.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
 
-    # wb.close()
+    wb.close()

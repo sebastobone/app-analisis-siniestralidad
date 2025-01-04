@@ -14,8 +14,8 @@ from src.models import Parametros
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
-INI_MOCK = date(2010, 1, 1)
-END_MOCK = date(2040, 1, 1)
+INI_MOCK = date(2015, 1, 1)
+END_MOCK = date(2030, 1, 1)
 
 
 @pytest.fixture

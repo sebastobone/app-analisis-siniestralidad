@@ -413,7 +413,7 @@ End Sub
 
 
 
-Function color_aux_totales(ini_col, fin_col, tipo, num_filas_auxtot)
+Function color_aux_totales(ws, ini_col, fin_col, tipo, num_filas)
 
     Select Case tipo
         Case "descriptores"
@@ -439,36 +439,38 @@ Function color_aux_totales(ini_col, fin_col, tipo, num_filas_auxtot)
             formato_numero = "$#,##0"
     End Select
 
-    With ws_auxtot.Range(Cells(1, col_auxtot(ini_col)), Cells(1, col_auxtot(fin_col)))
+    With ws.Range(ws.Cells(1, col_auxtot(ini_col)), ws.Cells(1, col_auxtot(fin_col)))
         .Interior.Color = color
         .Font.Bold = True
         .Font.Color = RGB(255, 255, 255)
     End With
 
-    ws_auxtot.Range(Cells(2, col_auxtot(ini_col)), Cells(num_filas_auxtot , col_auxtot(fin_col))).NumberFormat = formato_numero
+    ws.Range(ws.Cells(2, col_auxtot(ini_col)), ws.Cells(num_filas + 1, col_auxtot(fin_col))).NumberFormat = formato_numero
 
 End Function
 
 
-Sub formatos_aux_totales(num_filas_auxtot)
+Sub formatos_aux_totales(ws_name, num_filas)
+    'Le sirve a Aux_Totales y a Atipicos, pues tienen la misma estructura
 
-    Call color_aux_totales("apertura_reservas", "periodo_ocurrencia", "descriptores", num_filas_auxtot)
-    Call color_aux_totales("pago_bruto", "pago_bruto", "plata_bruto", num_filas_auxtot)
-    Call color_aux_totales("pago_retenido", "pago_retenido", "plata_retenido", num_filas_auxtot)
-    Call color_aux_totales("incurrido_bruto", "incurrido_bruto", "plata_bruto", num_filas_auxtot)
-    Call color_aux_totales("incurrido_retenido", "incurrido_retenido", "plata_retenido", num_filas_auxtot)
-    Call color_aux_totales("conteo_pago", "expuestos", "conteo", num_filas_auxtot)
-    Call color_aux_totales("prima_bruta", "prima_bruta_devengada", "plata_bruto", num_filas_auxtot)
-    Call color_aux_totales("prima_retenida", "prima_retenida_devengada", "plata_retenido", num_filas_auxtot)
-    Call color_aux_totales("frec_ultimate", "frec_ultimate", "frec", num_filas_auxtot)
-    Call color_aux_totales("conteo_ultimate", "conteo_ultimate", "conteo", num_filas_auxtot)
-    Call color_aux_totales("seve_ultimate_bruto", "seve_ultimate_bruto", "seve_bruto", num_filas_auxtot)
-    Call color_aux_totales("seve_ultimate_retenido", "seve_ultimate_retenido", "seve_retenido", num_filas_auxtot)
-    Call color_aux_totales("plata_ultimate_bruto", "plata_ultimate_contable_bruto", "plata_bruto", num_filas_auxtot)
-    Call color_aux_totales("plata_ultimate_retenido", "plata_ultimate_contable_retenido", "plata_retenido", num_filas_auxtot)
-    Call color_aux_totales("aviso_bruto", "aviso_bruto", "plata_bruto", num_filas_auxtot)
-    Call color_aux_totales("aviso_retenido", "aviso_retenido", "plata_retenido", num_filas_auxtot)
-    Call color_aux_totales("ibnr_bruto", "ibnr_contable_bruto", "plata_bruto", num_filas_auxtot)
-    Call color_aux_totales("ibnr_retenido", "ibnr_contable_retenido", "plata_retenido", num_filas_auxtot)
+    Set ws = Worksheets(ws_name)
+    Call color_aux_totales(ws, "apertura_reservas", "periodo_ocurrencia", "descriptores", num_filas)
+    Call color_aux_totales(ws, "pago_bruto", "pago_bruto", "plata_bruto", num_filas)
+    Call color_aux_totales(ws, "pago_retenido", "pago_retenido", "plata_retenido", num_filas)
+    Call color_aux_totales(ws, "incurrido_bruto", "incurrido_bruto", "plata_bruto", num_filas)
+    Call color_aux_totales(ws, "incurrido_retenido", "incurrido_retenido", "plata_retenido", num_filas)
+    Call color_aux_totales(ws, "conteo_pago", "expuestos", "conteo", num_filas)
+    Call color_aux_totales(ws, "prima_bruta", "prima_bruta_devengada", "plata_bruto", num_filas)
+    Call color_aux_totales(ws, "prima_retenida", "prima_retenida_devengada", "plata_retenido", num_filas)
+    Call color_aux_totales(ws, "frec_ultimate", "frec_ultimate", "frec", num_filas)
+    Call color_aux_totales(ws, "conteo_ultimate", "conteo_ultimate", "conteo", num_filas)
+    Call color_aux_totales(ws, "seve_ultimate_bruto", "seve_ultimate_bruto", "seve_bruto", num_filas)
+    Call color_aux_totales(ws, "seve_ultimate_retenido", "seve_ultimate_retenido", "seve_retenido", num_filas)
+    Call color_aux_totales(ws, "plata_ultimate_bruto", "plata_ultimate_contable_bruto", "plata_bruto", num_filas)
+    Call color_aux_totales(ws, "plata_ultimate_retenido", "plata_ultimate_contable_retenido", "plata_retenido", num_filas)
+    Call color_aux_totales(ws, "aviso_bruto", "aviso_bruto", "plata_bruto", num_filas)
+    Call color_aux_totales(ws, "aviso_retenido", "aviso_retenido", "plata_retenido", num_filas)
+    Call color_aux_totales(ws, "ibnr_bruto", "ibnr_contable_bruto", "plata_bruto", num_filas)
+    Call color_aux_totales(ws, "ibnr_retenido", "ibnr_contable_retenido", "plata_retenido", num_filas)
 
 End Sub

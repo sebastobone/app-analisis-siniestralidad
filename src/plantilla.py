@@ -45,7 +45,7 @@ def preparar_plantilla(
             plantilla_name = f"Plantilla_{plantilla.capitalize()}"
             wb.sheets[plantilla_name].visible = False
 
-    for sheet in ["Aux_Totales", "Aux_Expuestos", "Aux_Primas", "Atipicos"]:
+    for sheet in ["Aux_Totales", "Atipicos"]:
         wb.sheets[sheet].clear_contents()
 
     tablas_resumen.generar_tabla(wb.sheets["Main"], aperturas, "aperturas", (1, 4))
@@ -60,18 +60,16 @@ def preparar_plantilla(
 
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
-    diagonales, expuestos, primas, atipicos = tablas_resumen.tablas_resumen(
+    diagonales, atipicos = tablas_resumen.tablas_resumen(
         periodicidades, tipo_analisis, aperturas.lazy()
     )
 
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
-
-    wb.macro("formatos_aux_totales")(diagonales.shape[0])
-    wb.macro("formulas_aux_totales")(diagonales.shape[0])
-
-    wb.sheets["Aux_Expuestos"]["A1"].options(index=False).value = expuestos.to_pandas()
-    wb.sheets["Aux_Primas"]["A1"].options(index=False).value = primas.to_pandas()
     wb.sheets["Atipicos"]["A1"].options(index=False).value = atipicos.to_pandas()
+
+    wb.macro("formatos_aux_totales")("Aux_Totales", diagonales.shape[0])
+    wb.macro("formulas_aux_totales")(diagonales.shape[0])
+    wb.macro("formatos_aux_totales")("Atipicos", atipicos.shape[0])
 
     wb.sheets["Main"]["A1"].value = "PREPARAR_PLANTILLA"
     wb.sheets["Main"]["A2"].value = time.time() - s

@@ -36,17 +36,44 @@ def generar_tabla(
         ).update(df_pd, index=False)
 
 
+def join_tablas(
+    df: pl.LazyFrame,
+    aperturas: pl.LazyFrame,
+    expuestos: pl.LazyFrame,
+    primas: pl.LazyFrame,
+) -> pl.LazyFrame:
+    base_cols = aperturas.collect_schema().names()[1:]
+    return (
+        df.join(aperturas, on="apertura_reservas")
+        .select(
+            ["apertura_reservas"]
+            + aperturas.collect_schema().names()[1:]
+            + ["periodicidad_ocurrencia", "periodo_ocurrencia"]
+            + ct.COLUMNAS_QTYS
+        )
+        .join(
+            expuestos.drop("vigentes"),
+            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
+            how="left",
+        )
+        .join(
+            primas,
+            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
+            how="left",
+        )
+        .fill_null(0)
+    )
+
+
 def tablas_resumen(
     periodicidades: list[list[str]],
     tipo_analisis: Literal["triangulos", "entremes"],
     aperturas: pl.LazyFrame,
-) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, pl.DataFrame]:
+) -> tuple[pl.DataFrame, pl.DataFrame]:
     diagonales = ins.df_triangulos()
     atipicos = ins.df_atipicos()
     expuestos = ins.df_expuestos()
     primas = ins.df_primas()
-
-    base_cols = aperturas.collect_schema().names()[1:]
 
     diagonales = (
         diagonales.filter(pl.col("diagonal") == 1)
@@ -93,29 +120,7 @@ def tablas_resumen(
         )
 
     diagonales_df = (
-        diagonales.join(aperturas, on="apertura_reservas")
-        .select(
-            [
-                "apertura_reservas",
-            ]
-            + aperturas.collect_schema().names()[1:]
-            + [
-                "periodicidad_ocurrencia",
-                "periodo_ocurrencia",
-            ]
-            + ct.COLUMNAS_QTYS
-        )
-        .join(
-            expuestos.drop("vigentes"),
-            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
-            how="left",
-        )
-        .join(
-            primas,
-            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
-            how="left",
-        )
-        .fill_null(0)
+        diagonales.pipe(join_tablas, aperturas, expuestos, primas)
         .with_columns(
             frec_ultimate=0,
             conteo_ultimate=0,
@@ -137,29 +142,7 @@ def tablas_resumen(
     )
 
     atipicos_df = (
-        atipicos.join(aperturas, on="apertura_reservas")
-        .select(
-            [
-                "apertura_reservas",
-            ]
-            + aperturas.collect_schema().names()[1:]
-            + [
-                "periodicidad_ocurrencia",
-                "periodo_ocurrencia",
-            ]
-            + ct.COLUMNAS_QTYS
-        )
-        .join(
-            expuestos.drop("vigentes"),
-            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
-            how="left",
-        )
-        .join(
-            primas,
-            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
-            how="left",
-        )
-        .fill_null(0)
+        atipicos.pipe(join_tablas, aperturas, expuestos, primas)
         .with_columns(
             frec_ultimate=pl.col("conteo_incurrido") / pl.col("expuestos"),
             conteo_ultimate=pl.col("conteo_incurrido"),
@@ -181,4 +164,4 @@ def tablas_resumen(
         .collect()
     )
 
-    return diagonales_df, expuestos.collect(), primas.collect(), atipicos_df
+    return diagonales_df, atipicos_df

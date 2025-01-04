@@ -2,14 +2,11 @@ from datetime import timedelta
 from typing import Literal
 from unittest.mock import MagicMock, patch
 
-from numpy.random import randint
 import polars as pl
 import pytest
 from src import utils
 from src.extraccion import tera_connect
 from src.models import Parametros
-from tests.conftest import mock_siniestros
-from datetime import date
 
 
 @pytest.mark.unit
@@ -136,12 +133,9 @@ def test_check_nulls():
 
 
 @pytest.mark.unit
-def test_check_final_info():
+def test_check_final_info(mock_siniestros: pl.LazyFrame):
     tipo_query = "siniestros"
-
-    mes_inicio = date(randint(2010, 2019), randint(1, 12), 1)
-    mes_corte = date(randint(2020, 2030), randint(1, 12), 1)
-    df = mock_siniestros(mes_inicio, mes_corte).collect()
+    df = mock_siniestros.collect()
 
     with pytest.raises(ValueError) as exc_info:
         tera_connect.check_final_info(tipo_query, df.drop("codigo_op"), "mock")

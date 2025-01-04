@@ -14,10 +14,18 @@ from src.models import Parametros
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
-INI_MOCK = date(2015, 1, 1)
-END_MOCK = date(2030, 1, 1)
+
+@pytest.fixture
+def mes_inicio() -> date:
+    return date(np.random.randint(2010, 2019), np.random.randint(1, 12), 1)
 
 
+@pytest.fixture
+def mes_corte() -> date:
+    return date(np.random.randint(2020, 2030), np.random.randint(1, 12), 1)
+
+
+@pytest.fixture
 def mock_siniestros(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     num_rows = 100000
     return pl.LazyFrame(
@@ -64,6 +72,7 @@ def mock_siniestros(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     )
 
 
+@pytest.fixture
 def mock_primas(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     num_rows = 10000
     return pl.LazyFrame(
@@ -97,6 +106,7 @@ def mock_primas(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     )
 
 
+@pytest.fixture
 def mock_expuestos(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     num_rows = 10000
     return (

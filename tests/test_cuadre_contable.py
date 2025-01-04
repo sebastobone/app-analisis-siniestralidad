@@ -1,14 +1,6 @@
-from unittest.mock import MagicMock, patch
-
-import numpy as np
 import polars as pl
 import pytest
-from src import utils
-from src.controles_informacion import controles_informacion as ctrl
 from src.controles_informacion import cuadre_contable as cuadre
-
-from tests.test_controles_informacion import mock_hoja_afo
-
 
 # @pytest.mark.parametrize("mes_corte", [202312])
 # @pytest.mark.parametrize("qty", ["pago_bruto", "aviso_bruto"])

@@ -4,15 +4,8 @@ from unittest.mock import patch
 
 import polars as pl
 import pytest
-from numpy.random import randint
 from src import utils
 from src.procesamiento import base_siniestros as base
-
-from tests.conftest import mock_siniestros
-
-
-def mes_inicio_mock(mock_siniestros: pl.LazyFrame) -> date:
-    return mock_siniestros.collect().get_column("fecha_siniestro").min()  # type: ignore
 
 
 def plata_original(
@@ -85,14 +78,13 @@ def test_mes_prim_ocurr_periodo_act(
 )
 def test_analisis_triangulos(
     periodicidad_ocurrencia: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
+    mock_siniestros: pl.LazyFrame,
+    mes_inicio: date,
+    mes_corte: date,
 ):
-    mes_inicio = date(randint(2010, 2019), randint(1, 12), 1)
-    mes_corte = date(randint(2020, 2030), randint(1, 12), 1)
-
-    df_siniestros = mock_siniestros(mes_inicio, mes_corte)
     with patch("src.procesamiento.base_siniestros.guardar_archivos"):
         base_triangulos, _, base_atipicos = base.generar_bases_siniestros(
-            df_siniestros,
+            mock_siniestros,
             "triangulos",
             mes_inicio,
             mes_corte,
@@ -115,7 +107,7 @@ def test_analisis_triangulos(
     assert col_dllo.max() == utils.date_to_yyyymm(mes_corte_tipicos)
 
     plata_original_tipicos = plata_original(
-        df_siniestros, mes_inicio, mes_corte_tipicos, 0
+        mock_siniestros, mes_inicio, mes_corte_tipicos, 0
     )
     plata_procesada_tipicos = (
         base_triangulos.filter(pl.col("diagonal") == 1).get_column("pago_bruto").sum()
@@ -130,7 +122,7 @@ def test_analisis_triangulos(
     assert col_ocurr_at.min() >= utils.date_to_yyyymm(mes_inicio)  # type: ignore
     assert col_ocurr_at.max() <= utils.date_to_yyyymm(mes_corte)  # type: ignore
 
-    plata_original_atipicos = plata_original(df_siniestros, mes_inicio, mes_corte, 1)
+    plata_original_atipicos = plata_original(mock_siniestros, mes_inicio, mes_corte, 1)
 
     assert (
         abs(plata_original_atipicos - base_atipicos.get_column("pago_bruto").sum())
@@ -145,14 +137,13 @@ def test_analisis_triangulos(
 )
 def test_analisis_entremes(
     periodicidad_ocurrencia: Literal["Trimestral", "Semestral", "Anual"],
+    mock_siniestros: pl.LazyFrame,
+    mes_inicio: date,
+    mes_corte: date,
 ):
-    mes_inicio = date(randint(2010, 2019), randint(1, 12), 1)
-    mes_corte = date(randint(2020, 2030), randint(1, 12), 1)
-
-    df_siniestros = mock_siniestros(mes_inicio, mes_corte)
     with patch("src.procesamiento.base_siniestros.guardar_archivos"):
         base_triangulos, base_ult_ocurr, base_atipicos = base.generar_bases_siniestros(
-            df_siniestros, "entremes", mes_inicio, mes_corte
+            mock_siniestros, "entremes", mes_inicio, mes_corte
         )
 
     base_triangulos = base_triangulos.filter(
@@ -167,7 +158,7 @@ def test_analisis_entremes(
     assert col_dllo.min() == utils.date_to_yyyymm(mes_inicio)
     assert col_dllo.max() == utils.date_to_yyyymm(mes_corte)
 
-    plata_original_tipicos = plata_original(df_siniestros, mes_inicio, mes_corte, 0)
+    plata_original_tipicos = plata_original(mock_siniestros, mes_inicio, mes_corte, 0)
 
     plata_procesada_tipicos = (
         base_triangulos.filter(pl.col("diagonal") == 1).get_column("pago_bruto").sum()
@@ -185,7 +176,7 @@ def test_analisis_entremes(
     assert col_ocurr_ult.min() == utils.date_to_yyyymm(prim_ocurr)
     assert col_ocurr_ult.max() == utils.date_to_yyyymm(mes_corte)
 
-    plata_original_ult_ocurr = plata_original(df_siniestros, prim_ocurr, mes_corte, 0)
+    plata_original_ult_ocurr = plata_original(mock_siniestros, prim_ocurr, mes_corte, 0)
     plata_procesada = base_ult_ocurr.get_column("pago_bruto").sum()
 
     assert abs(plata_original_ult_ocurr - plata_procesada) < 100
@@ -196,7 +187,7 @@ def test_analisis_entremes(
     assert col_ocurr_at.min() >= utils.date_to_yyyymm(mes_inicio)  # type: ignore
     assert col_ocurr_at.max() <= utils.date_to_yyyymm(mes_corte)  # type: ignore
 
-    plata_original_atipicos = plata_original(df_siniestros, mes_inicio, mes_corte, 1)
+    plata_original_atipicos = plata_original(mock_siniestros, mes_inicio, mes_corte, 1)
 
     assert (
         abs(plata_original_atipicos - base_atipicos.get_column("pago_bruto").sum())

@@ -1,41 +1,29 @@
 import os
-from typing import Literal
-from unittest.mock import MagicMock, patch
-from numpy.random import randint
 from datetime import date
-
-from fastapi import status
-from sqlmodel import Session, select
-
-from fastapi.testclient import TestClient
-
-from src.models import Parametros
+from typing import Literal
+from unittest.mock import patch
 
 import polars as pl
 import pytest
+from fastapi import status
+from fastapi.testclient import TestClient
+from sqlmodel import Session, select
 from src import constantes as ct
 from src import plantilla as plant
 from src import utils
 from src.metodos_plantilla import base_plantillas
+from src.models import Parametros
 from src.procesamiento import base_siniestros
-from src import main
-
-from tests.conftest import mock_siniestros, mock_expuestos, mock_primas
 
 
-def mock_informacion_cruda(mes_inicio: int, mes_corte: int) -> None:
-    mes_inicio_dt = utils.yyyymm_to_date(mes_inicio)
-    mes_corte_dt = utils.yyyymm_to_date(mes_corte)
-
-    mock_siniestros(mes_inicio_dt, mes_corte_dt).collect().write_parquet(
-        "data/raw/siniestros.parquet"
-    )
-    mock_primas(mes_inicio_dt, mes_corte_dt).collect().write_parquet(
-        "data/raw/primas.parquet"
-    )
-    mock_expuestos(mes_inicio_dt, mes_corte_dt).collect().write_parquet(
-        "data/raw/expuestos.parquet"
-    )
+def mock_informacion_cruda(
+    mock_siniestros: pl.LazyFrame,
+    mock_primas: pl.LazyFrame,
+    mock_expuestos: pl.LazyFrame,
+) -> None:
+    mock_siniestros.collect().write_parquet("data/raw/siniestros.parquet")
+    mock_primas.collect().write_parquet("data/raw/primas.parquet")
+    mock_expuestos.collect().write_parquet("data/raw/expuestos.parquet")
 
 
 @pytest.mark.integration
@@ -54,13 +42,12 @@ def mock_informacion_cruda(mes_inicio: int, mes_corte: int) -> None:
 def test_forma_triangulo(
     tipo_analisis: Literal["triangulos", "entremes"],
     periodicidad_ocurrencia: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
+    mock_siniestros: pl.LazyFrame,
+    mes_inicio: date,
+    mes_corte: date,
 ):
-    mes_inicio = date(randint(2010, 2019), randint(1, 12), 1)
-    mes_corte = date(randint(2020, 2030), randint(1, 12), 1)
-    df_siniestros = mock_siniestros(mes_inicio, mes_corte)
-
     _, _, _ = base_siniestros.generar_bases_siniestros(
-        df_siniestros, tipo_analisis, mes_inicio, mes_corte
+        mock_siniestros, tipo_analisis, mes_inicio, mes_corte
     )
 
     df = base_plantillas.base_plantillas(
@@ -103,11 +90,14 @@ def test_preparar_plantilla(
     client: TestClient,
     test_session: Session,
     params_form: dict[str, str],
+    mock_siniestros: pl.LazyFrame,
+    mock_primas: pl.LazyFrame,
+    mock_expuestos: pl.LazyFrame,
 ):
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]
 
-    mock_informacion_cruda(p.mes_inicio, p.mes_corte)
+    mock_informacion_cruda(mock_siniestros, mock_primas, mock_expuestos)
 
     response = client.post("/preparar-plantilla")
 
@@ -212,11 +202,14 @@ def test_generar_plantilla(
     test_session: Session,
     params_form: dict[str, str],
     plantillas: list[str],
+    mock_siniestros: pl.LazyFrame,
+    mock_primas: pl.LazyFrame,
+    mock_expuestos: pl.LazyFrame,
 ):
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]
 
-    mock_informacion_cruda(p.mes_inicio, p.mes_corte)
+    mock_informacion_cruda(mock_siniestros, mock_primas, mock_expuestos)
 
     _ = client.post("/preparar-plantilla")
     wb = plant.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
@@ -236,6 +229,7 @@ def test_generar_plantilla(
         assert wb.sheets[plantilla_name].range((3, 3)).value == "Bruto"
 
     wb.close()
+    os.remove(f"plantillas/{p.nombre_plantilla}.xlsm")
 
 
 @pytest.mark.plantilla
@@ -295,11 +289,14 @@ def test_guardar_traer(
     params_form: dict[str, str],
     plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
     rangos_adicionales: dict[Literal["frec", "seve", "plata", "entremes"], list[str]],
+    mock_siniestros: pl.LazyFrame,
+    mock_primas: pl.LazyFrame,
+    mock_expuestos: pl.LazyFrame,
 ):
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]
 
-    mock_informacion_cruda(p.mes_inicio, p.mes_corte)
+    mock_informacion_cruda(mock_siniestros, mock_primas, mock_expuestos)
 
     _ = client.post("/preparar-plantilla")
     wb = plant.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
@@ -355,3 +352,4 @@ def test_guardar_traer(
                 mock_leer.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
 
     wb.close()
+    os.remove(f"plantillas/{p.nombre_plantilla}.xlsm")

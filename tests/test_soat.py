@@ -1,8 +1,3 @@
-import polars as pl
-import pytest
-from fastapi.testclient import TestClient
-
-
 # @pytest.fixture
 # def params_soat() -> dict[str, str]:
 #     return {

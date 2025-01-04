@@ -36,28 +36,18 @@ INSERT INTO clases VALUES (?, ?, ?, ?);  -- noqa:
 
 CREATE MULTISET VOLATILE TABLE fechas AS
 (
-    SELECT DISTINCT
+    SELECT
         mes_id
-        , MIN(dia_dt) OVER (PARTITION BY mes_id) AS primer_dia_mes
-        , MAX(dia_dt) OVER (PARTITION BY mes_id) AS ultimo_dia_mes
-        , CAST((ultimo_dia_mes - primer_dia_mes + 1) * 1.00 AS DECIMAL(18, 0))
+        , MIN(dia_dt) AS primer_dia_mes
+        , MAX(dia_dt) AS ultimo_dia_mes
+        , CAST(ultimo_dia_mes - primer_dia_mes + 1 AS FLOAT)
             AS num_dias_mes
-        , MIN(dia_dt) OVER (PARTITION BY trimestre_id) AS primer_dia_trimestre
-        , MAX(dia_dt) OVER (PARTITION BY trimestre_id) AS ultimo_dia_trimestre
-        , CAST(
-            (ultimo_dia_trimestre - primer_dia_trimestre + 1)
-            * 1.00 AS DECIMAL(18, 0)
-        ) AS num_dias_trimestre
-        , MIN(dia_dt) OVER (PARTITION BY ano_id) AS primer_dia_anno
-        , MAX(dia_dt) OVER (PARTITION BY ano_id) AS ultimo_dia_anno
-        , CAST(
-            (ultimo_dia_anno - primer_dia_anno + 1) * 1.00 AS DECIMAL(18, 0)
-        ) AS num_dias_anno
     FROM mdb_seguros_colombia.v_dia
     WHERE
         mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER) AND CAST(
             '{mes_corte}' AS INTEGER
         )
+    GROUP BY 1
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 
 -- drop table BASE_EXPUESTOS;
@@ -284,7 +274,7 @@ CREATE MULTISET VOLATILE TABLE expuestos AS
                 , COALESCE(vpc.fecha_cancelacion, (DATE '3000-01-01'))
             ) AS fecha_fin
             , SUM(
-                CAST((fecha_fin - fecha_inicio + 1) AS DECIMAL(18, 6))
+                CAST(fecha_fin - fecha_inicio + 1 AS FLOAT)
                 / fechas.num_dias_mes
             ) AS expuestos
             , SUM(1) AS vigentes

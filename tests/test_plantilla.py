@@ -26,7 +26,6 @@ def generar_bases_mock(
     return base_triangulos, base_ult_ocurr, base_atipicos
 
 
-
 @pytest.mark.unit
 @pytest.mark.parametrize("tipo_analisis", ["triangulos", "entremes"])
 @patch("src.metodos_plantilla.insumos.df_triangulos")

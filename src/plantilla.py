@@ -66,6 +66,7 @@ def preparar_plantilla(
 
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
 
+    wb.macro("formatos_aux_totales")(diagonales.shape[0])
     wb.macro("formulas_aux_totales")(diagonales.shape[0])
 
     wb.sheets["Aux_Expuestos"]["A1"].options(index=False).value = expuestos.to_pandas()

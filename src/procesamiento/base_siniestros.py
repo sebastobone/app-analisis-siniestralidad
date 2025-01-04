@@ -68,7 +68,10 @@ def preparar_base_siniestros(
     return df_sinis_tipicos, df_sinis_atipicos
 
 
-def mes_ult_ocurr_triangulos(mes_corte: date, origin_grain: str) -> date:
+def mes_ult_ocurr_triangulos(
+    mes_corte: date,
+    origin_grain: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
+) -> date:
     anno = mes_corte.year
     mes = mes_corte.month
     periodicidad = ct.PERIODICIDADES[origin_grain]
@@ -79,7 +82,10 @@ def mes_ult_ocurr_triangulos(mes_corte: date, origin_grain: str) -> date:
     )
 
 
-def mes_prim_ocurr_periodo_act(mes_corte: date, origin_grain: str) -> date:
+def mes_prim_ocurr_periodo_act(
+    mes_corte: date,
+    origin_grain: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
+) -> date:
     anno = mes_corte.year
     mes = mes_corte.month
     periodicidad = ct.PERIODICIDADES[origin_grain]
@@ -88,8 +94,8 @@ def mes_prim_ocurr_periodo_act(mes_corte: date, origin_grain: str) -> date:
 
 def construir_triangulos(
     df_tri: pl.LazyFrame,
-    origin_grain: str,
-    development_grain: str,
+    origin_grain: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
+    development_grain: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
     mes_corte: date,
     tipo_analisis: Literal["triangulos", "entremes"],
 ) -> pl.LazyFrame:
@@ -168,7 +174,7 @@ def construir_triangulos(
 
 def construir_diagonales_triangulo(
     df_tri: pl.LazyFrame,
-    origin_grain: str,
+    origin_grain: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
     mes_inicio: date,
     mes_corte: date,
     base_output: Literal["atipicos", "ultima_ocurrencia"],

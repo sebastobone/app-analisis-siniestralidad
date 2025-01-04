@@ -18,8 +18,7 @@ INI_MOCK = date(2015, 1, 1)
 END_MOCK = date(2030, 1, 1)
 
 
-@pytest.fixture
-def mock_siniestros() -> pl.LazyFrame:
+def mock_siniestros(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     num_rows = 100000
     return pl.LazyFrame(
         {
@@ -31,8 +30,8 @@ def mock_siniestros() -> pl.LazyFrame:
             "atipico": np.random.choice([0, 1], size=num_rows, p=[0.95, 0.05]),
             "fecha_siniestro": np.random.choice(
                 pl.date_range(
-                    INI_MOCK,
-                    END_MOCK,
+                    mes_inicio,
+                    mes_corte,
                     interval="1mo",
                     eager=True,
                 ),
@@ -40,8 +39,8 @@ def mock_siniestros() -> pl.LazyFrame:
             ),
             "fecha_registro": np.random.choice(
                 pl.date_range(
-                    INI_MOCK,
-                    END_MOCK,
+                    mes_inicio,
+                    mes_corte,
                     interval="1mo",
                     eager=True,
                 ),
@@ -65,8 +64,7 @@ def mock_siniestros() -> pl.LazyFrame:
     )
 
 
-@pytest.fixture
-def mock_primas() -> pl.LazyFrame:
+def mock_primas(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     num_rows = 10000
     return pl.LazyFrame(
         {
@@ -77,8 +75,8 @@ def mock_primas() -> pl.LazyFrame:
             "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
             "fecha_registro": np.random.choice(
                 pl.date_range(
-                    INI_MOCK,
-                    END_MOCK,
+                    mes_inicio,
+                    mes_corte,
                     interval="1mo",
                     eager=True,
                 ),
@@ -99,8 +97,7 @@ def mock_primas() -> pl.LazyFrame:
     )
 
 
-@pytest.fixture
-def mock_expuestos() -> pl.LazyFrame:
+def mock_expuestos(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     num_rows = 10000
     return (
         pl.LazyFrame(
@@ -116,8 +113,8 @@ def mock_expuestos() -> pl.LazyFrame:
                 "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
                 "fecha_registro": np.random.choice(
                     pl.date_range(
-                        INI_MOCK,
-                        END_MOCK,
+                        mes_inicio,
+                        mes_corte,
                         interval="1mo",
                         eager=True,
                     ),

@@ -419,10 +419,14 @@ def generar_evidencias_parametros(negocio: str, mes_corte: int):
     logger.success("Evidencias de controles generadas exitosamente.")
 
 
-def ajustar_fraude(df: pl.LazyFrame):
-    fraude = pl.LazyFrame(
-        pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")
-    ).drop("tipo_ajuste")
+def ajustar_fraude(df: pl.LazyFrame, mes_corte: int):
+    fraude = (
+        pl.LazyFrame(
+            pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")
+        )
+        .drop("tipo_ajuste")
+        .filter(pl.col("fecha_registro") <= utils.yyyymm_to_date(mes_corte))
+    )
 
     df = (
         pl.concat([df, fraude], how="vertical_relaxed")
@@ -472,7 +476,7 @@ def generar_controles(
     if negocio == "soat" and file == "siniestros" and add_fraude_soat:
         df.collect().write_csv("data/raw/siniestros_post_cuadre.csv", separator="\t")
         df.collect().write_parquet("data/raw/siniestros_post_cuadre.parquet")
-        df = ajustar_fraude(df)
+        df = ajustar_fraude(df, mes_corte)
         _ = controles_informacion(
             df,
             file,

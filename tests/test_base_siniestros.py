@@ -125,7 +125,7 @@ def test_analisis_triangulos(
 
     col_ocurr_at = base_atipicos.get_column("periodo_ocurrencia")
 
-    # Puede que no hallan llegado atipicos todos los meses, 
+    # Puede que no hallan llegado atipicos todos los meses,
     # entonces no se exige igualdad
     assert col_ocurr_at.min() >= utils.date_to_yyyymm(mes_inicio)  # type: ignore
     assert col_ocurr_at.max() <= utils.date_to_yyyymm(mes_corte)  # type: ignore
@@ -185,14 +185,12 @@ def test_analisis_entremes(
     assert col_ocurr_ult.min() == utils.date_to_yyyymm(prim_ocurr)
     assert col_ocurr_ult.max() == utils.date_to_yyyymm(mes_corte)
 
-    plata_original_ult_ocurr = plata_original(
-        df_siniestros, prim_ocurr, mes_corte, 0
-    )
+    plata_original_ult_ocurr = plata_original(df_siniestros, prim_ocurr, mes_corte, 0)
     plata_procesada = base_ult_ocurr.get_column("pago_bruto").sum()
 
     assert abs(plata_original_ult_ocurr - plata_procesada) < 100
 
-    # Puede que no hallan llegado atipicos todos los meses, 
+    # Puede que no hallan llegado atipicos todos los meses,
     # entonces no se exige igualdad
     col_ocurr_at = base_atipicos.get_column("periodo_ocurrencia")
     assert col_ocurr_at.min() >= utils.date_to_yyyymm(mes_inicio)  # type: ignore

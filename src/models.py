@@ -9,9 +9,9 @@ class Parametros(SQLModel, table=True):
     mes_inicio: int
     mes_corte: int
     tipo_analisis: Literal["triangulos", "entremes"] = Field(sa_type=String)
-    aproximar_reaseguro: bool
+    aproximar_reaseguro: bool = False
     nombre_plantilla: str
-    cuadre_contable_sinis: bool
-    add_fraude_soat: bool
-    cuadre_contable_primas: bool
+    cuadre_contable_sinis: bool = False
+    add_fraude_soat: bool = False
+    cuadre_contable_primas: bool = False
     session_id: str | None = Field(index=True)

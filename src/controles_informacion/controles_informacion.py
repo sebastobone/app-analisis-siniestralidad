@@ -92,14 +92,16 @@ def transformar_hoja_afo(
             variable_name="codigo_ramo_op",
             value_name=qty,
         )
-        .filter(pl.col(qty) != 0)
         .with_columns(
             pl.col(qty) * signo_sap(qty),
             codigo_op=pl.lit("01") if cia == "Generales" else pl.lit("02"),
+            fecha_registro=pl.date(pl.col("Anno"), pl.col("Mes"), 1),
         )
         .fill_null(0)
-        .with_columns(fecha_registro=pl.date(pl.col("Anno"), pl.col("Mes"), 1))
-        .filter(pl.col("fecha_registro") <= utils.yyyymm_to_date(mes_corte))
+        .filter(
+            (pl.col("fecha_registro") <= utils.yyyymm_to_date(mes_corte))
+            & (pl.col(qty) != 0)
+        )
         .select(["codigo_op", "codigo_ramo_op", "fecha_registro", qty])
     )
 
@@ -198,7 +200,8 @@ def generar_consistencia_historica(
     )
 
     logger.success(
-        f"Archivo de consistencia historica para {file} - {fuente} - {estado_cuadre} generado exitosamente."
+        f"""Archivo de consistencia historica para {file} - {fuente} - {estado_cuadre}
+        generado exitosamente.""".replace("\n", " ")
     )
 
 
@@ -344,7 +347,8 @@ def controles_informacion(
     generar_integridad_exactitud(df, estado_cuadre, file, mes_corte, qtys)
 
     logger.success(
-        f"""Revisiones de informacion y generacion de controles terminada para {file} en el estado {estado_cuadre}."""
+        f"""Revisiones de informacion y generacion de controles terminada
+        para {file} en el estado {estado_cuadre}.""".replace("\n", " ")
     )
 
     return difs_sap_tera

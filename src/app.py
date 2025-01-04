@@ -160,7 +160,10 @@ async def preparar_plantilla(
 @app.post("/modos-plantilla")
 async def modos_plantilla(
     plant: Annotated[Literal["frec", "seve", "plata", "entremes"], Form()],
-    modo: Annotated[str, Form()],
+    modo: Annotated[
+        Literal["generar", "guardar", "traer", "guardar_todo", "traer_guardar_todo"],
+        Form(),
+    ],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:

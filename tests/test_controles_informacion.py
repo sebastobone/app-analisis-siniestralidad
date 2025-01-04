@@ -1,5 +1,4 @@
 from datetime import date
-from unittest.mock import patch
 
 import numpy as np
 import polars as pl
@@ -9,6 +8,7 @@ from src import utils
 from src.controles_informacion import controles_informacion as ctrl
 
 
+@pytest.mark.unit
 @pytest.mark.parametrize(
     "qtys, expected",
     [
@@ -34,16 +34,15 @@ def test_definir_hojas_afo(qtys: list[str], expected: set[str]):
     assert ctrl.definir_hojas_afo(qtys) == expected
 
 
-def fechas_sap(mes_corte: int) -> list[date]:
-    return pl.date_range(
-        utils.yyyymm_to_date(201001),
-        utils.yyyymm_to_date(mes_corte),
-        interval="1mo",
-        eager=True,
-    ).to_list()
-
-
 def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
+    def fechas_sap(mes_corte: int) -> list[date]:
+        return pl.date_range(
+            utils.yyyymm_to_date(201001),
+            utils.yyyymm_to_date(mes_corte),
+            interval="1mo",
+            eager=True,
+        ).to_list()
+
     fechas = fechas_sap(mes_corte)
     num_rows = len(fechas)
 
@@ -63,7 +62,7 @@ def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
     ).with_columns(pl.sum_horizontal("001", "002", "003").alias("Resultado total"))
 
 
-@pytest.mark.parametrize("mes_corte", [202212])
+@pytest.mark.unit
 @pytest.mark.parametrize("cia", ["Vida", "Generales"])
 @pytest.mark.parametrize(
     "qty",
@@ -78,7 +77,10 @@ def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
         "prima_retenida_devengada",
     ],
 )
-def test_transformar_hoja_afo(mes_corte: int, cia: str, qty: str):
+def test_transformar_hoja_afo(cia: str, qty: str):
+    mes_corte = utils.date_to_yyyymm(
+        date(np.random.randint(2020, 2030), np.random.randint(1, 12), 1)
+    )
     df_original = mock_hoja_afo(mes_corte, qty)
     sum_original = sum(
         [df_original.get_column(column).sum() for column in ["001", "002", "003"]]
@@ -94,6 +96,7 @@ def test_transformar_hoja_afo(mes_corte: int, cia: str, qty: str):
         ctrl.transformar_hoja_afo(hoja_afo_incompleta, cia, qty, mes_corte)
 
 
+@pytest.mark.unit
 @pytest.mark.parametrize(
     "cias, qtys, mes_corte, expected_columns",
     [
@@ -106,21 +109,15 @@ def test_transformar_hoja_afo(mes_corte: int, cia: str, qty: str):
         (
             ["Vida"],
             ["pago_retenido"],
-            202412,
+            202201,
             ["pago_retenido"],
         ),
     ],
 )
 def test_consolidar_sap(cias, qtys, mes_corte, expected_columns):
-    with patch(
-        "src.controles_informacion.controles_informacion.pl.read_excel"
-    ) as mock_read_excel:
-        mock_read_excel.return_value = mock_hoja_afo(mes_corte, "prima_bruta")
-
-        result = ctrl.consolidar_sap(cias, qtys, mes_corte)
-
-        assert (
-            result.collect_schema().names()
-            == ["codigo_op", "codigo_ramo_op", "fecha_registro"] + expected_columns
-        )
-        assert result.shape[0] > 0
+    result = ctrl.consolidar_sap(cias, qtys, mes_corte)
+    assert (
+        result.collect_schema().names()
+        == ["codigo_op", "codigo_ramo_op", "fecha_registro"] + expected_columns
+    )
+    assert result.shape[0] > 0

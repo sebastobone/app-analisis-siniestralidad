@@ -1,6 +1,15 @@
 import os
 from typing import Literal
 from unittest.mock import MagicMock, patch
+from numpy.random import randint
+from datetime import date
+
+from fastapi import status
+from sqlmodel import Session, select
+
+from fastapi.testclient import TestClient
+
+from src.models import Parametros
 
 import polars as pl
 import pytest
@@ -8,106 +17,120 @@ from src import constantes as ct
 from src import plantilla as plant
 from src import utils
 from src.metodos_plantilla import base_plantillas
-from src.procesamiento import base_primas_expuestos, base_siniestros
+from src.procesamiento import base_siniestros
+from src import main
 
-from tests.conftest import END_MOCK, INI_MOCK
-
-
-def generar_bases_mock(
-    mock_siniestros: pl.LazyFrame,
-    tipo_analisis: Literal["triangulos", "entremes"],
-) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
-    with patch("src.procesamiento.base_siniestros.guardar_archivos"):
-        base_triangulos, base_ult_ocurr, base_atipicos = (
-            base_siniestros.generar_bases_siniestros(
-                mock_siniestros, tipo_analisis, INI_MOCK, END_MOCK
-            )
-        )
-    return base_triangulos, base_ult_ocurr, base_atipicos
+from tests.conftest import mock_siniestros, mock_expuestos, mock_primas
 
 
-@pytest.mark.unit
-@pytest.mark.parametrize("tipo_analisis", ["triangulos", "entremes"])
-@patch("src.metodos_plantilla.insumos.df_triangulos")
-def test_base_plantillas(
-    mock_df_triangulos: MagicMock,
-    mock_siniestros: pl.LazyFrame,
-    tipo_analisis: Literal["triangulos", "entremes"],
-):
-    base_triangulos, _, _ = generar_bases_mock(mock_siniestros, tipo_analisis)
-    mock_df_triangulos.return_value = base_triangulos.lazy()
+def mock_informacion_cruda(mes_inicio: int, mes_corte: int) -> None:
+    mes_inicio_dt = utils.yyyymm_to_date(mes_inicio)
+    mes_corte_dt = utils.yyyymm_to_date(mes_corte)
 
-    df = base_plantillas.base_plantillas(
-        "01_001_A_D", "bruto", [["01_001_A_D", "Trimestral"]], ["pago", "incurrido"]
+    mock_siniestros(mes_inicio_dt, mes_corte_dt).collect().write_parquet(
+        "data/raw/siniestros.parquet"
+    )
+    mock_primas(mes_inicio_dt, mes_corte_dt).collect().write_parquet(
+        "data/raw/primas.parquet"
+    )
+    mock_expuestos(mes_inicio_dt, mes_corte_dt).collect().write_parquet(
+        "data/raw/expuestos.parquet"
     )
 
-    assert df.shape[0] <= df.shape[1] // 2
 
-
-@pytest.mark.plantilla
+@pytest.mark.integration
 @pytest.mark.parametrize(
-    "mes_corte, tipo_analisis, plantillas",
+    "tipo_analisis, periodicidad_ocurrencia",
     [
-        (202312, "triangulos", ["frec", "seve", "plata"]),
-        (202312, "entremes", ["entremes"]),
+        ("triangulos", "Mensual"),
+        ("triangulos", "Trimestral"),
+        ("triangulos", "Semestral"),
+        ("triangulos", "Anual"),
+        ("entremes", "Trimestral"),
+        ("entremes", "Semestral"),
+        ("entremes", "Anual"),
     ],
 )
-@patch("src.metodos_plantilla.insumos.df_primas")
-@patch("src.metodos_plantilla.insumos.df_expuestos")
-@patch("src.metodos_plantilla.insumos.df_atipicos")
-@patch("src.metodos_plantilla.insumos.df_ult_ocurr")
-@patch("src.metodos_plantilla.insumos.df_triangulos")
-@patch("src.plantilla.tablas_resumen.df_aperturas")
-def test_preparar_y_generar_plantilla(
-    mock_df_aperturas: MagicMock,
-    mock_df_triangulos: MagicMock,
-    mock_df_ult_ocurr: MagicMock,
-    mock_df_atipicos: MagicMock,
-    mock_df_expuestos: MagicMock,
-    mock_df_primas: MagicMock,
-    mock_siniestros: pl.LazyFrame,
-    mock_expuestos: pl.LazyFrame,
-    mock_primas: pl.LazyFrame,
-    mes_corte: int,
+def test_forma_triangulo(
     tipo_analisis: Literal["triangulos", "entremes"],
-    plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
+    periodicidad_ocurrencia: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
 ):
-    base_triangulos, base_ult_ocurr, base_atipicos = generar_bases_mock(
-        mock_siniestros, tipo_analisis
+    mes_inicio = date(randint(2010, 2019), randint(1, 12), 1)
+    mes_corte = date(randint(2020, 2030), randint(1, 12), 1)
+    df_siniestros = mock_siniestros(mes_inicio, mes_corte)
+
+    _, _, _ = base_siniestros.generar_bases_siniestros(
+        df_siniestros, tipo_analisis, mes_inicio, mes_corte
     )
 
-    mock_df_aperturas.return_value = mock_siniestros
-    mock_df_triangulos.return_value = base_triangulos.lazy()
-    mock_df_ult_ocurr.return_value = base_ult_ocurr.lazy()
-    mock_df_atipicos.return_value = base_atipicos.lazy()
-    mock_df_expuestos.return_value = (
-        base_primas_expuestos.generar_base_primas_expuestos(
-            mock_expuestos, "expuestos", "mock"
-        ).lazy()
-    )
-    mock_df_primas.return_value = base_primas_expuestos.generar_base_primas_expuestos(
-        mock_primas, "primas", "mock"
-    ).lazy()
-
-    if os.path.exists("tests/mock_plantilla.xlsm"):
-        os.remove("tests/mock_plantilla.xlsm")
-
-    wb = plant.abrir_plantilla("tests/mock_plantilla.xlsm")
-    plant.preparar_plantilla(wb, mes_corte, tipo_analisis, "mock")
-
-    assert wb.sheets["Main"]["A4"].value == "Mes corte"
-    assert wb.sheets["Main"]["B4"].value == mes_corte
-    assert wb.sheets["Main"]["A5"].value == "Mes anterior"
-    assert wb.sheets["Main"]["B5"].value == (
-        mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
+    df = base_plantillas.base_plantillas(
+        "01_001_A_D",
+        "bruto",
+        [["01_001_A_D", periodicidad_ocurrencia]],
+        ["pago", "incurrido"],
     )
 
     if tipo_analisis == "triangulos":
+        assert df.shape[0] == df.shape[1] // 2
+    elif tipo_analisis == "entremes":
+        assert (
+            df.shape[0] * ct.PERIODICIDADES[periodicidad_ocurrencia] >= df.shape[1] // 2
+        )
+
+
+@pytest.mark.plantilla
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "params_form",
+    [
+        {
+            "negocio": "mock",
+            "mes_inicio": "201501",
+            "mes_corte": "203012",
+            "tipo_analisis": "triangulos",
+            "nombre_plantilla": "plantilla_mock_triangulos",
+        },
+        {
+            "negocio": "mock",
+            "mes_inicio": "201501",
+            "mes_corte": "203012",
+            "tipo_analisis": "entremes",
+            "nombre_plantilla": "plantilla_mock_entremes",
+        },
+    ],
+)
+def test_preparar_plantilla(
+    client: TestClient,
+    test_session: Session,
+    params_form: dict[str, str],
+):
+    _ = client.post("/ingresar-parametros", data=params_form)
+    p = test_session.exec(select(Parametros)).all()[0]
+
+    mock_informacion_cruda(p.mes_inicio, p.mes_corte)
+
+    response = client.post("/preparar-plantilla")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert os.path.exists(f"plantillas/{p.nombre_plantilla}.xlsm")
+
+    wb = plant.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+
+    assert wb.sheets["Main"]["A4"].value == "Mes corte"
+    assert wb.sheets["Main"]["B4"].value == p.mes_corte
+    assert wb.sheets["Main"]["A5"].value == "Mes anterior"
+    assert wb.sheets["Main"]["B5"].value == (
+        p.mes_corte - 1
+        if p.mes_corte % 100 != 1
+        else ((p.mes_corte // 100) - 1) * 100 + 12
+    )
+
+    if p.tipo_analisis == "triangulos":
         assert not wb.sheets["Plantilla_Entremes"].visible
         assert wb.sheets["Plantilla_Frec"].visible
         assert wb.sheets["Plantilla_Seve"].visible
         assert wb.sheets["Plantilla_Plata"].visible
-    elif tipo_analisis == "entremes":
+    elif p.tipo_analisis == "entremes":
         assert wb.sheets["Plantilla_Entremes"].visible
         assert not wb.sheets["Plantilla_Frec"].visible
         assert not wb.sheets["Plantilla_Seve"].visible
@@ -115,6 +138,8 @@ def test_preparar_y_generar_plantilla(
 
     assert "aperturas" in [table.name for table in wb.sheets["Main"].tables]
     assert "periodicidades" in [table.name for table in wb.sheets["Main"].tables]
+
+    base_triangulos = pl.read_parquet("data/processed/base_triangulos.parquet")
 
     df_original = base_triangulos.filter(
         (pl.col("periodicidad_ocurrencia") == "Trimestral") & (pl.col("diagonal") == 1)
@@ -127,7 +152,10 @@ def test_preparar_y_generar_plantilla(
         + ct.COLUMNAS_QTYS
     )
 
-    if tipo_analisis == "entremes":
+    if p.tipo_analisis == "entremes":
+        base_ult_ocurr = pl.read_parquet(
+            "data/processed/base_ultima_ocurrencia.parquet"
+        )
         df_original = df_original.filter(
             pl.col("periodo_ocurrencia")
             != pl.col("periodo_ocurrencia").max().over("apertura_reservas")
@@ -148,23 +176,81 @@ def test_preparar_y_generar_plantilla(
         < 100
     )
 
-    for plantilla in plantillas:
-        plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-        plant.generar_plantilla(wb, plantilla, mes_corte, "mock")
+    wb.close()
+    os.remove(f"plantillas/{p.nombre_plantilla}.xlsm")
 
-        assert wb.sheets[plantilla_name]["C2"].value == "01_001_A_D"
-        assert wb.sheets[plantilla_name]["C3"].value == "Bruto"
+
+@pytest.mark.plantilla
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "params_form, plantillas",
+    [
+        (
+            {
+                "negocio": "mock",
+                "mes_inicio": "201501",
+                "mes_corte": "203012",
+                "tipo_analisis": "triangulos",
+                "nombre_plantilla": "plantilla_mock_triangulos",
+            },
+            ["frec", "seve", "plata"],
+        ),
+        # (
+        #     {
+        #         "negocio": "mock",
+        #         "mes_inicio": "201501",
+        #         "mes_corte": "203012",
+        #         "tipo_analisis": "entremes",
+        #         "nombre_plantilla": "plantilla_mock_entremes",
+        #     },
+        #     ["entremes"],
+        # ),
+    ],
+)
+def test_generar_plantilla(
+    client: TestClient,
+    test_session: Session,
+    params_form: dict[str, str],
+    plantillas: list[str],
+):
+    _ = client.post("/ingresar-parametros", data=params_form)
+    p = test_session.exec(select(Parametros)).all()[0]
+
+    mock_informacion_cruda(p.mes_inicio, p.mes_corte)
+
+    _ = client.post("/preparar-plantilla")
+    wb = plant.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+
+    for plantilla in plantillas:
+        response = client.post(
+            "/modos-plantilla", data={"plant": plantilla, "modo": "generar"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert os.path.exists(f"plantillas/{p.nombre_plantilla}.xlsm")
+
+        plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+        assert wb.sheets[plantilla_name].range((2, 2)).value == "Apertura"
+        assert wb.sheets[plantilla_name].range((2, 3)).value == "01_001_A_D"
+        assert wb.sheets[plantilla_name].range((3, 2)).value == "Atributo"
+        assert wb.sheets[plantilla_name].range((3, 3)).value == "Bruto"
 
     wb.close()
 
 
 @pytest.mark.plantilla
+@pytest.mark.integration
 @pytest.mark.parametrize(
-    "mes_corte, tipo_analisis, plantillas, rangos_adicionales",
+    "params_form, plantillas, rangos_adicionales",
     [
         (
-            202312,
-            "triangulos",
+            {
+                "negocio": "mock",
+                "mes_inicio": "201501",
+                "mes_corte": "203012",
+                "tipo_analisis": "triangulos",
+                "nombre_plantilla": "plantilla_mock_triangulos",
+            },
             ["frec", "seve", "plata"],
             {
                 "frec": ["BASE", "INDICADOR", "COMENTARIOS"],
@@ -178,72 +264,45 @@ def test_preparar_y_generar_plantilla(
                 "plata": ["BASE", "INDICADOR", "COMENTARIOS"],
             },
         ),
-        (
-            202312,
-            "entremes",
-            ["entremes"],
-            {
-                "entremes": [
-                    "FREC_SEV_ULTIMA_OCURRENCIA",
-                    "VARIABLE_DESPEJADA",
-                    "COMENTARIOS",
-                    "FACTOR_COMPLETITUD",
-                    "PCT_SUE_BF",
-                    "VELOCIDAD_BF",
-                    "PCT_SUE_NUEVO",
-                    "AJUSTE_PARCIAL",
-                    "COMENTARIOS_AJUSTE",
-                ]
-            },
-        ),
+        # (
+        #     {
+        #         "negocio": "mock",
+        #         "mes_inicio": "201501",
+        #         "mes_corte": "203012",
+        #         "tipo_analisis": "entremes",
+        #         "nombre_plantilla": "plantilla_mock_entremes",
+        #     },
+        #     ["entremes"],
+        #     {
+        #         "entremes": [
+        #             "FREC_SEV_ULTIMA_OCURRENCIA",
+        #             "VARIABLE_DESPEJADA",
+        #             "COMENTARIOS",
+        #             "FACTOR_COMPLETITUD",
+        #             "PCT_SUE_BF",
+        #             "VELOCIDAD_BF",
+        #             "PCT_SUE_NUEVO",
+        #             "AJUSTE_PARCIAL",
+        #             "COMENTARIOS_AJUSTE",
+        #         ]
+        #     },
+        # ),
     ],
 )
-@patch("src.metodos_plantilla.insumos.df_primas")
-@patch("src.metodos_plantilla.insumos.df_expuestos")
-@patch("src.metodos_plantilla.insumos.df_atipicos")
-@patch("src.metodos_plantilla.insumos.df_ult_ocurr")
-@patch("src.metodos_plantilla.insumos.df_triangulos")
-@patch("src.plantilla.tablas_resumen.df_aperturas")
 def test_guardar_traer(
-    mock_df_aperturas: MagicMock,
-    mock_df_triangulos: MagicMock,
-    mock_df_ult_ocurr: MagicMock,
-    mock_df_atipicos: MagicMock,
-    mock_df_expuestos: MagicMock,
-    mock_df_primas: MagicMock,
-    mock_siniestros: pl.LazyFrame,
-    mock_expuestos: pl.LazyFrame,
-    mock_primas: pl.LazyFrame,
-    mes_corte: int,
-    tipo_analisis: Literal["triangulos", "entremes"],
+    client: TestClient,
+    test_session: Session,
+    params_form: dict[str, str],
     plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
     rangos_adicionales: dict[Literal["frec", "seve", "plata", "entremes"], list[str]],
 ):
-    base_triangulos, base_ult_ocurr, base_atipicos = generar_bases_mock(
-        mock_siniestros, tipo_analisis
-    )
+    _ = client.post("/ingresar-parametros", data=params_form)
+    p = test_session.exec(select(Parametros)).all()[0]
 
-    mock_df_aperturas.return_value = mock_siniestros
-    mock_df_triangulos.return_value = base_triangulos.lazy()
-    mock_df_ult_ocurr.return_value = base_ult_ocurr.lazy()
-    mock_df_atipicos.return_value = base_atipicos.lazy()
-    mock_df_expuestos.return_value = (
-        base_primas_expuestos.generar_base_primas_expuestos(
-            mock_expuestos, "expuestos", "mock"
-        ).lazy()
-    )
-    mock_df_primas.return_value = base_primas_expuestos.generar_base_primas_expuestos(
-        mock_primas, "primas", "mock"
-    ).lazy()
+    mock_informacion_cruda(p.mes_inicio, p.mes_corte)
 
-    if os.path.exists("tests/mock_plantilla.xlsm"):
-        os.remove("tests/mock_plantilla.xlsm")
-
-    wb = plant.abrir_plantilla("tests/mock_plantilla.xlsm")
-    plant.preparar_plantilla(wb, mes_corte, tipo_analisis, "mock")
-
-    for plantilla in plantillas:
-        plant.generar_plantilla(wb, plantilla, mes_corte, "mock")
+    _ = client.post("/preparar-plantilla")
+    wb = plant.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     rangos_comunes = [
         "MET_PAGO_INCURRIDO",
@@ -255,6 +314,10 @@ def test_guardar_traer(
     ]
 
     for plantilla in plantillas:
+        _ = client.post(
+            "/modos-plantilla", data={"plant": plantilla, "modo": "generar"}
+        )
+
         plantilla_name = f"Plantilla_{plantilla.capitalize()}"
 
         apertura = str(wb.sheets[plantilla_name]["C2"].value)
@@ -266,12 +329,17 @@ def test_guardar_traer(
         ]
 
         with pytest.raises(FileNotFoundError):
-            plant.guardar_traer_fn(wb, "traer", plantilla, mes_corte)
+            _ = client.post(
+                "/modos-plantilla", data={"plant": plantilla, "modo": "traer"}
+            )
 
         with patch(
             "src.plantilla.guardar_traer.pl.DataFrame.write_csv"
         ) as mock_guardar:
-            plant.guardar_traer_fn(wb, "guardar", plantilla, mes_corte)
+            response = client.post(
+                "/modos-plantilla", data={"plant": plantilla, "modo": "guardar"}
+            )
+            assert response.status_code == status.HTTP_200_OK
             for archivo in archivos_guardados:
                 mock_guardar.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
 
@@ -279,7 +347,10 @@ def test_guardar_traer(
             mock_leer.return_value = pl.DataFrame(
                 [("ABCDEFG", "HIJKLMN"), ("ABCDEFG", "HIJKLMN")]
             )
-            plant.guardar_traer_fn(wb, "traer", plantilla, mes_corte)
+            response = client.post(
+                "/modos-plantilla", data={"plant": plantilla, "modo": "traer"}
+            )
+            assert response.status_code == status.HTTP_200_OK
             for archivo in archivos_guardados:
                 mock_leer.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
 

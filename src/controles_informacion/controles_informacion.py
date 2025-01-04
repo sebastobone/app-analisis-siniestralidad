@@ -460,6 +460,7 @@ def generar_controles(
         file == "primas" and cuadre_contable_primas
     ):
         df.collect().write_csv(f"data/raw/{file}_pre_cuadre.csv", separator="\t")
+        df.collect().write_parquet(f"data/raw/{file}_pre_cuadre.parquet")
         df = cuadre_contable(negocio, file, df, difs_sap_tera_pre_cuadre.lazy())
         _ = controles_informacion(
             df,
@@ -470,6 +471,7 @@ def generar_controles(
 
     if negocio == "soat" and file == "siniestros" and add_fraude_soat:
         df.collect().write_csv("data/raw/siniestros_post_cuadre.csv", separator="\t")
+        df.collect().write_parquet("data/raw/siniestros_post_cuadre.parquet")
         df = ajustar_fraude(df)
         _ = controles_informacion(
             df,

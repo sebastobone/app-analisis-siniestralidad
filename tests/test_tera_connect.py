@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Literal
 from unittest.mock import MagicMock, patch
 
@@ -47,7 +47,6 @@ def test_preparar_queries(params: Parametros):
 @pytest.mark.unit
 def test_fechas_chunks(params: Parametros):
     test = tera_connect.fechas_chunks(params.mes_inicio, params.mes_corte)
-    print(test[0])
 
     mes_inicio_date = utils.yyyymm_to_date(params.mes_inicio)
     mes_inicio_next = mes_inicio_date.replace(day=28) + timedelta(days=4)
@@ -133,23 +132,47 @@ def test_check_nulls():
 
 
 @pytest.mark.unit
-def test_check_final_info(mock_siniestros: pl.LazyFrame):
+def test_check_final_info(
+    mock_siniestros: pl.LazyFrame, mes_inicio: date, mes_corte: date
+):
+    mes_inicio_int = utils.date_to_yyyymm(mes_inicio)
+    mes_corte_int = utils.date_to_yyyymm(mes_corte)
+
     tipo_query = "siniestros"
     df = mock_siniestros.collect()
 
-    with pytest.raises(ValueError) as exc_info:
-        tera_connect.check_final_info(tipo_query, df.drop("codigo_op"), "mock")
-    assert str(exc_info.value) == """¡Falta la columna codigo_op!"""
+    with pytest.raises(ValueError):
+        tera_connect.check_final_info(
+            tipo_query, df.drop("codigo_op"), "mock", mes_inicio_int, mes_corte_int
+        )
 
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(ValueError):
         tera_connect.check_final_info(
             tipo_query,
             df.with_columns(pl.col("fecha_siniestro").cast(pl.String)),
             "mock",
+            mes_inicio_int,
+            mes_corte_int,
+        )
+
+    df_fechas_por_fuera = df.slice(0, 2).with_columns(
+        fecha_registro=[date(2000, 1, 1), date(2100, 1, 1)],
+        fecha_siniestro=[date(2000, 1, 1), date(2100, 1, 1)],
+    )
+
+    with pytest.raises(ValueError):
+        tera_connect.check_final_info(
+            tipo_query,
+            df_fechas_por_fuera,
+            "mock",
+            mes_inicio_int,
+            mes_corte_int,
         )
 
     df_falt = df.slice(0, 2).with_columns(
         [pl.lit(None).alias(col) for col in utils.columnas_aperturas("mock")]
     )
-    with pytest.raises(ValueError) as exc_info:
-        tera_connect.check_final_info(tipo_query, pl.concat([df, df_falt]), "mock")
+    with pytest.raises(ValueError):
+        tera_connect.check_final_info(
+            tipo_query, pl.concat([df, df_falt]), "mock", mes_inicio_int, mes_corte_int
+        )

@@ -113,25 +113,17 @@ def ejecutar_queries(
             logger.exception(f"Error en {query[:100]}")
             raise
 
-    return pl.read_database(queries[-1], con)
+    return pl.DataFrame(utils.lowercase_columns(pl.read_database(queries[-1], con)))
 
 
 def guardar_resultados(
     df: pl.DataFrame,
-    negocio: str,
     save_path: str,
     save_format: str,
     tipo_query: str,
 ) -> None:
-    df = pl.DataFrame(utils.lowercase_columns(df))
-
-    if tipo_query != "otro":
-        check_final_info(tipo_query, df, negocio)
-
-        df = df.select(
-            utils.col_apertura_reservas(negocio),
-            pl.all(),
-        )
+    # Para poder visualizarlo facil, en caso de ser necesario
+    if tipo_query != "otro" and save_format != "csv":
         df.write_csv(f"{save_path}.csv", separator="\t")
 
     if save_format == "parquet":
@@ -216,30 +208,58 @@ def check_nulls(add: pl.DataFrame) -> None:
             f"""
             Error -> tiene valores nulos en la siguiente tabla: {add}
             Corrija estos valores antes de ejecutar el proceso.
-            """
+            """.replace("\n", " ")
         )
         raise ValueError
 
 
-def check_final_info(tipo_query: str, df: pl.DataFrame, negocio: str) -> None:
+def asegurar_formato_fecha(col: pl.Series) -> None:
+    if col.dtype != pl.Date:
+        logger.error(f"""La columna {col.name} debe estar en formato fecha.""")
+        raise ValueError
+
+
+def impedir_fecha_por_fuera(col: pl.Series, lim_inf: date, lim_sup: date) -> None:
+    if col.dt.min() < lim_inf or col.dt.max() > lim_sup:  # type: ignore
+        logger.error(
+            f"""La columna {col.name} debe estar entre {lim_inf} y {lim_sup},
+                pero la informacion generada esta entre {col.dt.min()} y {col.dt.max()}.
+                Revise el query.
+                """.replace("\n", " ")
+        )
+        raise ValueError
+
+
+def check_final_info(
+    tipo_query: str, df: pl.DataFrame, negocio: str, mes_inicio: int, mes_corte: int
+) -> None:
     """Esta funcion se usa cuando se ejecuta un query de siniestros,
     primas, o expuestos que consolida la informacion necesaria para
     pasar a las transformaciones de la plantilla, sin necesidad de
     hacer procesamiento extra. Valida la consistencia de la informacion.
     """
+
     cols = df.collect_schema().names()
 
     for column in utils.min_cols_tera(tipo_query):
         if column not in cols:
-            raise ValueError(f"""¡Falta la columna {column}!""")
+            logger.error(f"""¡Falta la columna {column}!""")
+            raise ValueError
 
-    if "fecha_siniestro" in cols and df.get_column("fecha_siniestro").dtype != pl.Date:
-        logger.error("""La columna fecha_siniestro debe estar en formato fecha.""")
-        raise ValueError
+    asegurar_formato_fecha(df.get_column("fecha_registro"))
+    impedir_fecha_por_fuera(
+        df.get_column("fecha_registro"),
+        utils.yyyymm_to_date(mes_inicio),
+        utils.yyyymm_to_date(mes_corte),
+    )
 
-    if df.get_column("fecha_registro").dtype != pl.Date:
-        logger.error("""La columna fecha_registro debe estar en formato fecha.""")
-        raise ValueError
+    if tipo_query == "siniestros":
+        asegurar_formato_fecha(df.get_column("fecha_siniestro"))
+        impedir_fecha_por_fuera(
+            df.get_column("fecha_siniestro"),
+            utils.yyyymm_to_date(mes_inicio),
+            utils.yyyymm_to_date(mes_corte),
+        )
 
     # Segmentaciones faltantes
     df_faltante = df.filter(
@@ -273,4 +293,12 @@ def correr_query(
 
     df = ejecutar_queries(queries.split(";"), fchunks, segm)
     logger.debug(df)
-    guardar_resultados(df, p.negocio, save_path, save_format, tipo)
+
+    if tipo != "otro":
+        check_final_info(tipo, df, p.negocio, p.mes_inicio, p.mes_corte)
+        df = df.select(
+            utils.col_apertura_reservas(p.negocio),
+            pl.all(),
+        )
+
+    guardar_resultados(df, save_path, save_format, tipo)

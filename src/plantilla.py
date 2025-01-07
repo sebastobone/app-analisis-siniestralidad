@@ -227,7 +227,7 @@ def traer_guardar_todo(
     wb.sheets["Main"]["A2"].value = time.time() - s
 
 
-def almacenar_analisis(wb: xw.Book, mes_corte: int) -> None:
+def almacenar_analisis(wb: xw.Book, nombre_plantilla: str, mes_corte: int) -> None:
     s = time.time()
 
     df_resultados_tipicos = (
@@ -241,7 +241,9 @@ def almacenar_analisis(wb: xw.Book, mes_corte: int) -> None:
         .collect()
     )
     df_resultados = pl.concat([df_resultados_tipicos, df_resultados_atipicos])
-    df_resultados.write_parquet(f"output/resultados_{wb.name}_{mes_corte}.parquet")
+    df_resultados.write_parquet(
+        f"output/resultados/{nombre_plantilla}_{mes_corte}.parquet"
+    )
 
     wb.sheets["Main"]["A1"].value = "ALMACENAR_ANALISIS"
     wb.sheets["Main"]["A2"].value = time.time() - s
@@ -251,7 +253,7 @@ def abrir_plantilla(plantilla_path: str) -> xw.Book:
     if not os.path.exists(plantilla_path):
         shutil.copyfile("plantillas/plantilla.xlsm", plantilla_path)
 
-    wb = xw.Book(plantilla_path, ignore_read_only_recommended=True)
+    wb = xw.Book(plantilla_path)
 
     wb.macro("eliminar_modulos")()
     wb.macro("crear_modulos")()

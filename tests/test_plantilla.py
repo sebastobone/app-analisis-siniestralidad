@@ -75,14 +75,14 @@ def test_forma_triangulo(
             "mes_inicio": "201501",
             "mes_corte": "203012",
             "tipo_analisis": "triangulos",
-            "nombre_plantilla": "plantilla_mock_triangulos",
+            "nombre_plantilla": "plantilla_test_triangulos",
         },
         {
             "negocio": "mock",
             "mes_inicio": "201501",
             "mes_corte": "203012",
             "tipo_analisis": "entremes",
-            "nombre_plantilla": "plantilla_mock_entremes",
+            "nombre_plantilla": "plantilla_test_entremes",
         },
     ],
 )
@@ -181,7 +181,7 @@ def test_preparar_plantilla(
                 "mes_inicio": "201501",
                 "mes_corte": "203012",
                 "tipo_analisis": "triangulos",
-                "nombre_plantilla": "plantilla_mock_triangulos",
+                "nombre_plantilla": "plantilla_test_triangulos",
             },
             ["frec", "seve", "plata"],
         ),
@@ -191,7 +191,7 @@ def test_preparar_plantilla(
         #         "mes_inicio": "201501",
         #         "mes_corte": "203012",
         #         "tipo_analisis": "entremes",
-        #         "nombre_plantilla": "plantilla_mock_entremes",
+        #         "nombre_plantilla": "plantilla_test_entremes",
         #     },
         #     ["entremes"],
         # ),
@@ -243,7 +243,7 @@ def test_generar_plantilla(
                 "mes_inicio": "201501",
                 "mes_corte": "203012",
                 "tipo_analisis": "triangulos",
-                "nombre_plantilla": "plantilla_mock_triangulos",
+                "nombre_plantilla": "plantilla_test_triangulos",
             },
             ["frec", "seve", "plata"],
             {
@@ -264,7 +264,7 @@ def test_generar_plantilla(
         #         "mes_inicio": "201501",
         #         "mes_corte": "203012",
         #         "tipo_analisis": "entremes",
-        #         "nombre_plantilla": "plantilla_mock_entremes",
+        #         "nombre_plantilla": "plantilla_test_entremes",
         #     },
         #     ["entremes"],
         #     {
@@ -350,6 +350,93 @@ def test_guardar_traer(
             assert response.status_code == status.HTTP_200_OK
             for archivo in archivos_guardados:
                 mock_leer.assert_any_call(f"data/db/{archivo}.csv", separator="\t")
+
+    wb.close()
+    os.remove(f"plantillas/{p.nombre_plantilla}.xlsm")
+
+
+@pytest.mark.plantilla
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "params_form, plantillas",
+    [
+        (
+            {
+                "negocio": "mock",
+                "mes_inicio": "201501",
+                "mes_corte": "203012",
+                "tipo_analisis": "triangulos",
+                "nombre_plantilla": "plantilla_test_triangulos",
+            },
+            ["frec", "seve"],
+        ),
+        (
+            {
+                "negocio": "mock",
+                "mes_inicio": "201501",
+                "mes_corte": "203012",
+                "tipo_analisis": "triangulos",
+                "nombre_plantilla": "plantilla_test_triangulos",
+            },
+            ["plata"],
+        ),
+        # (
+        #     {
+        #         "negocio": "mock",
+        #         "mes_inicio": "201501",
+        #         "mes_corte": "203012",
+        #         "tipo_analisis": "triangulos",
+        #         "nombre_plantilla": "plantilla_test_triangulos",
+        #     },
+        #     ["entremes"],
+        # ),
+    ],
+)
+def test_almacenar_analisis(
+    client: TestClient,
+    test_session: Session,
+    params_form: dict[str, str],
+    plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
+    mock_siniestros: pl.LazyFrame,
+    mock_primas: pl.LazyFrame,
+    mock_expuestos: pl.LazyFrame,
+):
+    _ = client.post("/ingresar-parametros", data=params_form)
+    p = test_session.exec(select(Parametros)).all()[0]
+
+    mock_informacion_cruda(mock_siniestros, mock_primas, mock_expuestos)
+
+    _ = client.post("/preparar-plantilla")
+    wb = plant.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+
+    for plantilla in plantillas:
+        _ = client.post(
+            "/modos-plantilla", data={"plant": plantilla, "modo": "generar"}
+        )
+        _ = client.post(
+            "/modos-plantilla", data={"plant": plantilla, "modo": "guardar"}
+        )
+
+    response = client.post("/almacenar-analisis")
+    assert response.status_code == status.HTTP_200_OK
+    assert os.path.exists(
+        f"output/resultados/{p.nombre_plantilla}_{p.mes_corte}.parquet"
+    )
+
+    info_plantilla = (
+        utils.sheet_to_dataframe(wb, "Aux_Totales")
+        .collect()
+        .get_column("plata_ultimate_bruto")
+        .sum()
+    )
+    info_guardada = (
+        pl.read_parquet(f"output/resultados/{p.nombre_plantilla}_{p.mes_corte}.parquet")
+        .filter(pl.col("atipico") == 0)
+        .get_column("plata_ultimate_bruto")
+        .sum()
+    )
+
+    assert abs(info_plantilla - info_guardada) < 100
 
     wb.close()
     os.remove(f"plantillas/{p.nombre_plantilla}.xlsm")

@@ -187,7 +187,7 @@ async def almacenar_analisis(
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
     wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    plantilla.almacenar_analisis(wb, p.mes_corte)
+    plantilla.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 

@@ -138,5 +138,6 @@ markers = [
     "integration: tests que evaluan la integracion de varias partes individuales del proyecto",
     "end_to_end: tests que evaluan el proyecto de principio a fin",
     "soat: tests para evaluar el proceso real de soat",
+    "autonomia: tests para evaluar el proceso real de autonomia",
     "teradata: tests que requieren conectarse a Teradata",
 ]

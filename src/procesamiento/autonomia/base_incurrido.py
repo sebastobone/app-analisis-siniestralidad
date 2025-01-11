@@ -1,3 +1,5 @@
+from typing import Literal
+
 import polars as pl
 
 from src import utils
@@ -5,52 +7,17 @@ from src import utils
 from . import segmentaciones
 
 
-def base_incurrido() -> pl.LazyFrame:
-    segm = segmentaciones.segm()
+def cruzar_segmentaciones(
+    df_incurrido: pl.LazyFrame,
+    segm: dict[str, pl.DataFrame],
+) -> pl.LazyFrame:
     return (
-        pl.scan_parquet("data/raw/siniestros_brutos.parquet")
-        .join(
-            pl.scan_parquet("data/raw/siniestros_cedidos.parquet"),
-            on=[
-                "fecha_registro",
-                "poliza_id",
-                "asegurado_id",
-                "plan_individual_id",
-                "siniestro_id",
-                "amparo_id",
-            ],
-            how="full",
-            coalesce=True,
-            validate="1:1",
-        )
-        .fill_null(0)
-        .join(
-            pl.scan_parquet("data/catalogos/planes.parquet"),
-            on="plan_individual_id",
-        )
-        .with_columns(
-            codigo_ramo_op=pl.when(
-                (pl.col("ramo_id") == 78)
-                & (~pl.col("amparo_id").is_in([930, 641, 64082, 61296, 18647, -1]))
-            )
-            .then(pl.lit("AAV"))
-            .otherwise(pl.col("codigo_ramo_op")),
-            ramo_desc=pl.when(
-                (pl.col("ramo_id") == 78)
-                & (~pl.col("amparo_id").is_in([930, 641, 64082, 61296, 18647, -1]))
-            )
-            .then(pl.lit("ANEXOS VI"))
-            .otherwise(pl.col("ramo_desc")),
-        )
-        .join(pl.scan_parquet("data/catalogos/sucursales.parquet"), on="sucursal_id")
-        .join(
+        df_incurrido.join(
             utils.lowercase_columns(segm["add_pe_Canal-Poliza"])
             .lazy()
-            .with_columns(
-                pl.col("poliza_id").cast(pl.Int64), pl.col("compania_id").cast(pl.Int32)
-            )
+            .with_columns(pl.col("compania_id").cast(pl.Int32))
             .unique(),
-            on=["poliza_id", "codigo_ramo_op", "compania_id"],
+            on=["compania_id", "codigo_ramo_op", "numero_poliza"],
             how="left",
         )
         .join(
@@ -106,8 +73,68 @@ def base_incurrido() -> pl.LazyFrame:
             how="left",
         )
         .with_columns(pl.col("apertura_amparo_desc").fill_null(pl.lit("RESTO")))
+    )
+
+
+def base_incurrido() -> pl.LazyFrame:
+    segm = segmentaciones.segm()
+    fill_nulls = [
+        pl.col("fecha_siniestro").fill_null(pl.date(1990, 1, 1)),
+        pl.col("sucursal_id").fill_null(-1),
+        pl.col("numero_poliza").fill_null(pl.lit("-1")),
+        pl.col("asegurado_id").fill_null(pl.lit("-1")),
+        pl.col("tipo_estado_siniestro_cd").fill_null(pl.lit("-1")),
+    ]
+    cond_aav = (pl.col("ramo_id") == 78) & (
+        ~pl.col("amparo_id").is_in([930, 641, 64082, 61296, 18647, -1])
+    )
+    return (
+        pl.scan_parquet("data/raw/siniestros_brutos.parquet")
+        .with_columns(fill_nulls)
+        .join(
+            pl.scan_parquet("data/raw/siniestros_cedidos.parquet").with_columns(
+                fill_nulls
+            ),
+            on=[
+                "fecha_siniestro",
+                "fecha_registro",
+                "numero_poliza",
+                "asegurado_id",
+                "plan_individual_id",
+                "siniestro_id",
+                "sucursal_id",
+                "amparo_id",
+            ],
+            how="full",
+            coalesce=True,
+            validate="1:1",
+        )
+        .fill_null(0)
+        .join(
+            pl.scan_parquet("data/catalogos/planes.parquet"),
+            on="plan_individual_id",
+        )
+        .with_columns(
+            codigo_ramo_op=pl.when(cond_aav)
+            .then(pl.lit("AAV"))
+            .otherwise(pl.col("codigo_ramo_op")),
+            ramo_desc=pl.when(cond_aav)
+            .then(pl.lit("ANEXOS VI"))
+            .otherwise(pl.col("ramo_desc")),
+        )
+        .join(pl.scan_parquet("data/catalogos/sucursales.parquet"), on="sucursal_id")
+        .pipe(cruzar_segmentaciones, segm)
         .join(
             utils.lowercase_columns(segm["Atipicos"])
+            .select(
+                [
+                    "compania_id",
+                    "codigo_ramo_op",
+                    "siniestro_id",
+                    "apertura_amparo_desc",
+                    "atipico",
+                ]
+            )
             .lazy()
             .with_columns(pl.col("compania_id").cast(pl.Int32))
             .unique(),
@@ -125,7 +152,6 @@ def base_incurrido() -> pl.LazyFrame:
                 "fecha_siniestro",
                 "fecha_registro",
                 "asegurado_id",
-                "poliza_id",
                 "numero_poliza",
                 "nombre_tecnico",
                 "codigo_op",

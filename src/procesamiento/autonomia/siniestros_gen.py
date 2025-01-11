@@ -1,6 +1,7 @@
 import polars as pl
 
 from src import utils
+from src.procesamiento.autonomia import adds
 
 from . import aprox_reaseguro, base_incurrido
 
@@ -31,15 +32,13 @@ def conteo(
 
 def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
     df_incurrido = base_incurrido.base_incurrido()
+    adds.sap_sinis_ced(mes_corte)
 
     if aproximar_reaseguro:
         df_incurrido = aprox_reaseguro.main(df_incurrido, mes_corte)
 
     conteo_pago = conteo(
-        df_incurrido,
-        pl.col("pago_bruto").abs() > 1000,
-        "pago_bruto",
-        "conteo_pago",
+        df_incurrido, pl.col("pago_bruto").abs() > 1000, "pago_bruto", "conteo_pago"
     )
     conteo_incurrido = conteo(
         df_incurrido,
@@ -63,11 +62,7 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
     )
 
     sin_pagos_bruto = (
-        df_incurrido.join(
-            en_rva,
-            on=cols_base_desist,
-            how="left",
-        )
+        df_incurrido.join(en_rva, on=cols_base_desist, how="left")
         .filter(pl.col("en_reserva").is_null())
         .group_by(cols_base_desist)
         .agg(pl.col("pago_bruto").abs().max())
@@ -75,10 +70,7 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
     )
 
     conteo_desistido = conteo(
-        df_incurrido.join(
-            sin_pagos_bruto,
-            on=cols_base_desist,
-        ),
+        df_incurrido.join(sin_pagos_bruto, on=cols_base_desist),
         ~((pl.col("pago_bruto") == 0) & (pl.col("aviso_bruto") == 0)),
         "incurrido_bruto",
         "conteo_desistido",
@@ -116,24 +108,9 @@ def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
     ]
 
     consolidado = (
-        base_pagos_aviso.join(
-            conteo_pago,
-            on=cols_base,
-            how="full",
-            coalesce=True,
-        )
-        .join(
-            conteo_incurrido,
-            on=cols_base,
-            how="full",
-            coalesce=True,
-        )
-        .join(
-            conteo_desistido,
-            on=cols_base,
-            how="full",
-            coalesce=True,
-        )
+        base_pagos_aviso.join(conteo_pago, on=cols_base, how="full", coalesce=True)
+        .join(conteo_incurrido, on=cols_base, how="full", coalesce=True)
+        .join(conteo_desistido, on=cols_base, how="full", coalesce=True)
         .with_columns(
             pl.col("fecha_siniestro")
             .clip(lower_bound=utils.yyyymm_to_date(mes_inicio))

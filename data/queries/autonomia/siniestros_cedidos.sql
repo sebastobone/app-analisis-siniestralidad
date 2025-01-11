@@ -1,20 +1,19 @@
 CREATE MULTISET VOLATILE TABLE base_cedido
 (
     fecha_siniestro DATE
-    , fecha_registro DATE
+    , fecha_registro DATE NOT NULL
     , sucursal_id INTEGER
-    , poliza_id BIGINT
-    , numero_poliza VARCHAR(20) NOT NULL
+    , numero_poliza VARCHAR(20)
     , asegurado_id BIGINT
-    , plan_individual_id INTEGER
-    , siniestro_id VARCHAR(15)
-    , tipo_estado_siniestro_cd VARCHAR(5) NOT NULL
+    , plan_individual_id INTEGER NOT NULL
+    , siniestro_id VARCHAR(15) NOT NULL
+    , tipo_estado_siniestro_cd VARCHAR(5)
     , amparo_id INTEGER NOT NULL
-    , pago_cedido FLOAT
-    , aviso_cedido FLOAT
+    , pago_cedido FLOAT NOT NULL
+    , aviso_cedido FLOAT NOT NULL
 ) PRIMARY INDEX (
     fecha_registro
-    , poliza_id
+    , numero_poliza
     , asegurado_id
     , plan_individual_id
     , siniestro_id
@@ -26,7 +25,6 @@ SELECT
     sini.fecha_siniestro
     , esc.fecha_registro
     , sucu.sucursal_id
-    , poli.poliza_id
     , poli.numero_poliza
     , pc.asegurado_id
     , esc.plan_individual_id
@@ -53,25 +51,25 @@ SELECT
     ) AS aviso_cedido
 
 FROM mdb_seguros_colombia.v_evento_reaseguro_sini_cob AS esc
-INNER JOIN
+LEFT JOIN
     mdb_seguros_colombia.v_evento_reaseguro_sini AS ers
     ON esc.evento_id = ers.evento_id
-INNER JOIN
+LEFT JOIN
     mdb_seguros_colombia.v_plan_individual_mstr AS pind
     ON esc.plan_individual_id = pind.plan_individual_id
-INNER JOIN
+LEFT JOIN
     mdb_seguros_colombia.v_producto AS pro
     ON pind.producto_id = pro.producto_id
-INNER JOIN
+LEFT JOIN
     mdb_seguros_colombia.v_siniestro AS sini
     ON esc.siniestro_id = sini.siniestro_id
-INNER JOIN
+LEFT JOIN
     mdb_seguros_colombia.v_poliza AS poli
     ON esc.poliza_id = poli.poliza_id
-INNER JOIN
+LEFT JOIN
     mdb_seguros_colombia.v_sucursal AS sucu
     ON poli.sucursal_id = sucu.sucursal_id
-INNER JOIN
+LEFT JOIN
     mdb_seguros_colombia.v_poliza_certificado AS pc
     ON
         esc.poliza_certificado_id = pc.poliza_certificado_id
@@ -87,6 +85,6 @@ WHERE
         '{mes_corte}' AS INTEGER
     )
 
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9;
 
 SELECT * FROM base_cedido  -- noqa:

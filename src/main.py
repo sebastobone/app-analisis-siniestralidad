@@ -25,7 +25,6 @@ def correr_query_siniestros(p: Parametros) -> None:
             "parquet",
             p,
         )
-        adds.sap_sinis_ced(p.mes_corte)
         correr_query(
             "data/queries/autonomia/siniestros_cedidos.sql",
             "data/raw/siniestros_cedidos",

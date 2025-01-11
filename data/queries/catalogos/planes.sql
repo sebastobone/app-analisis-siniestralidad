@@ -8,7 +8,7 @@ SELECT
     , cia.compania_id
     , cia.codigo_op
     , TRIM(ramo.codigo_ramo_op) AS codigo_ramo_op
-FROM mdb_seguros_colombia.v_plan_individual AS pind
+FROM mdb_seguros_colombia.v_plan_individual_mstr AS pind
 INNER JOIN
     mdb_seguros_colombia.v_producto AS pro
     ON pind.producto_id = pro.producto_id

@@ -1,11 +1,22 @@
 from loguru import logger
 
-logger.add(
-    "logs/plantilla_seguimiento.log",
+dev = logger.add(
+    "logs/log_dev.log",
+    rotation="10MB",
+    retention="10 days",
+    compression="zip",
+    level="TRACE",
+    diagnose=True,
+    format="{time} | {level} | {message}",
+)
+
+prod = logger.add(
+    "logs/log_prod.log",
     rotation="10MB",
     retention="10 days",
     compression="zip",
     level="INFO",
+    diagnose=False,
     format="{time} | {level} | {message}",
 )
 

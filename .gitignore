@@ -215,3 +215,5 @@ logs/*
 
 plantillas/
 !plantillas/plantilla.xlsm
+
+node_modules/

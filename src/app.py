@@ -1,8 +1,18 @@
+import os
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 from uuid import uuid4
 
-from fastapi import Cookie, Depends, FastAPI, Form, Request, status
+from fastapi import (
+    Cookie,
+    Depends,
+    FastAPI,
+    Form,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -57,6 +67,37 @@ async def favicon():
 @app.get("/", response_class=HTMLResponse)
 async def generar_base(request: Request):
     return templates.TemplateResponse(request, "index.html")
+
+
+def colorize_log(log_message: str):
+    level = log_message.split("|")[1].strip()
+    colors = {
+        "INFO": "white",
+        "SUCCESS": "green",
+        "WARNING": "orange",
+        "ERROR": "red",
+        "CRITICAL": "red",
+    }
+    return f"""<span style="color: {colors[level]}">{log_message}</span>"""
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        with open("logs/log_prod.log", "rb") as f:
+            try:  # catch OSError in case of a one line file
+                f.seek(-2, os.SEEK_END)
+                while f.read(1) != b"\n":
+                    f.seek(-2, os.SEEK_CUR)
+            except OSError:
+                f.seek(0)
+            last_line = f.readline().decode()
+
+            if last_line:
+                await websocket.send_text(colorize_log(last_line))
+    except WebSocketDisconnect:
+        pass
 
 
 def obtener_parametros_usuario(

@@ -1,4 +1,5 @@
 import json
+import textwrap
 from datetime import date
 
 import pandas as pd
@@ -86,7 +87,30 @@ def ejecutar_queries(
         "password": configuracion.teradata_password,
     }
 
-    con = td.connect(json.dumps(creds))  # type: ignore
+    try:
+        con = td.connect(json.dumps(creds))  # type: ignore
+    except td.OperationalError as exc:
+        if "Hostname lookup failed" in str(exc):
+            logger.error(
+                textwrap.dedent(
+                    """
+                    Error al conectar con Teradata. Revise que se
+                    encuentre conectado a la VPN en caso de no estar
+                    conectado a la red "+SURA".
+                    """
+                ).replace("\n", " ")
+            )
+        else:
+            logger.error(
+                textwrap.dedent(
+                    """
+                    Error al conectar con Teradata. Revise sus
+                    credenciales.
+                    """
+                ).replace("\n", " ")
+            )
+        raise
+
     cur = con.cursor()  # type: ignore
     add_num = 0
     for query in tqdm(queries):

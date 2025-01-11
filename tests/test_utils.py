@@ -4,6 +4,7 @@ import pytest
 from src import utils
 
 
+@pytest.mark.unit
 @pytest.mark.parametrize(
     "mes_corte, num_ocurrencias, num_alturas, resultado_esperado",
     [

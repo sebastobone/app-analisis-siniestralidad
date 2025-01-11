@@ -14,8 +14,8 @@ FILTRO_083 = (pl.col("codigo_ramo_op") == "083") & (pl.col("codigo_op") == "02")
 
 
 def separar_meses_anteriores(
-    df: pl.LazyFrame | pl.DataFrame, mes_corte: int
-) -> tuple[pl.LazyFrame | pl.DataFrame, pl.LazyFrame | pl.DataFrame]:
+    df: pl.DataFrame, mes_corte: int
+) -> tuple[pl.DataFrame, pl.DataFrame]:
     mes_corte_dt = utils.yyyymm_to_date(mes_corte)
     df_ant = df.filter(pl.col("fecha_registro").dt.month_start() < mes_corte_dt)
     df_ult = df.filter(pl.col("fecha_registro").dt.month_start() == mes_corte_dt)
@@ -32,7 +32,7 @@ def verificar_segmentaciones(
 @pytest.fixture(scope="session")
 def info_autonomia(
     client: TestClient, test_session: Session
-) -> tuple[dict[DICT_KEYS, pl.DataFrame], Parametros]:
+) -> tuple[dict[str, pl.DataFrame], Parametros]:
     data = {
         "negocio": "autonomia",
         "mes_inicio": "201401",
@@ -126,7 +126,7 @@ def test_segmentaciones(
     lista_amparos = ["RESTO"]
     lista_canales = ["Resto"]
     for hoja, df in segm.items():
-        dfl = utils.lowercase_columns(df)
+        dfl = pl.DataFrame(utils.lowercase_columns(df))
         if "Canal" in hoja:
             lista_canales += dfl.get_column("apertura_canal_desc").unique().to_list()
         if "Amparos" in hoja:

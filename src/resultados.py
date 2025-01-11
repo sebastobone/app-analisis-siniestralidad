@@ -5,21 +5,34 @@ import xlwings as xw
 
 
 def concatenar_archivos_resultados() -> pl.DataFrame:
-    df_resultados = []
-    for file in os.listdir("output/resultados"):
-        df = pl.read_parquet(f"output/resultados/{file}").filter(
-            pl.col("plata_ultimate_bruto").sum().over("apertura_reservas") != 0
+    dfs = []
+    files = [file for file in os.listdir("output/resultados") if file != ".gitkeep"]
+    sorted_files = sorted(
+        files, key=lambda f: os.path.getmtime(os.path.join("output/resultados", f))
+    )
+    for file in sorted_files:
+        dfs.append(
+            pl.read_parquet(f"output/resultados/{file}").filter(
+                pl.col("plata_ultimate_bruto")
+                .sum()
+                .over(["atipico", "mes_corte", "apertura_reservas"])
+                != 0
+            )
         )
-        df_resultados.append(df)
 
-    return pl.concat(df_resultados)
+    df_resultados = (
+        pl.DataFrame(pl.concat(dfs))
+        .unique(subset=["apertura_reservas", "periodo_ocurrencia"], keep="last")
+        .sort(["mes_corte", "atipico", "apertura_reservas", "periodo_ocurrencia"])
+    )
+
+    return df_resultados
 
 
 def actualizar_wb_resultados() -> xw.Book:
-    wb = xw.Book("src/resultados.xlsx")
-    if "Resultados" not in [sheet.name for sheet in wb.sheets]:
-        wb.sheets.add("Resultados")
+    wb = xw.Book("output/resultados.xlsx")
 
+    wb.sheets["Resultados"].clear_contents()
     wb.sheets["Resultados"]["A1"].options(
         index=False
     ).value = concatenar_archivos_resultados().to_pandas()

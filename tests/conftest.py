@@ -157,7 +157,7 @@ def mock_expuestos(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def test_session():
     engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
@@ -167,14 +167,26 @@ def test_session():
         yield session
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def client(test_session: Session):
     def get_test_session():
         return test_session
 
     app.dependency_overrides[get_session] = get_test_session
 
-    client = TestClient(app, cookies={"session_id": "test-session-id"})
+    client = TestClient(app, cookies={"session_id": "test-usuario-1"})
+    yield client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def client_2(test_session: Session):
+    def get_test_session():
+        return test_session
+
+    app.dependency_overrides[get_session] = get_test_session
+
+    client = TestClient(app, cookies={"session_id": "test-usuario-2"})
     yield client
     app.dependency_overrides.clear()
 
@@ -198,3 +210,11 @@ def params_form() -> dict[str, str]:
 def params(params_form: dict[str, str]) -> Parametros:
     params = Parametros(**params_form, session_id="test-session-id")
     return Parametros.model_validate(params)
+
+
+def assert_igual(
+    df1: pl.DataFrame, df2: pl.DataFrame, col1: str, col2: str | None = None
+) -> None:
+    if not col2:
+        col2 = col1
+    assert abs(df1.get_column(col1).sum() - df2.get_column(col2).sum()) < 100

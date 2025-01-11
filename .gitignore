@@ -197,7 +197,7 @@ data/raw/autonomia/*
 !data/segmentacion.xlsx
 
 output/*
-!output/.gitkeep
+!output/resultados.xlsx
 output/resultados/*
 !output/resultados/.gitkeep
 

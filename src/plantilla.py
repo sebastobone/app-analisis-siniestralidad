@@ -32,15 +32,22 @@ def preparar_plantilla(
     )
 
     aperturas = tablas_resumen.aperturas(negocio)
+    lista_aperturas = aperturas.get_column("apertura_reservas").to_list()
 
     if tipo_analisis == "triangulos":
         wb.sheets["Plantilla_Entremes"].visible = False
         for plantilla in ["frec", "seve", "plata"]:
             plantilla_name = f"Plantilla_{plantilla.capitalize()}"
             wb.sheets[plantilla_name].visible = True
+            wb.macro("generar_parametros")(
+                plantilla_name, ",".join(lista_aperturas), lista_aperturas[0]
+            )
 
     elif tipo_analisis == "entremes":
         wb.sheets["Plantilla_Entremes"].visible = True
+        wb.macro("generar_parametros")(
+            "Plantilla_Entremes", ",".join(lista_aperturas), lista_aperturas[0]
+        )
         for plantilla in ["frec", "seve", "plata"]:
             plantilla_name = f"Plantilla_{plantilla.capitalize()}"
             wb.sheets[plantilla_name].visible = False
@@ -85,12 +92,7 @@ def generar_plantilla(
 
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
 
-    aperturas = (
-        tablas_resumen.aperturas(negocio).get_column("apertura_reservas").to_list()
-    )
-
     wb.macro("limpiar_plantilla")(plantilla_name)
-    wb.macro("generar_parametros")(plantilla_name, ",".join(aperturas), aperturas[0])
 
     apertura = str(wb.sheets[plantilla_name]["C2"].value)
     atributo = str(wb.sheets[plantilla_name]["C3"].value).lower()
@@ -104,6 +106,10 @@ def generar_plantilla(
 
     df = base_plantillas.base_plantillas(apertura, atributo, periodicidades, cantidades)
 
+    wb.sheets[plantilla_name].cells(
+        ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS
+    ).value = df
+
     num_ocurrencias = df.shape[0]
     num_alturas = df.shape[1] // len(cantidades)
     mes_del_periodo = utils.mes_del_periodo(
@@ -112,10 +118,6 @@ def generar_plantilla(
 
     wb.macro("formatear_parametro")("Main", "Mes del periodo", 6, 1)
     wb.sheets["Main"].range((6, 2)).value = mes_del_periodo
-
-    wb.sheets[plantilla_name].cells(
-        ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS
-    ).value = df
 
     wb.macro(f"generar_{plantilla_name}")(
         num_ocurrencias,

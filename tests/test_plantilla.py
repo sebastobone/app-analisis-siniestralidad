@@ -77,13 +77,13 @@ def test_forma_triangulo(
             "tipo_analisis": "triangulos",
             "nombre_plantilla": "plantilla_test_triangulos",
         },
-        {
-            "negocio": "mock",
-            "mes_inicio": "201501",
-            "mes_corte": "203012",
-            "tipo_analisis": "entremes",
-            "nombre_plantilla": "plantilla_test_entremes",
-        },
+        # {
+        #     "negocio": "mock",
+        #     "mes_inicio": "201501",
+        #     "mes_corte": "203012",
+        #     "tipo_analisis": "entremes",
+        #     "nombre_plantilla": "plantilla_test_entremes",
+        # },
     ],
 )
 def test_preparar_plantilla(

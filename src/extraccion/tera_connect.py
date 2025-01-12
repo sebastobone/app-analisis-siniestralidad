@@ -39,11 +39,16 @@ def preparar_queries(
 def cargar_segmentaciones(
     path_archivo_segm: str, tipo_query: str
 ) -> list[pl.DataFrame]:
-    hojas_segm = [
-        str(hoja)
-        for hoja in pd.ExcelFile(path_archivo_segm).sheet_names
-        if str(hoja).startswith("add")
-    ]
+    try:
+        hojas_segm = [
+            str(hoja)
+            for hoja in pd.ExcelFile(path_archivo_segm).sheet_names
+            if str(hoja).startswith("add")
+        ]
+    except FileNotFoundError:
+        logger.error(f"No se encuentra el archivo {path_archivo_segm}.")
+        raise
+
     if hojas_segm:
         check_adds_segmentacion(hojas_segm)
 
@@ -76,11 +81,7 @@ def fechas_chunks(mes_inicio: int, mes_corte: int) -> list[tuple[date, date]]:
     )
 
 
-def ejecutar_queries(
-    queries: list[str],
-    fechas_chunks: list[tuple[date, date]],
-    segm: list[pl.DataFrame],
-) -> pl.DataFrame:
+def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
     creds = {
         "host": configuracion.teradata_host,
         "user": configuracion.teradata_user,
@@ -112,6 +113,17 @@ def ejecutar_queries(
         raise
 
     cur = con.cursor()  # type: ignore
+
+    return con, cur
+
+
+def ejecutar_queries(
+    queries: list[str],
+    fechas_chunks: list[tuple[date, date]],
+    segm: list[pl.DataFrame],
+) -> pl.DataFrame:
+    con, cur = conectar_teradata()
+
     add_num = 0
     for query in tqdm(queries):
         try:
@@ -123,18 +135,18 @@ def ejecutar_queries(
                                 chunk_ini=chunk_ini.strftime(format="%Y%m"),
                                 chunk_fin=chunk_fin.strftime(format="%Y%m"),
                             )
-                        )
+                        )  # type: ignore
                 else:
-                    cur.execute(query)
+                    cur.execute(query)  # type: ignore
             else:
                 check_numero_columnas_add(query, segm[add_num])
                 add = check_duplicados(segm[add_num])
                 check_nulls(add)
-                cur.executemany(query, add.rows())
+                cur.executemany(query, add.rows())  # type: ignore
                 add_num += 1
 
         except td.OperationalError:
-            logger.exception(f"Error en {query[:100]}")
+            logger.error(f"Error en {query[:100]}")
             raise
 
     return pl.DataFrame(utils.lowercase_columns(pl.read_database(queries[-1], con)))

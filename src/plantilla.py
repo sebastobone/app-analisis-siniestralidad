@@ -8,6 +8,7 @@ import xlwings as xw
 
 import src.constantes as ct
 from src import utils
+from src.logger_config import logger
 from src.metodos_plantilla import (
     base_plantillas,
     guardar_traer,
@@ -254,6 +255,7 @@ def almacenar_analisis(wb: xw.Book, nombre_plantilla: str, mes_corte: int) -> No
 def abrir_plantilla(plantilla_path: str) -> xw.Book:
     if not os.path.exists(plantilla_path):
         shutil.copyfile("plantillas/plantilla.xlsm", plantilla_path)
+        logger.info(f"Nueva plantilla creada en {plantilla_path}.")
 
     wb = xw.Book(plantilla_path)
 

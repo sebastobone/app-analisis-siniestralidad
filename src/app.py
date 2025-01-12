@@ -1,4 +1,4 @@
-import os
+import textwrap
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 from uuid import uuid4
@@ -16,6 +16,7 @@ from fastapi import (
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import ValidationError
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from src import main, plantilla, resultados
@@ -73,12 +74,12 @@ def colorize_log(log_message: str):
     level = log_message.split("|")[1].strip()
     colors = {
         "INFO": "white",
-        "SUCCESS": "green",
+        "SUCCESS": "lightgreen",
         "WARNING": "orange",
         "ERROR": "red",
         "CRITICAL": "red",
     }
-    return f"""<span style="color: {colors[level]}">{log_message}</span>"""
+    return f"""<span style="color: {colors[level]}">{log_message}</span><br>"""
 
 
 @app.websocket("/ws")
@@ -86,16 +87,8 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
         with open("logs/log_prod.log", "rb") as f:
-            try:  # catch OSError in case of a one line file
-                f.seek(-2, os.SEEK_END)
-                while f.read(1) != b"\n":
-                    f.seek(-2, os.SEEK_CUR)
-            except OSError:
-                f.seek(0)
-            last_line = f.readline().decode()
-
-            if last_line:
-                await websocket.send_text(colorize_log(last_line))
+            for line in f.readlines()[-15:]:
+                await websocket.send_text(colorize_log(line.decode()))
     except WebSocketDisconnect:
         pass
 
@@ -119,7 +112,21 @@ async def ingresar_parametros(
         session_id = str(uuid4())
         response.set_cookie(key=SESSION_COOKIE_NAME, value=session_id)
 
-    parametros = Parametros.model_validate(params)
+    try:
+        parametros = Parametros.model_validate(params)
+    except ValidationError:
+        logger.error(
+            textwrap.dedent(
+                f"""
+                Parametros no validos. Revise que los meses de inicio
+                y corte sean numeros enteros entre 199001 y 204001,
+                y vuelva a intentar. Los parametros que ingreso fueron: 
+                {params.model_dump()}.
+                """
+            ).replace("\n", " ")
+        )
+        raise
+
     parametros.session_id = session_id
 
     try:
@@ -133,7 +140,9 @@ async def ingresar_parametros(
     session.add(parametros)
     session.commit()
     session.refresh(parametros)
-    logger.info(session.exec(select(Parametros)).all())
+
+    logger.info(f"""Parametros ingresados: {parametros.model_dump()}""")
+
     return response
 
 

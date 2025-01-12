@@ -86,7 +86,6 @@ h2 {
 }
 
 #log {
-  display: flex;
   height: 20vh;
   overflow-y: scroll;
   background-color: #1e1e1e;
@@ -95,4 +94,9 @@ h2 {
   font-family: monospace;
   white-space: pre-wrap;
   border-radius: 10px;
+}
+
+#log span {
+  display: flex;
+  /* margin-bottom: 10px; */
 }

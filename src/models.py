@@ -6,8 +6,8 @@ from sqlmodel import Field, SQLModel, String
 class Parametros(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     negocio: str
-    mes_inicio: int
-    mes_corte: int
+    mes_inicio: int = Field(ge=199001, le=204001)
+    mes_corte: int = Field(ge=199001, le=204001)
     tipo_analisis: Literal["triangulos", "entremes"] = Field(sa_type=String)
     aproximar_reaseguro: bool = False
     nombre_plantilla: str

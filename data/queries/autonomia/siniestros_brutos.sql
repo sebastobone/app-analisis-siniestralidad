@@ -1,26 +1,3 @@
-CREATE MULTISET VOLATILE TABLE base_bruto
-(
-    fecha_siniestro DATE
-    , fecha_registro DATE NOT NULL
-    , sucursal_id INTEGER
-    , numero_poliza VARCHAR(20)
-    , asegurado_id BIGINT
-    , plan_individual_id INTEGER NOT NULL
-    , siniestro_id VARCHAR(15) NOT NULL
-    , tipo_estado_siniestro_cd VARCHAR(5)
-    , amparo_id INTEGER NOT NULL
-    , pago_bruto FLOAT NOT NULL
-    , aviso_bruto FLOAT NOT NULL
-) PRIMARY INDEX (
-    fecha_registro
-    , numero_poliza
-    , asegurado_id
-    , plan_individual_id
-    , siniestro_id
-    , amparo_id
-) ON COMMIT PRESERVE ROWS;
-
-INSERT INTO base_bruto
 SELECT
     sini.fecha_siniestro
     , esc.fecha_registro
@@ -73,15 +50,11 @@ LEFT JOIN
         AND esc.plan_individual_id = pc.plan_individual_id
 
 WHERE
-    esc.ramo_id IN (
-        54835, 78, 274, 57074, 140, 107, 271, 297, 204
-    )
+    esc.ramo_id IN (54835, 78, 274, 57074, 140, 107, 271, 297, 204)
     AND pro.compania_id IN (3, 4)
     AND esc.valor_siniestro <> 0
     AND esc.mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER) AND CAST(
         '{mes_corte}' AS INTEGER
     )
 
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9;
-
-SELECT * FROM base_bruto  -- noqa:
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9

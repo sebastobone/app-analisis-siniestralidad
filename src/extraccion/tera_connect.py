@@ -113,6 +113,7 @@ def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
         raise
 
     cur = con.cursor()  # type: ignore
+    logger.success("Conexion con Teradata exitosa.")
 
     return con, cur
 
@@ -122,10 +123,11 @@ def ejecutar_queries(
     fechas_chunks: list[tuple[date, date]],
     segm: list[pl.DataFrame],
 ) -> pl.DataFrame:
-    con, cur = conectar_teradata()
+    _, cur = conectar_teradata()
 
     add_num = 0
-    for query in tqdm(queries):
+    for n_query, query in tqdm(enumerate(queries)):
+        logger.info(f"Ejecutando query {n_query + 1} de {len(queries)}...")
         try:
             if "?" not in query:
                 if "{chunk_ini}" in query:
@@ -149,7 +151,11 @@ def ejecutar_queries(
             logger.error(f"Error en {query[:100]}")
             raise
 
-    return pl.DataFrame(utils.lowercase_columns(pl.read_database(queries[-1], con)))
+    return pl.DataFrame(
+        utils.lowercase_columns(
+            pl.read_database("{fn teradata_try_fastexport}" + queries[-1], cur)
+        )
+    )
 
 
 def guardar_resultados(
@@ -167,7 +173,7 @@ def guardar_resultados(
     elif save_format in ("csv", "txt"):
         df.write_csv(f"{save_path}.{save_format}", separator="\t")
 
-    logger.success(f"""Datos almacenados en {save_path}.{save_format}.""")
+    logger.success(f"Datos almacenados en {save_path}.{save_format}.")
 
 
 def check_adds_segmentacion(segm_sheets: list[str]) -> None:

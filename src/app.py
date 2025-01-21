@@ -1,23 +1,16 @@
 import textwrap
+from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 from uuid import uuid4
 
-from fastapi import (
-    Cookie,
-    Depends,
-    FastAPI,
-    Form,
-    Request,
-    WebSocket,
-    WebSocketDisconnect,
-    status,
-)
+from fastapi import BackgroundTasks, Cookie, Depends, FastAPI, Form, Request, status
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 from sqlmodel import Session, SQLModel, create_engine, select
+from sse_starlette.sse import EventSourceResponse
 
 from src import main, plantilla, resultados
 from src.logger_config import logger
@@ -43,8 +36,6 @@ def get_session():
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
-SESSION_COOKIE_NAME = "session_id"
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -54,7 +45,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
 
 templates = Jinja2Templates(directory="src/templates")
 app.mount("/static", StaticFiles(directory="src/static"), name="static")
@@ -82,15 +72,21 @@ def colorize_log(log_message: str):
     return f"""<span style="color: {colors[level]}">{log_message}</span><br>"""
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        with open("logs/log_prod.log", "rb") as f:
-            for line in f.readlines()[-15:]:
-                await websocket.send_text(colorize_log(line.decode()))
-    except WebSocketDisconnect:
-        pass
+sent_logs: list[str] = []
+
+
+def get_unseen_logs() -> Iterator[str]:
+    with open("logs/log_prod.log") as f:
+        logs = f.readlines()[-5:]
+        for log in logs:
+            if log not in sent_logs:
+                sent_logs.append(log)
+                yield colorize_log(log)
+
+
+@app.get("/stream-logs")
+async def stream_logs():
+    return EventSourceResponse(get_unseen_logs())
 
 
 def obtener_parametros_usuario(
@@ -110,7 +106,7 @@ async def ingresar_parametros(
     response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
     if not session_id:
         session_id = str(uuid4())
-        response.set_cookie(key=SESSION_COOKIE_NAME, value=session_id)
+        response.set_cookie(key="session_id", value=session_id)
 
     try:
         parametros = Parametros.model_validate(params)
@@ -148,28 +144,34 @@ async def ingresar_parametros(
 
 @app.post("/correr-query-siniestros")
 async def correr_query_siniestros(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+    session: SessionDep,
+    background_tasks: BackgroundTasks,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:
     params = obtener_parametros_usuario(session, session_id)
-    main.correr_query_siniestros(params)
+    background_tasks.add_task(main.correr_query_siniestros, params)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/correr-query-primas")
 async def correr_query_primas(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+    session: SessionDep,
+    background_tasks: BackgroundTasks,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:
     params = obtener_parametros_usuario(session, session_id)
-    main.correr_query_primas(params)
+    background_tasks.add_task(main.correr_query_primas, params)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/correr-query-expuestos")
 async def correr_query_expuestos(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+    session: SessionDep,
+    background_tasks: BackgroundTasks,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:
     params = obtener_parametros_usuario(session, session_id)
-    main.correr_query_expuestos(params)
+    background_tasks.add_task(main.correr_query_expuestos, params)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 

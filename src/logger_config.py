@@ -7,7 +7,7 @@ dev = logger.add(
     compression="zip",
     level="TRACE",
     diagnose=True,
-    format="{time} | {level} | {message}",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
 )
 
 prod = logger.add(
@@ -17,7 +17,7 @@ prod = logger.add(
     compression="zip",
     level="INFO",
     diagnose=False,
-    format="{time} | {level} | {message}",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
 )
 
 __all__ = ["logger"]

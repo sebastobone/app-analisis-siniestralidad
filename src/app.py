@@ -1,5 +1,5 @@
-import textwrap
-from collections.abc import Iterator
+import asyncio
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 from uuid import uuid4
@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from sqlmodel import Session, SQLModel, create_engine, select
 from sse_starlette.sse import EventSourceResponse
 
-from src import main, plantilla, resultados
+from src import main, plantilla, resultados, utils
 from src.logger_config import logger
 from src.models import Parametros
 
@@ -60,33 +60,33 @@ async def generar_base(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
-def colorize_log(log_message: str):
-    level = log_message.split("|")[1].strip()
-    colors = {
+def colorear_log(log: str) -> str:
+    nivel = log.split("|")[1].strip()
+    colores = {
         "INFO": "white",
         "SUCCESS": "lightgreen",
         "WARNING": "orange",
         "ERROR": "red",
         "CRITICAL": "red",
     }
-    return f"""<span style="color: {colors[level]}">{log_message}</span><br>"""
+    return f"""<span style="color: {colores[nivel]}">{log}</span><br>"""
 
 
-sent_logs: list[str] = []
-
-
-def get_unseen_logs() -> Iterator[str]:
+async def obtener_nuevos_logs() -> AsyncIterator[str]:
     with open("logs/log_prod.log") as f:
-        logs = f.readlines()[-5:]
-        for log in logs:
-            if log not in sent_logs:
-                sent_logs.append(log)
-                yield colorize_log(log)
+        f.seek(0, 2)
+        while True:
+            log = f.readline()
+            if log:
+                yield colorear_log(log)
+            else:
+                # Evitemos consumir demasiada CPU, revisemos cada segundo.
+                await asyncio.sleep(1)
 
 
 @app.get("/stream-logs")
 async def stream_logs():
-    return EventSourceResponse(get_unseen_logs())
+    return EventSourceResponse(obtener_nuevos_logs())
 
 
 def obtener_parametros_usuario(
@@ -112,14 +112,14 @@ async def ingresar_parametros(
         parametros = Parametros.model_validate(params)
     except ValidationError:
         logger.error(
-            textwrap.dedent(
+            utils.limpiar_espacios_log(
                 f"""
                 Parametros no validos. Revise que los meses de inicio
                 y corte sean numeros enteros entre 199001 y 204001,
                 y vuelva a intentar. Los parametros que ingreso fueron: 
                 {params.model_dump()}.
                 """
-            ).replace("\n", " ")
+            )
         )
         raise
 

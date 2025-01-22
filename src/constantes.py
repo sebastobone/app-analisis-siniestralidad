@@ -1,5 +1,6 @@
-import polars as pl
 from typing import Literal
+
+import polars as pl
 
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 

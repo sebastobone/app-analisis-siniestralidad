@@ -1,33 +1,39 @@
+import time
+
 import polars as pl
 import xlwings as xw
-
+from src import constantes as ct
 from src import utils
 from src.logger_config import logger
-from src.metodos_plantilla.rangos_parametros import obtener_rangos_parametros
 from src.models import RangeDimension
 
+from .estructura_apertura import obtener_estructura_apertura
+from .rangos_parametros import obtener_rangos_parametros
 
-def guardar(
-    hoja: xw.Sheet,
-    apertura: str,
-    atributo: str,
-    dimensiones_triangulo: RangeDimension,
-    mes_del_periodo: int,
-) -> None:
-    for nombre_rango, valores_rango in obtener_rangos_parametros(
-        hoja,
+
+def traer_apertura(wb: xw.Book, plantilla: ct.LISTA_PLANTILLAS, mes_corte: int) -> None:
+    s = time.time()
+
+    plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+    apertura, atributo, dimensiones_triangulo, mes_del_periodo = (
+        obtener_estructura_apertura(wb, plantilla_name, mes_corte)
+    )
+
+    traer_parametros(
+        wb.sheets[plantilla_name],
+        apertura,
+        atributo,
         dimensiones_triangulo,
         mes_del_periodo,
-        hoja["C4"].value,
-        hoja["C3"].value,
-    ).items():
-        pl.DataFrame(valores_rango.formula).transpose().write_csv(
-            f"data/db/{apertura}_{atributo}_{hoja.name}_{nombre_rango}.csv",
-            separator="\t",
-        )
+    )
+
+    logger.success(f"Parametros para {apertura} - {atributo} traidos.")
+
+    wb.sheets["Main"]["A1"].value = "TRAER_PLANTILLA"
+    wb.sheets["Main"]["A2"].value = time.time() - s
 
 
-def traer(
+def traer_parametros(
     hoja: xw.Sheet,
     apertura: str,
     atributo: str,

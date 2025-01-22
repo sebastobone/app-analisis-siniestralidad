@@ -1,8 +1,7 @@
 from typing import Literal
 
-import xlwings as xw
-
 import src.constantes as ct
+import xlwings as xw
 from src.models import Offset, RangeDimension
 
 

@@ -12,8 +12,21 @@ from pydantic import ValidationError
 from sqlmodel import Session, SQLModel, create_engine, select
 from sse_starlette.sse import EventSourceResponse
 
-from src import main, plantilla, resultados, utils
+from src import main, resultados, utils
 from src.logger_config import logger
+from src.metodos_plantilla import (
+    abrir,
+    generar,
+    preparar,
+)
+from src.metodos_plantilla import (
+    almacenar_analisis as almacenar,
+)
+from src.metodos_plantilla.guardar_traer import (
+    guardar_apertura,
+    traer_apertura,
+    traer_guardar_todo,
+)
 from src.models import Parametros
 
 engine = create_engine(
@@ -189,7 +202,7 @@ async def abrir_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
-    _ = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+    _ = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -199,8 +212,8 @@ async def preparar_plantilla(
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
     main.generar_bases_plantilla(p)
-    wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    plantilla.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
+    wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+    preparar.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -215,16 +228,22 @@ async def modos_plantilla(
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
-    wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+    wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     if modo == "generar":
-        plantilla.generar_plantilla(wb, plant, p.mes_corte)
-    elif modo in ["guardar", "traer"]:
-        plantilla.guardar_traer_fn(wb, modo, plant, p.mes_corte)
+        generar.generar_plantilla(wb, plant, p.mes_corte)
+    elif modo == "guardar":
+        guardar_apertura.guardar_apertura(wb, plant, p.mes_corte)
+    elif modo == "traer":
+        traer_apertura.traer_apertura(wb, plant, p.mes_corte)
     elif modo == "guardar_todo":
-        plantilla.traer_guardar_todo(wb, plant, p.mes_corte, p.negocio)
+        traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
+            wb, plant, p.mes_corte, p.negocio
+        )
     elif modo == "traer_guardar_todo":
-        plantilla.traer_guardar_todo(wb, plant, p.mes_corte, p.negocio, traer=True)
+        traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
+            wb, plant, p.mes_corte, p.negocio, traer=True
+        )
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -233,8 +252,8 @@ async def almacenar_analisis(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
-    wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    plantilla.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte)
+    wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+    almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 

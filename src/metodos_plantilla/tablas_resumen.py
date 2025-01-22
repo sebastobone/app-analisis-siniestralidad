@@ -12,7 +12,7 @@ def df_aperturas() -> pl.LazyFrame:
     return pl.scan_parquet("data/raw/siniestros.parquet")
 
 
-def aperturas(negocio: str) -> pl.DataFrame:
+def obtener_tabla_aperturas(negocio: str) -> pl.DataFrame:
     return (
         df_aperturas()
         .with_columns(ramo_desc=utils.complementar_col_ramo_desc())

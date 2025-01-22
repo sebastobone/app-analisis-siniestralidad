@@ -25,37 +25,13 @@ def preparar_plantilla(
 ) -> None:
     s = time.time()
 
-    wb.macro("formatear_parametro")("Main", "Mes corte", 4, 1)
-    wb.sheets["Main"].range((4, 2)).value = mes_corte
+    generar_parametros_globales(wb, mes_corte)
 
-    wb.macro("formatear_parametro")("Main", "Mes anterior", 5, 1)
-    wb.sheets["Main"].range((5, 2)).value = (
-        mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
-    )
-
-    aperturas = tablas_resumen.aperturas(negocio)
+    aperturas = tablas_resumen.obtener_tabla_aperturas(negocio)
     lista_aperturas = aperturas.get_column("apertura_reservas").to_list()
 
-    if tipo_analisis == "triangulos":
-        wb.sheets["Plantilla_Entremes"].visible = False
-        for plantilla in ["frec", "seve", "plata"]:
-            plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-            wb.sheets[plantilla_name].visible = True
-            wb.macro("generar_parametros")(
-                plantilla_name, ",".join(lista_aperturas), lista_aperturas[0]
-            )
-
-    elif tipo_analisis == "entremes":
-        wb.sheets["Plantilla_Entremes"].visible = True
-        wb.macro("generar_parametros")(
-            "Plantilla_Entremes", ",".join(lista_aperturas), lista_aperturas[0]
-        )
-        for plantilla in ["frec", "seve", "plata"]:
-            plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-            wb.sheets[plantilla_name].visible = False
-
-    for sheet in ["Aux_Totales", "Atipicos"]:
-        wb.sheets[sheet].clear_contents()
+    generar_parametros_plantillas(wb, lista_aperturas)
+    mostrar_plantillas_relevantes(wb, tipo_analisis)
 
     tablas_resumen.generar_tabla(wb.sheets["Main"], aperturas, "aperturas", (1, 4))
     tablas_resumen.generar_tabla(
@@ -73,15 +49,56 @@ def preparar_plantilla(
         periodicidades, tipo_analisis, aperturas.lazy()
     )
 
+    generar_hojas_resumen(wb, diagonales, atipicos)
+
+    wb.sheets["Main"]["A1"].value = "PREPARAR_PLANTILLA"
+    wb.sheets["Main"]["A2"].value = time.time() - s
+
+
+def mostrar_plantillas_relevantes(wb: xw.Book, tipo_analisis: str):
+    if tipo_analisis == "triangulos":
+        wb.sheets["Plantilla_Entremes"].visible = False
+        for plantilla in ["frec", "seve", "plata"]:
+            plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+            wb.sheets[plantilla_name].visible = True
+
+    elif tipo_analisis == "entremes":
+        wb.sheets["Plantilla_Entremes"].visible = True
+        for plantilla in ["frec", "seve", "plata"]:
+            plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+            wb.sheets[plantilla_name].visible = False
+
+
+def generar_parametros_globales(wb: xw.Book, mes_corte: int) -> None:
+    wb.macro("formatear_parametro")("Main", "Mes corte", 4, 1)
+    wb.sheets["Main"].range((4, 2)).value = mes_corte
+
+    wb.macro("formatear_parametro")("Main", "Mes anterior", 5, 1)
+    wb.sheets["Main"].range((5, 2)).value = (
+        mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
+    )
+
+
+def generar_parametros_plantillas(wb: xw.Book, lista_aperturas: list[str]) -> None:
+    for plantilla in ["frec", "seve", "plata", "entremes"]:
+        plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+        wb.macro("generar_parametros")(
+            plantilla_name, ",".join(lista_aperturas), lista_aperturas[0]
+        )
+
+
+def generar_hojas_resumen(
+    wb: xw.Book, diagonales: pl.DataFrame, atipicos: pl.DataFrame
+) -> None:
+    for sheet in ["Aux_Totales", "Atipicos"]:
+        wb.sheets[sheet].clear_contents()
+
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
     wb.sheets["Atipicos"]["A1"].options(index=False).value = atipicos.to_pandas()
 
     wb.macro("formatos_aux_totales")("Aux_Totales", diagonales.shape[0])
     wb.macro("formulas_aux_totales")(diagonales.shape[0])
     wb.macro("formatos_aux_totales")("Atipicos", atipicos.shape[0])
-
-    wb.sheets["Main"]["A1"].value = "PREPARAR_PLANTILLA"
-    wb.sheets["Main"]["A2"].value = time.time() - s
 
 
 def generar_plantilla(
@@ -103,14 +120,16 @@ def generar_plantilla(
 
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
-    df = base_plantillas.base_plantillas(apertura, atributo, periodicidades, cantidades)
+    triangulo = base_plantillas.crear_triangulo_base_plantilla(
+        apertura, atributo, periodicidades, cantidades
+    )
 
     wb.sheets[plantilla_name].cells(
         ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS
-    ).value = df
+    ).value = triangulo
 
-    num_ocurrencias = df.shape[0]
-    num_alturas = df.shape[1] // len(cantidades)
+    num_ocurrencias = triangulo.shape[0]
+    num_alturas = triangulo.shape[1] // len(cantidades)
     mes_del_periodo = utils.mes_del_periodo(
         utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
     )
@@ -205,7 +224,9 @@ def traer_guardar_todo(
     s = time.time()
 
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-    aperturas = tablas_resumen.aperturas(negocio).get_column("apertura_reservas")
+    aperturas = tablas_resumen.obtener_tabla_aperturas(negocio).get_column(
+        "apertura_reservas"
+    )
     atributos = (
         ["Bruto", "Retenido"] if plantilla_name != "Plantilla_Frec" else ["Bruto"]
     )

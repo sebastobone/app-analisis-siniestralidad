@@ -4,7 +4,7 @@ import polars as pl
 from src.metodos_plantilla import insumos as ins
 
 
-def base_plantillas(
+def crear_triangulo_base_plantilla(
     apertura: str,
     atributo: str,
     periodicidades: list[list[str]],

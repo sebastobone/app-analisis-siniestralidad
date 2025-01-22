@@ -1,5 +1,3 @@
-from typing import Literal
-
 import polars as pl
 
 from src import utils
@@ -86,23 +84,18 @@ def generar_controles(p: Parametros) -> None:
     ctrl.set_permissions("data/controles_informacion", "read")
 
 
-def generar_bases_plantilla(
-    negocio: str,
-    tipo_analisis: Literal["triangulos", "entremes"],
-    mes_inicio: int,
-    mes_corte: int,
-) -> None:
+def generar_bases_plantilla(p: Parametros) -> None:
     _, _, _ = bsin.generar_bases_siniestros(
         pl.scan_parquet("data/raw/siniestros.parquet"),
-        tipo_analisis,
-        utils.yyyymm_to_date(mes_inicio),
-        utils.yyyymm_to_date(mes_corte),
+        p.tipo_analisis,
+        utils.yyyymm_to_date(p.mes_inicio),
+        utils.yyyymm_to_date(p.mes_corte),
     )
 
     bpdn.generar_base_primas_expuestos(
-        pl.scan_parquet("data/raw/primas.parquet"), "primas", negocio
+        pl.scan_parquet("data/raw/primas.parquet"), "primas", p.negocio
     ).write_parquet("data/processed/primas.parquet")
 
     bpdn.generar_base_primas_expuestos(
-        pl.scan_parquet("data/raw/expuestos.parquet"), "expuestos", negocio
+        pl.scan_parquet("data/raw/expuestos.parquet"), "expuestos", p.negocio
     ).write_parquet("data/processed/expuestos.parquet")

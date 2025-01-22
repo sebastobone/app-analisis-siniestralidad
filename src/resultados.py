@@ -7,11 +7,11 @@ import xlwings as xw
 def concatenar_archivos_resultados() -> pl.DataFrame:
     columnas_distintivas = ["apertura_reservas", "mes_corte", "atipico"]
 
-    dfs = []
     files = [file for file in os.listdir("output/resultados") if file != ".gitkeep"]
     sorted_files = sorted(
         files, key=lambda f: os.path.getmtime(os.path.join("output/resultados", f))
     )
+    dfs = []
     for file in sorted_files:
         dfs.append(
             pl.read_parquet(f"output/resultados/{file}").filter(
@@ -39,7 +39,7 @@ def actualizar_wb_resultados() -> xw.Book:
     return wb
 
 
-def generar_informe_actuario_responsable(mes_corte: int) -> pl.DataFrame:
+def generar_informe_actuario_responsable(negocio: str, mes_corte: int) -> None:
     periodicidades_desc = pl.LazyFrame(
         {
             "periodicidad_ocurrencia": [
@@ -53,7 +53,9 @@ def generar_informe_actuario_responsable(mes_corte: int) -> pl.DataFrame:
         }
     )
 
-    df = concatenar_archivos_resultados().lazy()
+    df = (
+        concatenar_archivos_resultados().lazy().filter(pl.col("mes_corte") == mes_corte)
+    )
 
     df_sinis = (
         df.select(
@@ -122,4 +124,4 @@ def generar_informe_actuario_responsable(mes_corte: int) -> pl.DataFrame:
         .collect()
     )
 
-    return df_ar
+    df_ar.write_excel(f"output/informe_ar_{negocio}_{mes_corte}.xlsx", worksheet="AR")

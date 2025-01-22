@@ -198,12 +198,7 @@ async def preparar_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
-    main.generar_bases_plantilla(
-        p.negocio,
-        p.tipo_analisis,
-        p.mes_inicio,
-        p.mes_corte,
-    )
+    main.generar_bases_plantilla(p)
     wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     plantilla.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
@@ -254,8 +249,5 @@ async def generar_informe_actuario_responsable(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> RedirectResponse:
     p = obtener_parametros_usuario(session, session_id)
-    df_ar = resultados.generar_informe_actuario_responsable(p.mes_corte)
-    df_ar.write_excel(
-        f"output/informe_ar_{p.negocio}_{p.mes_corte}.xlsx", worksheet="AR"
-    )
+    resultados.generar_informe_actuario_responsable(p.negocio, p.mes_corte)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)

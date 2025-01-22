@@ -65,7 +65,7 @@ def join_tablas(
     )
 
 
-def tablas_resumen(
+def generar_tablas_resumen(
     periodicidades: list[list[str]],
     tipo_analisis: Literal["triangulos", "entremes"],
     aperturas: pl.LazyFrame,

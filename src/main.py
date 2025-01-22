@@ -65,20 +65,9 @@ def correr_query_expuestos(p: Parametros) -> None:
 def generar_controles(p: Parametros) -> None:
     ctrl.set_permissions("data/controles_informacion", "write")
 
-    ctrl.generar_controles(
-        "siniestros",
-        p.negocio,
-        p.mes_corte,
-        cuadre_contable_sinis=p.cuadre_contable_sinis,
-        add_fraude_soat=p.add_fraude_soat,
-    )
-    ctrl.generar_controles(
-        "primas",
-        p.negocio,
-        p.mes_corte,
-        cuadre_contable_primas=p.cuadre_contable_primas,
-    )
-    ctrl.generar_controles("expuestos", p.negocio, p.mes_corte)
+    ctrl.generar_controles("siniestros", p)
+    ctrl.generar_controles("primas", p)
+    ctrl.generar_controles("expuestos", p)
 
     ctrl.generar_evidencias_parametros(p.negocio, p.mes_corte)
     ctrl.set_permissions("data/controles_informacion", "read")

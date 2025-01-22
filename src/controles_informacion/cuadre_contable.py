@@ -81,8 +81,7 @@ def cuadre_contable_autonomia(
     return df_cuadre.lazy()
 
 
-def apertura_dif_soat() -> pl.LazyFrame:
-    """Modificable, aca se decide en que apertura vamos a meter la diferencia SAP-Tera"""
+def apertura_para_asignar_diferencia_soat() -> pl.LazyFrame:
     return pl.LazyFrame(
         {
             "codigo_op": ["01"],
@@ -110,7 +109,9 @@ def cuadre_contable_soat(
         .select(["codigo_op", "codigo_ramo_op", "fecha_registro"] + dif_cols)
         .rename({col: col.replace("diferencia_", "") for col in dif_cols})
         .with_columns(ramo_desc=pl.lit("AUTOS OBLIGATORIO"))
-        .join(apertura_dif_soat(), on=["codigo_op", "codigo_ramo_op"])
+        .join(
+            apertura_para_asignar_diferencia_soat(), on=["codigo_op", "codigo_ramo_op"]
+        )
     )
 
     if file == "siniestros":

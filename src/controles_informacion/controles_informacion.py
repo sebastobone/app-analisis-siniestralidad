@@ -8,6 +8,7 @@ from src import constantes as ct
 from src import utils
 from src.controles_informacion.cuadre_contable import cuadre_contable
 from src.logger_config import logger
+from src.models import Parametros
 
 
 def agrupar_tera(
@@ -444,42 +445,37 @@ def ajustar_fraude(df: pl.LazyFrame, mes_corte: int):
 
 
 def generar_controles(
-    file: Literal["siniestros", "primas", "expuestos"],
-    negocio: str,
-    mes_corte: int,
-    cuadre_contable_sinis: bool = False,
-    add_fraude_soat: bool = False,
-    cuadre_contable_primas: bool = False,
+    file: Literal["siniestros", "primas", "expuestos"], p: Parametros
 ) -> None:
     df = pl.scan_parquet(f"data/raw/{file}.parquet")
 
     difs_sap_tera_pre_cuadre = controles_informacion(
         df,
         file,
-        mes_corte,
+        p.mes_corte,
         estado_cuadre="pre_cuadre_contable",
     )
 
-    if (file == "siniestros" and cuadre_contable_sinis) or (
-        file == "primas" and cuadre_contable_primas
+    if (file == "siniestros" and p.cuadre_contable_sinis) or (
+        file == "primas" and p.cuadre_contable_primas
     ):
         df.collect().write_csv(f"data/raw/{file}_pre_cuadre.csv", separator="\t")
         df.collect().write_parquet(f"data/raw/{file}_pre_cuadre.parquet")
-        df = cuadre_contable(negocio, file, df, difs_sap_tera_pre_cuadre.lazy())
+        df = cuadre_contable(p.negocio, file, df, difs_sap_tera_pre_cuadre.lazy())
         _ = controles_informacion(
             df,
             file,
-            mes_corte,
+            p.mes_corte,
             estado_cuadre="post_cuadre_contable",
         )
 
-    if negocio == "soat" and file == "siniestros" and add_fraude_soat:
+    if p.negocio == "soat" and file == "siniestros" and p.add_fraude_soat:
         df.collect().write_csv("data/raw/siniestros_post_cuadre.csv", separator="\t")
         df.collect().write_parquet("data/raw/siniestros_post_cuadre.parquet")
-        df = ajustar_fraude(df, mes_corte)
+        df = ajustar_fraude(df, p.mes_corte)
         _ = controles_informacion(
             df,
             file,
-            mes_corte,
+            p.mes_corte,
             estado_cuadre="post_ajustes_fraude",
         )

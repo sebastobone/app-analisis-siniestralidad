@@ -103,8 +103,8 @@ def test_actualizar_resultados(
         "plata_ultimate_bruto",
     )
 
-    # wb_u1.close()
-    # os.remove(f"plantillas/{p1.nombre_plantilla}.xlsm")
+    wb_u1.close()
+    os.remove(f"plantillas/{p1.nombre_plantilla}.xlsm")
 
     wb_u2.close()
     os.remove(f"plantillas/{p2.nombre_plantilla}.xlsm")

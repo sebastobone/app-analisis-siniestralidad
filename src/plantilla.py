@@ -14,6 +14,7 @@ from src.metodos_plantilla import (
     guardar_traer,
     tablas_resumen,
 )
+from src.models import RangeDimension
 
 
 def preparar_plantilla(
@@ -68,7 +69,7 @@ def preparar_plantilla(
 
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
-    diagonales, atipicos = tablas_resumen.tablas_resumen(
+    diagonales, atipicos = tablas_resumen.generar_tablas_resumen(
         periodicidades, tipo_analisis, aperturas.lazy()
     )
 
@@ -84,10 +85,7 @@ def preparar_plantilla(
 
 
 def generar_plantilla(
-    wb: xw.Book,
-    plantilla: Literal["frec", "seve", "plata", "entremes"],
-    mes_corte: int,
-    negocio: str,
+    wb: xw.Book, plantilla: ct.LISTA_PLANTILLAS, mes_corte: int
 ) -> None:
     s = time.time()
 
@@ -137,10 +135,7 @@ def generar_plantilla(
 
 
 def guardar_traer_fn(
-    wb: xw.Book,
-    modo: str,
-    plantilla: Literal["frec", "seve", "plata", "entremes"],
-    mes_corte: int,
+    wb: xw.Book, modo: str, plantilla: ct.LISTA_PLANTILLAS, mes_corte: int
 ) -> None:
     s = time.time()
 
@@ -164,8 +159,7 @@ def guardar_traer_fn(
             wb.sheets[plantilla_name],
             apertura,
             atributo,
-            num_ocurrencias,
-            num_alturas,
+            RangeDimension(height=num_ocurrencias, width=num_alturas),
             mes_del_periodo,
         )
 
@@ -193,8 +187,7 @@ def guardar_traer_fn(
             wb.sheets[plantilla_name],
             apertura,
             atributo,
-            num_ocurrencias,
-            num_alturas,
+            RangeDimension(height=num_ocurrencias, width=num_alturas),
             mes_del_periodo,
         )
 
@@ -204,7 +197,7 @@ def guardar_traer_fn(
 
 def traer_guardar_todo(
     wb: xw.Book,
-    plantilla: Literal["frec", "seve", "plata", "entremes"],
+    plantilla: ct.LISTA_PLANTILLAS,
     mes_corte: int,
     negocio: str,
     traer: bool = False,
@@ -221,7 +214,7 @@ def traer_guardar_todo(
         for atributo in atributos:
             wb.sheets[plantilla_name]["C2"].value = apertura
             wb.sheets[plantilla_name]["C3"].value = atributo
-            generar_plantilla(wb, plantilla, mes_corte, negocio)
+            generar_plantilla(wb, plantilla, mes_corte)
             if traer:
                 guardar_traer_fn(wb, "traer", plantilla, mes_corte)
             guardar_traer_fn(wb, "guardar", plantilla, mes_corte)

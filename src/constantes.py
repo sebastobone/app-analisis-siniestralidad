@@ -1,4 +1,5 @@
 import polars as pl
+from typing import Literal
 
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 
@@ -46,3 +47,6 @@ SEP_TRIANGULOS = 2
 COL_OCURRS_PLANTILLAS = 6
 FILA_INI_PLANTILLAS = 2
 FILA_INI_PARAMS = 4
+
+
+LISTA_PLANTILLAS = Literal["frec", "seve", "plata", "entremes"]

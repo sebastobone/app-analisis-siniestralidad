@@ -1,5 +1,6 @@
 from typing import Literal
 
+from pydantic import BaseModel
 from sqlmodel import Field, SQLModel, String
 
 
@@ -15,3 +16,13 @@ class Parametros(SQLModel, table=True):
     add_fraude_soat: bool = False
     cuadre_contable_primas: bool = False
     session_id: str | None = Field(index=True)
+
+
+class Offset(BaseModel):
+    y: int
+    x: int
+
+
+class RangeDimension(BaseModel):
+    height: int
+    width: int

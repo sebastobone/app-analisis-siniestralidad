@@ -218,7 +218,7 @@ async def modos_plantilla(
     wb = plantilla.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     if modo == "generar":
-        plantilla.generar_plantilla(wb, plant, p.mes_corte, p.negocio)
+        plantilla.generar_plantilla(wb, plant, p.mes_corte)
     elif modo in ["guardar", "traer"]:
         plantilla.guardar_traer_fn(wb, modo, plant, p.mes_corte)
     elif modo == "guardar_todo":

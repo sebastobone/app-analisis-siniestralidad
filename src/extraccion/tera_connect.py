@@ -1,5 +1,4 @@
 import json
-import textwrap
 from datetime import date
 
 import pandas as pd
@@ -13,30 +12,44 @@ from src.logger_config import logger
 from src.models import Parametros
 
 
-def tipo_query(file: str) -> str:
+def correr_query(
+    file_path: str, save_path: str, save_format: str, p: Parametros
+) -> None:
+    tipo_query = determinar_tipo_query(file_path)
+    segmentaciones = obtener_segmentaciones(
+        f"data/segmentacion_{p.negocio}.xlsx", tipo_query
+    )
+
+    particiones_fechas = crear_particiones_fechas(p.mes_inicio, p.mes_corte)
+
+    queries = reemplazar_parametros_queries(open(file_path).read(), p)
+    verificar_numero_segmentaciones(file_path, queries, segmentaciones)
+
+    logger.info(f"Ejecutando query {file_path}...")
+    df = ejecutar_queries(queries.split(";"), particiones_fechas, segmentaciones)
+    logger.debug(df)
+
+    if tipo_query != "otro":
+        verificar_resultado_siniestros_primas_expuestos(
+            tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte
+        )
+        df = df.select(
+            utils.col_apertura_reservas(p.negocio),
+            pl.all(),
+        )
+
+    guardar_resultado(df, save_path, save_format, tipo_query)
+
+
+def determinar_tipo_query(file: str) -> str:
     nombre_query = file.split("/")[-1]
-    for qty in ["siniestros", "primas", "expuestos"]:
-        if qty == nombre_query.replace(".sql", ""):
-            return qty
+    cantidad = nombre_query.replace(".sql", "")
+    if cantidad in ["primas", "expuestos", "siniestros"]:
+        return cantidad
     return "otro"
 
 
-def preparar_queries(
-    queries: str,
-    mes_inicio: int,
-    mes_corte: int,
-    aproximar_reaseguro: bool,
-) -> str:
-    return queries.format(
-        mes_primera_ocurrencia=mes_inicio,
-        mes_corte=mes_corte,
-        fecha_primera_ocurrencia=utils.yyyymm_to_date(mes_inicio),
-        fecha_mes_corte=utils.yyyymm_to_date(mes_corte),
-        aproximar_reaseguro=1 if aproximar_reaseguro else 0,
-    )
-
-
-def cargar_segmentaciones(
+def obtener_segmentaciones(
     path_archivo_segm: str, tipo_query: str
 ) -> list[pl.DataFrame]:
     try:
@@ -50,7 +63,7 @@ def cargar_segmentaciones(
         raise
 
     if hojas_segm:
-        check_adds_segmentacion(hojas_segm)
+        verificar_nombre_hojas_segmentacion(hojas_segm)
 
     hojas_query = [hoja for hoja in hojas_segm if tipo_query[0] in hoja.split("_")[1]]
 
@@ -60,25 +73,69 @@ def cargar_segmentaciones(
     ]
 
 
-def fechas_chunks(mes_inicio: int, mes_corte: int) -> list[tuple[date, date]]:
-    """Limites para correr queries pesados por partes"""
-    return list(
-        zip(
-            pl.date_range(
-                utils.yyyymm_to_date(mes_inicio),
-                utils.yyyymm_to_date(mes_corte),
-                interval="1mo",
-                eager=True,
-            ),
-            pl.date_range(
-                utils.yyyymm_to_date(mes_inicio),
-                utils.yyyymm_to_date(mes_corte),
-                interval="1mo",
-                eager=True,
-            ).dt.month_end(),
-            strict=False,
-        )
+def reemplazar_parametros_queries(queries: str, p: Parametros) -> str:
+    return queries.format(
+        mes_primera_ocurrencia=p.mes_inicio,
+        mes_corte=p.mes_corte,
+        fecha_primera_ocurrencia=utils.yyyymm_to_date(p.mes_inicio),
+        fecha_mes_corte=utils.yyyymm_to_date(p.mes_corte),
+        aproximar_reaseguro=1 if p.aproximar_reaseguro else 0,
     )
+
+
+def ejecutar_queries(
+    queries: list[str],
+    fechas_chunks: list[tuple[date, date]],
+    segm: list[pl.DataFrame],
+) -> pl.DataFrame:
+    con, cur = conectar_teradata()
+
+    add_num = 0
+    for n_query, query in tqdm(enumerate(queries)):
+        logger.info(f"Ejecutando query {n_query + 1} de {len(queries)}...")
+        try:
+            if "?" not in query:
+                ejecutar_query_de_procesamiento(cur, query, fechas_chunks)
+            else:
+                ejecutar_query_de_carga_de_informacion(cur, query, segm[add_num])
+                add_num += 1
+
+        except td.OperationalError:
+            logger.error(utils.limpiar_espacios_log(f"Error en {query[:100]}"))
+            raise
+
+    resultado = pl.read_database(queries[-1], con)
+    return pl.DataFrame(utils.lowercase_columns(resultado))
+
+
+def ejecutar_query_de_procesamiento(
+    cur: td.TeradataCursor, query: str, particiones_fechas: list[tuple[date, date]]
+) -> None:
+    if "{chunk_ini}" in query:
+        ejecutar_query_particionado_en_fechas(cur, query, particiones_fechas)
+    else:
+        cur.execute(query)  # type: ignore
+
+
+def ejecutar_query_particionado_en_fechas(
+    cur: td.TeradataCursor, query: str, particiones_fechas: list[tuple[date, date]]
+) -> None:
+    for chunk_ini, chunk_fin in tqdm(particiones_fechas):
+        cur.execute(
+            query.format(
+                chunk_ini=chunk_ini.strftime(format="%Y%m"),
+                chunk_fin=chunk_fin.strftime(format="%Y%m"),
+            )
+        )  # type: ignore
+
+
+def ejecutar_query_de_carga_de_informacion(
+    cur: td.TeradataCursor, query: str, add: pl.DataFrame
+):
+    verificar_numero_columnas_segmentacion(query, add)
+    add = verificar_registros_duplicados(add)
+    verificar_valores_nulos(add)
+    cur.executemany(query, add.rows())  # type: ignore
 
 
 def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
@@ -93,76 +150,43 @@ def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
     except td.OperationalError as exc:
         if "Hostname lookup failed" in str(exc):
             logger.error(
-                textwrap.dedent(
+                utils.limpiar_espacios_log(
                     """
                     Error al conectar con Teradata. Revise que se
                     encuentre conectado a la VPN en caso de no estar
                     conectado a la red "+SURA".
                     """
-                ).replace("\n", " ")
+                )
             )
         else:
             logger.error(
-                textwrap.dedent(
+                utils.limpiar_espacios_log(
                     """
                     Error al conectar con Teradata. Revise sus
                     credenciales.
                     """
-                ).replace("\n", " ")
+                )
             )
         raise
 
-    cur = con.cursor()  # type: ignore
-    logger.success("Conexion con Teradata exitosa.")
-
-    return con, cur
+    return con, con.cursor()  # type: ignore
 
 
-def ejecutar_queries(
-    queries: list[str],
-    fechas_chunks: list[tuple[date, date]],
-    segm: list[pl.DataFrame],
-) -> pl.DataFrame:
-    _, cur = conectar_teradata()
-
-    add_num = 0
-    for n_query, query in tqdm(enumerate(queries)):
-        logger.info(f"Ejecutando query {n_query + 1} de {len(queries)}...")
-        try:
-            if "?" not in query:
-                if "{chunk_ini}" in query:
-                    for chunk_ini, chunk_fin in tqdm(fechas_chunks):
-                        cur.execute(
-                            query.format(
-                                chunk_ini=chunk_ini.strftime(format="%Y%m"),
-                                chunk_fin=chunk_fin.strftime(format="%Y%m"),
-                            )
-                        )  # type: ignore
-                else:
-                    cur.execute(query)  # type: ignore
-            else:
-                check_numero_columnas_add(query, segm[add_num])
-                add = check_duplicados(segm[add_num])
-                check_nulls(add)
-                cur.executemany(query, add.rows())  # type: ignore
-                add_num += 1
-
-        except td.OperationalError:
-            logger.error(f"Error en {query[:100]}")
-            raise
-
-    return pl.DataFrame(
-        utils.lowercase_columns(
-            pl.read_database("{fn teradata_try_fastexport}" + queries[-1], cur)
-        )
+def crear_particiones_fechas(
+    mes_inicio: int, mes_corte: int
+) -> list[tuple[date, date]]:
+    inicios_mes = pl.date_range(
+        utils.yyyymm_to_date(mes_inicio),
+        utils.yyyymm_to_date(mes_corte),
+        interval="1mo",
+        eager=True,
     )
+    fines_mes = inicios_mes.dt.month_end()
+    return list(zip(inicios_mes, fines_mes, strict=False))
 
 
-def guardar_resultados(
-    df: pl.DataFrame,
-    save_path: str,
-    save_format: str,
-    tipo_query: str,
+def guardar_resultado(
+    df: pl.DataFrame, save_path: str, save_format: str, tipo_query: str
 ) -> None:
     # Para poder visualizarlo facil, en caso de ser necesario
     if tipo_query != "otro" and save_format != "csv":
@@ -176,7 +200,7 @@ def guardar_resultados(
     logger.success(f"Datos almacenados en {save_path}.{save_format}.")
 
 
-def check_adds_segmentacion(segm_sheets: list[str]) -> None:
+def verificar_nombre_hojas_segmentacion(segm_sheets: list[str]) -> None:
     for sheet in segm_sheets:
         partes = sheet.split("_")
         if (len(partes) < 3) or not any(char in partes[1] for char in "spe"):
@@ -195,7 +219,7 @@ def check_adds_segmentacion(segm_sheets: list[str]) -> None:
             raise ValueError
 
 
-def check_suficiencia_adds(
+def verificar_numero_segmentaciones(
     file_path: str, queries: str, adds: list[pl.DataFrame]
 ) -> None:
     num_adds_necesarios = queries.count("?);")
@@ -214,7 +238,7 @@ def check_suficiencia_adds(
         raise ValueError
 
 
-def check_numero_columnas_add(query: str, add: pl.DataFrame) -> None:
+def verificar_numero_columnas_segmentacion(query: str, add: pl.DataFrame) -> None:
     num_cols = query.count("?")
     num_cols_add = len(add.collect_schema().names())
     if num_cols != num_cols_add:
@@ -231,7 +255,7 @@ def check_numero_columnas_add(query: str, add: pl.DataFrame) -> None:
         raise ValueError
 
 
-def check_duplicados(add: pl.DataFrame) -> pl.DataFrame:
+def verificar_registros_duplicados(add: pl.DataFrame) -> pl.DataFrame:
     if len(add) != len(add.unique()):
         logger.warning(
             f"""
@@ -243,7 +267,7 @@ def check_duplicados(add: pl.DataFrame) -> pl.DataFrame:
     return add.unique()
 
 
-def check_nulls(add: pl.DataFrame) -> None:
+def verificar_valores_nulos(add: pl.DataFrame) -> None:
     num_nulls = add.null_count().max_horizontal().max()
     if isinstance(num_nulls, int) and num_nulls > 0:
         logger.error(
@@ -255,32 +279,30 @@ def check_nulls(add: pl.DataFrame) -> None:
         raise ValueError
 
 
-def asegurar_formato_fecha(col: pl.Series) -> None:
+def verificar_formato_fecha(col: pl.Series) -> None:
     if col.dtype != pl.Date:
         logger.error(f"""La columna {col.name} debe estar en formato fecha.""")
         raise ValueError
 
 
-def impedir_fecha_por_fuera(col: pl.Series, lim_inf: date, lim_sup: date) -> None:
+def verificar_fechas_dentro_de_rangos(
+    col: pl.Series, lim_inf: date, lim_sup: date
+) -> None:
     if col.dt.min() < lim_inf or col.dt.max() > lim_sup:  # type: ignore
         logger.error(
-            f"""La columna {col.name} debe estar entre {lim_inf} y {lim_sup},
+            utils.limpiar_espacios_log(
+                f"""La columna {col.name} debe estar entre {lim_inf} y {lim_sup},
                 pero la informacion generada esta entre {col.dt.min()} y {col.dt.max()}.
                 Revise el query.
-                """.replace("\n", " ")
+                """
+            )
         )
         raise ValueError
 
 
-def check_final_info(
+def verificar_resultado_siniestros_primas_expuestos(
     tipo_query: str, df: pl.DataFrame, negocio: str, mes_inicio: int, mes_corte: int
 ) -> None:
-    """Esta funcion se usa cuando se ejecuta un query de siniestros,
-    primas, o expuestos que consolida la informacion necesaria para
-    pasar a las transformaciones de la plantilla, sin necesidad de
-    hacer procesamiento extra. Valida la consistencia de la informacion.
-    """
-
     cols = df.collect_schema().names()
 
     for column in utils.min_cols_tera(tipo_query):
@@ -288,23 +310,22 @@ def check_final_info(
             logger.error(f"""¡Falta la columna {column}!""")
             raise ValueError
 
-    asegurar_formato_fecha(df.get_column("fecha_registro"))
-    impedir_fecha_por_fuera(
+    verificar_formato_fecha(df.get_column("fecha_registro"))
+    verificar_fechas_dentro_de_rangos(
         df.get_column("fecha_registro"),
         utils.yyyymm_to_date(mes_inicio),
         utils.yyyymm_to_date(mes_corte),
     )
 
     if tipo_query == "siniestros":
-        asegurar_formato_fecha(df.get_column("fecha_siniestro"))
-        impedir_fecha_por_fuera(
+        verificar_formato_fecha(df.get_column("fecha_siniestro"))
+        verificar_fechas_dentro_de_rangos(
             df.get_column("fecha_siniestro"),
             utils.yyyymm_to_date(mes_inicio),
             utils.yyyymm_to_date(mes_corte),
         )
 
-    # Segmentaciones faltantes
-    df_faltante = df.filter(
+    segmentaciones_faltantes = df.filter(
         pl.any_horizontal(
             [
                 (pl.col(col).is_null() | pl.col(col).eq("-1"))
@@ -312,35 +333,10 @@ def check_final_info(
             ]
         )
     )
-    if not df_faltante.is_empty():
-        logger.error(f"""¡Alerta! Revise las segmentaciones faltantes. {df_faltante}""")
-        raise ValueError
-
-
-def correr_query(
-    file_path: str,
-    save_path: str,
-    save_format: str,
-    p: Parametros,
-) -> None:
-    tipo = tipo_query(file_path)
-    segm = cargar_segmentaciones(f"data/segmentacion_{p.negocio}.xlsx", tipo)
-
-    fchunks = fechas_chunks(p.mes_inicio, p.mes_corte)
-
-    queries = preparar_queries(
-        open(file_path).read(), p.mes_inicio, p.mes_corte, p.aproximar_reaseguro
-    )
-    check_suficiencia_adds(file_path, queries, segm)
-
-    df = ejecutar_queries(queries.split(";"), fchunks, segm)
-    logger.debug(df)
-
-    if tipo != "otro":
-        check_final_info(tipo, df, p.negocio, p.mes_inicio, p.mes_corte)
-        df = df.select(
-            utils.col_apertura_reservas(p.negocio),
-            pl.all(),
+    if not segmentaciones_faltantes.is_empty():
+        logger.error(
+            f"""
+            ¡Alerta! Revise las segmentaciones faltantes. {segmentaciones_faltantes}
+            """
         )
-
-    guardar_resultados(df, save_path, save_format, tipo)
+        raise ValueError

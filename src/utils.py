@@ -1,3 +1,4 @@
+import textwrap
 from datetime import date
 from math import ceil
 
@@ -153,3 +154,7 @@ def sheet_to_dataframe(
 
 def path_plantilla(wb: xw.Book) -> str:
     return wb.fullname.replace(wb.name, "")
+
+
+def limpiar_espacios_log(log: str) -> str:
+    return textwrap.dedent(log).replace("\n", " ")

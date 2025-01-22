@@ -612,15 +612,3 @@ CREATE MULTISET VOLATILE TABLE siniestros_final AS (
 ) ON COMMIT PRESERVE ROWS;
 
 SELECT * FROM siniestros_final ORDER BY 1, 2, 3, 4, 5, 6, 7, 8, 9  -- noqa:
-
-/*
-
---========================
-PRUEBAS SOX
---========================
---  SELECT Sum(Conteo_Pago) as Suma_Columna__Conteo_Pago, Sum(Pago_Bruto) as Suma_Columna_Pago, Count(Ramo_Desc) as Conteo_Registros from SINIESTROS_FINAL
-
-*/
-
-
-

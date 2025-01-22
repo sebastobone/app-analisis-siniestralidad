@@ -86,10 +86,13 @@ def colorear_log(log: str) -> str:
 
 
 async def obtener_nuevos_logs() -> AsyncIterator[str]:
-    with open("logs/log_prod.log") as f:
+    with open("logs/log_prod.log", "rb") as f:
         f.seek(0, 2)
+        while f.read(1) != b"\n":
+            f.seek(-2, 1)
+        
         while True:
-            log = f.readline()
+            log = f.readline().decode()
             if log:
                 yield colorear_log(log)
             else:

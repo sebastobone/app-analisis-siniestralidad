@@ -15,8 +15,11 @@ from src.metodos_plantilla import base_plantillas
 from src.models import Parametros
 from src.procesamiento import base_siniestros
 
+from tests.conftest import assert_igual
 
-def mock_informacion_cruda(
+
+@pytest.fixture(autouse=True)
+def guardar_bases_ficticias(
     mock_siniestros: pl.LazyFrame,
     mock_primas: pl.LazyFrame,
     mock_expuestos: pl.LazyFrame,
@@ -24,6 +27,17 @@ def mock_informacion_cruda(
     mock_siniestros.collect().write_parquet("data/raw/siniestros.parquet")
     mock_primas.collect().write_parquet("data/raw/primas.parquet")
     mock_expuestos.collect().write_parquet("data/raw/expuestos.parquet")
+
+
+def agregar_meses_params(
+    params_form: dict[str, str], mes_inicio: date, mes_corte: date
+):
+    params_form.update(
+        {
+            "mes_corte": str(utils.date_to_yyyymm(mes_corte)),
+            "mes_inicio": str(utils.date_to_yyyymm(mes_inicio)),
+        }
+    )
 
 
 @pytest.mark.integration
@@ -70,34 +84,21 @@ def test_forma_triangulo(
 @pytest.mark.parametrize(
     "params_form",
     [
-        {
-            "negocio": "mock",
-            "mes_inicio": "201501",
-            "mes_corte": "203012",
-            "tipo_analisis": "triangulos",
-            "nombre_plantilla": "plantilla_test_triangulos",
-        },
-        # {
-        #     "negocio": "mock",
-        #     "mes_inicio": "201501",
-        #     "mes_corte": "203012",
-        #     "tipo_analisis": "entremes",
-        #     "nombre_plantilla": "plantilla_test_entremes",
-        # },
+        {"negocio": "mock", "tipo_analisis": "triangulos", "nombre_plantilla": "test1"},
+        {"negocio": "mock", "tipo_analisis": "entremes", "nombre_plantilla": "test2"},
     ],
 )
 def test_preparar_plantilla(
     client: TestClient,
     test_session: Session,
     params_form: dict[str, str],
-    mock_siniestros: pl.LazyFrame,
-    mock_primas: pl.LazyFrame,
-    mock_expuestos: pl.LazyFrame,
+    mes_inicio: date,
+    mes_corte: date,
 ):
+    agregar_meses_params(params_form, mes_inicio, mes_corte)
+
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]
-
-    mock_informacion_cruda(mock_siniestros, mock_primas, mock_expuestos)
 
     response = client.post("/preparar-plantilla")
 
@@ -134,11 +135,7 @@ def test_preparar_plantilla(
     df_original = base_triangulos.filter(
         (pl.col("periodicidad_ocurrencia") == "Trimestral") & (pl.col("diagonal") == 1)
     ).select(
-        [
-            "apertura_reservas",
-            "periodicidad_ocurrencia",
-            "periodo_ocurrencia",
-        ]
+        ["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"]
         + ct.COLUMNAS_QTYS
     )
 
@@ -158,13 +155,7 @@ def test_preparar_plantilla(
     df_plantilla = utils.sheet_to_dataframe(wb, "Aux_Totales").collect()
 
     assert df_original.shape[0] == df_plantilla.shape[0]
-    assert (
-        abs(
-            df_original.get_column("pago_bruto").sum()
-            - df_plantilla.get_column("pago_bruto").sum()
-        )
-        < 100
-    )
+    assert_igual(df_original, df_plantilla, "pago_bruto")
 
     wb.close()
     os.remove(f"plantillas/{p.nombre_plantilla}.xlsm")
@@ -173,46 +164,31 @@ def test_preparar_plantilla(
 @pytest.mark.plantilla
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "params_form, plantillas",
+    "params_form",
     [
-        (
-            {
-                "negocio": "mock",
-                "mes_inicio": "201501",
-                "mes_corte": "203012",
-                "tipo_analisis": "triangulos",
-                "nombre_plantilla": "plantilla_test_triangulos",
-            },
-            ["frec", "seve", "plata"],
-        ),
-        # (
-        #     {
-        #         "negocio": "mock",
-        #         "mes_inicio": "201501",
-        #         "mes_corte": "203012",
-        #         "tipo_analisis": "entremes",
-        #         "nombre_plantilla": "plantilla_test_entremes",
-        #     },
-        #     ["entremes"],
-        # ),
+        {"negocio": "mock", "tipo_analisis": "triangulos", "nombre_plantilla": "test1"},
+        # {"negocio": "mock", "tipo_analisis": "entremes", "nombre_plantilla": "test2"},
     ],
 )
 def test_generar_plantilla(
     client: TestClient,
     test_session: Session,
     params_form: dict[str, str],
-    plantillas: list[str],
-    mock_siniestros: pl.LazyFrame,
-    mock_primas: pl.LazyFrame,
-    mock_expuestos: pl.LazyFrame,
+    mes_inicio: date,
+    mes_corte: date,
 ):
+    agregar_meses_params(params_form, mes_inicio, mes_corte)
+
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]
 
-    mock_informacion_cruda(mock_siniestros, mock_primas, mock_expuestos)
-
     _ = client.post("/preparar-plantilla")
     wb = plant.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+
+    if p.tipo_analisis == "triangulos":
+        plantillas = ["frec", "seve", "plata"]
+    elif p.tipo_analisis == "entremes":
+        plantillas = ["entremes"]
 
     for plantilla in plantillas:
         response = client.post(
@@ -235,17 +211,14 @@ def test_generar_plantilla(
 @pytest.mark.plantilla
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "params_form, plantillas, rangos_adicionales",
+    "params_form, rangos_adicionales",
     [
         (
             {
                 "negocio": "mock",
-                "mes_inicio": "201501",
-                "mes_corte": "203012",
                 "tipo_analisis": "triangulos",
                 "nombre_plantilla": "plantilla_test_triangulos",
             },
-            ["frec", "seve", "plata"],
             {
                 "frec": ["BASE", "INDICADOR", "COMENTARIOS"],
                 "seve": [
@@ -287,16 +260,14 @@ def test_guardar_traer(
     client: TestClient,
     test_session: Session,
     params_form: dict[str, str],
-    plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
-    rangos_adicionales: dict[Literal["frec", "seve", "plata", "entremes"], list[str]],
-    mock_siniestros: pl.LazyFrame,
-    mock_primas: pl.LazyFrame,
-    mock_expuestos: pl.LazyFrame,
+    rangos_adicionales: dict[str, list[str]],
+    mes_inicio: date,
+    mes_corte: date,
 ):
+    agregar_meses_params(params_form, mes_inicio, mes_corte)
+
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]
-
-    mock_informacion_cruda(mock_siniestros, mock_primas, mock_expuestos)
 
     _ = client.post("/preparar-plantilla")
     wb = plant.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
@@ -309,6 +280,11 @@ def test_guardar_traer(
         "ULTIMATE",
         "METODOLOGIA",
     ]
+
+    if p.tipo_analisis == "triangulos":
+        plantillas = ["frec", "seve", "plata"]
+    elif p.tipo_analisis == "entremes":
+        plantillas = ["entremes"]
 
     for plantilla in plantillas:
         _ = client.post(
@@ -363,8 +339,6 @@ def test_guardar_traer(
         (
             {
                 "negocio": "mock",
-                "mes_inicio": "201501",
-                "mes_corte": "203012",
                 "tipo_analisis": "triangulos",
                 "nombre_plantilla": "plantilla_test_triangulos",
             },
@@ -373,8 +347,6 @@ def test_guardar_traer(
         (
             {
                 "negocio": "mock",
-                "mes_inicio": "201501",
-                "mes_corte": "203012",
                 "tipo_analisis": "triangulos",
                 "nombre_plantilla": "plantilla_test_triangulos",
             },
@@ -397,14 +369,13 @@ def test_almacenar_analisis(
     test_session: Session,
     params_form: dict[str, str],
     plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
-    mock_siniestros: pl.LazyFrame,
-    mock_primas: pl.LazyFrame,
-    mock_expuestos: pl.LazyFrame,
+    mes_inicio: date,
+    mes_corte: date,
 ):
+    agregar_meses_params(params_form, mes_inicio, mes_corte)
+
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]
-
-    mock_informacion_cruda(mock_siniestros, mock_primas, mock_expuestos)
 
     _ = client.post("/preparar-plantilla")
     wb = plant.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
@@ -423,20 +394,12 @@ def test_almacenar_analisis(
         f"output/resultados/{p.nombre_plantilla}_{p.mes_corte}.parquet"
     )
 
-    info_plantilla = (
-        utils.sheet_to_dataframe(wb, "Aux_Totales")
-        .collect()
-        .get_column("plata_ultimate_bruto")
-        .sum()
-    )
-    info_guardada = (
-        pl.read_parquet(f"output/resultados/{p.nombre_plantilla}_{p.mes_corte}.parquet")
-        .filter(pl.col("atipico") == 0)
-        .get_column("plata_ultimate_bruto")
-        .sum()
-    )
+    info_plantilla = utils.sheet_to_dataframe(wb, "Aux_Totales").collect()
+    info_guardada = pl.read_parquet(
+        f"output/resultados/{p.nombre_plantilla}_{p.mes_corte}.parquet"
+    ).filter(pl.col("atipico") == 0)
 
-    assert abs(info_plantilla - info_guardada) < 100
+    assert_igual(info_plantilla, info_guardada, "plata_ultimate_bruto")
 
     wb.close()
     os.remove(f"plantillas/{p.nombre_plantilla}.xlsm")

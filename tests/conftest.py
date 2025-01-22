@@ -10,7 +10,6 @@ from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 from src import utils
 from src.app import app, get_session
-from src.models import Parametros
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
@@ -22,7 +21,7 @@ def mes_inicio() -> date:
 
 @pytest.fixture
 def mes_corte() -> date:
-    return date(np.random.randint(2020, 2030), np.random.randint(1, 12), 1)
+    return date(np.random.randint(2020, 2029), np.random.randint(1, 12), 1)
 
 
 @pytest.fixture
@@ -157,6 +156,19 @@ def mock_expuestos(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
     )
 
 
+@pytest.fixture
+def bases_ficticias(
+    mock_siniestros: pl.LazyFrame,
+    mock_primas: pl.LazyFrame,
+    mock_expuestos: pl.LazyFrame,
+) -> dict[str, pl.LazyFrame]:
+    return {
+        "siniestros": mock_siniestros,
+        "primas": mock_primas,
+        "expuestos": mock_expuestos,
+    }
+
+
 @pytest.fixture(scope="session")
 def test_session():
     engine = create_engine(
@@ -189,27 +201,6 @@ def client_2(test_session: Session):
     client = TestClient(app, cookies={"session_id": "test-usuario-2"})
     yield client
     app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def params_form() -> dict[str, str]:
-    return {
-        "negocio": "autonomia",
-        "mes_inicio": "201001",
-        "mes_corte": "203012",
-        "tipo_analisis": "triangulos",
-        "aproximar_reaseguro": "False",
-        "nombre_plantilla": "plantilla",
-        "cuadre_contable_sinis": "False",
-        "add_fraude_soat": "False",
-        "cuadre_contable_primas": "False",
-    }
-
-
-@pytest.fixture
-def params(params_form: dict[str, str]) -> Parametros:
-    params = Parametros(**params_form, session_id="test-session-id")
-    return Parametros.model_validate(params)
 
 
 def assert_igual(

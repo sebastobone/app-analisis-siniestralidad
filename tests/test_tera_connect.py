@@ -9,6 +9,23 @@ from src.extraccion import tera_connect
 from src.models import Parametros
 
 
+@pytest.fixture
+def params(params_form: dict[str, str]) -> Parametros:
+    params_form = {
+        "negocio": "autonomia",
+        "mes_inicio": "201001",
+        "mes_corte": "203012",
+        "tipo_analisis": "triangulos",
+        "aproximar_reaseguro": "False",
+        "nombre_plantilla": "plantilla",
+        "cuadre_contable_sinis": "False",
+        "add_fraude_soat": "False",
+        "cuadre_contable_primas": "False",
+    }
+    params = Parametros(**params_form, session_id="test-session-id")
+    return Parametros.model_validate(params)
+
+
 @pytest.mark.unit
 def test_determinar_tipo_query():
     assert tera_connect.determinar_tipo_query("path/to/siniestros.sql") == "siniestros"

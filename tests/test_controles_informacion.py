@@ -34,15 +34,16 @@ def test_definir_hojas_afo(qtys: list[str], expected: set[str]):
     assert ctrl.definir_hojas_afo(qtys) == expected
 
 
-def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
-    def fechas_sap(mes_corte: int) -> list[date]:
-        return pl.date_range(
-            utils.yyyymm_to_date(201001),
-            utils.yyyymm_to_date(mes_corte),
-            interval="1mo",
-            eager=True,
-        ).to_list()
+def fechas_sap(mes_corte: int) -> list[date]:
+    return pl.date_range(
+        utils.yyyymm_to_date(201001),
+        utils.yyyymm_to_date(mes_corte),
+        interval="1mo",
+        eager=True,
+    ).to_list()
 
+
+def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
     fechas = fechas_sap(mes_corte)
     num_rows = len(fechas)
 
@@ -77,23 +78,21 @@ def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
         "prima_retenida_devengada",
     ],
 )
-def test_transformar_hoja_afo(cia: str, qty: str):
-    mes_corte = utils.date_to_yyyymm(
-        date(np.random.randint(2020, 2030), np.random.randint(1, 12), 1)
-    )
-    df_original = mock_hoja_afo(mes_corte, qty)
+def test_transformar_hoja_afo(cia: str, qty: str, mes_corte: date):
+    mes_corte_int = utils.date_to_yyyymm(mes_corte)
+    df_original = mock_hoja_afo(mes_corte_int, qty)
     sum_original = sum(
         [df_original.get_column(column).sum() for column in ["001", "002", "003"]]
     ) * ctrl.signo_sap(qty)
 
-    df_processed = ctrl.transformar_hoja_afo(df_original, cia, qty, mes_corte)
+    df_processed = ctrl.transformar_hoja_afo(df_original, cia, qty, mes_corte_int)
     sum_processed = df_processed.collect().get_column(qty).sum()
 
     assert abs(sum_original - sum_processed) < 100
 
     hoja_afo_incompleta = df_original.slice(0, df_original.shape[0] - 1)
     with pytest.raises(ValueError):
-        ctrl.transformar_hoja_afo(hoja_afo_incompleta, cia, qty, mes_corte)
+        ctrl.transformar_hoja_afo(hoja_afo_incompleta, cia, qty, mes_corte_int)
 
 
 @pytest.mark.unit

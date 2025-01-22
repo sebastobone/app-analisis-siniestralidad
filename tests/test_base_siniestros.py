@@ -7,13 +7,15 @@ import pytest
 from src import utils
 from src.procesamiento import base_siniestros as base
 
+from tests.conftest import assert_igual
+
 
 def plata_original(
     df_siniestros: pl.LazyFrame,
     mes_inicio: date,
     mes_corte: date,
     atipicos: Literal[1, 0],
-) -> float:
+) -> pl.DataFrame:
     return (
         df_siniestros.with_columns(
             pl.col("fecha_siniestro").clip(upper_bound=pl.col("fecha_registro"))
@@ -24,8 +26,6 @@ def plata_original(
             & (pl.col("atipico") == atipicos)
         )
         .collect()
-        .get_column("pago_bruto")
-        .sum()
     )
 
 
@@ -109,25 +109,20 @@ def test_analisis_triangulos(
     plata_original_tipicos = plata_original(
         mock_siniestros, mes_inicio, mes_corte_tipicos, 0
     )
-    plata_procesada_tipicos = (
-        base_triangulos.filter(pl.col("diagonal") == 1).get_column("pago_bruto").sum()
-    )
+    plata_procesada_tipicos = base_triangulos.filter(pl.col("diagonal") == 1)
 
-    assert abs(plata_original_tipicos - plata_procesada_tipicos) < 100
+    assert_igual(plata_procesada_tipicos, plata_original_tipicos, "pago_bruto")
 
     col_ocurr_at = base_atipicos.get_column("periodo_ocurrencia")
 
-    # Puede que no hallan llegado atipicos todos los meses,
+    # Puede que no hayan llegado atipicos todos los meses,
     # entonces no se exige igualdad
     assert col_ocurr_at.min() >= utils.date_to_yyyymm(mes_inicio)  # type: ignore
     assert col_ocurr_at.max() <= utils.date_to_yyyymm(mes_corte)  # type: ignore
 
     plata_original_atipicos = plata_original(mock_siniestros, mes_inicio, mes_corte, 1)
 
-    assert (
-        abs(plata_original_atipicos - base_atipicos.get_column("pago_bruto").sum())
-        < 100
-    )
+    assert_igual(base_atipicos, plata_original_atipicos, "pago_bruto")
 
 
 @pytest.mark.unit
@@ -160,11 +155,9 @@ def test_analisis_entremes(
 
     plata_original_tipicos = plata_original(mock_siniestros, mes_inicio, mes_corte, 0)
 
-    plata_procesada_tipicos = (
-        base_triangulos.filter(pl.col("diagonal") == 1).get_column("pago_bruto").sum()
-    )
+    plata_procesada_tipicos = base_triangulos.filter(pl.col("diagonal") == 1)
 
-    assert abs(plata_original_tipicos - plata_procesada_tipicos) < 100
+    assert_igual(plata_procesada_tipicos, plata_original_tipicos, "pago_bruto")
 
     base_ult_ocurr = base_ult_ocurr.filter(
         pl.col("periodicidad_triangulo") == periodicidad_ocurrencia
@@ -177,11 +170,10 @@ def test_analisis_entremes(
     assert col_ocurr_ult.max() == utils.date_to_yyyymm(mes_corte)
 
     plata_original_ult_ocurr = plata_original(mock_siniestros, prim_ocurr, mes_corte, 0)
-    plata_procesada = base_ult_ocurr.get_column("pago_bruto").sum()
 
-    assert abs(plata_original_ult_ocurr - plata_procesada) < 100
+    assert_igual(base_ult_ocurr, plata_original_ult_ocurr, "pago_bruto")
 
-    # Puede que no hallan llegado atipicos todos los meses,
+    # Puede que no hayan llegado atipicos todos los meses,
     # entonces no se exige igualdad
     col_ocurr_at = base_atipicos.get_column("periodo_ocurrencia")
     assert col_ocurr_at.min() >= utils.date_to_yyyymm(mes_inicio)  # type: ignore
@@ -189,7 +181,4 @@ def test_analisis_entremes(
 
     plata_original_atipicos = plata_original(mock_siniestros, mes_inicio, mes_corte, 1)
 
-    assert (
-        abs(plata_original_atipicos - base_atipicos.get_column("pago_bruto").sum())
-        < 100
-    )
+    assert_igual(base_atipicos, plata_original_atipicos, "pago_bruto")

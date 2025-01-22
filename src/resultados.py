@@ -5,6 +5,8 @@ import xlwings as xw
 
 
 def concatenar_archivos_resultados() -> pl.DataFrame:
+    columnas_distintivas = ["apertura_reservas", "mes_corte", "atipico"]
+
     dfs = []
     files = [file for file in os.listdir("output/resultados") if file != ".gitkeep"]
     sorted_files = sorted(
@@ -13,17 +15,14 @@ def concatenar_archivos_resultados() -> pl.DataFrame:
     for file in sorted_files:
         dfs.append(
             pl.read_parquet(f"output/resultados/{file}").filter(
-                pl.col("plata_ultimate_bruto")
-                .sum()
-                .over(["atipico", "mes_corte", "apertura_reservas"])
-                != 0
+                pl.col("plata_ultimate_bruto").sum().over(columnas_distintivas) != 0
             )
         )
 
     df_resultados = (
         pl.DataFrame(pl.concat(dfs))
-        .unique(subset=["apertura_reservas", "periodo_ocurrencia"], keep="last")
-        .sort(["mes_corte", "atipico", "apertura_reservas", "periodo_ocurrencia"])
+        .unique(subset=columnas_distintivas + ["periodo_ocurrencia"], keep="last")
+        .sort(columnas_distintivas + ["periodo_ocurrencia"])
     )
 
     return df_resultados

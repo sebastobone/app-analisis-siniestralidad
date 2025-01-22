@@ -13,9 +13,19 @@ def test_generar_base(client: TestClient):
 
 
 @pytest.mark.unit
-def test_ingresar_parametros(
-    client: TestClient, test_session: Session, params_form: dict[str, str]
-):
+def test_ingresar_parametros(client: TestClient, test_session: Session):
+    params_form = {
+        "negocio": "autonomia",
+        "mes_inicio": "201001",
+        "mes_corte": "203012",
+        "tipo_analisis": "triangulos",
+        "aproximar_reaseguro": "False",
+        "nombre_plantilla": "plantilla",
+        "cuadre_contable_sinis": "False",
+        "add_fraude_soat": "False",
+        "cuadre_contable_primas": "False",
+    }
+
     # Dos veces para verificar que se sobreescribe
     response = client.post("/ingresar-parametros", data=params_form)
     response = client.post("/ingresar-parametros", data=params_form)
@@ -29,11 +39,18 @@ def test_ingresar_parametros(
 
 
 @pytest.mark.unit
-def test_ingresar_parametros_malos(client: TestClient, params_form: dict[str, str]):
-    params_malos = params_form.copy()
-    params_malos["mes_inicio"] = "lorem"
-    params_malos["mes_corte"] = "ipsum"
-    params_malos["aproximar_reaseguro"] = "sit"
+def test_ingresar_parametros_malos(client: TestClient):
+    params_form = {
+        "negocio": "autonomia",
+        "mes_inicio": "lorem",
+        "mes_corte": "ipsum",
+        "tipo_analisis": "triangulos",
+        "aproximar_reaseguro": "sit",
+        "nombre_plantilla": "plantilla",
+        "cuadre_contable_sinis": "False",
+        "add_fraude_soat": "False",
+        "cuadre_contable_primas": "False",
+    }
 
     with pytest.raises(ValidationError):
-        client.post("/ingresar-parametros", data=params_malos)
+        client.post("/ingresar-parametros", data=params_form)

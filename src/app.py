@@ -110,17 +110,7 @@ def obtener_parametros_usuario(
     ).all()[0]
 
 
-@app.post("/ingresar-parametros", response_model=Parametros)
-async def ingresar_parametros(
-    session: SessionDep,
-    params: Annotated[Parametros, Form()],
-    session_id: Annotated[str | None, Cookie()] = None,
-):
-    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-    if not session_id:
-        session_id = str(uuid4())
-        response.set_cookie(key="session_id", value=session_id)
-
+def validar_parametros_ingresados(params: Annotated[Parametros, Form()]) -> Parametros:
     try:
         parametros = Parametros.model_validate(params)
     except ValidationError:
@@ -135,9 +125,12 @@ async def ingresar_parametros(
             )
         )
         raise
+    return parametros
 
-    parametros.session_id = session_id
 
+def eliminar_parametros_anteriores(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> None:
     try:
         existing_data = obtener_parametros_usuario(session, session_id)
         if existing_data:
@@ -145,6 +138,23 @@ async def ingresar_parametros(
             session.commit()
     except IndexError:
         pass
+
+
+@app.post("/ingresar-parametros", response_model=Parametros)
+async def ingresar_parametros(
+    session: SessionDep,
+    params: Annotated[Parametros, Form()],
+    session_id: Annotated[str | None, Cookie()] = None,
+):
+    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+    if not session_id:
+        session_id = str(uuid4())
+        response.set_cookie(key="session_id", value=session_id)
+
+    parametros = validar_parametros_ingresados(params)
+    parametros.session_id = session_id
+
+    eliminar_parametros_anteriores(session, session_id)
 
     session.add(parametros)
     session.commit()

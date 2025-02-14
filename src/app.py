@@ -12,12 +12,13 @@ from pydantic import ValidationError
 from sqlmodel import Session, SQLModel, create_engine, select
 from sse_starlette.sse import EventSourceResponse
 
-from src import main, resultados, utils
+from src import main, utils
 from src.logger_config import logger
 from src.metodos_plantilla import (
     abrir,
     generar,
     preparar,
+    resultados,
 )
 from src.metodos_plantilla import (
     almacenar_analisis as almacenar,
@@ -90,7 +91,7 @@ async def obtener_nuevos_logs() -> AsyncIterator[str]:
         f.seek(0, 2)
         while f.read(1) != b"\n":
             f.seek(-2, 1)
-        
+
         while True:
             log = f.readline().decode()
             if log:

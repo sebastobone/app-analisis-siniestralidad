@@ -16,12 +16,10 @@ def guardar_bases_ficticias(
     mock_expuestos.collect().write_parquet("data/raw/expuestos.parquet")
 
 
-def agregar_meses_params(
-    params_form: dict[str, str], mes_inicio: date, mes_corte: date
-):
+def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, date]):
     params_form.update(
         {
-            "mes_corte": str(utils.date_to_yyyymm(mes_corte)),
-            "mes_inicio": str(utils.date_to_yyyymm(mes_inicio)),
+            "mes_corte": str(utils.date_to_yyyymm(rango_meses[0])),
+            "mes_inicio": str(utils.date_to_yyyymm(rango_meses[1])),
         }
     )

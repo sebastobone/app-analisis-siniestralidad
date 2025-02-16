@@ -15,17 +15,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../s
 
 
 @pytest.fixture
-def mes_inicio() -> date:
-    return date(np.random.randint(2010, 2019), np.random.randint(1, 12), 1)
+def rango_meses() -> tuple[date, date]:
+    mes_inicio = date(np.random.randint(2010, 2019), np.random.randint(1, 12), 1)
+    mes_corte = date(np.random.randint(2020, 2029), np.random.randint(1, 12), 1)
+    return mes_inicio, mes_corte
 
 
 @pytest.fixture
-def mes_corte() -> date:
-    return date(np.random.randint(2020, 2029), np.random.randint(1, 12), 1)
-
-
-@pytest.fixture
-def mock_siniestros(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
+def mock_siniestros(rango_meses: tuple[date, date]) -> pl.LazyFrame:
     num_rows = 100000
     return pl.LazyFrame(
         {
@@ -37,19 +34,13 @@ def mock_siniestros(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
             "atipico": np.random.choice([0, 1], size=num_rows, p=[0.95, 0.05]),
             "fecha_siniestro": np.random.choice(
                 pl.date_range(
-                    mes_inicio,
-                    mes_corte,
-                    interval="1mo",
-                    eager=True,
+                    rango_meses[0], rango_meses[1], interval="1mo", eager=True
                 ),
                 size=num_rows,
             ),
             "fecha_registro": np.random.choice(
                 pl.date_range(
-                    mes_inicio,
-                    mes_corte,
-                    interval="1mo",
-                    eager=True,
+                    rango_meses[0], rango_meses[1], interval="1mo", eager=True
                 ),
                 size=num_rows,
             ),
@@ -72,7 +63,7 @@ def mock_siniestros(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
 
 
 @pytest.fixture
-def mock_primas(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
+def mock_primas(rango_meses: tuple[date, date]) -> pl.LazyFrame:
     num_rows = 10000
     return pl.LazyFrame(
         {
@@ -83,10 +74,7 @@ def mock_primas(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
             "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
             "fecha_registro": np.random.choice(
                 pl.date_range(
-                    mes_inicio,
-                    mes_corte,
-                    interval="1mo",
-                    eager=True,
+                    rango_meses[0], rango_meses[1], interval="1mo", eager=True
                 ),
                 size=num_rows,
             ),
@@ -106,7 +94,7 @@ def mock_primas(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
 
 
 @pytest.fixture
-def mock_expuestos(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
+def mock_expuestos(rango_meses: tuple[date, date]) -> pl.LazyFrame:
     num_rows = 10000
     return (
         pl.LazyFrame(
@@ -122,10 +110,7 @@ def mock_expuestos(mes_inicio: date, mes_corte: date) -> pl.LazyFrame:
                 "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
                 "fecha_registro": np.random.choice(
                     pl.date_range(
-                        mes_inicio,
-                        mes_corte,
-                        interval="1mo",
-                        eager=True,
+                        rango_meses[0], rango_meses[1], interval="1mo", eager=True
                     ),
                     size=num_rows,
                 ),

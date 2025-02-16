@@ -355,36 +355,6 @@ def controles_informacion(
     return difs_sap_tera
 
 
-def set_permissions(
-    directory: str, permission: Literal["read", "write"] = "write"
-) -> None:
-    import stat
-
-    for dirpath, dirnames, filenames in os.walk(directory):
-        for dirname in dirnames:
-            dir_full_path = os.path.join(dirpath, dirname)
-            if permission == "read":
-                os.chmod(dir_full_path, stat.S_IREAD | stat.S_IEXEC)
-            elif permission == "write":
-                os.chmod(
-                    dir_full_path,
-                    stat.S_IRWXU
-                    | stat.S_IRGRP
-                    | stat.S_IXGRP
-                    | stat.S_IROTH
-                    | stat.S_IXOTH,
-                )
-        for filename in filenames:
-            file_full_path = os.path.join(dirpath, filename)
-            if permission == "read":
-                os.chmod(file_full_path, stat.S_IREAD)
-            elif permission == "write":
-                os.chmod(
-                    file_full_path,
-                    stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH,
-                )
-
-
 def generar_evidencias_parametros(negocio: str, mes_corte: int):
     import shutil
     from datetime import datetime

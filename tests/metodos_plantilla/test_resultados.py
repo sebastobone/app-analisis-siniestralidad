@@ -20,8 +20,7 @@ def test_actualizar_resultados(
     client: TestClient,
     client_2: TestClient,
     test_session: Session,
-    mes_inicio: date,
-    mes_corte: date,
+    rango_meses: tuple[date, date],
 ):
     params_form_usuario_1 = {
         "negocio": "mock",
@@ -34,8 +33,8 @@ def test_actualizar_resultados(
         "nombre_plantilla": "plantilla_test_usuario_2",
     }
 
-    agregar_meses_params(params_form_usuario_1, mes_inicio, mes_corte)
-    agregar_meses_params(params_form_usuario_2, mes_inicio, mes_corte)
+    agregar_meses_params(params_form_usuario_1, *rango_meses)
+    agregar_meses_params(params_form_usuario_2, *rango_meses)
 
     _ = client.post("/ingresar-parametros", data=params_form_usuario_1)
     p1 = obtener_parametros_usuario(test_session, "test-usuario-1")

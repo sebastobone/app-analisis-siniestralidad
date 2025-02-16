@@ -6,22 +6,25 @@ import polars as pl
 import pytest
 from src import utils
 from src.controles_informacion import controles_informacion as ctrl
-from src.controles_informacion import cuadre_contable as cuadre
+from src.controles_informacion import cuadre_contable
 
 from tests.conftest import assert_igual
 from tests.test_controles_informacion import mock_hoja_afo
 
 
 @pytest.mark.parametrize("qty", ["pago_bruto", "aviso_bruto"])
-@patch("src.controles_informacion.cuadre_contable.apertura_dif_soat")
+@patch(
+    "src.controles_informacion.cuadre_contable.apertura_para_asignar_diferencia_soat"
+)
 @patch("src.controles_informacion.controles_informacion.pl.read_excel")
 def test_cuadre_contable_soat(
     mock_read_excel: MagicMock,
     mock_apertura_dif_soat: MagicMock,
     mock_siniestros: pl.LazyFrame,
-    mes_corte: date,
+    rango_meses: tuple[date, date],
     qty: str,
 ) -> None:
+    mes_corte = rango_meses[1]
     mes_corte_int = utils.date_to_yyyymm(mes_corte)
     mock_read_excel.return_value = mock_hoja_afo(mes_corte_int, "pago_bruto")
     mock_apertura_dif_soat.return_value = pl.LazyFrame(
@@ -60,7 +63,7 @@ def test_cuadre_contable_soat(
     ).filter(pl.col("fecha_registro") <= mes_corte)
 
     with patch("src.controles_informacion.cuadre_contable.guardar_archivos"):
-        df_cuadre = cuadre.cuadre_contable(
+        df_cuadre = cuadre_contable.cuadre_contable(
             "soat", "siniestros", mock_soat, dif_sap_vs_tera.lazy()
         )
 
@@ -72,6 +75,6 @@ def test_cuadre_contable_soat(
 
 def test_cuadre_contable_negocio_inexistente():
     with pytest.raises(ValueError):
-        cuadre.cuadre_contable(
+        cuadre_contable.cuadre_contable(
             "negocio_inexistente", "siniestros", pl.LazyFrame(), pl.LazyFrame()
         )

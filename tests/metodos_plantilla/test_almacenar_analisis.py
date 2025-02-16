@@ -52,10 +52,9 @@ def test_almacenar_analisis(
     test_session: Session,
     params_form: dict[str, str],
     plantillas: list[Literal["frec", "seve", "plata", "entremes"]],
-    mes_inicio: date,
-    mes_corte: date,
+    rango_meses: tuple[date, date],
 ):
-    agregar_meses_params(params_form, mes_inicio, mes_corte)
+    agregar_meses_params(params_form, *rango_meses)
 
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]

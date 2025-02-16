@@ -63,14 +63,11 @@ def correr_query_expuestos(p: Parametros) -> None:
 
 
 def generar_controles(p: Parametros) -> None:
-    ctrl.set_permissions("data/controles_informacion", "write")
-
     ctrl.generar_controles("siniestros", p)
     ctrl.generar_controles("primas", p)
     ctrl.generar_controles("expuestos", p)
 
     ctrl.generar_evidencias_parametros(p.negocio, p.mes_corte)
-    ctrl.set_permissions("data/controles_informacion", "read")
 
 
 def generar_bases_plantilla(p: Parametros) -> None:

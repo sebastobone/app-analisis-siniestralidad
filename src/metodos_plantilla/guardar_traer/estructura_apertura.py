@@ -1,11 +1,11 @@
 import xlwings as xw
 from src import utils
-from src.models import RangeDimension
+from src.models import EstructuraApertura, RangeDimension
 
 
 def obtener_estructura_apertura(
     wb: xw.Book, plantilla_name: str, mes_corte: int
-) -> tuple[str, str, RangeDimension, int]:
+) -> EstructuraApertura:
     apertura = str(wb.sheets[plantilla_name]["C2"].value)
     atributo = str(wb.sheets[plantilla_name]["C3"].value).lower()
 
@@ -21,4 +21,9 @@ def obtener_estructura_apertura(
 
     dimensiones_triangulo = RangeDimension(height=num_ocurrencias, width=num_alturas)
 
-    return apertura, atributo, dimensiones_triangulo, mes_del_periodo
+    return EstructuraApertura(
+        apertura=apertura,
+        atributo=atributo,
+        dimensiones_triangulo=dimensiones_triangulo,
+        mes_del_periodo=mes_del_periodo,
+    )

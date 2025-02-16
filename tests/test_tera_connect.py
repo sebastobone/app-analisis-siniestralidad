@@ -10,7 +10,7 @@ from src.models import Parametros
 
 
 @pytest.fixture
-def params(params_form: dict[str, str]) -> Parametros:
+def params() -> Parametros:
     params_form = {
         "negocio": "autonomia",
         "mes_inicio": "201001",
@@ -148,10 +148,10 @@ def test_check_nulls():
 
 @pytest.mark.unit
 def test_check_final_info(
-    mock_siniestros: pl.LazyFrame, mes_inicio: date, mes_corte: date
+    mock_siniestros: pl.LazyFrame, rango_meses: tuple[date, date]
 ):
-    mes_inicio_int = utils.date_to_yyyymm(mes_inicio)
-    mes_corte_int = utils.date_to_yyyymm(mes_corte)
+    mes_inicio_int = utils.date_to_yyyymm(rango_meses[0])
+    mes_corte_int = utils.date_to_yyyymm(rango_meses[1])
 
     tipo_query = "siniestros"
     df = mock_siniestros.collect()

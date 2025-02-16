@@ -31,11 +31,10 @@ def test_forma_triangulo(
     tipo_analisis: Literal["triangulos", "entremes"],
     periodicidad_ocurrencia: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
     mock_siniestros: pl.LazyFrame,
-    mes_inicio: date,
-    mes_corte: date,
+    rango_meses: tuple[date, date],
 ):
     _, _, _ = base_siniestros.generar_bases_siniestros(
-        mock_siniestros, tipo_analisis, mes_inicio, mes_corte
+        mock_siniestros, tipo_analisis, *rango_meses
     )
 
     df = generar.crear_triangulo_base_plantilla(
@@ -66,10 +65,9 @@ def test_generar_plantilla(
     client: TestClient,
     test_session: Session,
     params_form: dict[str, str],
-    mes_inicio: date,
-    mes_corte: date,
+    rango_meses: tuple[date, date],
 ):
-    agregar_meses_params(params_form, mes_inicio, mes_corte)
+    agregar_meses_params(params_form, *rango_meses)
 
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]

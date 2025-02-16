@@ -4,7 +4,7 @@ import polars as pl
 import xlwings as xw
 from src import constantes as ct
 from src.logger_config import logger
-from src.models import RangeDimension
+from src.models import EstructuraApertura, RangeDimension
 
 from .estructura_apertura import obtener_estructura_apertura
 from .rangos_parametros import obtener_rangos_parametros
@@ -16,27 +16,13 @@ def guardar_apertura(
     s = time.time()
 
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-    apertura, atributo, dimensiones_triangulo, mes_del_periodo = (
-        obtener_estructura_apertura(wb, plantilla_name, mes_corte)
-    )
+    estructura_apertura = obtener_estructura_apertura(wb, plantilla_name, mes_corte)
 
-    guardar_parametros(
-        wb.sheets[plantilla_name],
-        apertura,
-        atributo,
-        dimensiones_triangulo,
-        mes_del_periodo,
-    )
+    guardar_parametros(wb.sheets[plantilla_name], **estructura_apertura)
+    guardar_ultimate(wb, plantilla_name, estructura_apertura)
 
-    guardar_ultimate(
-        wb,
-        plantilla_name,
-        dimensiones_triangulo.height,
-        mes_del_periodo,
-        apertura,
-        atributo,
-    )
-
+    apertura = estructura_apertura.apertura
+    atributo = estructura_apertura.atributo
     logger.success(f"Parametros y resultados para {apertura} - {atributo} guardados.")
 
     wb.sheets["Main"]["A1"].value = "GUARDAR_APERTURA"
@@ -44,13 +30,10 @@ def guardar_apertura(
 
 
 def guardar_ultimate(
-    wb: xw.Book,
-    plantilla_name: str,
-    num_ocurrencias: int,
-    mes_del_periodo: int,
-    apertura: str,
-    atributo: str,
+    wb: xw.Book, plantilla_name: str, estructura_apertura: EstructuraApertura
 ):
+    num_ocurrencias = estructura_apertura.dimensiones_triangulo.height
+    atributo = estructura_apertura.atributo
     cols_ultimate = {
         "Plantilla_Frec": "frec_ultimate",
         "Plantilla_Seve": f"seve_ultimate_{atributo}",
@@ -61,9 +44,9 @@ def guardar_ultimate(
     wb.macro("guardar_ultimate")(
         plantilla_name,
         num_ocurrencias,
-        mes_del_periodo,
+        estructura_apertura.mes_del_periodo,
         cols_ultimate[plantilla_name],
-        apertura,
+        estructura_apertura.apertura,
         atributo,
     )
 

@@ -78,8 +78,8 @@ def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
         "prima_retenida_devengada",
     ],
 )
-def test_transformar_hoja_afo(cia: str, qty: str, mes_corte: date):
-    mes_corte_int = utils.date_to_yyyymm(mes_corte)
+def test_transformar_hoja_afo(cia: str, qty: str, rango_meses: tuple[date, date]):
+    mes_corte_int = utils.date_to_yyyymm(rango_meses[1])
     df_original = mock_hoja_afo(mes_corte_int, qty)
     sum_original = sum(
         [df_original.get_column(column).sum() for column in ["001", "002", "003"]]

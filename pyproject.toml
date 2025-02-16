@@ -142,3 +142,9 @@ markers = [
     "autonomia: tests para evaluar el proceso real de autonomia",
     "teradata: tests que requieren conectarse a Teradata",
 ]
+
+[dependency-groups]
+dev = [
+    "pip-audit>=2.8.0",
+    "pre-commit>=4.1.0",
+]

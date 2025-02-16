@@ -1,0 +1,52 @@
+repos:
+  - repo: local
+    hooks:
+      - id: uv-lock-check
+        name: uv => make sure the lock file is up-to-date
+        stages: [pre-commit]
+        language: system
+        entry: uv lock --locked
+        always_run: true
+        pass_filenames: false
+      - id: mypy
+        name: mypy => type checking
+        stages: [pre-commit]
+        language: system
+        entry: uv run mypy
+        always_run: true
+        pass_filenames: false
+      - id: ruff-formatting
+        name: ruff => code formatting
+        stages: [pre-commit]
+        language: system
+        entry: uv run ruff format
+        always_run: true
+        pass_filenames: false
+      - id: ruff-linting
+        name: ruff => linting
+        stages: [pre-commit]
+        language: system
+        entry: uv run ruff check .
+        always_run: true
+        pass_filenames: false
+      - id: pip-audit
+        name: pip-audit => vulnerability checking
+        stages: [pre-push]
+        language: system
+        entry: uv run pip-audit --ignore-vuln GHSA-c33w-24p9-8m24
+        always_run: true
+        pass_filenames: false
+      - id: pytest
+        name: pytest => testing
+        stages: [pre-push]
+        language: system
+        entry: uv run pytest --cov -m "not teradata"
+        always_run: true
+        pass_filenames: false
+      - id: coverage
+        name: coverage => testing coverage
+        stages: [pre-push]
+        language: system
+        entry: uv run coverage report
+        always_run: true
+        pass_filenames: false

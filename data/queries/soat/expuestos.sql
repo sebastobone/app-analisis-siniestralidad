@@ -1,7 +1,6 @@
 --Se cambio la tabla V_CONTRATO_MSTR por V_CONTRATO
 --ya que no estaba trayendo el nombre a unas sucursales)
 
--- drop table SUCURSALES;
 CREATE MULTISET VOLATILE TABLE sucursales
 (
     codigo_ramo_op VARCHAR(100) NOT NULL
@@ -10,9 +9,9 @@ CREATE MULTISET VOLATILE TABLE sucursales
     , apertura_canal_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (nombre_canal_comercial) ON COMMIT PRESERVE ROWS;
 INSERT INTO sucursales VALUES (?, ?, ?, ?);  -- noqa:
---sel*from SUCURSALES
+COLLECT STATISTICS ON sucursales INDEX (nombre_canal_comercial);  -- noqa:
 
--- drop table AMPAROS;
+
 CREATE MULTISET VOLATILE TABLE amparos
 (
     codigo_ramo_op VARCHAR(100) NOT NULL
@@ -21,9 +20,9 @@ CREATE MULTISET VOLATILE TABLE amparos
     , apertura_amparo_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (amparo_desc) ON COMMIT PRESERVE ROWS;
 INSERT INTO amparos VALUES (?, ?, ?, ?);  -- noqa:
---sel*from AMPAROS
+COLLECT STATISTICS ON amparos INDEX (amparo_desc);  -- noqa:
 
--- drop table CLASES;
+
 CREATE MULTISET VOLATILE TABLE clases
 (
     codigo_tarifa_cd VARCHAR(3) NOT NULL
@@ -32,7 +31,8 @@ CREATE MULTISET VOLATILE TABLE clases
     , tipo_vehiculo_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (codigo_tarifa_cd, descuento) ON COMMIT PRESERVE ROWS;
 INSERT INTO clases VALUES (?, ?, ?, ?);  -- noqa:
---sel*from CLASES
+COLLECT STATISTICS ON clases INDEX (codigo_tarifa_cd, descuento);  -- noqa:
+
 
 CREATE MULTISET VOLATILE TABLE fechas AS
 (
@@ -49,10 +49,50 @@ CREATE MULTISET VOLATILE TABLE fechas AS
         )
     GROUP BY 1
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
+COLLECT STATISTICS ON fechas INDEX (mes_id);  -- noqa:
+
 
 -- drop table BASE_EXPUESTOS;
 CREATE MULTISET VOLATILE TABLE base_expuestos AS
 (
+    WITH cont AS (
+        SELECT
+            contrato_id
+            , sucursal_id
+            , agente_lider_id
+        FROM mdb_seguros_colombia.v_contrato QUALIFY
+            ROW_NUMBER()
+                OVER (
+                    PARTITION BY contrato_id
+                    ORDER BY fecha_ultima_actualizacion DESC
+                )
+            = 1
+    )
+
+    , s AS (
+        SELECT DISTINCT
+            codigo_ramo_op
+            , nombre_canal_comercial
+            , apertura_canal_desc
+        FROM sucursales
+    )
+
+    , amparo AS (
+        SELECT DISTINCT
+            codigo_ramo_op
+            , amparo_desc
+            , apertura_amparo_desc
+        FROM amparos
+    )
+
+    , vehi AS (
+        SELECT DISTINCT
+            codigo_tarifa_cd
+            , descuento
+            , tipo_vehiculo
+        FROM clases
+    )
+
     SELECT
         spoli.poliza_id
         , '041' AS codigo_ramo_op
@@ -167,65 +207,32 @@ CREATE MULTISET VOLATILE TABLE base_expuestos AS
         FROM mdb_seguros_colombia.vsoat_poliza AS sp) AS spoli
     --LEFT JOIN mdb_seguros_colombia.V_POLIZA poli ON (poli.poliza_id = spoli.poliza_id)
     LEFT JOIN
-        (
-            SELECT
-                contrato_id
-                , sucursal_id
-                , agente_lider_id
-            FROM mdb_seguros_colombia.v_contrato QUALIFY
-                ROW_NUMBER()
-                    OVER (
-                        PARTITION BY contrato_id
-                        ORDER BY fecha_ultima_actualizacion DESC
-                    )
-                = 1
-        ) AS cont
-        ON (spoli.poliza_id = cont.contrato_id)
+        cont
+        ON spoli.poliza_id = cont.contrato_id
     LEFT JOIN
         mdb_seguros_colombia.v_sucursal AS sucu
-        ON (cont.sucursal_id = sucu.sucursal_id)
+        ON cont.sucursal_id = sucu.sucursal_id
     LEFT JOIN
         mdb_seguros_colombia.v_canal_comercial AS cacomer
         ON sucu.canal_comercial_id = cacomer.canal_comercial_id
-
-
+    LEFT JOIN
+        s
+        ON
+            s.codigo_ramo_op = '041'
+            AND cacomer.nombre_canal_comercial = s.nombre_canal_comercial
 
     LEFT JOIN
-        (SELECT DISTINCT
-            codigo_ramo_op
-            , nombre_canal_comercial
-            , apertura_canal_desc
-        FROM sucursales) AS s
+        amparo
         ON
-            (
-                s.codigo_ramo_op = '041'
-                AND cacomer.nombre_canal_comercial = s.nombre_canal_comercial
-            )
-    LEFT JOIN
-        (SELECT DISTINCT
-            codigo_ramo_op
-            , amparo_desc
-            , apertura_amparo_desc
-        FROM amparos) AS amparo
-        ON
-            (
-                amparo.codigo_ramo_op = '041'
-                AND apertura_amparo_desc = amparo.amparo_desc
-            )
-    LEFT JOIN
-        (SELECT DISTINCT
-            codigo_tarifa_cd
-            , descuento
-            , tipo_vehiculo
-        FROM clases) AS vehi
-        ON
-            (
-                spoli.codigo_tarifa_cd = vehi.codigo_tarifa_cd
-                AND spoli.descuento = vehi.descuento
-            )
+            amparo.codigo_ramo_op = '041'
+            AND apertura_amparo_desc = amparo.amparo_desc
 
-    --WHERE ramo.codigo_ramo_op IN ('041')
-    --and pc.poliza_certificado_id = '122652357'
+    LEFT JOIN
+        vehi
+        ON
+            spoli.codigo_tarifa_cd = vehi.codigo_tarifa_cd
+            AND spoli.descuento = vehi.descuento
+
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
     QUALIFY
         ROW_NUMBER()
@@ -234,7 +241,6 @@ CREATE MULTISET VOLATILE TABLE base_expuestos AS
                 ORDER BY fecha_exclusion_cobertura DESC
             )
         = 1
---HAVING MAX(pc.Fecha_Fin_Ultima_Vigencia) >= CAST('2012/10/01' AS DATE FORMAT 'YYYY/MM/DD')
 
 ) WITH DATA PRIMARY INDEX (
     poliza_id
@@ -244,7 +250,7 @@ CREATE MULTISET VOLATILE TABLE base_expuestos AS
     , descuento
 ) ON COMMIT PRESERVE ROWS;
 
--- drop table EXPUESTOS;
+
 CREATE MULTISET VOLATILE TABLE expuestos AS
 (
     SELECT
@@ -279,14 +285,9 @@ CREATE MULTISET VOLATILE TABLE expuestos AS
             ) AS expuestos
             , SUM(1) AS vigentes
 
-        FROM
-            (SELECT DISTINCT
-                primer_dia_mes
-                , ultimo_dia_mes
-                , num_dias_mes
-            FROM fechas) AS fechas
+        FROM fechas
         INNER JOIN base_expuestos AS vpc
-            ON (
+            ON
                 fechas.ultimo_dia_mes >= vpc.fecha_inclusion_cobertura
                 AND COALESCE(
                     vpc.fecha_cancelacion
@@ -294,8 +295,6 @@ CREATE MULTISET VOLATILE TABLE expuestos AS
                     , (DATE '3000-01-01')
                 )
                 >= fechas.primer_dia_mes
-            --AND COALESCE(vpc.Fecha_Exclusion_Cobertura, (DATE '3000-01-01')) >= fechas.Primer_dia_mes
-            )
 
         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
     ) AS base
@@ -379,13 +378,3 @@ SELECT
 FROM expuestos_final
 GROUP BY 1, 2, 3, 4, 5, 6, 7
 ORDER BY 1, 2, 3, 4, 5, 6, 7
-
-/*
-
---========================
-PRUEBAS SOX
---========================
---  SELECT Sum(Expuestos) as Suma_Columna_Expuestos, Count(Ramo_Desc) as Conteo_Registros from EXPUESTOS_FINAL
-
-*/
-

@@ -8,9 +8,11 @@ CREATE MULTISET VOLATILE TABLE canal_poliza
     , numero_poliza VARCHAR(100) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
     , apertura_canal_cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (numero_poliza) ON COMMIT PRESERVE ROWS;
+) PRIMARY INDEX (
+    poliza_id, codigo_ramo_op, compania_id
+) ON COMMIT PRESERVE ROWS;
 INSERT INTO canal_poliza VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
-
+COLLECT STATISTICS ON canal_poliza INDEX (poliza_id, codigo_ramo_op, compania_id);
 
 
 CREATE MULTISET VOLATILE TABLE canal_canal
@@ -23,9 +25,9 @@ CREATE MULTISET VOLATILE TABLE canal_canal
     , nombre_canal_comercial VARCHAR(100) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
     , apertura_canal_cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (canal_comercial_id) ON COMMIT PRESERVE ROWS;
+) PRIMARY INDEX (canal_comercial_id, codigo_ramo_op, compania_id) ON COMMIT PRESERVE ROWS;
 INSERT INTO canal_canal VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
-
+COLLECT STATISTICS ON canal_canal INDEX (canal_comercial_id, codigo_ramo_op, compania_id);
 
 
 CREATE MULTISET VOLATILE TABLE canal_sucursal
@@ -38,9 +40,9 @@ CREATE MULTISET VOLATILE TABLE canal_sucursal
     , nombre_sucursal VARCHAR(100) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
     , apertura_canal_cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (sucursal_id) ON COMMIT PRESERVE ROWS;
+) PRIMARY INDEX (sucursal_id, codigo_ramo_op, compania_id) ON COMMIT PRESERVE ROWS;
 INSERT INTO canal_sucursal VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
-
+COLLECT STATISTICS ON canal_sucursal INDEX (sucursal_id, codigo_ramo_op, compania_id);
 
 
 CREATE MULTISET VOLATILE TABLE fechas AS
@@ -57,7 +59,7 @@ CREATE MULTISET VOLATILE TABLE fechas AS
         )
     GROUP BY 1
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
-
+COLLECT STATISTICS ON fechas INDEX (mes_id);
 
 
 CREATE MULTISET VOLATILE TABLE meses_devengue AS
@@ -93,7 +95,6 @@ CREATE MULTISET VOLATILE TABLE primas_cedidas_rpnd_sap
 INSERT INTO primas_cedidas_rpnd_sap VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
 
 
-
 CREATE MULTISET VOLATILE TABLE gastos_expedicion
 (
     codigo_op VARCHAR(2) NOT NULL
@@ -119,7 +120,6 @@ CREATE MULTISET VOLATILE TABLE primas_rtdc
 ) PRIMARY INDEX (
     mes_id, codigo_op, codigo_ramo_op, apertura_canal_desc, tipo_produccion
 ) ON COMMIT PRESERVE ROWS;
-COLLECT STATISTICS ON PRIMAS_RTDC COLUMN (Mes_Id, Codigo_Op, Codigo_Ramo_Op, Apertura_Canal_Desc, Tipo_Produccion);  -- noqa:
 
 INSERT INTO PRIMAS_RTDC
 SELECT

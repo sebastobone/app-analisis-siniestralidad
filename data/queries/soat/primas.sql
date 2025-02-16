@@ -1,6 +1,6 @@
---Se cambio la tabla V_CONTRATO_MSTR por V_CONTRATO 
+--Se cambio la tabla V_CONTRATO_MSTR por V_CONTRATO
 --ya que no estaba trayendo el nombre a unas sucursales)
--- drop table SUCURSALES;
+
 CREATE MULTISET VOLATILE TABLE sucursales
 (
     codigo_ramo_op VARCHAR(100) NOT NULL
@@ -9,9 +9,9 @@ CREATE MULTISET VOLATILE TABLE sucursales
     , apertura_canal_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (nombre_canal_comercial) ON COMMIT PRESERVE ROWS;
 INSERT INTO sucursales VALUES (?, ?, ?, ?);  -- noqa:
---sel*from SUCURSALES
+COLLECT STATISTICS ON sucursales INDEX (nombre_canal_comercial);  -- noqa:
 
--- drop table AMPAROS;
+
 CREATE MULTISET VOLATILE TABLE amparos
 (
     codigo_ramo_op VARCHAR(100) NOT NULL
@@ -20,8 +20,9 @@ CREATE MULTISET VOLATILE TABLE amparos
     , apertura_amparo_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (amparo_desc) ON COMMIT PRESERVE ROWS;
 INSERT INTO amparos VALUES (?, ?, ?, ?);  -- noqa:
+COLLECT STATISTICS ON amparos INDEX (amparo_desc);  -- noqa:
 
--- drop table CLASES;
+
 CREATE MULTISET VOLATILE TABLE clases
 (
     codigo_tarifa_cd VARCHAR(3) NOT NULL
@@ -30,8 +31,9 @@ CREATE MULTISET VOLATILE TABLE clases
     , tipo_vehiculo_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (codigo_tarifa_cd, descuento) ON COMMIT PRESERVE ROWS;
 INSERT INTO clases VALUES (?, ?, ?, ?);  -- noqa:
+COLLECT STATISTICS ON clases INDEX (codigo_tarifa_cd, descuento);  -- noqa:
 
--- drop TABLE FECHAS;
+
 CREATE MULTISET VOLATILE TABLE fechas AS
 (
     SELECT DISTINCT
@@ -45,8 +47,9 @@ CREATE MULTISET VOLATILE TABLE fechas AS
         mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER)
         - 100 AND CAST('{mes_corte}' AS INTEGER)
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
+COLLECT STATISTICS ON fechas INDEX (mes_id);  -- noqa:
 
--- DROP TABLE PRIMAS;
+
 CREATE MULTISET VOLATILE TABLE primas AS
 (
     SELECT
@@ -475,13 +478,3 @@ FROM primas_final
 WHERE fecha_registro >= (DATE '{fecha_primera_ocurrencia}')
 GROUP BY 1, 2, 3, 4, 5, 6, 7
 ORDER BY 1, 2, 3, 4, 5, 6, 7
-
-/*
-
---========================
-PRUEBAS SOX
---========================
---  SELECT Sum(Prima_Bruta) as Suma_Columna_Prima_Emitida, Sum(Prima_Devengada_Mod) as Suma_Columna_Prima_Dev_Mod, Count(Ramo_Desc) as Conteo_Registros from PRIMAS_FINAL
-
-*/
-

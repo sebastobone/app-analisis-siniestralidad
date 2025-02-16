@@ -1,6 +1,6 @@
---Se cambio la tabla V_CONTRATO_MSTR por V_CONTRATO 
+--Se cambio la tabla V_CONTRATO_MSTR por V_CONTRATO
 --ya que no estaba trayendo el nombre a unas sucursales)
--- drop table SUCURSALES;
+
 CREATE MULTISET VOLATILE TABLE sucursales
 (
     codigo_ramo_op VARCHAR(100) NOT NULL
@@ -9,9 +9,9 @@ CREATE MULTISET VOLATILE TABLE sucursales
     , apertura_canal_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (nombre_canal_comercial) ON COMMIT PRESERVE ROWS;
 INSERT INTO sucursales VALUES (?, ?, ?, ?);  -- noqa:
---sel*from SUCURSALES
+COLLECT STATISTICS ON sucursales INDEX (nombre_canal_comercial);  -- noqa:
 
--- drop table AMPAROS;
+
 CREATE MULTISET VOLATILE TABLE amparos
 (
     codigo_ramo_op VARCHAR(100) NOT NULL
@@ -20,8 +20,9 @@ CREATE MULTISET VOLATILE TABLE amparos
     , apertura_amparo_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (amparo_desc) ON COMMIT PRESERVE ROWS;
 INSERT INTO amparos VALUES (?, ?, ?, ?);  -- noqa:
+COLLECT STATISTICS ON amparos INDEX (amparo_desc);  -- noqa:
 
--- drop table CLASES;
+
 CREATE MULTISET VOLATILE TABLE clases
 (
     codigo_tarifa_cd VARCHAR(3) NOT NULL
@@ -30,8 +31,10 @@ CREATE MULTISET VOLATILE TABLE clases
     , tipo_vehiculo_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (codigo_tarifa_cd, descuento) ON COMMIT PRESERVE ROWS;
 INSERT INTO clases VALUES (?, ?, ?, ?);  -- noqa:
+COLLECT STATISTICS ON clases INDEX (codigo_tarifa_cd, descuento);  -- noqa:
 
--- drop table BASE_BRUTO;
+
+
 CREATE MULTISET VOLATILE TABLE base_bruto AS
 (
     SELECT
@@ -218,10 +221,8 @@ CREATE MULTISET VOLATILE TABLE base_bruto AS
             , apertura_canal_desc
         FROM sucursales) AS s
         ON
-            (
-                ramo.codigo_ramo_op = s.codigo_ramo_op
-                AND cacomer.nombre_canal_comercial = s.nombre_canal_comercial
-            )
+            ramo.codigo_ramo_op = s.codigo_ramo_op
+            AND cacomer.nombre_canal_comercial = s.nombre_canal_comercial
     LEFT JOIN
         (SELECT DISTINCT
             codigo_ramo_op
@@ -229,10 +230,8 @@ CREATE MULTISET VOLATILE TABLE base_bruto AS
             , apertura_amparo_desc
         FROM amparos) AS amparo
         ON
-            (
-                ramo.codigo_ramo_op = amparo.codigo_ramo_op
-                AND ampa.amparo_desc = amparo.amparo_desc
-            )
+            ramo.codigo_ramo_op = amparo.codigo_ramo_op
+            AND ampa.amparo_desc = amparo.amparo_desc
     LEFT JOIN
         (SELECT DISTINCT
             codigo_tarifa_cd
@@ -240,11 +239,8 @@ CREATE MULTISET VOLATILE TABLE base_bruto AS
             , tipo_vehiculo
         FROM clases) AS vehi
         ON
-            (
-                spoli.codigo_tarifa_cd = vehi.codigo_tarifa_cd
-                AND spoli.descuento = vehi.descuento
-            )
-
+            spoli.codigo_tarifa_cd = vehi.codigo_tarifa_cd
+            AND spoli.descuento = vehi.descuento
 
     WHERE
         ramo.codigo_ramo_op IN ('041')

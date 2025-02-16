@@ -52,7 +52,7 @@ def test_reemplazar_parametros_queries(params: Parametros):
             , {utils.yyyymm_to_date(params.mes_corte)}
             , {int(params.aproximar_reaseguro)}
         FROM TABLE1
-    """
+    """  # noqa: S608
 
     test = tera_connect.reemplazar_parametros_queries(mock_query, params)
 

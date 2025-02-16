@@ -1,0 +1,28 @@
+site_name: Documentacion Plantilla Seguimiento
+site_author: Gerencia de Modelacion Tecnica
+
+repo_url: https://github.com/sebastobone/plantilla_seguimiento
+
+nav:
+  - Introducción: index.md
+  - Instalación: instalacion.md
+  - Configuración: configuracion.md
+  - Uso de la plantilla: uso.md
+
+theme:
+    name: material
+    palette:
+      accent: cyan
+    language: es
+    features:
+      - content.code.copy
+      - content.code.select
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

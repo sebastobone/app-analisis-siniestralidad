@@ -24,6 +24,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "mkdocs-material>=9.6.4",
+    "mkdocs>=1.6.1",
     "mypy>=1.15.0",
     "pandas-stubs>=2.2.3.241126",
     "pip-audit>=2.8.0",

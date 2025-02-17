@@ -150,3 +150,8 @@ markers = [
     "autonomia: tests para evaluar el proceso real de autonomia",
     "teradata: tests que requieren conectarse a Teradata",
 ]
+
+[tool.coverage.run]
+omit = [
+  'tests/*',
+]

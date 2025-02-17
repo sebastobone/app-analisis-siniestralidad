@@ -86,7 +86,7 @@ def test_transformar_hoja_afo(cia: str, qty: str, rango_meses: tuple[date, date]
     ) * ctrl.signo_sap(qty)
 
     df_processed = ctrl.transformar_hoja_afo(df_original, cia, qty, mes_corte_int)
-    sum_processed = df_processed.collect().get_column(qty).sum()
+    sum_processed = df_processed.get_column(qty).sum()
 
     assert abs(sum_original - sum_processed) < 100
 

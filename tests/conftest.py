@@ -154,7 +154,7 @@ def bases_ficticias(
     }
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def test_session():
     engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
@@ -164,7 +164,7 @@ def test_session():
         yield session
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def client(test_session: Session):
     def get_test_session():
         return test_session

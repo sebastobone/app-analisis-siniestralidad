@@ -53,7 +53,7 @@ def definir_hojas_afo(qtys: list[str]) -> set[str]:
 
 def transformar_hoja_afo(
     df: pl.DataFrame, cia: str, qty: str, mes_corte: int
-) -> pl.LazyFrame:
+) -> pl.DataFrame:
     if (
         f"{ct.NOMBRE_MES[mes_corte % 100]} {mes_corte // 100}"
         not in df.get_column("Ejercicio/Período").unique()
@@ -94,7 +94,7 @@ def transformar_hoja_afo(
             value_name=qty,
         )
         .with_columns(
-            pl.col(qty) * signo_sap(qty),
+            pl.col(qty).cast(pl.Float64) * signo_sap(qty),
             codigo_op=pl.lit("01") if cia == "Generales" else pl.lit("02"),
             fecha_registro=pl.date(pl.col("Anno"), pl.col("Mes"), 1),
         )
@@ -104,10 +104,11 @@ def transformar_hoja_afo(
             & (pl.col(qty) != 0)
         )
         .select(["codigo_op", "codigo_ramo_op", "fecha_registro", qty])
+        .collect()
     )
 
 
-def crear_columnas_faltantes_sap(df: pl.LazyFrame) -> pl.LazyFrame:
+def crear_columnas_faltantes_sap(df: pl.DataFrame) -> pl.DataFrame:
     for qty in df.collect_schema().names():
         if "retenid" in qty:
             df = df.with_columns(
@@ -148,9 +149,7 @@ def consolidar_sap(cias: list[str], qtys: list[str], mes_corte: int) -> pl.DataF
     df_sap_full = crear_columnas_faltantes_sap(df_sap_full)
     logger.success(f"Cantidades {qtys} leidas del AFO sin errores.")
 
-    return df_sap_full.select(
-        ["codigo_op", "codigo_ramo_op", "fecha_registro"] + qtys
-    ).collect()
+    return df_sap_full.select(["codigo_op", "codigo_ramo_op", "fecha_registro"] + qtys)
 
 
 def generar_consistencia_historica(

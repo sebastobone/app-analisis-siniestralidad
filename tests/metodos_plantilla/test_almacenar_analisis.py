@@ -85,3 +85,4 @@ def test_almacenar_analisis(
 
     wb.close()
     os.remove(f"plantillas/{p.nombre_plantilla}.xlsm")
+    os.remove(f"output/resultados/{p.nombre_plantilla}_{p.mes_corte}.parquet")

@@ -1,7 +1,7 @@
-site_name: Documentacion Plantilla Seguimiento
+site_name: App Análisis Siniestralidad
 site_author: Gerencia de Modelacion Tecnica
 
-repo_url: https://github.com/sebastobone/plantilla_seguimiento
+repo_url: https://github.com/sebastobone/app-analisis-siniestralidad
 
 nav:
   - Introducción: index.md

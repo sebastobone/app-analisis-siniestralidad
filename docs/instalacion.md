@@ -11,7 +11,7 @@ Para instalar la plantilla y empezarla a usar en un nuevo análisis, debe tener 
 3. En la terminal, copie lo siguiente y presione enter:
 
     ``` sh
-    git clone https://github.com/sebastobone/plantilla_seguimiento.git
+    git clone https://github.com/sebastobone/app-analisis-siniestralidad.git
     ```
 
 4. En la misma terminal, copie lo siguiente y presione enter:

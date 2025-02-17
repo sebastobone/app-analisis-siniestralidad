@@ -19,7 +19,7 @@ def guardar_bases_ficticias(
 def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, date]):
     params_form.update(
         {
-            "mes_corte": str(utils.date_to_yyyymm(rango_meses[0])),
-            "mes_inicio": str(utils.date_to_yyyymm(rango_meses[1])),
+            "mes_inicio": str(utils.date_to_yyyymm(rango_meses[0])),
+            "mes_corte": str(utils.date_to_yyyymm(rango_meses[1])),
         }
     )

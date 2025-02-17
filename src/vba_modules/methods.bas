@@ -341,6 +341,7 @@ Function crear_dropdown(ws, nombre As String, fila As Integer, columna As Intege
 
     With ws.Cells(fila, columna)
         .Interior.Color = RGB(242, 242, 242)
+        .Validation.Delete
         .Validation.Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=contenido
         .Value = valor_defecto
     End With

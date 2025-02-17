@@ -4,7 +4,7 @@ import polars as pl
 import xlwings as xw
 from src import constantes as ct
 from src.logger_config import logger
-from src.models import EstructuraApertura, RangeDimension
+from src.models import EstructuraApertura
 
 from .estructura_apertura import obtener_estructura_apertura
 from .rangos_parametros import obtener_rangos_parametros
@@ -18,7 +18,7 @@ def guardar_apertura(
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
     estructura_apertura = obtener_estructura_apertura(wb, plantilla_name, mes_corte)
 
-    guardar_parametros(wb.sheets[plantilla_name], **estructura_apertura)
+    guardar_parametros(wb.sheets[plantilla_name], estructura_apertura)
     guardar_ultimate(wb, plantilla_name, estructura_apertura)
 
     apertura = estructura_apertura.apertura
@@ -51,17 +51,13 @@ def guardar_ultimate(
     )
 
 
-def guardar_parametros(
-    hoja: xw.Sheet,
-    apertura: str,
-    atributo: str,
-    dimensiones_triangulo: RangeDimension,
-    mes_del_periodo: int,
-) -> None:
+def guardar_parametros(hoja: xw.Sheet, estructura_apertura: EstructuraApertura) -> None:
+    apertura = estructura_apertura.apertura
+    atributo = estructura_apertura.atributo
     for nombre_rango, valores_rango in obtener_rangos_parametros(
         hoja,
-        dimensiones_triangulo,
-        mes_del_periodo,
+        estructura_apertura.dimensiones_triangulo,
+        estructura_apertura.mes_del_periodo,
         hoja["C4"].value,
         hoja["C3"].value,
     ).items():

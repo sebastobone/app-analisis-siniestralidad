@@ -67,7 +67,7 @@ def test_generar_plantilla(
     params_form: dict[str, str],
     rango_meses: tuple[date, date],
 ):
-    agregar_meses_params(params_form, *rango_meses)
+    agregar_meses_params(params_form, rango_meses)
 
     _ = client.post("/ingresar-parametros", data=params_form)
     p = test_session.exec(select(Parametros)).all()[0]

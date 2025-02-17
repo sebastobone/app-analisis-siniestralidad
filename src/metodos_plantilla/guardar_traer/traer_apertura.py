@@ -5,7 +5,7 @@ import xlwings as xw
 from src import constantes as ct
 from src import utils
 from src.logger_config import logger
-from src.models import RangeDimension
+from src.models import EstructuraApertura
 
 from .estructura_apertura import obtener_estructura_apertura
 from .rangos_parametros import obtener_rangos_parametros
@@ -15,35 +15,21 @@ def traer_apertura(wb: xw.Book, plantilla: ct.LISTA_PLANTILLAS, mes_corte: int) 
     s = time.time()
 
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-    apertura, atributo, dimensiones_triangulo, mes_del_periodo = (
-        obtener_estructura_apertura(wb, plantilla_name, mes_corte)
-    )
+    estructura_apertura = obtener_estructura_apertura(wb, plantilla_name, mes_corte)
 
-    traer_parametros(
-        wb.sheets[plantilla_name],
-        apertura,
-        atributo,
-        dimensiones_triangulo,
-        mes_del_periodo,
-    )
-
-    logger.success(f"Parametros para {apertura} - {atributo} traidos.")
+    traer_parametros(wb.sheets[plantilla_name], estructura_apertura)
 
     wb.sheets["Main"]["A1"].value = "TRAER_PLANTILLA"
     wb.sheets["Main"]["A2"].value = time.time() - s
 
 
-def traer_parametros(
-    hoja: xw.Sheet,
-    apertura: str,
-    atributo: str,
-    dimensiones_triangulo: RangeDimension,
-    mes_del_periodo: int,
-) -> None:
+def traer_parametros(hoja: xw.Sheet, estructura_apertura: EstructuraApertura) -> None:
+    apertura = estructura_apertura.apertura
+    atributo = estructura_apertura.atributo
     for range_name, range_values in obtener_rangos_parametros(
         hoja,
-        dimensiones_triangulo,
-        mes_del_periodo,
+        estructura_apertura.dimensiones_triangulo,
+        estructura_apertura.mes_del_periodo,
         hoja["C4"].value,
         hoja["C3"].value,
     ).items():
@@ -63,3 +49,5 @@ def traer_parametros(
                 )
             )
             raise
+
+    logger.success(f"Parametros para {apertura} - {atributo} traidos.")

@@ -3,8 +3,10 @@ from typing import Literal
 import polars as pl
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, select
+from sqlmodel import Session, SQLModel, create_engine, select
+from sqlmodel.pool import StaticPool
 from src import utils
+from src.app import app, get_session
 from src.models import Parametros
 from src.procesamiento.autonomia import aprox_reaseguro, segmentaciones
 from tests.conftest import assert_igual
@@ -30,8 +32,30 @@ def verificar_segmentaciones(
 
 
 @pytest.fixture(scope="session")
+def test_session_autonomia():
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
+
+
+@pytest.fixture(scope="session")
+def client_autonomia(test_session_autonomia: Session):
+    def get_test_session():
+        return test_session_autonomia
+
+    app.dependency_overrides[get_session] = get_test_session
+
+    client = TestClient(app, cookies={"session_id": "test-autonomia"})
+    yield client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="session")
 def info_autonomia(
-    client: TestClient, test_session: Session
+    client_autonomia: TestClient, test_session_autonomia: Session
 ) -> tuple[dict[str, pl.DataFrame], Parametros]:
     data = {
         "negocio": "autonomia",
@@ -42,12 +66,12 @@ def info_autonomia(
         "aproximar_reaseguro": "True",
     }
 
-    _ = client.post("/ingresar-parametros", data=data)
-    p = test_session.exec(select(Parametros)).all()[0]
+    _ = client_autonomia.post("/ingresar-parametros", data=data)
+    p = test_session_autonomia.exec(select(Parametros)).all()[0]
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    _ = client_autonomia.post("/correr-query-siniestros")
+    _ = client_autonomia.post("/correr-query-primas")
+    _ = client_autonomia.post("/correr-query-expuestos")
 
     info = {
         "sini_bruto": pl.read_parquet("data/raw/siniestros_brutos.parquet"),
@@ -59,6 +83,8 @@ def info_autonomia(
         "primas": pl.read_parquet("data/raw/primas.parquet"),
         "expuestos": pl.read_parquet("data/raw/expuestos.parquet"),
     }
+
+    _ = client_autonomia.post("/generar-controles")
 
     return info, p
 

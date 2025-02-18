@@ -7,11 +7,10 @@ CREATE MULTISET VOLATILE TABLE canal_poliza
     , poliza_id BIGINT NOT NULL
     , numero_poliza VARCHAR(100) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
-    , apertura_canal_cd VARCHAR(100) NOT NULL
 ) PRIMARY INDEX (
     poliza_id, codigo_ramo_op, compania_id
 ) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_POLIZA VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
+INSERT INTO canal_poliza VALUES (?, ?, ?, ?, ?, ?, ?);  -- noqa:
 COLLECT STATISTICS ON canal_poliza INDEX (poliza_id, codigo_ramo_op, compania_id);  -- noqa:
 
 
@@ -24,11 +23,8 @@ CREATE MULTISET VOLATILE TABLE canal_canal
     , codigo_canal_comercial_op VARCHAR(20) NOT NULL
     , nombre_canal_comercial VARCHAR(100) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
-    , apertura_canal_cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (
-    canal_comercial_id, codigo_ramo_op, compania_id
-) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_CANAL VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
+) PRIMARY INDEX (canal_comercial_id, codigo_ramo_op, compania_id) ON COMMIT PRESERVE ROWS;
+INSERT INTO canal_canal VALUES (?, ?, ?, ?, ?, ?, ?);  -- noqa:
 COLLECT STATISTICS ON canal_canal INDEX (canal_comercial_id, codigo_ramo_op, compania_id);  -- noqa:
 
 
@@ -41,11 +37,8 @@ CREATE MULTISET VOLATILE TABLE canal_sucursal
     , codigo_sucural_op VARCHAR(10) NOT NULL
     , nombre_sucursal VARCHAR(100) NOT NULL
     , apertura_canal_desc VARCHAR(100) NOT NULL
-    , apertura_canal_cd VARCHAR(100) NOT NULL
-) PRIMARY INDEX (
-    sucursal_id, codigo_ramo_op, compania_id
-) ON COMMIT PRESERVE ROWS;
-INSERT INTO CANAL_SUCURSAL VALUES (?, ?, ?, ?, ?, ?, ?, ?);  -- noqa:
+) PRIMARY INDEX (sucursal_id, codigo_ramo_op, compania_id) ON COMMIT PRESERVE ROWS;
+INSERT INTO canal_sucursal VALUES (?, ?, ?, ?, ?, ?, ?);  -- noqa:
 COLLECT STATISTICS ON canal_sucursal INDEX (sucursal_id, codigo_ramo_op, compania_id);  -- noqa:
 
 
@@ -249,7 +242,9 @@ CREATE MULTISET VOLATILE TABLE expuestos AS
 ) WITH DATA PRIMARY INDEX (
     primer_dia_mes, codigo_ramo_op, apertura_amparo_desc
 ) ON COMMIT PRESERVE ROWS;
-COLLECT STATISTICS ON EXPUESTOS COLUMN (Primer_dia_mes, Codigo_Ramo_Op, Apertura_Amparo_Desc);
+COLLECT STATISTICS ON EXPUESTOS INDEX (
+    primer_dia_mes, codigo_ramo_op, apertura_amparo_desc
+);
 
 
 SELECT

@@ -51,3 +51,12 @@ FILA_INI_PARAMS = 4
 
 
 LISTA_PLANTILLAS = Literal["frec", "seve", "plata", "entremes"]
+
+
+COLORES_LOGS = {
+    "INFO": "white",
+    "SUCCESS": "lightgreen",
+    "WARNING": "orange",
+    "ERROR": "red",
+    "CRITICAL": "red",
+}

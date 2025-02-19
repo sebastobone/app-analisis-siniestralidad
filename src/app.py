@@ -1,7 +1,7 @@
-import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Annotated, Literal
+from queue import Queue
+from typing import Annotated, Any, Literal
 from uuid import uuid4
 
 from fastapi import BackgroundTasks, Cookie, Depends, FastAPI, Form, Request, status
@@ -12,17 +12,11 @@ from pydantic import ValidationError
 from sqlmodel import Session, SQLModel, create_engine, select
 from sse_starlette.sse import EventSourceResponse
 
+from src import constantes as ct
 from src import main, utils
 from src.logger_config import logger
-from src.metodos_plantilla import (
-    abrir,
-    generar,
-    preparar,
-    resultados,
-)
-from src.metodos_plantilla import (
-    almacenar_analisis as almacenar,
-)
+from src.metodos_plantilla import abrir, generar, preparar, resultados
+from src.metodos_plantilla import almacenar_analisis as almacenar
 from src.metodos_plantilla.guardar_traer import (
     guardar_apertura,
     traer_apertura,
@@ -74,31 +68,24 @@ async def generar_base(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
-def colorear_log(log: str) -> str:
-    nivel = log.split("|")[1].strip()
-    colores = {
-        "INFO": "white",
-        "SUCCESS": "lightgreen",
-        "WARNING": "orange",
-        "ERROR": "red",
-        "CRITICAL": "red",
-    }
-    return f"""<span style="color: {colores[nivel]}">{log}</span><br>"""
+log_queue: Queue[Any] = Queue()
+
+
+def log_handler(message):
+    log_queue.put(message)
+
+
+logger.add(log_handler, level="INFO")
 
 
 async def obtener_nuevos_logs() -> AsyncIterator[str]:
-    with open("logs/log_prod.log", "rb") as f:
-        f.seek(0, 2)
-        while f.read(1) != b"\n":
-            f.seek(-2, 1)
-
-        while True:
-            log = f.readline().decode()
-            if log:
-                yield colorear_log(log)
-            else:
-                # Evitemos consumir demasiada CPU, revisemos cada segundo.
-                await asyncio.sleep(1)
+    while True:
+        message = log_queue.get()
+        nivel_log = message.record["level"].name
+        color_log = ct.COLORES_LOGS[nivel_log]
+        fecha_hora = message.record["time"].strftime("%Y-%m-%d %H:%M:%S")
+        texto = f"{fecha_hora} | {nivel_log} | {message.record['message']}"
+        yield f"""<span style="color: {color_log}">{texto}</span><br>"""
 
 
 @app.get("/stream-logs")
@@ -204,10 +191,12 @@ async def correr_query_expuestos(
 
 @app.post("/generar-controles")
 async def generar_controles(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+    session: SessionDep,
+    background_tasks: BackgroundTasks,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:
     params = obtener_parametros_usuario(session, session_id)
-    main.generar_controles(params)
+    background_tasks.add_task(main.generar_controles, params)
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 

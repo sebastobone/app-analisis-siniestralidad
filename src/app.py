@@ -1,11 +1,12 @@
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from queue import Queue
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 from uuid import uuid4
 
-from fastapi import BackgroundTasks, Cookie, Depends, FastAPI, Form, Request, status
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi import Cookie, Depends, FastAPI, Form, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
@@ -22,7 +23,7 @@ from src.metodos_plantilla.guardar_traer import (
     traer_apertura,
     traer_guardar_todo,
 )
-from src.models import Parametros
+from src.models import ModosPlantilla, Parametros
 
 engine = create_engine(
     "sqlite:///data/database.db", connect_args={"check_same_thread": False}
@@ -54,6 +55,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],
+)
+
 templates = Jinja2Templates(directory="src/templates")
 app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
@@ -68,19 +77,19 @@ async def generar_base(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
-log_queue: Queue[Any] = Queue()
+log_queue: asyncio.Queue[Any] = asyncio.Queue()
 
 
-def log_handler(message):
-    log_queue.put(message)
+async def log_handler(message):
+    asyncio.create_task(log_queue.put(message))
 
 
 logger.add(log_handler, level="INFO")
 
 
-async def obtener_nuevos_logs() -> AsyncIterator[str]:
+async def obtener_logs() -> AsyncIterator[str]:
     while True:
-        message = log_queue.get()
+        message = await log_queue.get()
         nivel_log = message.record["level"].name
         color_log = ct.COLORES_LOGS[nivel_log]
         fecha_hora = message.record["time"].strftime("%Y-%m-%d %H:%M:%S")
@@ -90,7 +99,7 @@ async def obtener_nuevos_logs() -> AsyncIterator[str]:
 
 @app.get("/stream-logs")
 async def stream_logs():
-    return EventSourceResponse(obtener_nuevos_logs())
+    return EventSourceResponse(obtener_logs())
 
 
 def obtener_parametros_usuario(
@@ -101,7 +110,7 @@ def obtener_parametros_usuario(
     ).all()[0]
 
 
-def validar_parametros_ingresados(params: Annotated[Parametros, Form()]) -> Parametros:
+def validar_parametros_ingresados(params: Parametros) -> Parametros:
     try:
         parametros = Parametros.model_validate(params)
     except ValidationError:
@@ -131,13 +140,23 @@ def eliminar_parametros_anteriores(
         pass
 
 
-@app.post("/ingresar-parametros", response_model=Parametros)
+@app.post("/wtf")
+async def wtf(params: Parametros):
+    return params
+
+
+@app.post("/wtf2")
+async def wtf2(params: ModosPlantilla):
+    return params
+
+
+@app.post("/ingresar-parametros")
 async def ingresar_parametros(
-    session: SessionDep,
     params: Annotated[Parametros, Form()],
+    response: Response,
+    session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
 ):
-    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
     if not session_id:
         session_id = str(uuid4())
         response.set_cookie(key="session_id", value=session_id)
@@ -153,85 +172,70 @@ async def ingresar_parametros(
 
     logger.info(f"""Parametros ingresados: {parametros.model_dump()}""")
 
-    return response
+    return params
 
 
 @app.post("/correr-query-siniestros")
 async def correr_query_siniestros(
-    session: SessionDep,
-    background_tasks: BackgroundTasks,
-    session_id: Annotated[str | None, Cookie()] = None,
-) -> RedirectResponse:
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    background_tasks.add_task(main.correr_query_siniestros, params)
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    main.correr_query_siniestros(params)
 
 
 @app.post("/correr-query-primas")
 async def correr_query_primas(
-    session: SessionDep,
-    background_tasks: BackgroundTasks,
-    session_id: Annotated[str | None, Cookie()] = None,
-) -> RedirectResponse:
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    background_tasks.add_task(main.correr_query_primas, params)
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    main.correr_query_primas(params)
 
 
 @app.post("/correr-query-expuestos")
 async def correr_query_expuestos(
-    session: SessionDep,
-    background_tasks: BackgroundTasks,
-    session_id: Annotated[str | None, Cookie()] = None,
-) -> RedirectResponse:
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    background_tasks.add_task(main.correr_query_expuestos, params)
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    main.correr_query_expuestos(params)
 
 
 @app.post("/generar-controles")
 async def generar_controles(
-    session: SessionDep,
-    background_tasks: BackgroundTasks,
-    session_id: Annotated[str | None, Cookie()] = None,
-) -> RedirectResponse:
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    background_tasks.add_task(main.generar_controles, params)
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    main.generar_controles(params)
 
 
 @app.post("/abrir-plantilla")
 async def abrir_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> RedirectResponse:
+) -> None:
     p = obtener_parametros_usuario(session, session_id)
     _ = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/preparar-plantilla")
 async def preparar_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> RedirectResponse:
+) -> None:
     p = obtener_parametros_usuario(session, session_id)
     main.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     preparar.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/modos-plantilla")
 async def modos_plantilla(
-    plant: Annotated[Literal["frec", "seve", "plata", "entremes"], Form()],
-    modo: Annotated[
-        Literal["generar", "guardar", "traer", "guardar_todo", "traer_guardar_todo"],
-        Form(),
-    ],
+    modos: Annotated[ModosPlantilla, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> RedirectResponse:
+) -> None:
     p = obtener_parametros_usuario(session, session_id)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+
+    modo = modos.modo
+    plant = modos.plantilla
 
     if modo == "generar":
         generar.generar_plantilla(wb, plant, p.mes_corte)
@@ -247,29 +251,25 @@ async def modos_plantilla(
         traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
             wb, plant, p.mes_corte, p.negocio, traer=True
         )
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/almacenar-analisis")
 async def almacenar_analisis(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> RedirectResponse:
+) -> None:
     p = obtener_parametros_usuario(session, session_id)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte)
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/actualizar-wb-resultados")
-async def actualizar_wb_resultados() -> RedirectResponse:
+async def actualizar_wb_resultados() -> None:
     _ = resultados.actualizar_wb_resultados()
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/generar-informe-ar")
 async def generar_informe_actuario_responsable(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> RedirectResponse:
+) -> None:
     p = obtener_parametros_usuario(session, session_id)
     resultados.generar_informe_actuario_responsable(p.negocio, p.mes_corte)
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)

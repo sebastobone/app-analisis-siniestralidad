@@ -13,12 +13,11 @@
     <div class="form-section">
       <h2>Estado</h2>
       <div id="log"></div>
-      <script src="/static/log_viewer.js"></script>
     </div>
 
     <div class="form-section">
       <h2>Parametros</h2>
-      <form method="POST" action="/ingresar-parametros">
+      <form id="ingresarParametros">
         <label for="negocio">Negocio:</label>
         <select id="negocio" name="negocio">
           <option value="arl">ARL</option>
@@ -93,36 +92,36 @@
     <div class="form-section">
       <h2>Extraccion de informacion</h2>
 
-      <form method="POST" action="/correr-query-siniestros">
+      <form class="apiForm" endpoint="correr-query-siniestros">
         <button type="submit">Correr query siniestros</button>
       </form>
-      <form method="POST" action="/correr-query-primas">
+      <form class="apiForm" endpoint="correr-query-primas">
         <button type="submit">Correr query primas</button>
       </form>
-      <form method="POST" action="/correr-query-expuestos">
+      <form class="apiForm" endpoint="correr-query-expuestos">
         <button type="submit">Correr query expuestos</button>
       </form>
     </div>
 
     <div class="form-section">
       <h2>Controles de informacion</h2>
-      <form method="POST" action="/generar-controles">
+      <form class="apiForm" , endpoint="generar-controles">
         <button type="submit">Generar controles</button>
       </form>
     </div>
 
     <div class="form-section">
       <h2>Plantilla</h2>
-      <form method="POST" action="/abrir-plantilla">
+      <form class="apiForm" , endpoint="abrir-plantilla">
         <button type="submit">Abrir plantilla</button>
       </form>
-      <form method="POST" action="/preparar-plantilla">
+      <form class="apiForm" , endpoint="preparar-plantilla">
         <button type="submit">Preparar plantilla</button>
       </form>
 
-      <form method="POST" action="/modos-plantilla">
-        <label for="plant">Plantilla:</label>
-        <select id="plant" name="plant">
+      <form id="modosPlantilla">
+        <label for="plantilla">Plantilla:</label>
+        <select id="plantilla" name="plant">
           <option value="frec">Frecuencia</option>
           <option value="seve">Severidad</option>
           <option value="plata" selected="selected">Plata</option>
@@ -141,19 +140,24 @@
         <button type="submit">Ejecutar</button>
       </form>
 
-      <form method="POST" action="/almacenar-analisis">
+      <form class="apiForm" , endpoint="almacenar-analisis">
         <button type="submit">Almacenar analisis</button>
       </form>
     </div>
 
     <div class="form-section">
       <h2>Resultados</h2>
-      <form method="POST" action="/actualizar-wb-resultados">
+      <form class="apiForm" , endpoint="actualizar-wb-resultados">
         <button type="submit">Actualizar y abrir archivo resultados</button>
       </form>
-      <form method="POST" action="/generar-informe-ar">
+      <form class="apiForm" , endpoint="generar-informe-ar">
         <button type="submit">Generar informe Actuario Responsable</button>
       </form>
     </div>
+
+    <script src="static/logViewer.js"></script>
+    <script src="static/ingresarParametros.js"></script>
+    <script src="static/apiForms.js"></script>
+    <script src="static/modosPlantilla.js"></script>
   </body>
 </html>

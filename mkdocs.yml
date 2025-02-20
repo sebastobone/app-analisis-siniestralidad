@@ -10,14 +10,14 @@ nav:
   - Uso de la plantilla: uso.md
 
 theme:
-    name: material
-    palette:
-      accent: cyan
-      scheme: slate
-    language: es
-    features:
-      - content.code.copy
-      - content.code.select
+  name: material
+  palette:
+    accent: cyan
+    scheme: slate
+  language: es
+  features:
+    - content.code.copy
+    - content.code.select
 
 markdown_extensions:
   - pymdownx.highlight:

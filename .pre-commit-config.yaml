@@ -29,6 +29,13 @@ repos:
         entry: uv run ruff check .
         always_run: true
         pass_filenames: false
+      - id: prettier-formatting
+        name: prettier => code formatting
+        stages: [pre-commit]
+        language: system
+        entry: npx prettier --write .
+        always_run: true
+        pass_filenames: false
       - id: pip-audit
         name: pip-audit => vulnerability checking
         stages: [pre-push]

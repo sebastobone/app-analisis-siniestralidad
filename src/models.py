@@ -18,6 +18,11 @@ class Parametros(SQLModel, table=True):
     session_id: str | None = Field(index=True)
 
 
+class ModosPlantilla(BaseModel):
+    plantilla: Literal["frec", "seve", "plata", "entremes"]
+    modo: Literal["generar", "guardar", "traer", "guardar_todo", "traer_guardar_todo"]
+
+
 class Offset(BaseModel):
     y: int
     x: int

@@ -2,7 +2,7 @@
 
 Para iniciar la plantilla, escriba la siguiente línea en la terminal y presione _enter_:
 
-``` sh
+```sh
 python run.py
 ```
 

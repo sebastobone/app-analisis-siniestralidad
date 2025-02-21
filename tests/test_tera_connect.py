@@ -70,6 +70,7 @@ def test_crear_particiones_fechas(params: Parametros):
     assert test[0] == (utils.yyyymm_to_date(params.mes_inicio), mes_inicio_last_day)
 
 
+@pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.parametrize(
     "tipo_query, hoja_segm",
@@ -81,7 +82,7 @@ def test_crear_particiones_fechas(params: Parametros):
 )
 @patch("src.extraccion.tera_connect.pd.ExcelFile")
 @patch("src.extraccion.tera_connect.pl.read_excel")
-def test_cargar_segmentaciones(
+async def test_cargar_segmentaciones(
     mock_read_excel: MagicMock,
     mock_excel_file: MagicMock,
     tipo_query: Literal["siniestros", "primas", "expuestos"],
@@ -91,26 +92,28 @@ def test_cargar_segmentaciones(
 
     mock_read_excel.return_value = pl.DataFrame({"col1": [1, 2, 3]})
 
-    result = tera_connect.obtener_segmentaciones("test_file.xlsx", tipo_query)
+    result = await tera_connect.obtener_segmentaciones("test_file.xlsx", tipo_query)
 
     assert len(result) == 1
     mock_read_excel.assert_called_once_with("test_file.xlsx", sheet_name=hoja_segm)
     mock_excel_file.assert_called_once_with("test_file.xlsx")
 
 
+@pytest.mark.asyncio
 @pytest.mark.unit
-def test_check_adds_segmentacion():
+async def test_check_adds_segmentacion():
     with pytest.raises(ValueError):
-        tera_connect.verificar_nombre_hojas_segmentacion(["add_d_Siniestros"])
+        await tera_connect.verificar_nombre_hojas_segmentacion(["add_d_Siniestros"])
 
     with pytest.raises(ValueError):
-        tera_connect.verificar_nombre_hojas_segmentacion(["add_Siniestros"])
+        await tera_connect.verificar_nombre_hojas_segmentacion(["add_Siniestros"])
 
-    tera_connect.verificar_nombre_hojas_segmentacion(["add_s_Siniestros"])
+    await tera_connect.verificar_nombre_hojas_segmentacion(["add_s_Siniestros"])
 
 
+@pytest.mark.asyncio
 @pytest.mark.unit
-def test_check_suficiencia_adds():
+async def test_check_suficiencia_adds():
     mock_query = """
     INSERT INTO POLIZAS VALUES (?, ?);
     INSERT INTO SUCURSALES VALUES (?, ?);
@@ -118,36 +121,47 @@ def test_check_suficiencia_adds():
     """
 
     with pytest.raises(ValueError):
-        tera_connect.verificar_numero_segmentaciones("_", mock_query, [pl.DataFrame()])
+        await tera_connect.verificar_numero_segmentaciones(
+            "_", mock_query, [pl.DataFrame()]
+        )
 
-    tera_connect.verificar_numero_segmentaciones("_", mock_query, [pl.DataFrame()] * 3)
+    await tera_connect.verificar_numero_segmentaciones(
+        "_", mock_query, [pl.DataFrame()] * 3
+    )
 
 
+@pytest.mark.asyncio
 @pytest.mark.unit
-def test_check_numero_columnas_add():
+async def test_check_numero_columnas_add():
     mock_query = "INSERT INTO table VALUES (?, ?)"
     mock_add_malo = pl.DataFrame({"datos": [1, 1, 2]})
     mock_add_bueno = pl.DataFrame({"datos": [1, 1, 2], "otro": [1, 1, 2]})
 
     with pytest.raises(ValueError):
-        tera_connect.verificar_numero_columnas_segmentacion(mock_query, mock_add_malo)
+        await tera_connect.verificar_numero_columnas_segmentacion(
+            mock_query, mock_add_malo
+        )
 
-    tera_connect.verificar_numero_columnas_segmentacion(mock_query, mock_add_bueno)
+    await tera_connect.verificar_numero_columnas_segmentacion(
+        mock_query, mock_add_bueno
+    )
 
 
+@pytest.mark.asyncio
 @pytest.mark.unit
-def test_check_nulls():
+async def test_check_nulls():
     mock_add_malo = pl.DataFrame({"datos": [None, 1, 2, 3, 4, 5]})
     mock_add_bueno = pl.DataFrame({"datos": [1, 1, 2, 3, 4, 5]})
 
     with pytest.raises(ValueError):
-        tera_connect.verificar_valores_nulos(mock_add_malo)
+        await tera_connect.verificar_valores_nulos(mock_add_malo)
 
-    tera_connect.verificar_valores_nulos(mock_add_bueno)
+    await tera_connect.verificar_valores_nulos(mock_add_bueno)
 
 
+@pytest.mark.asyncio
 @pytest.mark.unit
-def test_check_final_info(
+async def test_check_final_info(
     mock_siniestros: pl.LazyFrame, rango_meses: tuple[date, date]
 ):
     mes_inicio_int = utils.date_to_yyyymm(rango_meses[0])
@@ -157,12 +171,12 @@ def test_check_final_info(
     df = mock_siniestros.collect()
 
     with pytest.raises(ValueError):
-        tera_connect.verificar_resultado_siniestros_primas_expuestos(
+        await tera_connect.verificar_resultado_siniestros_primas_expuestos(
             tipo_query, df.drop("codigo_op"), "mock", mes_inicio_int, mes_corte_int
         )
 
     with pytest.raises(ValueError):
-        tera_connect.verificar_resultado_siniestros_primas_expuestos(
+        await tera_connect.verificar_resultado_siniestros_primas_expuestos(
             tipo_query,
             df.with_columns(pl.col("fecha_siniestro").cast(pl.String)),
             "mock",
@@ -176,7 +190,7 @@ def test_check_final_info(
     )
 
     with pytest.raises(ValueError):
-        tera_connect.verificar_resultado_siniestros_primas_expuestos(
+        await tera_connect.verificar_resultado_siniestros_primas_expuestos(
             tipo_query,
             df_fechas_por_fuera,
             "mock",
@@ -188,6 +202,6 @@ def test_check_final_info(
         [pl.lit(None).alias(col) for col in utils.columnas_aperturas("mock")]
     )
     with pytest.raises(ValueError):
-        tera_connect.verificar_resultado_siniestros_primas_expuestos(
+        await tera_connect.verificar_resultado_siniestros_primas_expuestos(
             tipo_query, pl.concat([df, df_falt]), "mock", mes_inicio_int, mes_corte_int
         )

@@ -56,7 +56,7 @@ LISTA_PLANTILLAS = Literal["frec", "seve", "plata", "entremes"]
 COLORES_LOGS = {
     "INFO": "white",
     "SUCCESS": "lightgreen",
-    "WARNING": "orange",
+    "WARNING": "yellow",
     "ERROR": "red",
     "CRITICAL": "red",
 }

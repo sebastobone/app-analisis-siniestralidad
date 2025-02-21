@@ -1,4 +1,6 @@
+import asyncio
 import json
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
 import pandas as pd
@@ -12,25 +14,25 @@ from src.logger_config import logger
 from src.models import Parametros
 
 
-def correr_query(
+async def correr_query(
     file_path: str, save_path: str, save_format: str, p: Parametros
 ) -> None:
     tipo_query = determinar_tipo_query(file_path)
-    segmentaciones = obtener_segmentaciones(
+    segmentaciones = await obtener_segmentaciones(
         f"data/segmentacion_{p.negocio}.xlsx", tipo_query
     )
 
     particiones_fechas = crear_particiones_fechas(p.mes_inicio, p.mes_corte)
 
     queries = reemplazar_parametros_queries(open(file_path).read(), p)
-    verificar_numero_segmentaciones(file_path, queries, segmentaciones)
+    await verificar_numero_segmentaciones(file_path, queries, segmentaciones)
 
     logger.info(f"Ejecutando query {file_path}...")
-    df = ejecutar_queries(queries.split(";"), particiones_fechas, segmentaciones)
+    df = await ejecutar_queries(queries.split(";"), particiones_fechas, segmentaciones)
     logger.debug(df)
 
     if tipo_query != "otro":
-        verificar_resultado_siniestros_primas_expuestos(
+        await verificar_resultado_siniestros_primas_expuestos(
             tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte
         )
         df = df.select(
@@ -38,7 +40,7 @@ def correr_query(
             pl.all(),
         )
 
-    guardar_resultado(df, save_path, save_format, tipo_query)
+    await guardar_resultado(df, save_path, save_format, tipo_query)
 
 
 def determinar_tipo_query(file: str) -> str:
@@ -49,7 +51,7 @@ def determinar_tipo_query(file: str) -> str:
     return "otro"
 
 
-def obtener_segmentaciones(
+async def obtener_segmentaciones(
     path_archivo_segm: str, tipo_query: str
 ) -> list[pl.DataFrame]:
     try:
@@ -63,7 +65,7 @@ def obtener_segmentaciones(
         raise
 
     if hojas_segm:
-        verificar_nombre_hojas_segmentacion(hojas_segm)
+        await verificar_nombre_hojas_segmentacion(hojas_segm)
 
     hojas_query = [hoja for hoja in hojas_segm if tipo_query[0] in hoja.split("_")[1]]
 
@@ -83,21 +85,27 @@ def reemplazar_parametros_queries(queries: str, p: Parametros) -> str:
     )
 
 
-def ejecutar_queries(
+async def ejecutar_queries(
     queries: list[str],
     fechas_chunks: list[tuple[date, date]],
     segm: list[pl.DataFrame],
 ) -> pl.DataFrame:
     con, cur = conectar_teradata()
 
+    loop = asyncio.get_running_loop()
+    executor = ThreadPoolExecutor()
+
     add_num = 0
     for n_query, query in tqdm(enumerate(queries)):
         logger.info(f"Ejecutando query {n_query + 1} de {len(queries)}...")
         try:
             if "?" not in query:
-                ejecutar_query_de_procesamiento(cur, query, fechas_chunks)
+                await loop.run_in_executor(
+                    executor, ejecutar_query_de_procesamiento, cur, query, fechas_chunks
+                )
             else:
-                ejecutar_query_de_carga_de_informacion(cur, query, segm[add_num])
+                add = await verificar_tabla_a_cargar(query, segm[add_num])
+                await loop.run_in_executor(executor, cur.executemany, query, add.rows())
                 add_num += 1
 
         except td.OperationalError:
@@ -129,13 +137,11 @@ def ejecutar_query_particionado_en_fechas(
         )  # type: ignore
 
 
-def ejecutar_query_de_carga_de_informacion(
-    cur: td.TeradataCursor, query: str, add: pl.DataFrame
-):
-    verificar_numero_columnas_segmentacion(query, add)
-    add = verificar_registros_duplicados(add)
-    verificar_valores_nulos(add)
-    cur.executemany(query, add.rows())  # type: ignore
+async def verificar_tabla_a_cargar(query: str, add: pl.DataFrame) -> pl.DataFrame:
+    await verificar_numero_columnas_segmentacion(query, add)
+    add = await verificar_registros_duplicados(add)
+    await verificar_valores_nulos(add)
+    return add
 
 
 def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
@@ -185,7 +191,7 @@ def crear_particiones_fechas(
     return list(zip(inicios_mes, fines_mes, strict=False))
 
 
-def guardar_resultado(
+async def guardar_resultado(
     df: pl.DataFrame, save_path: str, save_format: str, tipo_query: str
 ) -> None:
     # Para poder visualizarlo facil, en caso de ser necesario
@@ -200,7 +206,7 @@ def guardar_resultado(
     logger.success(f"Datos almacenados en {save_path}.{save_format}.")
 
 
-def verificar_nombre_hojas_segmentacion(segm_sheets: list[str]) -> None:
+async def verificar_nombre_hojas_segmentacion(segm_sheets: list[str]) -> None:
     for sheet in segm_sheets:
         partes = sheet.split("_")
         if (len(partes) < 3) or not any(char in partes[1] for char in "spe"):
@@ -219,7 +225,7 @@ def verificar_nombre_hojas_segmentacion(segm_sheets: list[str]) -> None:
             raise ValueError
 
 
-def verificar_numero_segmentaciones(
+async def verificar_numero_segmentaciones(
     file_path: str, queries: str, adds: list[pl.DataFrame]
 ) -> None:
     num_adds_necesarios = queries.count("?);")
@@ -238,7 +244,7 @@ def verificar_numero_segmentaciones(
         raise ValueError
 
 
-def verificar_numero_columnas_segmentacion(query: str, add: pl.DataFrame) -> None:
+async def verificar_numero_columnas_segmentacion(query: str, add: pl.DataFrame) -> None:
     num_cols = query.count("?")
     num_cols_add = len(add.collect_schema().names())
     if num_cols != num_cols_add:
@@ -255,7 +261,7 @@ def verificar_numero_columnas_segmentacion(query: str, add: pl.DataFrame) -> Non
         raise ValueError
 
 
-def verificar_registros_duplicados(add: pl.DataFrame) -> pl.DataFrame:
+async def verificar_registros_duplicados(add: pl.DataFrame) -> pl.DataFrame:
     if len(add) != len(add.unique()):
         logger.warning(
             f"""
@@ -267,7 +273,7 @@ def verificar_registros_duplicados(add: pl.DataFrame) -> pl.DataFrame:
     return add.unique()
 
 
-def verificar_valores_nulos(add: pl.DataFrame) -> None:
+async def verificar_valores_nulos(add: pl.DataFrame) -> None:
     num_nulls = add.null_count().max_horizontal().max()
     if isinstance(num_nulls, int) and num_nulls > 0:
         logger.error(
@@ -279,13 +285,13 @@ def verificar_valores_nulos(add: pl.DataFrame) -> None:
         raise ValueError
 
 
-def verificar_formato_fecha(col: pl.Series) -> None:
+async def verificar_formato_fecha(col: pl.Series) -> None:
     if col.dtype != pl.Date:
         logger.error(f"""La columna {col.name} debe estar en formato fecha.""")
         raise ValueError
 
 
-def verificar_fechas_dentro_de_rangos(
+async def verificar_fechas_dentro_de_rangos(
     col: pl.Series, lim_inf: date, lim_sup: date
 ) -> None:
     if col.dt.min() < lim_inf or col.dt.max() > lim_sup:  # type: ignore
@@ -300,7 +306,7 @@ def verificar_fechas_dentro_de_rangos(
         raise ValueError
 
 
-def verificar_resultado_siniestros_primas_expuestos(
+async def verificar_resultado_siniestros_primas_expuestos(
     tipo_query: str, df: pl.DataFrame, negocio: str, mes_inicio: int, mes_corte: int
 ) -> None:
     cols = df.collect_schema().names()
@@ -310,16 +316,16 @@ def verificar_resultado_siniestros_primas_expuestos(
             logger.error(f"""¡Falta la columna {column}!""")
             raise ValueError
 
-    verificar_formato_fecha(df.get_column("fecha_registro"))
-    verificar_fechas_dentro_de_rangos(
+    await verificar_formato_fecha(df.get_column("fecha_registro"))
+    await verificar_fechas_dentro_de_rangos(
         df.get_column("fecha_registro"),
         utils.yyyymm_to_date(mes_inicio),
         utils.yyyymm_to_date(mes_corte),
     )
 
     if tipo_query == "siniestros":
-        verificar_formato_fecha(df.get_column("fecha_siniestro"))
-        verificar_fechas_dentro_de_rangos(
+        await verificar_formato_fecha(df.get_column("fecha_siniestro"))
+        await verificar_fechas_dentro_de_rangos(
             df.get_column("fecha_siniestro"),
             utils.yyyymm_to_date(mes_inicio),
             utils.yyyymm_to_date(mes_corte),

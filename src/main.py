@@ -9,27 +9,27 @@ from src.procesamiento import base_siniestros as bsin
 from src.procesamiento.autonomia import adds, siniestros_gen
 
 
-def correr_query_siniestros(p: Parametros) -> None:
+async def correr_query_siniestros(p: Parametros) -> None:
     if p.negocio == "autonomia":
-        correr_query(
+        await correr_query(
             "data/queries/catalogos/planes.sql",
             "data/catalogos/planes",
             "parquet",
             p,
         )
-        correr_query(
+        await correr_query(
             "data/queries/catalogos/sucursales.sql",
             "data/catalogos/sucursales",
             "parquet",
             p,
         )
-        correr_query(
+        await correr_query(
             "data/queries/autonomia/siniestros_cedidos.sql",
             "data/raw/siniestros_cedidos",
             "parquet",
             p,
         )
-        correr_query(
+        await correr_query(
             "data/queries/autonomia/siniestros_brutos.sql",
             "data/raw/siniestros_brutos",
             "parquet",
@@ -37,7 +37,7 @@ def correr_query_siniestros(p: Parametros) -> None:
         )
         siniestros_gen.main(p.mes_inicio, p.mes_corte, p.aproximar_reaseguro)
     else:
-        correr_query(
+        await correr_query(
             f"data/queries/{p.negocio}/siniestros.sql",
             "data/raw/siniestros",
             "parquet",
@@ -45,16 +45,16 @@ def correr_query_siniestros(p: Parametros) -> None:
         )
 
 
-def correr_query_primas(p: Parametros) -> None:
+async def correr_query_primas(p: Parametros) -> None:
     if p.negocio == "autonomia":
         adds.sap_primas_ced(p.mes_corte)
-    correr_query(
+    await correr_query(
         f"data/queries/{p.negocio}/primas.sql", "data/raw/primas", "parquet", p
     )
 
 
-def correr_query_expuestos(p: Parametros) -> None:
-    correr_query(
+async def correr_query_expuestos(p: Parametros) -> None:
+    await correr_query(
         f"data/queries/{p.negocio}/expuestos.sql",
         "data/raw/expuestos",
         "parquet",

@@ -1,7 +1,6 @@
-import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import uuid4
 
 from fastapi import Cookie, Depends, FastAPI, Form, Request
@@ -15,7 +14,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from src import constantes as ct
 from src import main, utils
-from src.logger_config import logger
+from src.logger_config import log_queue, logger
 from src.metodos_plantilla import abrir, generar, preparar, resultados
 from src.metodos_plantilla import almacenar_analisis as almacenar
 from src.metodos_plantilla.guardar_traer import (
@@ -77,16 +76,6 @@ async def generar_base(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
-log_queue: asyncio.Queue[Any] = asyncio.Queue()
-
-
-async def log_handler(message):
-    asyncio.create_task(log_queue.put(message))
-
-
-logger.add(log_handler, level="INFO")
-
-
 async def obtener_logs() -> AsyncIterator[str]:
     while True:
         message = await log_queue.get()
@@ -140,23 +129,13 @@ def eliminar_parametros_anteriores(
         pass
 
 
-@app.post("/wtf")
-async def wtf(params: Parametros):
-    return params
-
-
-@app.post("/wtf2")
-async def wtf2(params: ModosPlantilla):
-    return params
-
-
 @app.post("/ingresar-parametros")
 async def ingresar_parametros(
     params: Annotated[Parametros, Form()],
     response: Response,
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-):
+) -> Parametros:
     if not session_id:
         session_id = str(uuid4())
         response.set_cookie(key="session_id", value=session_id)
@@ -180,7 +159,7 @@ async def correr_query_siniestros(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    main.correr_query_siniestros(params)
+    await main.correr_query_siniestros(params)
 
 
 @app.post("/correr-query-primas")
@@ -188,7 +167,7 @@ async def correr_query_primas(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    main.correr_query_primas(params)
+    await main.correr_query_primas(params)
 
 
 @app.post("/correr-query-expuestos")
@@ -196,7 +175,7 @@ async def correr_query_expuestos(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    main.correr_query_expuestos(params)
+    await main.correr_query_expuestos(params)
 
 
 @app.post("/generar-controles")

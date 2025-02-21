@@ -1,3 +1,6 @@
+import asyncio
+from typing import Any
+
 from loguru import logger
 
 dev = logger.add(
@@ -19,5 +22,14 @@ prod = logger.add(
     diagnose=False,
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
 )
+
+log_queue: asyncio.Queue[Any] = asyncio.Queue()
+
+
+async def log_handler(message):
+    asyncio.create_task(log_queue.put(message))
+
+
+logger.add(log_handler, level="INFO")
 
 __all__ = ["logger"]

@@ -183,7 +183,7 @@ async def generar_controles(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    main.generar_controles(params)
+    await main.generar_controles(params)
 
 
 @app.post("/abrir-plantilla")

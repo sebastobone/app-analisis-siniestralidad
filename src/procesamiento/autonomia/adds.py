@@ -4,14 +4,16 @@ import polars as pl
 import xlwings as xw
 
 from src import utils
-from src.controles_informacion.controles_informacion import consolidar_sap
+from src.controles_informacion.sap import consolidar_sap
 
 
-def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:
-    return consolidar_sap(
-        ["Generales", "Vida"],
-        hojas_afo,
-        mes_corte,
+async def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:
+    return (
+        await consolidar_sap(
+            ["Generales", "Vida"],
+            hojas_afo,
+            mes_corte,
+        )
     ).filter(
         (pl.col("fecha_registro") == utils.yyyymm_to_date(mes_corte))
         & (
@@ -37,22 +39,24 @@ def crear_hoja_segmentacion(df: pl.DataFrame, nombre_hoja: str) -> None:
     wb.sheets[nombre_hoja]["A1"].options(index=False).value = df.to_pandas()
 
 
-def sap_sinis_ced(mes_corte: int) -> None:
-    df_sinis = cantidades_sap(["pago_cedido", "aviso_cedido"], mes_corte)
+async def sap_sinis_ced(mes_corte: int) -> None:
+    df_sinis = await cantidades_sap(["pago_cedido", "aviso_cedido"], mes_corte)
     crear_hoja_segmentacion(df_sinis, "SAP_Sinis_Ced")
 
 
-def sap_primas_ced(mes_corte: int) -> None:
-    df_primas = cantidades_sap(
-        [
-            "prima_bruta",
-            "prima_retenida",
-            "prima_bruta_devengada",
-            "prima_retenida_devengada",
-            "rpnd_bruto",
-            "rpnd_cedido",
-        ],
-        mes_corte,
+async def sap_primas_ced(mes_corte: int) -> None:
+    df_primas = (
+        await cantidades_sap(
+            [
+                "prima_bruta",
+                "prima_retenida",
+                "prima_bruta_devengada",
+                "prima_retenida_devengada",
+                "rpnd_bruto",
+                "rpnd_cedido",
+            ],
+            mes_corte,
+        )
     ).with_columns(
         rpnd_retenido=pl.col("rpnd_bruto") - pl.col("rpnd_cedido"),
         prima_cedida=pl.col("prima_bruta") - pl.col("prima_retenida"),

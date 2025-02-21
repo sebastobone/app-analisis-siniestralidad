@@ -1,7 +1,8 @@
 import polars as pl
 
 from src import utils
-from src.controles_informacion import controles_informacion as ctrl
+from src.controles_informacion import generacion as ctrl
+from src.controles_informacion.evidencias import generar_evidencias_parametros
 from src.extraccion.tera_connect import correr_query
 from src.models import Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
@@ -35,7 +36,7 @@ async def correr_query_siniestros(p: Parametros) -> None:
             "parquet",
             p,
         )
-        siniestros_gen.main(p.mes_inicio, p.mes_corte, p.aproximar_reaseguro)
+        await siniestros_gen.main(p.mes_inicio, p.mes_corte, p.aproximar_reaseguro)
     else:
         await correr_query(
             f"data/queries/{p.negocio}/siniestros.sql",
@@ -47,7 +48,7 @@ async def correr_query_siniestros(p: Parametros) -> None:
 
 async def correr_query_primas(p: Parametros) -> None:
     if p.negocio == "autonomia":
-        adds.sap_primas_ced(p.mes_corte)
+        await adds.sap_primas_ced(p.mes_corte)
     await correr_query(
         f"data/queries/{p.negocio}/primas.sql", "data/raw/primas", "parquet", p
     )
@@ -62,12 +63,12 @@ async def correr_query_expuestos(p: Parametros) -> None:
     )
 
 
-def generar_controles(p: Parametros) -> None:
-    ctrl.generar_controles("siniestros", p)
-    ctrl.generar_controles("primas", p)
-    ctrl.generar_controles("expuestos", p)
+async def generar_controles(p: Parametros) -> None:
+    await ctrl.generar_controles("siniestros", p)
+    await ctrl.generar_controles("primas", p)
+    await ctrl.generar_controles("expuestos", p)
 
-    ctrl.generar_evidencias_parametros(p.negocio, p.mes_corte)
+    await generar_evidencias_parametros(p.negocio, p.mes_corte)
 
 
 def generar_bases_plantilla(p: Parametros) -> None:

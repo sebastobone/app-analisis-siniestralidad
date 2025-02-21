@@ -3,14 +3,15 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 from src import utils
-from src.controles_informacion.controles_informacion import consolidar_sap
+from src.controles_informacion.sap import consolidar_sap
 from src.models import Parametros
 
 
+@pytest.mark.asyncio
 @pytest.mark.soat
 @pytest.mark.integration
 @pytest.mark.teradata
-def test_info_soat(client: TestClient, test_session: Session):
+async def test_info_soat(client: TestClient, test_session: Session):
     params = {
         "negocio": "soat",
         "mes_inicio": "201901",
@@ -54,10 +55,12 @@ def test_info_soat(client: TestClient, test_session: Session):
         .filter(pl.col("fecha_registro") <= mes_corte_dt)
     )
 
-    sap = consolidar_sap(
-        ["Generales"],
-        ["pago_bruto", "pago_retenido", "aviso_bruto", "aviso_retenido"],
-        p.mes_corte,
+    sap = (
+        await consolidar_sap(
+            ["Generales"],
+            ["pago_bruto", "pago_retenido", "aviso_bruto", "aviso_retenido"],
+            p.mes_corte,
+        )
     ).filter(
         (pl.col("fecha_registro") == mes_corte_dt) & (pl.col("codigo_ramo_op") == "041")
     )

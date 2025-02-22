@@ -141,19 +141,19 @@ def generar_parametros_plantillas(wb: xw.Book, lista_aperturas: list[str]) -> No
 def generar_hojas_resumen(
     wb: xw.Book,
     diagonales: pl.DataFrame,
-    anterior: pl.DataFrame,
+    resultados_anteriores: pl.DataFrame,
     atipicos: pl.DataFrame,
 ) -> None:
     for sheet in ["Aux_Totales", "Atipicos", "Aux_Anterior"]:
         wb.sheets[sheet].clear_contents()
 
-    if anterior.shape[0] != 0:
+    if resultados_anteriores.shape[0] != 0:
         wb.sheets["Aux_Anterior"]["A1"].options(
             index=False
-        ).value = anterior.to_pandas()
+        ).value = resultados_anteriores.to_pandas()
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
     wb.sheets["Atipicos"]["A1"].options(index=False).value = atipicos.to_pandas()
 
-    wb.macro("formatos_aux_totales")("Aux_Totales", diagonales.shape[0])
-    wb.macro("formulas_aux_totales")(diagonales.shape[0])
-    wb.macro("formatos_aux_totales")("Atipicos", atipicos.shape[0])
+    wb.macro("formatear_tablas_resumen")("Aux_Totales", diagonales.shape[0])
+    wb.macro("formatear_tablas_resumen")("Atipicos", atipicos.shape[0])
+    wb.macro("formatear_tablas_resumen")("Aux_Anterior", resultados_anteriores.shape[0])

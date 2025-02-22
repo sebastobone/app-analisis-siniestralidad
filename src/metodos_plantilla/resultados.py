@@ -3,14 +3,17 @@ import os
 import polars as pl
 import xlwings as xw
 
+from src.logger_config import logger
+
 
 def concatenar_archivos_resultados() -> pl.DataFrame:
     columnas_distintivas = ["apertura_reservas", "mes_corte", "atipico"]
 
-    files = [file for file in os.listdir("output/resultados") if file != ".gitkeep"]
+    files = [file for file in os.listdir("output/resultados") if ".parquet" in file]
     sorted_files = sorted(
         files, key=lambda f: os.path.getmtime(os.path.join("output/resultados", f))
     )
+
     dfs = []
     for file in sorted_files:
         dfs.append(
@@ -19,11 +22,15 @@ def concatenar_archivos_resultados() -> pl.DataFrame:
             )
         )
 
-    df_resultados = (
-        pl.DataFrame(pl.concat(dfs))
-        .unique(subset=columnas_distintivas + ["periodo_ocurrencia"], keep="last")
-        .sort(columnas_distintivas + ["periodo_ocurrencia"])
-    )
+    try:
+        df_resultados = (
+            pl.DataFrame(pl.concat(dfs))
+            .unique(subset=columnas_distintivas + ["periodo_ocurrencia"], keep="last")
+            .sort(columnas_distintivas + ["periodo_ocurrencia"])
+        )
+    except ValueError:
+        logger.warning("No se encontraron resultados anteriores.")
+        df_resultados = pl.DataFrame()
 
     return df_resultados
 

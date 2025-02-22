@@ -223,11 +223,11 @@ async def modos_plantilla(
     elif modo == "traer":
         traer_apertura.traer_apertura(wb, plant, p.mes_corte)
     elif modo == "guardar_todo":
-        traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
+        await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
             wb, plant, p.mes_corte, p.negocio
         )
     elif modo == "traer_guardar_todo":
-        traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
+        await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
             wb, plant, p.mes_corte, p.negocio, traer=True
         )
 

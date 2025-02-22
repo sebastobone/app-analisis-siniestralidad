@@ -1,7 +1,9 @@
+import asyncio
 import time
 
 import xlwings as xw
 from src import constantes as ct
+from src import utils
 from src.logger_config import logger
 from src.metodos_plantilla import tablas_resumen
 from src.metodos_plantilla.generar import generar_plantilla
@@ -10,7 +12,7 @@ from .guardar_apertura import guardar_apertura
 from .traer_apertura import traer_apertura
 
 
-def traer_y_guardar_todas_las_aperturas(
+async def traer_y_guardar_todas_las_aperturas(
     wb: xw.Book,
     plantilla: ct.LISTA_PLANTILLAS,
     mes_corte: int,
@@ -20,14 +22,17 @@ def traer_y_guardar_todas_las_aperturas(
     s = time.time()
 
     plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-    aperturas = tablas_resumen.obtener_tabla_aperturas(negocio).get_column(
-        "apertura_reservas"
+    aperturas = (
+        tablas_resumen.obtener_tabla_aperturas(negocio)
+        .get_column("apertura_reservas")
+        .to_list()
     )
     atributos = (
         ["Bruto", "Retenido"] if plantilla_name != "Plantilla_Frec" else ["Bruto"]
     )
 
-    for apertura in aperturas.to_list():
+    num_apertura = 0
+    for apertura in aperturas:
         for atributo in atributos:
             wb.sheets[plantilla_name]["C2"].value = apertura
             wb.sheets[plantilla_name]["C3"].value = atributo
@@ -35,6 +40,18 @@ def traer_y_guardar_todas_las_aperturas(
             if traer:
                 traer_apertura(wb, plantilla, mes_corte)
             guardar_apertura(wb, plantilla, mes_corte)
+
+            await asyncio.sleep(0)
+
+            logger.info(
+                utils.limpiar_espacios_log(
+                    f"""
+                    Apertura {num_apertura + 1} de {len(aperturas) * len(atributos)}
+                    terminada.
+                    """
+                )
+            )
+            num_apertura += 1
 
     if traer:
         logger.success("Todas las aperturas se han traido y guardado correctamente.")

@@ -12,7 +12,7 @@ def generar_tablas_resumen(
     periodicidades: list[list[str]],
     tipo_analisis: Literal["triangulos", "entremes"],
     aperturas: pl.LazyFrame,
-) -> tuple[pl.DataFrame, pl.DataFrame]:
+) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
     diagonales = ins.df_triangulos()
     atipicos = ins.df_atipicos()
     expuestos = ins.df_expuestos()
@@ -60,11 +60,13 @@ def generar_tablas_resumen(
             .collect()
             .vstack(ult_ocurr.collect())
             .lazy()
+            .pipe(unificar_tablas, aperturas, expuestos, primas)
         )
 
-    diagonales_df = (
-        diagonales.pipe(unificar_tablas, aperturas, expuestos, primas)
-        .with_columns(
+    tabla_entremes = diagonales.drop(aperturas.collect_schema().names()[1:]).collect()
+
+    tabla_aux_totales = (
+        diagonales.with_columns(
             frec_ultimate=0,
             conteo_ultimate=0,
             seve_ultimate_bruto=0,
@@ -84,7 +86,7 @@ def generar_tablas_resumen(
         .collect()
     )
 
-    atipicos_df = (
+    tabla_atipicos = (
         atipicos.pipe(unificar_tablas, aperturas, expuestos, primas)
         .with_columns(
             frec_ultimate=pl.col("conteo_incurrido") / pl.col("expuestos"),
@@ -107,7 +109,7 @@ def generar_tablas_resumen(
         .collect()
     )
 
-    return diagonales_df, atipicos_df
+    return tabla_aux_totales, tabla_atipicos, tabla_entremes
 
 
 def unificar_tablas(

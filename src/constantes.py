@@ -42,6 +42,13 @@ COLUMNAS_QTYS = [
     "conteo_desistido",
 ]
 
+COLUMNAS_ULTIMATE = [
+    "plata_ultimate_bruto",
+    "plata_ultimate_contable_bruto",
+    "plata_ultimate_retenido",
+    "plata_ultimate_contable_retenido",
+]
+
 
 HEADER_TRIANGULOS = 2
 SEP_TRIANGULOS = 2

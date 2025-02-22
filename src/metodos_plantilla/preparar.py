@@ -4,6 +4,7 @@ from typing import Literal
 import polars as pl
 import xlwings as xw
 
+from src import constantes as ct
 from src import utils
 from src.logger_config import logger
 from src.metodos_plantilla import resultados, tablas_resumen
@@ -37,17 +38,18 @@ def preparar_plantilla(
 
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
-    diagonales, atipicos = tablas_resumen.generar_tablas_resumen(
+    diagonales, atipicos, entremes = tablas_resumen.generar_tablas_resumen(
         periodicidades, tipo_analisis, aperturas.lazy()
     )
     resultados_anteriores = resultados.concatenar_archivos_resultados()
+
+    generar_hojas_resumen(wb, diagonales, resultados_anteriores, atipicos)
 
     if tipo_analisis == "entremes":
         verificar_resultados_anteriores_para_entremes(
             diagonales, resultados_anteriores, mes_corte
         )
-
-    generar_hojas_resumen(wb, diagonales, resultados_anteriores, atipicos)
+        generar_hoja_entremes(wb, entremes, resultados_anteriores, mes_corte)
 
     logger.success("Plantilla preparada.")
 
@@ -131,7 +133,7 @@ def generar_parametros_globales(wb: xw.Book, mes_corte: int) -> None:
 
 
 def generar_parametros_plantillas(wb: xw.Book, lista_aperturas: list[str]) -> None:
-    for plantilla in ["frec", "seve", "plata", "entremes"]:
+    for plantilla in ["frec", "seve", "plata"]:
         plantilla_name = f"Plantilla_{plantilla.capitalize()}"
         wb.macro("generar_parametros")(
             plantilla_name, ",".join(lista_aperturas), lista_aperturas[0]
@@ -157,3 +159,89 @@ def generar_hojas_resumen(
     wb.macro("formatear_tablas_resumen")("Aux_Totales", diagonales.shape[0])
     wb.macro("formatear_tablas_resumen")("Atipicos", atipicos.shape[0])
     wb.macro("formatear_tablas_resumen")("Aux_Anterior", resultados_anteriores.shape[0])
+
+
+def generar_hoja_entremes(
+    wb: xw.Book,
+    tabla_entremes: pl.DataFrame,
+    resultados_anteriores: pl.DataFrame,
+    mes_corte: int,
+) -> None:
+    wb.sheets["Plantilla_Entremes"].clear_contents()
+    columnas_base = [
+        "apertura_reservas",
+        "periodicidad_ocurrencia",
+        "periodo_ocurrencia",
+    ]
+
+    resultados_mes_anterior = (
+        resultados_anteriores.filter(
+            pl.col("mes_corte") == utils.mes_anterior_corte(mes_corte)
+        )
+        .select(columnas_base + ct.COLUMNAS_ULTIMATE)
+        .rename({col: f"{col}_anterior" for col in ct.COLUMNAS_ULTIMATE})
+    )
+
+    tabla_entremes = (
+        tabla_entremes.join(
+            resultados_mes_anterior, on=columnas_base, how="left", validate="1:1"
+        )
+        .join(
+            obtener_resultados_ultimo_triangulo(resultados_anteriores),
+            on=columnas_base,
+            how="left",
+            validate="1:1",
+        )
+        .sort(["apertura_reservas", "periodo_ocurrencia"])
+    )
+
+    wb.sheets["Plantilla_Entremes"]["A1"].options(
+        index=False
+    ).value = tabla_entremes.to_pandas()
+    # wb.macro("formatear_tabla_entremes")("Entremes", tabla_entremes.shape[0])
+
+
+def obtener_resultados_ultimo_triangulo(
+    resultados_anteriores: pl.DataFrame,
+) -> pl.DataFrame:
+    return (
+        resultados_anteriores.with_columns(
+            periodicidad=pl.col("periodicidad_ocurrencia")
+            .replace(ct.PERIODICIDADES)
+            .cast(pl.Int32)
+        )
+        .with_columns(
+            mes_ultimo_triangulo=(
+                pl.when(pl.col("mes_corte") % 100 < pl.col("periodicidad"))
+                .then(pl.date(pl.col("mes_corte") // 100 - 1, 12, 1))
+                .otherwise(
+                    pl.date(
+                        pl.col("mes_corte") // 100,
+                        (pl.col("mes_corte") % 100).floordiv(pl.col("periodicidad"))
+                        * pl.col("periodicidad"),
+                        1,
+                    )
+                )
+            ),
+            velocidad_pago_bruto_triangulo=pl.col("pago_bruto")
+            / pl.col("plata_ultimate_bruto"),
+            velocidad_incurrido_bruto_triangulo=pl.col("incurrido_bruto")
+            / pl.col("plata_ultimate_bruto"),
+            velocidad_pago_retenido_triangulo=pl.col("pago_retenido")
+            / pl.col("plata_ultimate_retenido"),
+            velocidad_incurrido_retenido_triangulo=pl.col("incurrido_retenido")
+            / pl.col("plata_ultimate_retenido"),
+        )
+        .filter(pl.col("mes_corte") == pl.col("mes_ultimo_triangulo"))
+        .select(
+            [
+                "apertura_reservas",
+                "periodicidad_ocurrencia",
+                "periodo_ocurrencia",
+                "velocidad_pago_bruto_triangulo",
+                "velocidad_incurrido_bruto_triangulo",
+                "velocidad_pago_retenido_triangulo",
+                "velocidad_incurrido_retenido_triangulo",
+            ]
+        )
+    )

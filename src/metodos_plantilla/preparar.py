@@ -4,8 +4,9 @@ from typing import Literal
 import polars as pl
 import xlwings as xw
 
+from src import utils
 from src.logger_config import logger
-from src.metodos_plantilla import tablas_resumen
+from src.metodos_plantilla import resultados, tablas_resumen
 
 
 def preparar_plantilla(
@@ -39,13 +40,69 @@ def preparar_plantilla(
     diagonales, atipicos = tablas_resumen.generar_tablas_resumen(
         periodicidades, tipo_analisis, aperturas.lazy()
     )
+    resultados_anteriores = resultados.concatenar_archivos_resultados()
 
-    generar_hojas_resumen(wb, diagonales, atipicos)
+    if tipo_analisis == "entremes":
+        verificar_resultados_anteriores_para_entremes(
+            diagonales, resultados_anteriores, mes_corte
+        )
+
+    generar_hojas_resumen(wb, diagonales, resultados_anteriores, atipicos)
 
     logger.success("Plantilla preparada.")
 
     wb.sheets["Main"]["A1"].value = "PREPARAR_PLANTILLA"
     wb.sheets["Main"]["A2"].value = time.time() - s
+
+
+def verificar_resultados_anteriores_para_entremes(
+    diagonales: pl.DataFrame, resultados_anteriores: pl.DataFrame, mes_corte: int
+) -> None:
+    if resultados_anteriores.shape[0] == 0:
+        logger.error(
+            utils.limpiar_espacios_log(
+                """
+                No se encontraron resultados anteriores.
+                Se necesitan para hacer el analisis de entremes.
+                """
+            )
+        )
+        raise ValueError
+
+    mes_corte_anterior = utils.mes_anterior_corte(mes_corte)
+    resultados_mes_anterior = resultados_anteriores.filter(
+        pl.col("mes_corte") == mes_corte_anterior
+    )
+
+    if resultados_mes_anterior.shape[0] == 0:
+        logger.error(
+            utils.limpiar_espacios_log(
+                f"""
+                No se encontraron resultados anteriores
+                para el mes {mes_corte_anterior}. Se necesitan
+                para hacer el analisis de entremes.
+                """
+            )
+        )
+        raise ValueError
+
+    aperturas_actuales = sorted(diagonales.get_column("apertura_reservas").to_list())
+    aperturas_anteriores = sorted(
+        resultados_mes_anterior.get_column("apertura_reservas").to_list()
+    )
+    if aperturas_actuales != aperturas_anteriores:
+        logger.error(
+            utils.limpiar_espacios_log(
+                f"""Las aperturas no coinciden con los analisis anteriores,
+                los cuales se necesitan para el analisis de entremes. Si realizo
+                un cambio a las aperturas con las que quiere hacer el analisis,
+                modifique los resultados anteriores y vuelva a intentar.
+                Aperturas actuales: {aperturas_actuales}.
+                Aperturas anteriores: {aperturas_anteriores}.
+                """
+            )
+        )
+        raise ValueError
 
 
 def mostrar_plantillas_relevantes(wb: xw.Book, tipo_analisis: str):
@@ -67,9 +124,7 @@ def generar_parametros_globales(wb: xw.Book, mes_corte: int) -> None:
     wb.sheets["Main"].range((4, 2)).value = mes_corte
 
     wb.macro("formatear_parametro")("Main", "Mes anterior", 5, 1)
-    wb.sheets["Main"].range((5, 2)).value = (
-        mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
-    )
+    wb.sheets["Main"].range((5, 2)).value = utils.mes_anterior_corte(mes_corte)
 
 
 def generar_parametros_plantillas(wb: xw.Book, lista_aperturas: list[str]) -> None:
@@ -81,11 +136,18 @@ def generar_parametros_plantillas(wb: xw.Book, lista_aperturas: list[str]) -> No
 
 
 def generar_hojas_resumen(
-    wb: xw.Book, diagonales: pl.DataFrame, atipicos: pl.DataFrame
+    wb: xw.Book,
+    diagonales: pl.DataFrame,
+    anterior: pl.DataFrame,
+    atipicos: pl.DataFrame,
 ) -> None:
-    for sheet in ["Aux_Totales", "Atipicos"]:
+    for sheet in ["Aux_Totales", "Atipicos", "Aux_Anterior"]:
         wb.sheets[sheet].clear_contents()
 
+    if anterior.shape[0] != 0:
+        wb.sheets["Aux_Anterior"]["A1"].options(
+            index=False
+        ).value = anterior.to_pandas()
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
     wb.sheets["Atipicos"]["A1"].options(index=False).value = atipicos.to_pandas()
 

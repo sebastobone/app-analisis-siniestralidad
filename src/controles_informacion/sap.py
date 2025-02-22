@@ -40,8 +40,10 @@ async def transformar_hoja_afo(
         not in df.get_column("Ejercicio/Período").unique()
     ):
         logger.error(
-            f"""¡Error! No se pudo encontrar el mes {mes_corte}
-            en la hoja {qty} del AFO de {cia}. Actualizar el AFO."""
+            utils.limpiar_espacios_log(
+                f"""¡Error! No se pudo encontrar el mes {mes_corte}
+                en la hoja {qty} del AFO de {cia}. Actualizar el AFO."""
+            )
         )
         raise ValueError
 

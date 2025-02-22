@@ -157,4 +157,10 @@ def path_plantilla(wb: xw.Book) -> str:
 
 
 def limpiar_espacios_log(log: str) -> str:
-    return textwrap.dedent(log).replace("\n", " ")
+    return textwrap.dedent(log).replace("\n", " ").replace("\t", " ")
+
+
+def mes_anterior_corte(mes_corte: int) -> int:
+    return (
+        mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
+    )

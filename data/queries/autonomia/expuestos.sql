@@ -72,8 +72,8 @@ CREATE MULTISET VOLATILE TABLE fechas AS
             '{mes_corte}' AS INTEGER
         )
     GROUP BY 1
-) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
-COLLECT STATISTICS ON FECHAS INDEX (mes_id);  -- noqa:
+) WITH DATA PRIMARY INDEX (primer_dia_mes, ultimo_dia_mes) ON COMMIT PRESERVE ROWS;
+COLLECT STATISTICS ON FECHAS INDEX (primer_dia_mes, ultimo_dia_mes);  -- noqa:
 
 
 

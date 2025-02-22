@@ -41,8 +41,10 @@ async def transformar_hoja_afo(
     ):
         logger.error(
             utils.limpiar_espacios_log(
-                f"""¡Error! No se pudo encontrar el mes {mes_corte}
-                en la hoja {qty} del AFO de {cia}. Actualizar el AFO."""
+                f"""
+                ¡Error! No se pudo encontrar el mes {mes_corte}
+                en la hoja {qty} del AFO de {cia}. Actualizar el AFO.
+                """
             )
         )
         raise ValueError

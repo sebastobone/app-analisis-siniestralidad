@@ -76,7 +76,7 @@ def test_almacenar_analisis(
         f"output/resultados/{p.nombre_plantilla}_{p.mes_corte}.parquet"
     )
 
-    info_plantilla = utils.sheet_to_dataframe(wb, "Aux_Totales").collect()
+    info_plantilla = utils.sheet_to_dataframe(wb, "Aux_Totales")
     info_guardada = pl.read_parquet(
         f"output/resultados/{p.nombre_plantilla}_{p.mes_corte}.parquet"
     ).filter(pl.col("atipico") == 0)

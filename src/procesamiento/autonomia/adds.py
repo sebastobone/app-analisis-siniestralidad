@@ -38,6 +38,9 @@ def crear_hoja_segmentacion(df: pl.DataFrame, nombre_hoja: str) -> None:
     wb.sheets[nombre_hoja].range("B1:B500").number_format = "@"
     wb.sheets[nombre_hoja]["A1"].options(index=False).value = df.to_pandas()
 
+    wb.save()
+    wb.close()
+
 
 async def sap_sinis_ced(mes_corte: int) -> None:
     df_sinis = await cantidades_sap(["pago_cedido", "aviso_cedido"], mes_corte)

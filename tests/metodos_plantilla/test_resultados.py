@@ -65,7 +65,7 @@ def test_actualizar_resultados(
     assert response.status_code == status.HTTP_200_OK
 
     wb_res = xw.Book("output/resultados.xlsx")
-    info_wb_res = utils.sheet_to_dataframe(wb_res, "Resultados").collect()
+    info_wb_res = utils.sheet_to_dataframe(wb_res, "Resultados")
 
     # Verificamos que solamente se guarden aperturas calculadas
     assert sorted(

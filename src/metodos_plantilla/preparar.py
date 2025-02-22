@@ -86,14 +86,17 @@ def verificar_resultados_anteriores_para_entremes(
         )
         raise ValueError
 
-    aperturas_actuales = sorted(diagonales.get_column("apertura_reservas").to_list())
+    aperturas_actuales = sorted(
+        diagonales.get_column("apertura_reservas").unique().to_list()
+    )
     aperturas_anteriores = sorted(
-        resultados_mes_anterior.get_column("apertura_reservas").to_list()
+        resultados_mes_anterior.get_column("apertura_reservas").unique().to_list()
     )
     if aperturas_actuales != aperturas_anteriores:
         logger.error(
             utils.limpiar_espacios_log(
-                f"""Las aperturas no coinciden con los analisis anteriores,
+                f"""
+                Las aperturas no coinciden con los analisis anteriores,
                 los cuales se necesitan para el analisis de entremes. Si realizo
                 un cambio a las aperturas con las que quiere hacer el analisis,
                 modifique los resultados anteriores y vuelva a intentar.

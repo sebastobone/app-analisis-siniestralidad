@@ -32,9 +32,9 @@ def conteo(
 
 async def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> None:
     df_incurrido = base_incurrido.base_incurrido()
-    await adds.sap_sinis_ced(mes_corte)
 
     if aproximar_reaseguro:
+        await adds.sap_sinis_ced(mes_corte)
         df_incurrido = aprox_reaseguro.main(df_incurrido, mes_corte)
 
     conteo_pago = conteo(

@@ -142,14 +142,14 @@ def mes_del_periodo(mes_corte: date, num_ocurrencias: int, num_alturas: int) -> 
 
 def sheet_to_dataframe(
     wb: xw.Book, sheet_name: str, schema: pl.Schema | None = None
-) -> pl.LazyFrame:
+) -> pl.DataFrame:
     return pl.from_pandas(
         wb.sheets[sheet_name]
         .cells(1, 1)
         .options(pd.DataFrame, header=1, index=False, expand="table")
         .value,
         schema_overrides=schema,
-    ).lazy()
+    )
 
 
 def path_plantilla(wb: xw.Book) -> str:

@@ -86,7 +86,7 @@ def test_preparar_plantilla(
             ).drop("periodicidad_triangulo")
         )
 
-    df_plantilla = utils.sheet_to_dataframe(wb, "Aux_Totales").collect()
+    df_plantilla = utils.sheet_to_dataframe(wb, "Aux_Totales")
 
     assert df_original.shape[0] == df_plantilla.shape[0]
     assert_igual(df_original, df_plantilla, "pago_bruto")

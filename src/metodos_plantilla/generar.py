@@ -58,7 +58,7 @@ def generar_plantilla(
         mes_del_periodo,
     )
 
-    logger.success(f"{plantilla_name} generada.")
+    logger.success(f"{plantilla_name} generada para {apertura} - {atributo}.")
 
     wb.sheets["Main"]["A1"].value = "GENERAR_PLANTILLA"
     wb.sheets["Main"]["A2"].value = time.time() - s

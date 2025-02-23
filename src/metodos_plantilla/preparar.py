@@ -9,6 +9,8 @@ from src import utils
 from src.logger_config import logger
 from src.metodos_plantilla import resultados, tablas_resumen
 
+from .completar_diagonal import factor_completitud as compl
+
 
 def preparar_plantilla(
     wb: xw.Book,
@@ -23,7 +25,6 @@ def preparar_plantilla(
     aperturas = tablas_resumen.obtener_tabla_aperturas(negocio)
     lista_aperturas = aperturas.get_column("apertura_reservas").to_list()
 
-    generar_parametros_plantillas(wb, lista_aperturas)
     mostrar_plantillas_relevantes(wb, tipo_analisis)
 
     tablas_resumen.generar_tabla(wb.sheets["Main"], aperturas, "aperturas", (1, 4))
@@ -49,7 +50,15 @@ def preparar_plantilla(
         verificar_resultados_anteriores_para_entremes(
             diagonales, resultados_anteriores, mes_corte
         )
-        generar_hoja_entremes(wb, entremes, resultados_anteriores, mes_corte)
+        factores_completitud = compl.calcular_factores_completitud(
+            periodicidades, mes_corte
+        )
+        generar_hoja_entremes(
+            wb, entremes, resultados_anteriores, factores_completitud, mes_corte
+        )
+
+    else:
+        generar_parametros_plantillas(wb, lista_aperturas)
 
     logger.success("Plantilla preparada.")
 
@@ -147,7 +156,7 @@ def generar_hojas_resumen(
     atipicos: pl.DataFrame,
 ) -> None:
     for sheet in ["Aux_Totales", "Atipicos", "Aux_Anterior"]:
-        wb.sheets[sheet].clear_contents()
+        wb.sheets[sheet].clear()
 
     if resultados_anteriores.shape[0] != 0:
         wb.sheets["Aux_Anterior"]["A1"].options(
@@ -165,9 +174,10 @@ def generar_hoja_entremes(
     wb: xw.Book,
     tabla_entremes: pl.DataFrame,
     resultados_anteriores: pl.DataFrame,
+    factores_completitud: pl.DataFrame,
     mes_corte: int,
 ) -> None:
-    wb.sheets["Plantilla_Entremes"].clear_contents()
+    wb.sheets["Plantilla_Entremes"].clear()
     columnas_base = [
         "apertura_reservas",
         "periodicidad_ocurrencia",
@@ -176,7 +186,8 @@ def generar_hoja_entremes(
 
     resultados_mes_anterior = (
         resultados_anteriores.filter(
-            pl.col("mes_corte") == utils.mes_anterior_corte(mes_corte)
+            (pl.col("mes_corte") == utils.mes_anterior_corte(mes_corte))
+            & (pl.col("atipico") == 0)
         )
         .select(columnas_base + ct.COLUMNAS_ULTIMATE)
         .rename({col: f"{col}_anterior" for col in ct.COLUMNAS_ULTIMATE})
@@ -192,13 +203,20 @@ def generar_hoja_entremes(
             how="left",
             validate="1:1",
         )
+        .join(
+            factores_completitud,
+            on=["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"],
+            how="left",
+            validate="1:1",
+        )
         .sort(["apertura_reservas", "periodo_ocurrencia"])
     )
 
     wb.sheets["Plantilla_Entremes"]["A1"].options(
         index=False
     ).value = tabla_entremes.to_pandas()
-    # wb.macro("formatear_tabla_entremes")("Entremes", tabla_entremes.shape[0])
+    wb.macro("preparar_Plantilla_Entremes")(tabla_entremes.shape[0])
+    wb.macro("formatear_tabla_entremes")(tabla_entremes.shape[0])
 
 
 def obtener_resultados_ultimo_triangulo(
@@ -213,14 +231,11 @@ def obtener_resultados_ultimo_triangulo(
         .with_columns(
             mes_ultimo_triangulo=(
                 pl.when(pl.col("mes_corte") % 100 < pl.col("periodicidad"))
-                .then(pl.date(pl.col("mes_corte") // 100 - 1, 12, 1))
+                .then((pl.col("mes_corte") // 100 - 1) * 100 + 12)
                 .otherwise(
-                    pl.date(
-                        pl.col("mes_corte") // 100,
-                        (pl.col("mes_corte") % 100).floordiv(pl.col("periodicidad"))
-                        * pl.col("periodicidad"),
-                        1,
-                    )
+                    (pl.col("mes_corte") // 100) * 100
+                    + (pl.col("mes_corte") % 100).floordiv(pl.col("periodicidad"))
+                    * pl.col("periodicidad")
                 )
             ),
             velocidad_pago_bruto_triangulo=pl.col("pago_bruto")
@@ -232,7 +247,10 @@ def obtener_resultados_ultimo_triangulo(
             velocidad_incurrido_retenido_triangulo=pl.col("incurrido_retenido")
             / pl.col("plata_ultimate_retenido"),
         )
-        .filter(pl.col("mes_corte") == pl.col("mes_ultimo_triangulo"))
+        .filter(
+            (pl.col("mes_corte") == pl.col("mes_ultimo_triangulo"))
+            & (pl.col("atipico") == 0)
+        )
         .select(
             [
                 "apertura_reservas",

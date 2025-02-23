@@ -417,14 +417,22 @@ End Sub
 
 Function formatear_columnas_tablas_resumen(ws, ini_col, fin_col, tipo, num_filas)
 
-    If ws.Name = "Aux_Anterior" Then
-        numero_columna_inicial = col_auxant(ini_col)
-        numero_columna_final = col_auxant(fin_col)
-        Worksheets("Aux_Anterior").cells(1, 100).value = "wtf"
-    Else
-        numero_columna_inicial = col_auxtot(ini_col)
-        numero_columna_final = col_auxtot(fin_col)
-    End If
+    nombre_hoja = ws.Name
+
+    Select Case nombre_hoja
+        Case "Aux_Anterior"
+            numero_columna_inicial = col_auxant(ini_col)
+            numero_columna_final = col_auxant(fin_col)
+        Case "Aux_Totales"
+            numero_columna_inicial = col_auxtot(ini_col)
+            numero_columna_final = col_auxtot(fin_col)
+        Case "Atipicos"
+            numero_columna_inicial = col_auxtot(ini_col)
+            numero_columna_final = col_auxtot(fin_col)
+        Case "Plantilla_Entremes"
+            numero_columna_inicial = col_entremes(ini_col)
+            numero_columna_final = col_entremes(fin_col)
+    End Select
 
     Select Case tipo
         Case "descriptores"
@@ -448,6 +456,12 @@ Function formatear_columnas_tablas_resumen(ws, ini_col, fin_col, tipo, num_filas
         Case "seve_retenido"
             color = RGB(120, 190, 32)
             formato_numero = "$#,##0"
+        Case "velocidad_bruto"
+            color = RGB(0, 51, 160)
+            formato_numero = "0.00%"
+        Case "velocidad_retenido"
+            color = RGB(45, 113, 255)
+            formato_numero = "0.00%"
     End Select
 
     With ws.Range(ws.Cells(1, numero_columna_inicial), ws.Cells(1, numero_columna_final))
@@ -488,3 +502,26 @@ Sub formatear_tablas_resumen(ws_name, num_filas)
     End If
 
 End Sub
+
+
+Sub formatear_tabla_entremes(num_filas)
+
+    Set ws = ws_entremes()
+    Call formatear_columnas_tablas_resumen(ws, "apertura_reservas", "periodo_ocurrencia", "descriptores", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "pago_bruto", "pago_bruto", "plata_bruto", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "pago_retenido", "pago_retenido", "plata_retenido", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "incurrido_bruto", "incurrido_bruto", "plata_bruto", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "incurrido_retenido", "incurrido_retenido", "plata_retenido", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "conteo_pago", "expuestos", "conteo", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "prima_bruta", "prima_bruta_devengada", "plata_bruto", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "prima_retenida", "prima_retenida_devengada", "plata_retenido", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "frec_ultimate_anterior", "frec_ultimate_anterior", "frec", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "seve_ultimate_bruto_anterior", "seve_ultimate_bruto_anterior", "seve_bruto", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "seve_ultimate_retenido_anterior", "seve_ultimate_retenido_anterior", "seve_retenido", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "plata_ultimate_bruto_anterior", "plata_ultimate_contable_bruto_anterior", "plata_bruto", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "plata_ultimate_retenido_anterior", "plata_ultimate_contable_retenido_anterior", "plata_retenido", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "velocidad_pago_bruto_triangulo", "velocidad_incurrido_bruto_triangulo", "velocidad_bruto", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "velocidad_pago_retenido_triangulo", "velocidad_incurrido_retenido_triangulo", "velocidad_retenido", num_filas)
+
+End Sub
+

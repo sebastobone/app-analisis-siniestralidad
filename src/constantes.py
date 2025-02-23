@@ -43,6 +43,9 @@ COLUMNAS_QTYS = [
 ]
 
 COLUMNAS_ULTIMATE = [
+    "frec_ultimate",
+    "seve_ultimate_bruto",
+    "seve_ultimate_retenido",
     "plata_ultimate_bruto",
     "plata_ultimate_contable_bruto",
     "plata_ultimate_retenido",

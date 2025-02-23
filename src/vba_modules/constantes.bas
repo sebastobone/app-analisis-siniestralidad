@@ -70,6 +70,10 @@ Function col_auxant(lookup_string) As Integer
     col_auxant = WorksheetFunction.Match(lookup_string, ws_auxant.Range("1:1"), 0)
 End Function
 
+Function col_entremes(lookup_string) As Integer
+    col_entremes = WorksheetFunction.Match(lookup_string, ws_entremes.Range("1:1"), 0)
+End Function
+
 
 
 ' NUMEROS

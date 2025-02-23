@@ -76,8 +76,10 @@ async def generar_base(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
-async def obtener_logs() -> AsyncIterator[str]:
+async def obtener_logs(request: Request) -> AsyncIterator[str]:
     while True:
+        if await request.is_disconnected():
+            break
         message = await log_queue.get()
         nivel_log = message.record["level"].name
         color_log = ct.COLORES_LOGS[nivel_log]
@@ -87,8 +89,8 @@ async def obtener_logs() -> AsyncIterator[str]:
 
 
 @app.get("/stream-logs")
-async def stream_logs():
-    return EventSourceResponse(obtener_logs())
+async def stream_logs(request: Request):
+    return EventSourceResponse(obtener_logs(request))
 
 
 def obtener_parametros_usuario(

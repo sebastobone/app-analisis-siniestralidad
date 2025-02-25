@@ -5,6 +5,11 @@ Sub preparar_Plantilla_Entremes(num_filas)
 	
 	Set ws = ws_entremes()
 
+	col_pago_bruto = col_entremes("pago_bruto")
+	col_pago_retenido = col_entremes("pago_retenido")
+	col_incurrido_bruto = col_entremes("incurrido_bruto")
+	col_incurrido_retenido = col_entremes("incurrido_retenido")
+
 	col_expuestos = col_entremes("expuestos")
 	col_prima_bruta_devengada = col_entremes("prima_bruta_devengada")
 	col_prima_retenida_devengada = col_entremes("prima_retenida_devengada")
@@ -19,42 +24,41 @@ Sub preparar_Plantilla_Entremes(num_filas)
 
 	inicio_columnas_calculadas = col_factor_completitud_incurrido_retenido
 
-	col_ultimate_bruto_actuarial = crear_columna(ws, 1, inicio_columnas_calculadas + 1, "plata_ultimate_bruto", "=IF(RC1 <> R[1]C1, RC" & col_prima_bruta_devengada & " * R[-1]C[2], RC" & col_ultimate_bruto_actuarial_anterior &")", formato_plata(), False, num_filas, azul_oscuro(), blanco())
-	col_ultimate_retenido_actuarial = crear_columna(ws, 1, inicio_columnas_calculadas + 2, "plata_ultimate_retenido", "=IF(RC1 <> R[1]C1, RC" & col_prima_retenida_devengada & " * R[-1]C[2], RC" & col_ultimate_retenido_actuarial_anterior &")", formato_plata(), False, num_filas, azul_claro(), blanco())
+	col_ultimate_bruto_actuarial = crear_columna(ws, 1, inicio_columnas_calculadas + 1, "plata_ultimate_bruto", "=IF(RC1 <> R[1]C1, RC" & col_prima_bruta_devengada & " * R[-1]C[2], RC" & col_ultimate_bruto_actuarial_anterior &")", formato_plata(), True, num_filas, azul_oscuro(), blanco())
+	col_ultimate_retenido_actuarial = crear_columna(ws, 1, inicio_columnas_calculadas + 2, "plata_ultimate_retenido", "=IF(RC1 <> R[1]C1, RC" & col_prima_retenida_devengada & " * R[-1]C[2], RC" & col_ultimate_retenido_actuarial_anterior &")", formato_plata(), True, num_filas, azul_claro(), blanco())
 	col_pct_sue_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 3, "pct_sue_bruto", "=IFERROR(RC" & col_ultimate_bruto_actuarial & " / RC" & col_prima_bruta_devengada & ", 0)", formato_porcentaje(), False, num_filas, azul_oscuro(), blanco())
 	col_pct_sue_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 4, "pct_sue_retenido", "=IFERROR(RC" & col_ultimate_retenido_actuarial & " / RC" & col_prima_retenida_devengada & ", 0)", formato_porcentaje(), False, num_filas, azul_claro(), blanco())
 
 	col_ajuste_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 5, "ajuste_bruto", "=RC" & col_ultimate_bruto_actuarial & " - RC" & col_ultimate_bruto_actuarial_anterior & "", formato_plata(), False, num_filas, amarillo_oscuro(), blanco())
 	col_ajuste_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 6, "ajuste_retenido", "=RC" & col_ultimate_retenido_actuarial & " - RC" & col_ultimate_retenido_actuarial_anterior & "", formato_plata(), False, num_filas, amarillo_claro(), blanco())
 
-	''' METODOLOGIA 1: COMPLETAR DIAGONAL
-	col_ultimate_bruto_metodologia_1_pago = crear_columna(ws, 1, inicio_columnas_calculadas + 7, "ultimate_bruto_completar_diagonal_pago", "=0", formato_plata(), False, num_filas, violeta_oscuro(), blanco())
-	col_ultimate_bruto_metodologia_1_incurrido = crear_columna(ws, 1, inicio_columnas_calculadas + 8, "ultimate_bruto_completar_diagonal_incurrido", "=0", formato_plata(), False, num_filas, violeta_oscuro(), blanco())
-	col_ultimate_retenido_metodologia_1_pago = crear_columna(ws, 1, inicio_columnas_calculadas + 9, "ultimate_retenido_completar_diagonal_pago", "=0", formato_plata(), False, num_filas, violeta_claro(), blanco())
-	col_ultimate_retenido_metodologia_1_incurrido = crear_columna(ws, 1, inicio_columnas_calculadas + 10, "ultimate_retenido_completar_diagonal_incurrido", "=0", formato_plata(), False, num_filas, violeta_claro(), blanco())
-	
-	' ' ''' ALERTA
-	' ' Call columnas_entremes("Alerta", "=IFERROR(IF(ABS(RC[14] / RC[3] - 1) > 0.05, ""Completar diagonal ajusta mas de 5%"", """"), """")", "#,##0", num_ocurrencias, False, 1, fila_tabla)
-	' ' Call columnas_entremes("Comentarios", "", "", num_ocurrencias + mes_del_periodo, True, 1, fila_tabla)
+	col_alerta_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 7, "alerta_bruto", "=IFERROR(IF(ABS(MAX(RC[2], RC[3]) / RC" & col_ultimate_bruto_actuarial & " - 1) > 0.05, ""Completar diagonal ajusta mas de 5%"", """"), """")", "@", False, num_filas, amarillo_oscuro(), blanco())
+	col_alerta_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 8, "alerta_retenido", "=IFERROR(IF(ABS(MAX(RC[3], RC[4]) / RC" & col_ultimate_retenido_actuarial & " - 1) > 0.05, ""Completar diagonal ajusta mas de 5%"", """"), """")", "@", False, num_filas, amarillo_claro(), blanco())
 
+	''' METODOLOGIA 1: COMPLETAR DIAGONAL
+	col_ultimate_bruto_metodologia_1_pago = crear_columna(ws, 1, inicio_columnas_calculadas + 9, "ultimate_bruto_completar_diagonal_pago", "=IFERROR(RC" & col_pago_bruto & " / RC" & col_entremes("factor_completitud_pago_bruto") & " / R[-1]C" & col_entremes("velocidad_pago_bruto_triangulo") & " , """") ", formato_plata(), False, num_filas, violeta_oscuro(), blanco())
+	col_ultimate_bruto_metodologia_1_incurrido = crear_columna(ws, 1, inicio_columnas_calculadas + 10, "ultimate_bruto_completar_diagonal_incurrido", "=IFERROR(RC" & col_incurrido_bruto & " / RC" & col_entremes("factor_completitud_incurrido_bruto") & " / R[-1]C" & col_entremes("velocidad_incurrido_bruto_triangulo") & " , """") ", formato_plata(), False, num_filas, violeta_oscuro(), blanco())
+	col_ultimate_retenido_metodologia_1_pago = crear_columna(ws, 1, inicio_columnas_calculadas + 11, "ultimate_retenido_completar_diagonal_pago", "=IFERROR(RC" & col_pago_retenido & " / RC" & col_entremes("factor_completitud_pago_retenido") & " / R[-1]C" & col_entremes("velocidad_pago_retenido_triangulo") & " , """") ", formato_plata(), False, num_filas, violeta_claro(), blanco())
+	col_ultimate_retenido_metodologia_1_incurrido = crear_columna(ws, 1, inicio_columnas_calculadas + 12, "ultimate_retenido_completar_diagonal_incurrido", "=IFERROR(RC" & col_incurrido_retenido & " / RC" & col_entremes("factor_completitud_incurrido_retenido") & " / R[-1]C" & col_entremes("velocidad_incurrido_retenido_triangulo") & " , """") ", formato_plata(), False, num_filas, violeta_claro(), blanco())
+	
 	''' METODOLOGIA 2: BORNHUETTER-FERGUSON
-	col_pct_sue_bf_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 11, "pct_sue_bornhuetter_ferguson_bruto", "=RC" & col_pct_sue_bruto & "", formato_porcentaje(), True, num_filas, naranja_oscuro(), blanco())
-	col_ultimate_bruto_metodologia_2_pago = crear_columna(ws, 1, inicio_columnas_calculadas + 12, "ultimate_bruto_bornhuetter_ferguson_pago", "=0", formato_plata(), False, num_filas, naranja_oscuro(), blanco())
-	col_ultimate_bruto_metodologia_2_incurrido = crear_columna(ws, 1, inicio_columnas_calculadas + 13, "ultimate_bruto_bornhuetter_ferguson_incurrido", "=0", formato_plata(), False, num_filas, naranja_oscuro(), blanco())
-	col_pct_sue_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 14, "pct_sue_bornhuetter_ferguson_retenido", "=RC" & col_pct_sue_retenido & "", formato_porcentaje(), True, num_filas, naranja_claro(), blanco())
-	col_ultimate_retenido_metodologia_2_pago = crear_columna(ws, 1, inicio_columnas_calculadas + 15, "ultimate_retenido_bornhuetter_ferguson_pago", "=0", formato_plata(), False, num_filas, naranja_claro(), blanco())
-	col_ultimate_retenido_metodologia_2_incurrido = crear_columna(ws, 1, inicio_columnas_calculadas + 16, "ultimate_retenido_bornhuetter_ferguson_incurrido", "=0", formato_plata(), False, num_filas, naranja_claro(), blanco())
+	col_pct_sue_bf_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 13, "pct_sue_bornhuetter_ferguson_bruto", "=RC" & col_pct_sue_bruto & "", formato_porcentaje(), True, num_filas, naranja_oscuro(), blanco())
+	col_ultimate_bruto_metodologia_2_pago = crear_columna(ws, 1, inicio_columnas_calculadas + 14, "ultimate_bruto_bornhuetter_ferguson_pago", "=RC" & col_pago_bruto & " ", formato_plata(), False, num_filas, naranja_oscuro(), blanco())
+	col_ultimate_bruto_metodologia_2_incurrido = crear_columna(ws, 1, inicio_columnas_calculadas + 15, "ultimate_bruto_bornhuetter_ferguson_incurrido", "=0", formato_plata(), False, num_filas, naranja_oscuro(), blanco())
+	col_pct_sue_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 16, "pct_sue_bornhuetter_ferguson_retenido", "=RC" & col_pct_sue_retenido & "", formato_porcentaje(), True, num_filas, naranja_claro(), blanco())
+	col_ultimate_retenido_metodologia_2_pago = crear_columna(ws, 1, inicio_columnas_calculadas + 17, "ultimate_retenido_bornhuetter_ferguson_pago", "=0", formato_plata(), False, num_filas, naranja_claro(), blanco())
+	col_ultimate_retenido_metodologia_2_incurrido = crear_columna(ws, 1, inicio_columnas_calculadas + 18, "ultimate_retenido_bornhuetter_ferguson_incurrido", "=0", formato_plata(), False, num_filas, naranja_claro(), blanco())
 
 	'''FRECUENCIA Y SEVERIDAD
-	col_frec_ultimate = crear_columna(ws, 1, inicio_columnas_calculadas + 17, "frec_ultimate", "=IF(RC1 <> R[1]C1, R[-1]C, RC" & col_frec_ultimate_anterior & ")", formato_porcentaje(), True, num_filas, cian_claro(), blanco())
-	col_seve_ultimate_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 18, "seve_ultimate_bruto", "=IFERROR(RC" & col_ultimate_bruto_actuarial & " / (RC" & col_frec_ultimate & " * RC" & col_expuestos & "), 0)", formato_plata(), True, num_filas, verde_oscuro(), blanco())
-	col_seve_ultimate_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 19, "seve_ultimate_retenido", "=IFERROR(RC" & col_ultimate_retenido_actuarial & " / (RC" & col_frec_ultimate & " * RC" & col_expuestos & "), 0)", formato_plata(), True, num_filas, verde_claro(), blanco())
+	col_frec_ultimate = crear_columna(ws, 1, inicio_columnas_calculadas + 19, "frec_ultimate", "=IF(RC1 <> R[1]C1, R[-1]C, RC" & col_frec_ultimate_anterior & ")", formato_porcentaje(), True, num_filas, cian_claro(), blanco())
+	col_seve_ultimate_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 20, "seve_ultimate_bruto", "=IFERROR(RC" & col_ultimate_bruto_actuarial & " / (RC" & col_frec_ultimate & " * RC" & col_expuestos & "), 0)", formato_plata(), True, num_filas, verde_oscuro(), blanco())
+	col_seve_ultimate_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 21, "seve_ultimate_retenido", "=IFERROR(RC" & col_ultimate_retenido_actuarial & " / (RC" & col_frec_ultimate & " * RC" & col_expuestos & "), 0)", formato_plata(), True, num_filas, verde_claro(), blanco())
 
 	''' AJUSTE PARCIAL
-	col_pct_ajuste_gradual_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 20, "pct_ajuste_gradual_bruto", "=0", formato_porcentaje(), True, num_filas, azul_oscuro(), blanco())
-	col_pct_ajuste_gradual_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 21, "pct_ajuste_gradual_retenido", "=0", formato_porcentaje(), True, num_filas, azul_claro(), blanco())
-	col_ultimate_bruto_contable = crear_columna(ws, 1, inicio_columnas_calculadas + 22, "plata_ultimate_bruto_contable", "=0", formato_plata(), False, num_filas, azul_oscuro(), blanco())
-	col_ultimate_retenido_contable = crear_columna(ws, 1, inicio_columnas_calculadas + 23, "plata_ultimate_retenido_contable", "=0", formato_plata(), False, num_filas, azul_claro(), blanco())
+	col_pct_ajuste_gradual_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 22, "pct_ajuste_gradual_bruto", "=0", formato_porcentaje(), True, num_filas, azul_oscuro(), blanco())
+	col_pct_ajuste_gradual_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 23, "pct_ajuste_gradual_retenido", "=0", formato_porcentaje(), True, num_filas, azul_claro(), blanco())
+	col_ultimate_bruto_contable = crear_columna(ws, 1, inicio_columnas_calculadas + 24, "plata_ultimate_bruto_contable", "=0", formato_plata(), False, num_filas, azul_oscuro(), blanco())
+	col_ultimate_retenido_contable = crear_columna(ws, 1, inicio_columnas_calculadas + 25, "plata_ultimate_retenido_contable", "=0", formato_plata(), False, num_filas, azul_claro(), blanco())
 	
 	Application.ScreenUpdating = True
 	Application.Calculation = xlCalculationAutomatic

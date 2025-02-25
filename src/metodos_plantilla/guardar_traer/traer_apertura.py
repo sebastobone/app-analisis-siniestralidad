@@ -2,19 +2,18 @@ import time
 
 import polars as pl
 import xlwings as xw
-from src import constantes as ct
 from src import utils
 from src.logger_config import logger
-from src.models import EstructuraApertura
+from src.models import EstructuraApertura, ModosPlantilla
 
 from .estructura_apertura import obtener_estructura_apertura
 from .rangos_parametros import obtener_rangos_parametros
 
 
-def traer_apertura(wb: xw.Book, plantilla: ct.LISTA_PLANTILLAS, mes_corte: int) -> None:
+def traer_apertura(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> None:
     s = time.time()
 
-    plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+    plantilla_name = f"Plantilla_{modos.plantilla.capitalize()}"
     estructura_apertura = obtener_estructura_apertura(wb, plantilla_name, mes_corte)
 
     traer_parametros(wb.sheets[plantilla_name], estructura_apertura)

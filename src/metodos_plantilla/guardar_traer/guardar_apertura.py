@@ -2,20 +2,17 @@ import time
 
 import polars as pl
 import xlwings as xw
-from src import constantes as ct
 from src.logger_config import logger
-from src.models import EstructuraApertura
+from src.models import EstructuraApertura, ModosPlantilla
 
 from .estructura_apertura import obtener_estructura_apertura
 from .rangos_parametros import obtener_rangos_parametros
 
 
-def guardar_apertura(
-    wb: xw.Book, plantilla: ct.LISTA_PLANTILLAS, mes_corte: int
-) -> None:
+def guardar_apertura(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> None:
     s = time.time()
 
-    plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+    plantilla_name = f"Plantilla_{modos.plantilla.capitalize()}"
     estructura_apertura = obtener_estructura_apertura(wb, plantilla_name, mes_corte)
 
     guardar_parametros(wb.sheets[plantilla_name], estructura_apertura)

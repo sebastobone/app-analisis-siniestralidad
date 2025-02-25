@@ -92,34 +92,53 @@
     <div class="form-section">
       <h2>Extraccion de informacion</h2>
 
-      <form class="apiForm" endpoint="correr-query-siniestros">
-        <button type="submit">Correr query siniestros</button>
-      </form>
-      <form class="apiForm" endpoint="correr-query-primas">
-        <button type="submit">Correr query primas</button>
-      </form>
-      <form class="apiForm" endpoint="correr-query-expuestos">
-        <button type="submit">Correr query expuestos</button>
-      </form>
+      <button class="apiButton" endpoint="correr-query-siniestros">
+        Correr query siniestros
+      </button>
+      <button class="apiButton" endpoint="correr-query-primas">
+        Correr query primas
+      </button>
+      <button class="apiButton" endpoint="correr-query-expuestos">
+        Correr query expuestos
+      </button>
     </div>
 
     <div class="form-section">
       <h2>Controles de informacion</h2>
-      <form class="apiForm" endpoint="generar-controles">
-        <button type="submit">Generar controles</button>
-      </form>
+      <button class="apiButton" endpoint="generar-controles">
+        Generar controles
+      </button>
     </div>
 
     <div class="form-section">
       <h2>Plantilla</h2>
-      <form class="apiForm" endpoint="abrir-plantilla">
-        <button type="submit">Abrir plantilla</button>
-      </form>
-      <form class="apiForm" endpoint="preparar-plantilla">
-        <button type="submit">Preparar plantilla</button>
-      </form>
+      <button class="apiButton" endpoint="abrir-plantilla">
+        Abrir plantilla
+      </button>
+      <button class="apiButton" endpoint="preparar-plantilla">
+        Preparar plantilla
+      </button>
+
+      <button id="generarAperturas">Generar aperturas</button>
 
       <form id="modosPlantilla">
+        <label for="apertura">Apertura:</label>
+        <select id="apertura" name="apertura">
+          <option value="">Ninguna</option>
+        </select>
+
+        <label for="atributo">Atributo:</label>
+        <select id="atributo" name="atributo">
+          <option value="bruto">Bruto</option>
+          <option value="retenido">Retenido</option>
+        </select>
+
+        <label for="metodologia">Metodologia:</label>
+        <select id="metodologia" name="metodologia">
+          <option value="pago">Pago</option>
+          <option value="incurrido">Incurrido</option>
+        </select>
+
         <label for="plantilla">Plantilla:</label>
         <select id="plantilla" name="plantilla">
           <option value="frec">Frecuencia</option>
@@ -140,24 +159,25 @@
         <button type="submit">Ejecutar</button>
       </form>
 
-      <form class="apiForm" endpoint="almacenar-analisis">
-        <button type="submit">Almacenar analisis</button>
-      </form>
+      <button class="apiButton" endpoint="almacenar-analisis">
+        Almacenar analisis
+      </button>
     </div>
 
     <div class="form-section">
       <h2>Resultados</h2>
-      <form class="apiForm" endpoint="actualizar-wb-resultados">
-        <button type="submit">Actualizar y abrir archivo resultados</button>
-      </form>
-      <form class="apiForm" endpoint="generar-informe-ar">
-        <button type="submit">Generar informe Actuario Responsable</button>
-      </form>
+      <button class="apiButton" endpoint="actualizar-wb-resultados">
+        Actualizar y abrir archivo resultados
+      </button>
+      <button class="apiButton" endpoint="generar-informe-ar">
+        Generar informe Actuario Responsable
+      </button>
     </div>
 
     <script src="static/logViewer.js"></script>
     <script src="static/ingresarParametros.js"></script>
-    <script src="static/apiForms.js"></script>
+    <script src="static/generarAperturas.js"></script>
+    <script src="static/apiButtons.js"></script>
     <script src="static/modosPlantilla.js"></script>
   </body>
 </html>

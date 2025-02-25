@@ -2,11 +2,11 @@ import asyncio
 import time
 
 import xlwings as xw
-from src import constantes as ct
 from src import utils
 from src.logger_config import logger
 from src.metodos_plantilla import tablas_resumen
 from src.metodos_plantilla.generar import generar_plantilla
+from src.models import ModosPlantilla
 
 from .guardar_apertura import guardar_apertura
 from .traer_apertura import traer_apertura
@@ -14,14 +14,14 @@ from .traer_apertura import traer_apertura
 
 async def traer_y_guardar_todas_las_aperturas(
     wb: xw.Book,
-    plantilla: ct.LISTA_PLANTILLAS,
+    modos: ModosPlantilla,
     mes_corte: int,
     negocio: str,
     traer: bool = False,
 ) -> None:
     s = time.time()
 
-    plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+    plantilla_name = f"Plantilla_{modos.plantilla.capitalize()}"
     aperturas = (
         tablas_resumen.obtener_tabla_aperturas(negocio)
         .get_column("apertura_reservas")
@@ -36,10 +36,10 @@ async def traer_y_guardar_todas_las_aperturas(
         for atributo in atributos:
             wb.sheets[plantilla_name]["C2"].value = apertura
             wb.sheets[plantilla_name]["C3"].value = atributo
-            generar_plantilla(wb, plantilla, mes_corte)
+            generar_plantilla(wb, modos, mes_corte)
             if traer:
-                traer_apertura(wb, plantilla, mes_corte)
-            guardar_apertura(wb, plantilla, mes_corte)
+                traer_apertura(wb, modos, mes_corte)
+            guardar_apertura(wb, modos, mes_corte)
 
             await asyncio.sleep(0)
 

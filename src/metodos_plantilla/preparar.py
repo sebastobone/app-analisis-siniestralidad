@@ -23,7 +23,6 @@ def preparar_plantilla(
     generar_parametros_globales(wb, mes_corte)
 
     aperturas = tablas_resumen.obtener_tabla_aperturas(negocio)
-    lista_aperturas = aperturas.get_column("apertura_reservas").to_list()
 
     mostrar_plantillas_relevantes(wb, tipo_analisis)
 
@@ -56,10 +55,6 @@ def preparar_plantilla(
         generar_hoja_entremes(
             wb, entremes, resultados_anteriores, factores_completitud, mes_corte
         )
-        generar_parametros_plantillas(wb, ["completar_diagonal"], lista_aperturas)
-
-    else:
-        generar_parametros_plantillas(wb, ["frec", "seve", "plata"], lista_aperturas)
 
     logger.success("Plantilla preparada.")
 
@@ -144,19 +139,6 @@ def generar_parametros_globales(wb: xw.Book, mes_corte: int) -> None:
 
     wb.macro("formatear_parametro")("Main", "Mes anterior", 5, 1)
     wb.sheets["Main"].range((5, 2)).value = utils.mes_anterior_corte(mes_corte)
-
-
-def generar_parametros_plantillas(
-    wb: xw.Book, plantillas: list[str], lista_aperturas: list[str]
-) -> None:
-    for plantilla in plantillas:
-        if plantilla in ["frec", "seve", "plata"]:
-            plantilla_name = f"Plantilla_{plantilla.capitalize()}"
-        else:
-            plantilla_name = plantilla.capitalize()
-        wb.macro("generar_parametros")(
-            plantilla_name, ",".join(lista_aperturas), lista_aperturas[0]
-        )
 
 
 def generar_hojas_resumen(

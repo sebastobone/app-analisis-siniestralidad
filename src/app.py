@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 from uuid import uuid4
 
+import polars as pl
 from fastapi import Cookie, Depends, FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, Response
@@ -188,6 +189,29 @@ async def generar_controles(
     await main.generar_controles(params)
 
 
+@app.get("/generar-aperturas")
+async def generar_aperturas():
+    try:
+        aperturas = sorted(
+            pl.read_parquet("data/raw/siniestros.parquet")
+            .get_column("apertura_reservas")
+            .unique()
+            .to_list()
+        )
+        logger.success("Aperturas generadas.")
+    except FileNotFoundError:
+        logger.error(
+            utils.limpiar_espacios_log(
+                """
+                Las aperturas se generan a partir del archivo de siniestros.
+                Verifique que la base de datos se haya generado.
+                """
+            )
+        )
+        raise
+    return {"aperturas": aperturas}
+
+
 @app.post("/abrir-plantilla")
 async def abrir_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
@@ -215,22 +239,19 @@ async def modos_plantilla(
     p = obtener_parametros_usuario(session, session_id)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
-    modo = modos.modo
-    plant = modos.plantilla
-
-    if modo == "generar":
-        generar.generar_plantilla(wb, plant, p.mes_corte)
-    elif modo == "guardar":
-        guardar_apertura.guardar_apertura(wb, plant, p.mes_corte)
-    elif modo == "traer":
-        traer_apertura.traer_apertura(wb, plant, p.mes_corte)
-    elif modo == "guardar_todo":
+    if modos.modo == "generar":
+        generar.generar_plantilla(wb, modos, p.mes_corte)
+    elif modos.modo == "guardar":
+        guardar_apertura.guardar_apertura(wb, modos, p.mes_corte)
+    elif modos.modo == "traer":
+        traer_apertura.traer_apertura(wb, modos, p.mes_corte)
+    elif modos.modo == "guardar_todo":
         await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
-            wb, plant, p.mes_corte, p.negocio
+            wb, modos, p.mes_corte, p.negocio
         )
-    elif modo == "traer_guardar_todo":
+    elif modos.modo == "traer_guardar_todo":
         await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
-            wb, plant, p.mes_corte, p.negocio, traer=True
+            wb, modos, p.mes_corte, p.negocio, traer=True
         )
 
 

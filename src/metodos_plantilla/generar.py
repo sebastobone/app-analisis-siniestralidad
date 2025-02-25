@@ -8,22 +8,19 @@ import src.constantes as ct
 from src import utils
 from src.logger_config import logger
 from src.metodos_plantilla import insumos as ins
+from src.models import ModosPlantilla
 
 
-def generar_plantilla(
-    wb: xw.Book, plantilla: ct.LISTA_PLANTILLAS, mes_corte: int
-) -> None:
+def generar_plantilla(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> None:
     s = time.time()
 
-    if plantilla != "completar_diagonal":
-        plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+    if modos.plantilla != "completar_diagonal":
+        plantilla_name = f"Plantilla_{modos.plantilla.capitalize()}"
     else:
         plantilla_name = "Completar_diagonal"
 
     wb.macro("limpiar_plantilla")(plantilla_name)
 
-    apertura = str(wb.sheets[plantilla_name]["C2"].value)
-    atributo = str(wb.sheets[plantilla_name]["C3"].value).lower()
     cantidades = (
         ["pago", "incurrido"]
         if plantilla_name != "Plantilla_Frec"
@@ -33,7 +30,7 @@ def generar_plantilla(
     periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
 
     triangulo = crear_triangulo_base_plantilla(
-        apertura, atributo, periodicidades, cantidades
+        modos.apertura, modos.atributo, periodicidades, cantidades
     )
 
     wb.sheets[plantilla_name].cells(
@@ -56,12 +53,14 @@ def generar_plantilla(
         ct.SEP_TRIANGULOS,
         ct.FILA_INI_PLANTILLAS,
         ct.COL_OCURRS_PLANTILLAS,
-        apertura,
-        atributo,
+        modos.apertura,
+        modos.atributo,
         mes_del_periodo,
     )
 
-    logger.success(f"{plantilla_name} generada para {apertura} - {atributo}.")
+    logger.success(
+        f"""{plantilla_name} generada para {modos.apertura} - {modos.atributo}."""
+    )
 
     wb.sheets["Main"]["A1"].value = "GENERAR_PLANTILLA"
     wb.sheets["Main"]["A2"].value = time.time() - s

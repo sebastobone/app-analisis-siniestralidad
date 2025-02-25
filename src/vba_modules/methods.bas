@@ -374,13 +374,11 @@ Sub generar_parametros(ws_name As String, aperturas As String, apertura_defecto 
             Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto,Retenido", "Bruto")
             Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
 
-        Case "Plantilla_Entremes"
+        Case "Completar_diagonal"
             Call crear_dropdown(ws, "Apertura", 2, 3, aperturas, apertura_defecto)
             Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto,Retenido", "Bruto")
             Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
-            Call crear_dropdown(ws, "Ultima ocurrencia", 5, 3, "% Siniestralidad,Frecuencia y Severidad", "% Siniestralidad")
-            Call crear_dropdown(ws, "Variable a despejar", 6, 3, "Frecuencia,Severidad", "Severidad")
-
+            
     End Select
 
 End Sub
@@ -395,7 +393,7 @@ Function estructura_factores(ws, num_ocurrencias, num_alturas, header_triangulos
     Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Exclusiones", "=IF(OR(R[" & desref_filas * 2 & "]C[1] = """", R" & fila_ind_altura & "C[1] < R" & fila_ind_altura & "C), """", 1)", "#,##0")
     Call factores_desarrollo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, fila_ind_altura)
     
-    If Not InStr(ws.Name, "Entremes") <> 0 Then
+    If ws.Name <> "Completar_diagonal" Then
         fila_fact_sel = WorksheetFunction.Match("FACTORES SELECCIONADOS", ws.Range("F:F"), 0)
         Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Base", "=IF(R[" & (desref_filas - sep_triangulos) * 2 - 16 & "]C = """", R" & fila_fact_sel & "C,R[" & (desref_filas - sep_triangulos) * 2 - 16 & "]C)", "#,##0.0000")
     End If
@@ -436,32 +434,38 @@ Function formatear_columnas_tablas_resumen(ws, ini_col, fin_col, tipo, num_filas
 
     Select Case tipo
         Case "descriptores"
-            color = RGB(101, 104, 103)
-            formato_numero = "@"
+            color = gris_oscuro()
+            formato = "@"
         Case "plata_bruto"
-            color = RGB(0, 51, 160)
-            formato_numero = "$#,##0"
+            color = azul_oscuro()
+            formato = formato_plata()
         Case "plata_retenido"
-            color = RGB(45, 113, 255)
-            formato_numero = "$#,##0"
+            color = azul_claro()
+            formato = formato_plata()
         Case "conteo"
-            color = RGB(0, 174, 199)
-            formato_numero = "#,##0"
+            color = cian_claro()
+            formato = formato_numero()
         Case "frec"
-            color = RGB(0, 174, 199)
-            formato_numero = "0.0000%"
+            color = cian_claro()
+            formato = formato_porcentaje()
         Case "seve_bruto"
-            color = RGB(89, 142, 23)
-            formato_numero = "$#,##0"
+            color = verde_oscuro()
+            formato = formato_plata()
         Case "seve_retenido"
-            color = RGB(120, 190, 32)
-            formato_numero = "$#,##0"
+            color = verde_claro()
+            formato = formato_plata()
         Case "velocidad_bruto"
-            color = RGB(0, 51, 160)
-            formato_numero = "0.00%"
+            color = azul_oscuro()
+            formato = formato_porcentaje()
         Case "velocidad_retenido"
-            color = RGB(45, 113, 255)
-            formato_numero = "0.00%"
+            color = azul_claro()
+            formato = formato_porcentaje()
+        Case "factor_completitud_bruto"
+            color = violeta_oscuro()
+            formato = formato_porcentaje()
+        Case "factor_completitud_retenido"
+            color = violeta_claro()
+            formato = formato_porcentaje()
     End Select
 
     With ws.Range(ws.Cells(1, numero_columna_inicial), ws.Cells(1, numero_columna_final))
@@ -470,7 +474,7 @@ Function formatear_columnas_tablas_resumen(ws, ini_col, fin_col, tipo, num_filas
         .Font.Color = RGB(255, 255, 255)
     End With
 
-    ws.Range(ws.Cells(2, numero_columna_inicial), ws.Cells(num_filas + 1, numero_columna_final)).NumberFormat = formato_numero
+    ws.Range(ws.Cells(2, numero_columna_inicial), ws.Cells(num_filas + 1, numero_columna_final)).NumberFormat = formato
 
 End Function
 
@@ -522,6 +526,34 @@ Sub formatear_tabla_entremes(num_filas)
     Call formatear_columnas_tablas_resumen(ws, "plata_ultimate_retenido_anterior", "plata_ultimate_contable_retenido_anterior", "plata_retenido", num_filas)
     Call formatear_columnas_tablas_resumen(ws, "velocidad_pago_bruto_triangulo", "velocidad_incurrido_bruto_triangulo", "velocidad_bruto", num_filas)
     Call formatear_columnas_tablas_resumen(ws, "velocidad_pago_retenido_triangulo", "velocidad_incurrido_retenido_triangulo", "velocidad_retenido", num_filas)
-
+    Call formatear_columnas_tablas_resumen(ws, "factor_completitud_pago_bruto", "factor_completitud_pago_bruto", "factor_completitud_bruto", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "factor_completitud_pago_retenido", "factor_completitud_pago_retenido", "factor_completitud_retenido", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "factor_completitud_incurrido_bruto", "factor_completitud_incurrido_bruto", "factor_completitud_bruto", num_filas)
+    Call formatear_columnas_tablas_resumen(ws, "factor_completitud_incurrido_retenido", "factor_completitud_incurrido_retenido", "factor_completitud_retenido", num_filas)
+   
 End Sub
 
+
+
+Function crear_columna(ws, fila, columna, nombre, formula, formato, modificable, num_filas, color, color_titulo) As Integer
+	
+    With ws.Cells(fila, columna)
+        .value = nombre
+        .Interior.Color = color
+        .Font.Color = color_titulo
+        .Font.Bold = True
+    End With
+	
+	With ws.Range(ws.Cells(fila + 1, columna), ws.Cells(fila + num_filas, columna))
+		.Formula2R1C1 = formula
+		.NumberFormat = formato
+		
+		If modificable Then
+			.Interior.Color = RGB(226, 226, 226)
+		End If
+		
+	End With
+
+	crear_columna = columna
+
+End Function

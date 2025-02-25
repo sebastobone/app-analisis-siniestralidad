@@ -15,7 +15,10 @@ def generar_plantilla(
 ) -> None:
     s = time.time()
 
-    plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+    if plantilla != "completar_diagonal":
+        plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+    else:
+        plantilla_name = "Completar_diagonal"
 
     wb.macro("limpiar_plantilla")(plantilla_name)
 

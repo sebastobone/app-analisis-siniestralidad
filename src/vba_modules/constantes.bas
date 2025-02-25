@@ -20,6 +20,10 @@ Function ws_entremes() As Worksheet
     Set ws_entremes = Worksheets("Plantilla_Entremes")
 End Function
 
+Function ws_completar_diagonal() As Worksheet
+    Set ws_completar_diagonal = Worksheets("Completar_diagonal")
+End Function
+
 Function ws_auxtot() As Worksheet
     Set ws_auxtot = Worksheets("Aux_Totales")
 End Function
@@ -92,4 +96,75 @@ End Function
 
 Function num_meses_periodo_fn(num_ocurrencias, num_alturas) As Integer
     num_meses_periodo_fn = WorksheetFunction.RoundUp(num_alturas / num_ocurrencias, 0)
+End Function
+
+
+
+' COLORES
+
+Function blanco() As Long
+    blanco = RGB(255, 255, 255)
+End Function
+
+Function gris_oscuro() As Long
+    gris_oscuro = RGB(101, 104, 103)
+End Function
+
+Function azul_oscuro() As Long
+    azul_oscuro = RGB(0, 51, 160)
+End Function
+
+Function azul_claro() As Long
+    azul_claro = RGB(45, 113, 255)
+End Function
+
+Function amarillo_oscuro() As Long
+    amarillo_oscuro = RGB(119, 122, 14)
+End Function
+
+Function amarillo_claro() As Long
+    amarillo_claro = RGB(180, 184, 20)
+End Function
+
+Function violeta_oscuro() As Long
+    violeta_oscuro = RGB(128, 0, 128)
+End Function
+
+Function violeta_claro() As Long
+    violeta_claro = RGB(192, 0, 192)
+End Function
+
+Function naranja_oscuro() As Long
+    naranja_oscuro = RGB(179, 103, 0)
+End Function
+
+Function naranja_claro() As Long
+    naranja_claro = RGB(237, 139, 0)
+End Function
+
+Function cian_claro() As Long
+    cian_claro = RGB(0, 174, 199)
+End Function
+
+Function verde_oscuro() As Long
+    verde_oscuro = RGB(89, 142, 23)
+End Function
+
+Function verde_claro() As Long
+    verde_claro = RGB(120, 190, 32)
+End Function
+
+
+' FORMATOS
+
+Function formato_plata() As String
+    formato_plata = "$#,##0"
+End Function
+
+Function formato_porcentaje() As String
+    formato_porcentaje = "0.00%"
+End Function
+
+Function formato_numero() As String
+    formato_numero = "#,##0"
 End Function

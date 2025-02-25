@@ -161,6 +161,12 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# VSCode
+.vscode
+
+# Vainas de Mac
+.DS_Store
+
 .ruff_cache
 
 data/afo/*
@@ -203,8 +209,6 @@ output/resultados/*
 
 backups
 !data/queries/backups
-
-.DS_Store
 
 data/database.db
 

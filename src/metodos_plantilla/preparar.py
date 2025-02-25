@@ -56,9 +56,10 @@ def preparar_plantilla(
         generar_hoja_entremes(
             wb, entremes, resultados_anteriores, factores_completitud, mes_corte
         )
+        generar_parametros_plantillas(wb, ["completar_diagonal"], lista_aperturas)
 
     else:
-        generar_parametros_plantillas(wb, lista_aperturas)
+        generar_parametros_plantillas(wb, ["frec", "seve", "plata"], lista_aperturas)
 
     logger.success("Plantilla preparada.")
 
@@ -122,12 +123,16 @@ def verificar_resultados_anteriores_para_entremes(
 def mostrar_plantillas_relevantes(wb: xw.Book, tipo_analisis: str):
     if tipo_analisis == "triangulos":
         wb.sheets["Plantilla_Entremes"].visible = False
+        wb.sheets["Completar_Diagonal"].visible = False
+        wb.sheets["Vectores_Index"].visible = True
         for plantilla in ["frec", "seve", "plata"]:
             plantilla_name = f"Plantilla_{plantilla.capitalize()}"
             wb.sheets[plantilla_name].visible = True
 
     elif tipo_analisis == "entremes":
         wb.sheets["Plantilla_Entremes"].visible = True
+        wb.sheets["Completar_Diagonal"].visible = True
+        wb.sheets["Vectores_Index"].visible = False
         for plantilla in ["frec", "seve", "plata"]:
             plantilla_name = f"Plantilla_{plantilla.capitalize()}"
             wb.sheets[plantilla_name].visible = False
@@ -141,9 +146,14 @@ def generar_parametros_globales(wb: xw.Book, mes_corte: int) -> None:
     wb.sheets["Main"].range((5, 2)).value = utils.mes_anterior_corte(mes_corte)
 
 
-def generar_parametros_plantillas(wb: xw.Book, lista_aperturas: list[str]) -> None:
-    for plantilla in ["frec", "seve", "plata"]:
-        plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+def generar_parametros_plantillas(
+    wb: xw.Book, plantillas: list[str], lista_aperturas: list[str]
+) -> None:
+    for plantilla in plantillas:
+        if plantilla in ["frec", "seve", "plata"]:
+            plantilla_name = f"Plantilla_{plantilla.capitalize()}"
+        else:
+            plantilla_name = plantilla.capitalize()
         wb.macro("generar_parametros")(
             plantilla_name, ",".join(lista_aperturas), lista_aperturas[0]
         )

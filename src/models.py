@@ -19,7 +19,7 @@ class Parametros(SQLModel, table=True):
 
 
 class ModosPlantilla(BaseModel):
-    plantilla: Literal["frec", "seve", "plata", "entremes"]
+    plantilla: Literal["frec", "seve", "plata", "completar_diagonal"]
     modo: Literal["generar", "guardar", "traer", "guardar_todo", "traer_guardar_todo"]
 
 

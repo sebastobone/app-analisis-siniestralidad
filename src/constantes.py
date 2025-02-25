@@ -60,7 +60,7 @@ FILA_INI_PLANTILLAS = 2
 FILA_INI_PARAMS = 4
 
 
-LISTA_PLANTILLAS = Literal["frec", "seve", "plata", "entremes"]
+LISTA_PLANTILLAS = Literal["frec", "seve", "plata", "completar_diagonal"]
 
 
 COLORES_LOGS = {

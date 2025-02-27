@@ -12,8 +12,7 @@ def preparar_base_siniestros(
     df: pl.LazyFrame, mes_inicio: date, mes_corte: date
 ) -> tuple[pl.LazyFrame, pl.LazyFrame]:
     df_sinis = df.with_columns(
-        pl.col("fecha_siniestro").clip(upper_bound=pl.col("fecha_registro")),
-        ramo_desc=utils.complementar_col_ramo_desc(),
+        pl.col("fecha_siniestro").clip(upper_bound=pl.col("fecha_registro"))
     )
 
     df_sinis = df_sinis.with_columns(
@@ -25,12 +24,7 @@ def preparar_base_siniestros(
         ],
         conteo_incurrido=pl.col("conteo_incurrido") - pl.col("conteo_desistido"),
     ).select(
-        [
-            "apertura_reservas",
-            "atipico",
-            "fecha_siniestro",
-            "fecha_registro",
-        ]
+        ["apertura_reservas", "atipico", "fecha_siniestro", "fecha_registro"]
         + ct.COLUMNAS_QTYS
     )
 
@@ -41,12 +35,9 @@ def preparar_base_siniestros(
     for tipo_fecha in ["fecha_siniestro", "fecha_registro"]:
         bases_fechas.append(
             pl.LazyFrame(
-                pl.date_range(
-                    mes_inicio,
-                    mes_corte,
-                    interval="1mo",
-                    eager=True,
-                ).alias(tipo_fecha)
+                pl.date_range(mes_inicio, mes_corte, interval="1mo", eager=True).alias(
+                    tipo_fecha
+                )
             )
         )
 
@@ -117,13 +108,7 @@ def construir_triangulos(
             ),
         )
         .drop(["fecha_siniestro", "fecha_registro"])
-        .group_by(
-            [
-                "apertura_reservas",
-                "periodo_ocurrencia",
-                "periodo_desarrollo",
-            ]
-        )
+        .group_by(["apertura_reservas", "periodo_ocurrencia", "periodo_desarrollo"])
         .sum()
         .sort(["apertura_reservas", "periodo_ocurrencia", "periodo_desarrollo"])
         .with_columns(
@@ -271,18 +256,10 @@ def generar_bases_siniestros(
         base_triangulos = pl.concat(
             [
                 construir_triangulos(
-                    df_sinis_tipicos,
-                    "Trimestral",
-                    "Mensual",
-                    mes_corte,
-                    tipo_analisis,
+                    df_sinis_tipicos, "Trimestral", "Mensual", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos,
-                    "Semestral",
-                    "Mensual",
-                    mes_corte,
-                    tipo_analisis,
+                    df_sinis_tipicos, "Semestral", "Mensual", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
                     df_sinis_tipicos, "Anual", "Mensual", mes_corte, tipo_analisis

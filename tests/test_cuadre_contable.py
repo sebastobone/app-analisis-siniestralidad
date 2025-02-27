@@ -36,7 +36,7 @@ async def test_cuadre_contable_soat(
             "apertura_1": ["A"],
             "apertura_2": ["D"],
         }
-    ).with_columns(utils.col_apertura_reservas("mock"))
+    ).with_columns(utils.crear_columna_apertura_reservas("mock"))
 
     qtys = ["pago_bruto", "pago_retenido", "aviso_bruto", "aviso_retenido"]
 

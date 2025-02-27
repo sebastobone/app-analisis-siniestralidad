@@ -1,6 +1,7 @@
 import textwrap
 from datetime import date
 from math import ceil
+from typing import Literal
 
 import pandas as pd
 import polars as pl
@@ -13,19 +14,13 @@ def lowercase_columns(df: pl.LazyFrame | pl.DataFrame) -> pl.LazyFrame | pl.Data
     return df.rename({column: column.lower() for column in df.collect_schema().names()})
 
 
-def complementar_col_ramo_desc() -> pl.Expr:
+def crear_columna_apertura_reservas(negocio: str) -> pl.Expr:
     return pl.concat_str(
-        pl.col("codigo_op"),
-        pl.col("codigo_ramo_op"),
-        pl.col("ramo_desc"),
-        separator=" - ",
-    )
-
-
-def col_apertura_reservas(negocio: str) -> pl.Expr:
-    return pl.concat_str(columnas_aperturas(negocio), separator="_").alias(
-        "apertura_reservas"
-    )
+        obtener_aperturas(negocio, "siniestros").drop(
+            ["apertura_reservas", "periodicidad_ocurrencia"]
+        ),
+        separator="_",
+    ).alias("apertura_reservas")
 
 
 def yyyymm_to_date(mes_yyyymm: int) -> date:
@@ -47,17 +42,6 @@ def date_to_yyyymm_pl(column: pl.Expr, grain: str = "Mensual") -> pl.Expr:
     ).cast(pl.Int32)
 
 
-def columnas_aperturas(negocio: str) -> list[str]:
-    base = ["codigo_op", "codigo_ramo_op"]
-    if negocio == "autonomia":
-        return base + ["apertura_canal_desc", "apertura_amparo_desc"]
-    elif negocio == "soat":
-        return base + ["apertura_canal_desc", "apertura_amparo_desc", "tipo_vehiculo"]
-    elif negocio == "mock":
-        return base + ["apertura_1", "apertura_2"]
-    return []
-
-
 def min_cols_tera(tipo_query: str) -> list[str]:
     """Define las columnas minimas que tienen que salir de un query
     que consolida la informacion de primas, siniestros, o expuestos.
@@ -66,7 +50,6 @@ def min_cols_tera(tipo_query: str) -> list[str]:
         return [
             "codigo_op",
             "codigo_ramo_op",
-            "ramo_desc",
             "atipico",
             "fecha_siniestro",
             "fecha_registro",
@@ -82,7 +65,6 @@ def min_cols_tera(tipo_query: str) -> list[str]:
         return [
             "codigo_op",
             "codigo_ramo_op",
-            "ramo_desc",
             "fecha_registro",
             "prima_bruta",
             "prima_bruta_devengada",
@@ -93,7 +75,6 @@ def min_cols_tera(tipo_query: str) -> list[str]:
     return [
         "codigo_op",
         "codigo_ramo_op",
-        "ramo_desc",
         "fecha_registro",
         "expuestos",
         "vigentes",
@@ -164,3 +145,21 @@ def mes_anterior_corte(mes_corte: int) -> int:
     return (
         mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
     )
+
+
+def obtener_aperturas(
+    negocio: str, cantidad: Literal["siniestros", "primas", "expuestos"]
+) -> pl.DataFrame:
+    return pl.read_excel(
+        f"data/segmentacion_{negocio}.xlsx",
+        sheet_name=f"Aperturas_{cantidad.capitalize()}",
+    )
+
+
+def obtener_nombres_aperturas(
+    negocio: str, cantidad: Literal["siniestros", "primas", "expuestos"]
+) -> list[str]:
+    aperturas = obtener_aperturas(negocio, cantidad)
+    if cantidad == "siniestros":
+        aperturas = aperturas.drop(["apertura_reservas", "periodicidad_ocurrencia"])
+    return aperturas.collect_schema().names()

@@ -314,7 +314,6 @@ CREATE MULTISET VOLATILE TABLE expuestos_final AS (
     SELECT
         '01' AS codigo_op
         , '041' AS codigo_ramo_op
-        , 'AUTOS OBLIGATORIO' AS ramo_desc
         , COALESCE(base.apertura_canal_desc, '-1') AS apertura_canal_desc
         , COALESCE(base.apertura_amparo_desc, '-1') AS apertura_amparo_desc
         , COALESCE(base.tipo_vehiculo, '-1') AS tipo_vehiculo
@@ -353,10 +352,9 @@ CREATE MULTISET VOLATILE TABLE expuestos_final AS (
         ON (base.apertura_amparo_desc = agrampa.apertura_amparo_desc)
     --LEFT JOIN MDB_SEGUROS_COLOMBIA.V_RAMO ramo ON (base.Codigo_Ramo_Op = ramo.Codigo_Ramo_Op)
 
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
 ) WITH DATA PRIMARY INDEX (
-    ramo_desc
-    , apertura_canal_desc
+    apertura_canal_desc
     , apertura_amparo_desc
     , tipo_vehiculo
     , descuento
@@ -368,7 +366,6 @@ CREATE MULTISET VOLATILE TABLE expuestos_final AS (
 SELECT
     codigo_op
     , codigo_ramo_op
-    , ramo_desc
     , apertura_canal_desc
     , apertura_amparo_desc
     , tipo_vehiculo
@@ -376,5 +373,5 @@ SELECT
     , SUM(expuestos) AS expuestos
     , SUM(vigentes) AS vigentes
 FROM expuestos_final
-GROUP BY 1, 2, 3, 4, 5, 6, 7
-ORDER BY 1, 2, 3, 4, 5, 6, 7
+GROUP BY 1, 2, 3, 4, 5, 6
+ORDER BY 1, 2, 3, 4, 5, 6

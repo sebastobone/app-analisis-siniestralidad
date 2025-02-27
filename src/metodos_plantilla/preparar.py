@@ -22,24 +22,12 @@ def preparar_plantilla(
 
     generar_parametros_globales(wb, mes_corte)
 
-    aperturas = tablas_resumen.obtener_tabla_aperturas(negocio)
+    aperturas = utils.obtener_aperturas(negocio, "siniestros")
 
     mostrar_plantillas_relevantes(wb, tipo_analisis)
 
-    tablas_resumen.generar_tabla(wb.sheets["Main"], aperturas, "aperturas", (1, 4))
-    tablas_resumen.generar_tabla(
-        wb.sheets["Main"],
-        aperturas.select("apertura_reservas").with_columns(
-            periodicidad=pl.lit("Trimestral")
-        ),
-        "periodicidades",
-        (1, 4 + len(aperturas.collect_schema().names()) + 1),
-    )
-
-    periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
-
     diagonales, atipicos, entremes = tablas_resumen.generar_tablas_resumen(
-        periodicidades, tipo_analisis, aperturas.lazy()
+        negocio, tipo_analisis, aperturas.lazy()
     )
     resultados_anteriores = resultados.concatenar_archivos_resultados()
 
@@ -50,7 +38,7 @@ def preparar_plantilla(
             diagonales, resultados_anteriores, mes_corte
         )
         factores_completitud = compl.calcular_factores_completitud(
-            periodicidades, mes_corte
+            aperturas.lazy(), mes_corte
         )
         generar_hoja_entremes(
             wb, entremes, resultados_anteriores, factores_completitud, mes_corte
@@ -141,6 +129,15 @@ def generar_parametros_globales(wb: xw.Book, mes_corte: int) -> None:
     wb.sheets["Main"].range((5, 2)).value = utils.mes_anterior_corte(mes_corte)
 
 
+def mantener_formato_columnas(df: pl.DataFrame) -> pl.DataFrame:
+    return df.with_columns(
+        [
+            pl.concat_str(pl.lit("'"), pl.col(column)).alias(column)
+            for column in ["codigo_op", "codigo_ramo_op"]
+        ]
+    )
+
+
 def generar_hojas_resumen(
     wb: xw.Book,
     diagonales: pl.DataFrame,
@@ -153,9 +150,14 @@ def generar_hojas_resumen(
     if resultados_anteriores.shape[0] != 0:
         wb.sheets["Aux_Anterior"]["A1"].options(
             index=False
-        ).value = resultados_anteriores.to_pandas()
-    wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.to_pandas()
-    wb.sheets["Atipicos"]["A1"].options(index=False).value = atipicos.to_pandas()
+        ).value = resultados_anteriores.pipe(mantener_formato_columnas).to_pandas()
+
+    wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.pipe(
+        mantener_formato_columnas
+    ).to_pandas()
+    wb.sheets["Atipicos"]["A1"].options(index=False).value = atipicos.pipe(
+        mantener_formato_columnas
+    ).to_pandas()
 
     wb.macro("formatear_tablas_resumen")("Aux_Totales", diagonales.shape[0])
     wb.macro("formatear_tablas_resumen")("Atipicos", atipicos.shape[0])

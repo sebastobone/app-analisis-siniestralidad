@@ -392,7 +392,6 @@ CREATE MULTISET VOLATILE TABLE primas_final AS (
     SELECT
         '01' AS codigo_op
         , '041' AS codigo_ramo_op
-        , 'AUTOS OBLIGATORIO' AS ramo_desc
         , COALESCE(m.apertura_canal_desc, s.apertura_canal_desc, '-1')
             AS apertura_canal_desc
         , COALESCE(m.apertura_amparo_desc, s.apertura_amparo_desc, '-1')
@@ -449,10 +448,9 @@ CREATE MULTISET VOLATILE TABLE primas_final AS (
             AND m.agrupacion_reservas = s.agrupacion_reservas
             AND m.descuento = s.descuento
 
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
 ) WITH DATA PRIMARY INDEX (
-    ramo_desc
-    , apertura_canal_desc
+    apertura_canal_desc
     , apertura_amparo_desc
     , tipo_vehiculo
     , descuento
@@ -464,7 +462,6 @@ CREATE MULTISET VOLATILE TABLE primas_final AS (
 SELECT
     codigo_op
     , codigo_ramo_op
-    , ramo_desc
     , apertura_canal_desc
     , apertura_amparo_desc
     , tipo_vehiculo
@@ -476,5 +473,5 @@ SELECT
     , SUM(prima_devengada_mod) AS prima_devengada_mod
 FROM primas_final
 WHERE fecha_registro >= (DATE '{fecha_primera_ocurrencia}')
-GROUP BY 1, 2, 3, 4, 5, 6, 7
-ORDER BY 1, 2, 3, 4, 5, 6, 7
+GROUP BY 1, 2, 3, 4, 5, 6
+ORDER BY 1, 2, 3, 4, 5, 6

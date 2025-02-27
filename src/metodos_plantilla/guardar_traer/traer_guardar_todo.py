@@ -4,7 +4,6 @@ import time
 import xlwings as xw
 from src import utils
 from src.logger_config import logger
-from src.metodos_plantilla import tablas_resumen
 from src.metodos_plantilla.generar import generar_plantilla
 from src.models import ModosPlantilla
 
@@ -23,7 +22,7 @@ async def traer_y_guardar_todas_las_aperturas(
 
     plantilla_name = f"Plantilla_{modos.plantilla.capitalize()}"
     aperturas = (
-        tablas_resumen.obtener_tabla_aperturas(negocio)
+        utils.obtener_aperturas(negocio, "siniestros")
         .get_column("apertura_reservas")
         .to_list()
     )

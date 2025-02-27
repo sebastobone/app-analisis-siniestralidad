@@ -99,37 +99,3 @@ h2 {
 #log span {
   display: flex;
 }
-
-table {
-  width: 50%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  margin-bottom: 15px;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-th,
-td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-th {
-  background-color: #0033a0;
-  color: white;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-td {
-  font-size: 16px;
-  color: #333;
-}
-
-tr:hover {
-  background-color: #f1f1f1;
-}

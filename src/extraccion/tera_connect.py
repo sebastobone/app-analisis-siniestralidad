@@ -2,6 +2,7 @@ import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
+from typing import Literal
 
 import pandas as pd
 import polars as pl
@@ -35,20 +36,22 @@ async def correr_query(
         await verificar_resultado_siniestros_primas_expuestos(
             tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte
         )
-        df = df.select(
-            utils.col_apertura_reservas(p.negocio),
-            pl.all(),
-        )
+
+        if tipo_query == "siniestros":
+            df = df.select(
+                utils.crear_columna_apertura_reservas(p.negocio),
+                pl.all(),
+            )
 
     await guardar_resultado(df, save_path, save_format, tipo_query)
 
 
-def determinar_tipo_query(file: str) -> str:
+def determinar_tipo_query(
+    file: str,
+) -> Literal["siniestros", "primas", "expuestos", "otro"]:
     nombre_query = file.split("/")[-1]
     cantidad = nombre_query.replace(".sql", "")
-    if cantidad in ["primas", "expuestos", "siniestros"]:
-        return cantidad
-    return "otro"
+    return cantidad if cantidad in ["siniestros", "primas", "expuestos"] else "otro"  # type: ignore
 
 
 async def obtener_segmentaciones(
@@ -307,7 +310,11 @@ async def verificar_fechas_dentro_de_rangos(
 
 
 async def verificar_resultado_siniestros_primas_expuestos(
-    tipo_query: str, df: pl.DataFrame, negocio: str, mes_inicio: int, mes_corte: int
+    tipo_query: Literal["siniestros", "primas", "expuestos"],
+    df: pl.DataFrame,
+    negocio: str,
+    mes_inicio: int,
+    mes_corte: int,
 ) -> None:
     cols = df.collect_schema().names()
 
@@ -335,7 +342,7 @@ async def verificar_resultado_siniestros_primas_expuestos(
         pl.any_horizontal(
             [
                 (pl.col(col).is_null() | pl.col(col).eq("-1"))
-                for col in utils.columnas_aperturas(negocio)
+                for col in utils.obtener_nombres_aperturas(negocio, tipo_query)
             ]
         )
     )

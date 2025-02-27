@@ -131,4 +131,4 @@ def apertura_para_asignar_diferencia_soat() -> pl.LazyFrame:
             "apertura_amparo_desc": ["Total"],
             "tipo_vehiculo": ["MOTO"],
         }
-    ).with_columns(utils.col_apertura_reservas("soat"))
+    ).with_columns(utils.crear_columna_apertura_reservas("soat"))

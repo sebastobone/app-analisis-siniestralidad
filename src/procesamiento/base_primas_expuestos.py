@@ -18,38 +18,21 @@ def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
 def generar_base_primas_expuestos(
     df: pl.LazyFrame, qty: Literal["primas", "expuestos"], negocio: str
 ) -> pl.DataFrame:
-    qty_cols = (
-        [
-            "prima_bruta",
-            "prima_bruta_devengada",
-            "prima_retenida",
-            "prima_retenida_devengada",
-        ]
-        if qty == "primas"
-        else ["expuestos", "vigentes"]
-    )
+    qty_cols = ct.COLUMNAS_PRIMAS if qty == "primas" else ["expuestos", "vigentes"]
 
-    cols_aperts = utils.columnas_aperturas(negocio)[2:]
+    columnas_aperturas = utils.obtener_nombres_aperturas(negocio, qty)
 
     df_group = (
-        df.with_columns(
-            fechas_pdn(pl.col("fecha_registro")),
-            ramo_desc=utils.complementar_col_ramo_desc(),
-        )
-        .select(["ramo_desc"] + cols_aperts + qty_cols + list(ct.PERIODICIDADES.keys()))
+        df.with_columns(fechas_pdn(pl.col("fecha_registro")))
+        .select(columnas_aperturas + qty_cols + list(ct.PERIODICIDADES.keys()))
         .unpivot(
-            index=["ramo_desc"] + cols_aperts + qty_cols,
+            index=columnas_aperturas + qty_cols,
             variable_name="periodicidad_ocurrencia",
             value_name="periodo_ocurrencia",
         )
         .with_columns(pl.col("periodo_ocurrencia").cast(pl.Int32))
         .group_by(
-            ["ramo_desc"]
-            + cols_aperts
-            + [
-                "periodicidad_ocurrencia",
-                "periodo_ocurrencia",
-            ]
+            columnas_aperturas + ["periodicidad_ocurrencia", "periodo_ocurrencia"]
         )
     )
 
@@ -59,10 +42,5 @@ def generar_base_primas_expuestos(
         df = df_group.mean()
 
     return df.sort(
-        ["ramo_desc"]
-        + cols_aperts
-        + [
-            "periodicidad_ocurrencia",
-            "periodo_ocurrencia",
-        ]
+        columnas_aperturas + ["periodicidad_ocurrencia", "periodo_ocurrencia"]
     ).collect()

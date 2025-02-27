@@ -167,17 +167,16 @@ async def test_check_final_info(
     mes_inicio_int = utils.date_to_yyyymm(rango_meses[0])
     mes_corte_int = utils.date_to_yyyymm(rango_meses[1])
 
-    tipo_query = "siniestros"
     df = mock_siniestros.collect()
 
     with pytest.raises(ValueError):
         await tera_connect.verificar_resultado_siniestros_primas_expuestos(
-            tipo_query, df.drop("codigo_op"), "mock", mes_inicio_int, mes_corte_int
+            "siniestros", df.drop("codigo_op"), "mock", mes_inicio_int, mes_corte_int
         )
 
     with pytest.raises(ValueError):
         await tera_connect.verificar_resultado_siniestros_primas_expuestos(
-            tipo_query,
+            "siniestros",
             df.with_columns(pl.col("fecha_siniestro").cast(pl.String)),
             "mock",
             mes_inicio_int,
@@ -191,7 +190,7 @@ async def test_check_final_info(
 
     with pytest.raises(ValueError):
         await tera_connect.verificar_resultado_siniestros_primas_expuestos(
-            tipo_query,
+            "siniestros",
             df_fechas_por_fuera,
             "mock",
             mes_inicio_int,
@@ -199,9 +198,16 @@ async def test_check_final_info(
         )
 
     df_falt = df.slice(0, 2).with_columns(
-        [pl.lit(None).alias(col) for col in utils.columnas_aperturas("mock")]
+        [
+            pl.lit(None).alias(col)
+            for col in utils.obtener_nombres_aperturas("mock", "siniestros")
+        ]
     )
     with pytest.raises(ValueError):
         await tera_connect.verificar_resultado_siniestros_primas_expuestos(
-            tipo_query, pl.concat([df, df_falt]), "mock", mes_inicio_int, mes_corte_int
+            "siniestros",
+            pl.concat([df, df_falt]),
+            "mock",
+            mes_inicio_int,
+            mes_corte_int,
         )

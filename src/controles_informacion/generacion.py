@@ -4,6 +4,7 @@ from typing import Literal
 
 import polars as pl
 
+from src import constantes as ct
 from src import utils
 from src.controles_informacion import sap
 from src.controles_informacion.cuadre_contable import realizar_cuadre_contable
@@ -19,6 +20,7 @@ async def generar_controles(
 
     difs_sap_tera_pre_cuadre = await generar_controles_estado_cuadre(
         df,
+        p.negocio,
         file,
         p.mes_corte,
         estado_cuadre="pre_cuadre_contable",
@@ -36,6 +38,7 @@ async def generar_controles(
         )
         _ = await generar_controles_estado_cuadre(
             df,
+            p.negocio,
             file,
             p.mes_corte,
             estado_cuadre="post_cuadre_contable",
@@ -53,6 +56,7 @@ async def generar_controles(
         df = await ajustar_fraude(df, p.mes_corte)
         _ = await generar_controles_estado_cuadre(
             df,
+            p.negocio,
             file,
             p.mes_corte,
             estado_cuadre="post_ajustes_fraude",
@@ -61,13 +65,14 @@ async def generar_controles(
 
 async def generar_controles_estado_cuadre(
     df: pl.DataFrame,
+    negocio: str,
     file: Literal["siniestros", "primas", "expuestos"],
     mes_corte: int,
     estado_cuadre: Literal[
         "pre_cuadre_contable", "post_cuadre_contable", "post_ajustes_fraude"
     ],
 ) -> pl.DataFrame:
-    qtys, group_cols = definir_cantidades_control(file)
+    qtys, group_cols = definir_cantidades_control(negocio, file)
     await asyncio.to_thread(
         agrupar_tera(df, group_cols, qtys).write_excel,
         f"data/controles_informacion/{estado_cuadre}/{file}_tera_{mes_corte}.xlsx",
@@ -121,8 +126,10 @@ async def generar_controles_estado_cuadre(
 
     logger.success(
         utils.limpiar_espacios_log(
-            f"""Revisiones de informacion y generacion de controles terminada
-            para {file} en el estado {estado_cuadre}."""
+            f"""
+            Revisiones de informacion y generacion de controles terminada
+            para {file} en el estado {estado_cuadre}.
+            """
         )
     )
 
@@ -130,6 +137,7 @@ async def generar_controles_estado_cuadre(
 
 
 def definir_cantidades_control(
+    negocio: str,
     file: Literal["siniestros", "primas", "expuestos"],
 ) -> tuple[list[str], list[str]]:
     if file == "siniestros":
@@ -137,17 +145,16 @@ def definir_cantidades_control(
         group_cols = ["apertura_reservas", "fecha_siniestro", "fecha_registro"]
 
     elif file == "primas":
-        qtys = [
-            "prima_bruta",
-            "prima_retenida",
-            "prima_bruta_devengada",
-            "prima_retenida_devengada",
-        ]
-        group_cols = ["apertura_reservas", "fecha_registro"]
+        qtys = ct.COLUMNAS_PRIMAS
+        group_cols = utils.obtener_aperturas(
+            negocio, "primas"
+        ).collect_schema().names() + ["fecha_registro"]
 
     elif file == "expuestos":
         qtys = ["expuestos"]
-        group_cols = ["apertura_reservas", "fecha_registro"]
+        group_cols = utils.obtener_aperturas(
+            negocio, "expuestos"
+        ).collect_schema().names() + ["fecha_registro"]
 
     return qtys, group_cols
 

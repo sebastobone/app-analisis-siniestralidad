@@ -7,16 +7,12 @@ from . import chainladder as cl
 
 
 def calcular_factores_completitud(
-    periodicidades: list[list[str]], mes_corte: int
+    aperturas: pl.LazyFrame, mes_corte: int
 ) -> pl.DataFrame:
     base_triangulos = (
         pl.scan_parquet("data/processed/base_triangulos.parquet")
         .join(
-            pl.LazyFrame(
-                periodicidades,
-                schema=["apertura_reservas", "periodicidad_ocurrencia"],
-                orient="row",
-            ),
+            aperturas.select(["apertura_reservas", "periodicidad_ocurrencia"]),
             on=["apertura_reservas", "periodicidad_ocurrencia"],
         )
         .filter(pl.col("periodicidad_desarrollo") == "Mensual")

@@ -127,7 +127,7 @@ async def main(mes_inicio: int, mes_corte: int, aproximar_reaseguro: bool) -> No
             how="left",
         )
         .with_columns(
-            utils.col_apertura_reservas("autonomia"),
+            utils.crear_columna_apertura_reservas("autonomia"),
             ramo_desc=pl.when(pl.col("codigo_ramo_op") == "AAV")
             .then(pl.lit("ANEXOS VI"))
             .otherwise(pl.col("ramo_desc")),

@@ -53,7 +53,7 @@ def mock_siniestros(rango_meses: tuple[date, date]) -> pl.LazyFrame:
             "conteo_desistido": np.random.randint(0, 10, size=num_rows),
         }
     ).with_columns(
-        utils.col_apertura_reservas("mock"),
+        utils.crear_columna_apertura_reservas("mock"),
         ramo_desc=pl.when(pl.col("codigo_ramo_op") == "001")
         .then(pl.lit("RAMO1"))
         .when(pl.col("codigo_ramo_op") == "002")
@@ -84,7 +84,7 @@ def mock_primas(rango_meses: tuple[date, date]) -> pl.LazyFrame:
             "prima_retenida_devengada": np.random.random(size=num_rows) * 1e8,
         }
     ).with_columns(
-        utils.col_apertura_reservas("mock"),
+        utils.crear_columna_apertura_reservas("mock"),
         ramo_desc=pl.when(pl.col("codigo_ramo_op") == "001")
         .then(pl.lit("RAMO1"))
         .when(pl.col("codigo_ramo_op") == "002")
@@ -119,7 +119,7 @@ def mock_expuestos(rango_meses: tuple[date, date]) -> pl.LazyFrame:
             }
         )
         .with_columns(
-            utils.col_apertura_reservas("mock"),
+            utils.crear_columna_apertura_reservas("mock"),
             ramo_desc=pl.when(pl.col("codigo_ramo_op") == "001")
             .then(pl.lit("RAMO1"))
             .when(pl.col("codigo_ramo_op") == "002")

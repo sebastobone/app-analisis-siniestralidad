@@ -1,7 +1,6 @@
 from typing import Literal
 
 import polars as pl
-import xlwings as xw
 
 from src import constantes as ct
 from src import utils
@@ -9,7 +8,7 @@ from src.metodos_plantilla import insumos as ins
 
 
 def generar_tablas_resumen(
-    periodicidades: list[list[str]],
+    negocio: str,
     tipo_analisis: Literal["triangulos", "entremes"],
     aperturas: pl.LazyFrame,
 ) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
@@ -21,19 +20,11 @@ def generar_tablas_resumen(
     diagonales = (
         diagonales.filter(pl.col("diagonal") == 1)
         .join(
-            pl.LazyFrame(
-                periodicidades,
-                schema=["apertura_reservas", "periodicidad_ocurrencia"],
-                orient="row",
-            ),
+            aperturas.select(["apertura_reservas", "periodicidad_ocurrencia"]),
             on=["apertura_reservas", "periodicidad_ocurrencia"],
         )
         .select(
-            [
-                "apertura_reservas",
-                "periodicidad_ocurrencia",
-                "periodo_ocurrencia",
-            ]
+            ["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"]
             + ct.COLUMNAS_QTYS
         )
     )
@@ -42,10 +33,9 @@ def generar_tablas_resumen(
         ult_ocurr = (
             ins.df_ult_ocurr()
             .join(
-                pl.LazyFrame(
-                    periodicidades,
-                    schema=["apertura_reservas", "periodicidad_triangulo"],
-                    orient="row",
+                aperturas.select(
+                    pl.col("apertura_reservas"),
+                    pl.col("periodicidad_ocurrencia").alias("periodicidad_triangulo"),
                 ),
                 on=["apertura_reservas", "periodicidad_triangulo"],
             )
@@ -63,7 +53,9 @@ def generar_tablas_resumen(
             .pipe(unificar_tablas, aperturas, expuestos, primas)
         )
 
-    tabla_entremes = diagonales.drop(aperturas.collect_schema().names()[1:]).collect()
+    tabla_entremes = diagonales.drop(
+        utils.obtener_nombres_aperturas(negocio, "siniestros")
+    ).collect()
 
     tabla_aux_totales = (
         diagonales.with_columns(
@@ -118,52 +110,23 @@ def unificar_tablas(
     expuestos: pl.LazyFrame,
     primas: pl.LazyFrame,
 ) -> pl.LazyFrame:
-    base_cols = aperturas.collect_schema().names()[1:]
+    columnas_aperturas = aperturas.drop("apertura_reservas").collect_schema().names()
     return (
-        df.join(aperturas, on="apertura_reservas")
+        df.join(aperturas.drop("periodicidad_ocurrencia"), on="apertura_reservas")
         .select(
-            ["apertura_reservas"]
-            + aperturas.collect_schema().names()[1:]
-            + ["periodicidad_ocurrencia", "periodo_ocurrencia"]
+            aperturas.collect_schema().names()
+            + ["periodo_ocurrencia"]
             + ct.COLUMNAS_QTYS
         )
         .join(
             expuestos.drop("vigentes"),
-            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
+            on=columnas_aperturas + ["periodo_ocurrencia"],
             how="left",
         )
-        .join(
-            primas,
-            on=base_cols + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
-            how="left",
-        )
+        .join(primas, on=columnas_aperturas + ["periodo_ocurrencia"], how="left")
         .fill_null(0)
     )
 
 
 def df_aperturas() -> pl.LazyFrame:
     return pl.scan_parquet("data/raw/siniestros.parquet")
-
-
-def obtener_tabla_aperturas(negocio: str) -> pl.DataFrame:
-    return (
-        df_aperturas()
-        .with_columns(ramo_desc=utils.complementar_col_ramo_desc())
-        .select(["apertura_reservas", "ramo_desc"] + utils.columnas_aperturas(negocio))
-        .drop(["codigo_op", "codigo_ramo_op"])
-        .unique()
-        .sort("apertura_reservas")
-        .collect()
-    )
-
-
-def generar_tabla(
-    sheet: xw.Sheet, df: pl.DataFrame, table_name: str, loc: tuple[int, int]
-) -> None:
-    df_pd = df.to_pandas()
-    if table_name in [table.name for table in sheet.tables]:
-        sheet.tables[table_name].update(df_pd, index=False)
-    else:
-        _ = sheet.tables.add(
-            source=sheet.cells(loc[0], loc[1]), name=table_name
-        ).update(df_pd, index=False)

@@ -533,7 +533,6 @@ CREATE MULTISET VOLATILE TABLE siniestros_final AS (
     SELECT
         '01' AS codigo_op
         , '041' AS codigo_ramo_op
-        , 'AUTOS OBLIGATORIO' AS ramo_desc
         , COALESCE(base.apertura_canal_desc, '-1') AS apertura_canal_desc
         , COALESCE(base.apertura_amparo_desc, '-1') AS apertura_amparo_desc
         , COALESCE(base.tipo_vehiculo, '-1') AS tipo_vehiculo
@@ -580,13 +579,10 @@ CREATE MULTISET VOLATILE TABLE siniestros_final AS (
             AND (base.tipo_vehiculo = contd.tipo_vehiculo)
             AND (base.atipico = contd.atipico)
 
-    LEFT JOIN
-        mdb_seguros_colombia.v_ramo AS ramo
-        ON (base.codigo_ramo_op = ramo.codigo_ramo_op)
     INNER JOIN fechas AS focurr ON (base.fecha_siniestro = focurr.dia_dt)
     INNER JOIN fechas AS fmov ON (base.fecha_registro = fmov.dia_dt)
 
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
 
     HAVING NOT (
         ZEROIFNULL(SUM(contp.conteo_pago)) = 0
@@ -599,12 +595,11 @@ CREATE MULTISET VOLATILE TABLE siniestros_final AS (
     )
 
 ) WITH DATA PRIMARY INDEX (
-    ramo_desc
-    , apertura_canal_desc
+    apertura_canal_desc
     , apertura_amparo_desc
     , tipo_vehiculo
     , fecha_siniestro
     , fecha_registro
 ) ON COMMIT PRESERVE ROWS;
 
-SELECT * FROM siniestros_final ORDER BY 1, 2, 3, 4, 5, 6, 7, 8, 9  -- noqa:
+SELECT * FROM siniestros_final ORDER BY 1, 2, 3, 4, 5, 6, 7, 8  -- noqa:

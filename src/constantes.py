@@ -42,6 +42,13 @@ COLUMNAS_QTYS = [
     "conteo_desistido",
 ]
 
+COLUMNAS_PRIMAS = [
+    "prima_bruta",
+    "prima_bruta_devengada",
+    "prima_retenida",
+    "prima_retenida_devengada",
+]
+
 COLUMNAS_ULTIMATE = [
     "frec_ultimate",
     "seve_ultimate_bruto",

@@ -497,11 +497,22 @@ Sub formatear_tablas_resumen(ws_name, num_filas)
     Call formatear_columnas_tablas_resumen(ws, "plata_ultimate_retenido", "plata_ultimate_contable_retenido", "plata_retenido", num_filas)
     Call formatear_columnas_tablas_resumen(ws, "aviso_bruto", "aviso_bruto", "plata_bruto", num_filas)
     Call formatear_columnas_tablas_resumen(ws, "aviso_retenido", "aviso_retenido", "plata_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "ibnr_bruto", "ibnr_contable_bruto", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "ibnr_retenido", "ibnr_contable_retenido", "plata_retenido", num_filas)
+
+    If ws_name <> "Aux_Totales" Then
+        Call formatear_columnas_tablas_resumen(ws, "ibnr_bruto", "ibnr_contable_bruto", "plata_bruto", num_filas)
+        Call formatear_columnas_tablas_resumen(ws, "ibnr_retenido", "ibnr_contable_retenido", "plata_retenido", num_filas)
+    End If
 
     If ws_name = "Aux_Anterior" Then
         Call formatear_columnas_tablas_resumen(ws, "atipico", "mes_corte", "conteo", num_filas * 120)
+    End If
+
+    If ws_name = "Aux_Totales" Then
+        col_aviso_retenido = col_auxtot("aviso_retenido")
+        Call crear_columna(ws, 1, col_aviso_retenido + 1, "ibnr_bruto", "=RC" & col_auxtot("plata_ultimate_bruto") & " - RC" & col_auxtot("incurrido_bruto") & " ", formato_plata(), False, num_filas, azul_oscuro(), blanco())
+        Call crear_columna(ws, 1, col_aviso_retenido + 2, "ibnr_contable_bruto", "=RC" & col_auxtot("plata_ultimate_contable_bruto") & " - RC" & col_auxtot("incurrido_bruto") & " ", formato_plata(), False, num_filas, azul_oscuro(), blanco())
+        Call crear_columna(ws, 1, col_aviso_retenido + 3, "ibnr_retenido", "=RC" & col_auxtot("plata_ultimate_retenido") & " - RC" & col_auxtot("incurrido_retenido") & " ", formato_plata(), False, num_filas, azul_claro(), blanco())
+        Call crear_columna(ws, 1, col_aviso_retenido + 4, "ibnr_contable_retenido", "=RC" & col_auxtot("plata_ultimate_contable_retenido") & " - RC" & col_auxtot("incurrido_retenido") & " ", formato_plata(), False, num_filas, azul_claro(), blanco())
     End If
 
 End Sub

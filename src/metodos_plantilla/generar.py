@@ -11,7 +11,9 @@ from src.metodos_plantilla import insumos as ins
 from src.models import ModosPlantilla
 
 
-def generar_plantilla(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> None:
+def generar_plantilla(
+    wb: xw.Book, negocio: str, modos: ModosPlantilla, mes_corte: int
+) -> None:
     s = time.time()
 
     if modos.plantilla != "completar_diagonal":
@@ -27,10 +29,10 @@ def generar_plantilla(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> Non
         else ["conteo_pago", "conteo_incurrido"]
     )
 
-    periodicidades = wb.sheets["Main"].tables["periodicidades"].data_body_range.value
+    aperturas = utils.obtener_aperturas(negocio, "siniestros")
 
     triangulo = crear_triangulo_base_plantilla(
-        modos.apertura, modos.atributo, periodicidades, cantidades
+        modos.apertura, modos.atributo, aperturas, cantidades
     )
 
     wb.sheets[plantilla_name].cells(
@@ -69,18 +71,14 @@ def generar_plantilla(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> Non
 def crear_triangulo_base_plantilla(
     apertura: str,
     atributo: str,
-    periodicidades: list[list[str]],
+    aperturas: pl.DataFrame,
     cantidades: list[str],
 ) -> pd.DataFrame:
     return (
         ins.df_triangulos()
         .filter(pl.col("apertura_reservas") == apertura)
         .join(
-            pl.LazyFrame(
-                periodicidades,
-                schema=["apertura_reservas", "periodicidad_ocurrencia"],
-                orient="row",
-            ),
+            aperturas.select(["apertura_reservas", "periodicidad_ocurrencia"]).lazy(),
             on=["apertura_reservas", "periodicidad_ocurrencia"],
         )
         .drop(["diagonal", "periodo_desarrollo"])

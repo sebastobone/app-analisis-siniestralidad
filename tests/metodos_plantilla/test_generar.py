@@ -40,7 +40,12 @@ def test_forma_triangulo(
     df = generar.crear_triangulo_base_plantilla(
         "01_001_A_D",
         "bruto",
-        [["01_001_A_D", periodicidad_ocurrencia]],
+        pl.DataFrame(
+            {
+                "apertura_reservas": ["01_001_A_D"],
+                "periodicidad_ocurrencia": [periodicidad_ocurrencia],
+            }
+        ),
         ["pago", "incurrido"],
     )
 

@@ -27,18 +27,20 @@ async def traer_y_guardar_todas_las_aperturas(
         .to_list()
     )
     atributos = (
-        ["Bruto", "Retenido"] if plantilla_name != "Plantilla_Frec" else ["Bruto"]
+        ["bruto", "retenido"] if plantilla_name != "Plantilla_Frec" else ["bruto"]
     )
 
     num_apertura = 0
     for apertura in aperturas:
         for atributo in atributos:
-            wb.sheets[plantilla_name]["C2"].value = apertura
-            wb.sheets[plantilla_name]["C3"].value = atributo
-            generar_plantilla(wb, modos, mes_corte)
+            modos_actual = ModosPlantilla(**modos.model_dump())
+            modos_actual.apertura = apertura
+            modos_actual.atributo = atributo  # type: ignore
+
+            generar_plantilla(wb, negocio, modos_actual, mes_corte)
             if traer:
-                traer_apertura(wb, modos, mes_corte)
-            guardar_apertura(wb, modos, mes_corte)
+                traer_apertura(wb, modos_actual, mes_corte)
+            guardar_apertura(wb, modos_actual, mes_corte)
 
             await asyncio.sleep(0)
 

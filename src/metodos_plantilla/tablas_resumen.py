@@ -27,6 +27,7 @@ def generar_tablas_resumen(
             ["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"]
             + ct.COLUMNAS_QTYS
         )
+        .pipe(unificar_tablas, aperturas, expuestos, primas)
     )
 
     if tipo_analisis == "entremes":
@@ -40,6 +41,7 @@ def generar_tablas_resumen(
                 on=["apertura_reservas", "periodicidad_triangulo"],
             )
             .drop("periodicidad_triangulo")
+            .pipe(unificar_tablas, aperturas, expuestos, primas)
         )
 
         diagonales = (
@@ -50,7 +52,6 @@ def generar_tablas_resumen(
             .collect()
             .vstack(ult_ocurr.collect())
             .lazy()
-            .pipe(unificar_tablas, aperturas, expuestos, primas)
         )
 
     tabla_entremes = diagonales.drop(
@@ -69,10 +70,6 @@ def generar_tablas_resumen(
             plata_ultimate_contable_retenido=0,
             aviso_bruto=pl.col("incurrido_bruto") - pl.col("pago_bruto"),
             aviso_retenido=pl.col("incurrido_retenido") - pl.col("pago_retenido"),
-            ibnr_bruto=0,
-            ibnr_contable_bruto=0,
-            ibnr_retenido=0,
-            ibnr_contable_retenido=0,
         )
         .sort(["apertura_reservas", "periodo_ocurrencia"])
         .collect()

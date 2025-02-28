@@ -90,7 +90,8 @@ async def obtener_logs(request: Request) -> AsyncIterator[str]:
 
 @app.get("/stream-logs")
 async def stream_logs(request: Request):
-    return EventSourceResponse(obtener_logs(request))
+    dev = True
+    return EventSourceResponse(obtener_logs(request)) if not dev else None
 
 
 def obtener_parametros_usuario(
@@ -231,7 +232,7 @@ async def modos_plantilla(
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     if modos.modo == "generar":
-        generar.generar_plantilla(wb, modos, p.mes_corte)
+        generar.generar_plantilla(wb, p.negocio, modos, p.mes_corte)
     elif modos.modo == "guardar":
         guardar_apertura.guardar_apertura(wb, modos, p.mes_corte)
     elif modos.modo == "traer":

@@ -4,11 +4,8 @@ from src.models import EstructuraApertura, RangeDimension
 
 
 def obtener_estructura_apertura(
-    wb: xw.Book, plantilla_name: str, mes_corte: int
+    wb: xw.Book, apertura: str, atributo: str, plantilla_name: str, mes_corte: int
 ) -> EstructuraApertura:
-    apertura = str(wb.sheets[plantilla_name]["C2"].value)
-    atributo = str(wb.sheets[plantilla_name]["C3"].value).lower()
-
     num_ocurrencias = utils.num_ocurrencias(wb.sheets[plantilla_name])
     num_alturas = utils.num_alturas(wb.sheets[plantilla_name])
 

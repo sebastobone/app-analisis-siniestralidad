@@ -151,6 +151,9 @@ def generar_hojas_resumen(
         wb.sheets["Aux_Anterior"]["A1"].options(
             index=False
         ).value = resultados_anteriores.pipe(mantener_formato_columnas).to_pandas()
+        wb.macro("formatear_tablas_resumen")(
+            "Aux_Anterior", resultados_anteriores.shape[0]
+        )
 
     wb.sheets["Aux_Totales"]["A1"].options(index=False).value = diagonales.pipe(
         mantener_formato_columnas
@@ -161,7 +164,6 @@ def generar_hojas_resumen(
 
     wb.macro("formatear_tablas_resumen")("Aux_Totales", diagonales.shape[0])
     wb.macro("formatear_tablas_resumen")("Atipicos", atipicos.shape[0])
-    wb.macro("formatear_tablas_resumen")("Aux_Anterior", resultados_anteriores.shape[0])
 
 
 def generar_hoja_entremes(

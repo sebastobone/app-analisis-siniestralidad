@@ -2,6 +2,7 @@ import time
 
 import polars as pl
 import xlwings as xw
+from src import utils
 from src.logger_config import logger
 from src.models import EstructuraApertura, ModosPlantilla
 
@@ -13,14 +14,20 @@ def guardar_apertura(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> None
     s = time.time()
 
     plantilla_name = f"Plantilla_{modos.plantilla.capitalize()}"
-    estructura_apertura = obtener_estructura_apertura(wb, plantilla_name, mes_corte)
+    estructura_apertura = obtener_estructura_apertura(
+        wb, modos.apertura, modos.atributo, plantilla_name, mes_corte
+    )
 
     guardar_parametros(wb.sheets[plantilla_name], estructura_apertura)
     guardar_ultimate(wb, plantilla_name, estructura_apertura)
 
-    apertura = estructura_apertura.apertura
-    atributo = estructura_apertura.atributo
-    logger.success(f"Parametros y resultados para {apertura} - {atributo} guardados.")
+    logger.success(
+        utils.limpiar_espacios_log(
+            f"""
+            Parametros y resultados para {modos.apertura} - {modos.atributo} guardados.
+            """
+        )
+    )
 
     wb.sheets["Main"]["A1"].value = "GUARDAR_APERTURA"
     wb.sheets["Main"]["A2"].value = time.time() - s

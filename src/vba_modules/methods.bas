@@ -508,6 +508,8 @@ Sub formatear_tablas_resumen(ws_name, num_filas)
     End If
 
     If ws_name = "Aux_Totales" Then
+        Call crear_columna(ws, 1, col_auxtot("conteo_ultimate"), "conteo_ultimate", "=RC" & col_auxtot("frec_ultimate") & " * RC" & col_auxtot("expuestos") & " ", formato_numero(), False, num_filas, cian_claro(), blanco())
+        
         col_aviso_retenido = col_auxtot("aviso_retenido")
         Call crear_columna(ws, 1, col_aviso_retenido + 1, "ibnr_bruto", "=RC" & col_auxtot("plata_ultimate_bruto") & " - RC" & col_auxtot("incurrido_bruto") & " ", formato_plata(), False, num_filas, azul_oscuro(), blanco())
         Call crear_columna(ws, 1, col_aviso_retenido + 2, "ibnr_contable_bruto", "=RC" & col_auxtot("plata_ultimate_contable_bruto") & " - RC" & col_auxtot("incurrido_bruto") & " ", formato_plata(), False, num_filas, azul_oscuro(), blanco())

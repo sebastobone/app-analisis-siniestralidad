@@ -213,6 +213,7 @@ def generar_hoja_entremes(
     ).value = tabla_entremes.to_pandas()
     wb.macro("preparar_Plantilla_Entremes")(tabla_entremes.shape[0])
     wb.macro("formatear_tabla_entremes")(tabla_entremes.shape[0])
+    wb.macro("vincular_ultimates_entremes")(tabla_entremes.shape[0])
 
 
 def obtener_resultados_ultimo_triangulo(

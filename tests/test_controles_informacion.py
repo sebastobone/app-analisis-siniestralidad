@@ -14,14 +14,7 @@ from src.controles_informacion import sap
     [
         (
             ["prima_bruta", "prima_cedida"],
-            set(
-                (
-                    "prima_bruta",
-                    "prima_retenida",
-                    "prima_bruta_devengada",
-                    "prima_retenida_devengada",
-                )
-            ),
+            set(ct.COLUMNAS_PRIMAS),
         ),
         (
             ["pago_retenido", "aviso_bruto"],

@@ -28,7 +28,6 @@ def mock_siniestros(rango_meses: tuple[date, date]) -> pl.LazyFrame:
         {
             "codigo_op": np.random.choice(["01", "02"], size=num_rows),
             "codigo_ramo_op": np.random.choice(["001", "002", "003"], size=num_rows),
-            "ramo_desc": ["" for i in range(num_rows)],
             "apertura_1": np.random.choice(["A", "B", "C"], size=num_rows),
             "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
             "atipico": np.random.choice([0, 1], size=num_rows, p=[0.95, 0.05]),
@@ -52,14 +51,7 @@ def mock_siniestros(rango_meses: tuple[date, date]) -> pl.LazyFrame:
             "conteo_incurrido": np.random.randint(0, 110, size=num_rows),
             "conteo_desistido": np.random.randint(0, 10, size=num_rows),
         }
-    ).with_columns(
-        utils.crear_columna_apertura_reservas("mock"),
-        ramo_desc=pl.when(pl.col("codigo_ramo_op") == "001")
-        .then(pl.lit("RAMO1"))
-        .when(pl.col("codigo_ramo_op") == "002")
-        .then(pl.lit("RAMO2"))
-        .otherwise(pl.lit("RAMO3")),
-    )
+    ).with_columns(utils.crear_columna_apertura_reservas("mock"))
 
 
 @pytest.fixture
@@ -69,7 +61,6 @@ def mock_primas(rango_meses: tuple[date, date]) -> pl.LazyFrame:
         {
             "codigo_op": np.random.choice(["01", "02"], size=num_rows),
             "codigo_ramo_op": np.random.choice(["001", "002", "003"], size=num_rows),
-            "ramo_desc": np.random.choice(["RAMO1", "RAMO2", "RAMO3"], size=num_rows),
             "apertura_1": np.random.choice(["A", "B", "C"], size=num_rows),
             "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
             "fecha_registro": np.random.choice(
@@ -83,14 +74,7 @@ def mock_primas(rango_meses: tuple[date, date]) -> pl.LazyFrame:
             "prima_bruta_devengada": np.random.random(size=num_rows) * 1e8,
             "prima_retenida_devengada": np.random.random(size=num_rows) * 1e8,
         }
-    ).with_columns(
-        utils.crear_columna_apertura_reservas("mock"),
-        ramo_desc=pl.when(pl.col("codigo_ramo_op") == "001")
-        .then(pl.lit("RAMO1"))
-        .when(pl.col("codigo_ramo_op") == "002")
-        .then(pl.lit("RAMO2"))
-        .otherwise(pl.lit("RAMO3")),
-    )
+    ).with_columns(utils.crear_columna_apertura_reservas("mock"))
 
 
 @pytest.fixture
@@ -102,9 +86,6 @@ def mock_expuestos(rango_meses: tuple[date, date]) -> pl.LazyFrame:
                 "codigo_op": np.random.choice(["01", "02"], size=num_rows),
                 "codigo_ramo_op": np.random.choice(
                     ["001", "002", "003"], size=num_rows
-                ),
-                "ramo_desc": np.random.choice(
-                    ["RAMO1", "RAMO2", "RAMO3"], size=num_rows
                 ),
                 "apertura_1": np.random.choice(["A", "B", "C"], size=num_rows),
                 "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
@@ -118,20 +99,12 @@ def mock_expuestos(rango_meses: tuple[date, date]) -> pl.LazyFrame:
                 "vigentes": np.random.random(size=num_rows) * 1e6,
             }
         )
-        .with_columns(
-            utils.crear_columna_apertura_reservas("mock"),
-            ramo_desc=pl.when(pl.col("codigo_ramo_op") == "001")
-            .then(pl.lit("RAMO1"))
-            .when(pl.col("codigo_ramo_op") == "002")
-            .then(pl.lit("RAMO2"))
-            .otherwise(pl.lit("RAMO3")),
-        )
+        .with_columns(utils.crear_columna_apertura_reservas("mock"))
         .group_by(
             [
                 "apertura_reservas",
                 "codigo_op",
                 "codigo_ramo_op",
-                "ramo_desc",
                 "apertura_1",
                 "apertura_2",
                 "fecha_registro",
@@ -194,3 +167,9 @@ def assert_igual(
     if not col2:
         col2 = col1
     assert abs(df1.get_column(col1).sum() - df2.get_column(col2).sum()) < 100
+
+
+def borrar_archivos(directorio: str) -> None:
+    for file in os.listdir(directorio):
+        if file != ".gitkeep":
+            os.remove(directorio)

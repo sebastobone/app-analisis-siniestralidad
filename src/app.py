@@ -193,7 +193,7 @@ async def generar_aperturas(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ):
     params = obtener_parametros_usuario(session, session_id)
-    aperturas = (
+    aperturas = sorted(
         utils.obtener_aperturas(params.negocio, "siniestros")
         .get_column("apertura_reservas")
         .unique()

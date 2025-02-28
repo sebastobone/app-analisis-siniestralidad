@@ -16,9 +16,7 @@ def lowercase_columns(df: pl.LazyFrame | pl.DataFrame) -> pl.LazyFrame | pl.Data
 
 def crear_columna_apertura_reservas(negocio: str) -> pl.Expr:
     return pl.concat_str(
-        obtener_aperturas(negocio, "siniestros").drop(
-            ["apertura_reservas", "periodicidad_ocurrencia"]
-        ),
+        obtener_nombres_aperturas(negocio, "siniestros"),
         separator="_",
     ).alias("apertura_reservas")
 

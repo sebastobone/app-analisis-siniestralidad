@@ -1,31 +1,21 @@
-Function color_format(Rng)
-    With Rng
-        .Font.Bold = True
-        .Interior.ThemeColor = xlThemeColorAccent1
-        .Interior.TintAndShade = 0.799981688894314
-        .HorizontalAlignment = xlCenter
-        .VerticalAlignment = xlBottom
-    End With
-End Function
+Function FormatearTriangulo(ws, fila_ini_plantillas, header_triangulos, col_ocurrs_plantillas, num_ocurrencias, num_alturas, formato)
 
-
-
-Function color_columnas_triangulo(ws, fila_ini_plantillas, col_ocurrs_plantillas, num_alturas)
-
-    With ws.Range(ws.Cells(fila_ini_plantillas, col_ocurrs_plantillas), ws.Cells(fila_ini_plantillas + 1, col_ocurrs_plantillas)).Interior
-        .ThemeColor = xlThemeColorAccent1
-        .TintAndShade = 0.799981688894314
+    With ws.Range(ws.Cells(fila_ini_plantillas, col_ocurrs_plantillas), ws.Cells(fila_ini_plantillas + header_triangulos - 1, col_ocurrs_plantillas))
+        .Interior.Color = gris_oscuro()
+        .Font.Color = blanco()
     End With
 
-    With ws.Range(ws.Cells(fila_ini_plantillas, col_ocurrs_plantillas + 1), ws.Cells(fila_ini_plantillas + 1, col_ocurrs_plantillas + num_alturas)).Interior
-        .ThemeColor = xlThemeColorAccent3
-        .TintAndShade = 0.599999
+    With ws.Range(ws.Cells(fila_ini_plantillas, col_ocurrs_plantillas + 1), ws.Cells(fila_ini_plantillas + header_triangulos - 1, col_ocurrs_plantillas + num_alturas))
+        .Interior.Color = cian_claro()
+        .Font.Color = blanco()
     End With
     
-    With ws.Range(ws.Cells(fila_ini_plantillas, col_ocurrs_plantillas + 1 + num_alturas), ws.Cells(fila_ini_plantillas + 1, col_ocurrs_plantillas + num_alturas * 2)).Interior
-        .ThemeColor = xlThemeColorAccent2
-        .TintAndShade = 0.599999
+    With ws.Range(ws.Cells(fila_ini_plantillas, col_ocurrs_plantillas + 1 + num_alturas), ws.Cells(fila_ini_plantillas + header_triangulos - 1, col_ocurrs_plantillas + num_alturas * 2))
+        .Interior.Color = amarillo_claro()
+        .Font.Color = blanco()
     End With
+
+    ws.Range(ws.Cells(fila_ini_plantillas + header_triangulos, col_ocurrs_plantillas + 1), ws.Cells(fila_ini_plantillas + header_triangulos + num_ocurrencias - 1, col_ocurrs_plantillas + num_alturas * 2)).NumberFormat = formato
 
 End Function
 
@@ -37,7 +27,7 @@ End Function
 
 
 
-Function triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, nombre, formula, format)
+Function CrearTriangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, nombre, formula, format)
     
     fila_triangulo = last_row(ws, col_ocurrs_plantillas) + sep_triangulos + 1
     
@@ -57,7 +47,7 @@ Function triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_tria
     rango_valores.NumberFormat = format
     
     
-    If nombre = "Ratios" And ws.Name <> "Plantilla_Entremes" Then
+    If nombre = "Ratios" And ws.Name <> "Entremes" Then
         
         'Mapa de color verde
         Set Rng = ws.Range(ws.Cells(fila_triangulo + header_triangulos, col_ocurrs_plantillas + 1), ws.Cells(fila_triangulo + header_triangulos + num_ocurrencias - 1, col_ocurrs_plantillas + 1))
@@ -122,27 +112,29 @@ Function factores_desarrollo(ws, num_ocurrencias, num_alturas, header_triangulos
     ws.Cells(fila_factores, col_ocurrs_plantillas - 3).value = "Periodo final"
     ws.Cells(fila_factores, col_ocurrs_plantillas - 2).value = "Percentil"
     
-    Set Rng = ws.Range(ws.Cells(fila_factores, col_ocurrs_plantillas - 4), ws.Cells(fila_factores, col_ocurrs_plantillas - 2))
-    Call color_format(Rng)
+    With ws.Range(ws.Cells(fila_factores, col_ocurrs_plantillas - 4), ws.Cells(fila_factores, col_ocurrs_plantillas - 2))
+        .Font.Bold = True
+        .Interior.Color = gris_claro()
+    End With
     
     With ws.Cells(fila_factores, col_ocurrs_plantillas + 1)
-        .value = "Pago"
+        .value = "pago"
         .Font.Bold = True
+        .Font.Color = blanco()
     End With
     
     With ws.Range(ws.Cells(fila_factores, col_ocurrs_plantillas + 1), ws.Cells(fila_factores, col_ocurrs_plantillas + num_alturas))
-        .Interior.ThemeColor = xlThemeColorAccent3
-        .Interior.TintAndShade = 0.599999
+        .Interior.Color = cian_claro()
     End With
     
     With ws.Cells(fila_factores, col_ocurrs_plantillas + num_alturas + 1)
-        .value = "Incurrido"
+        .value = "incurrido"
         .Font.Bold = True
+        .Font.Color = blanco()
     End With
     
     With ws.Range(ws.Cells(fila_factores, col_ocurrs_plantillas + num_alturas + 1), ws.Cells(fila_factores, col_ocurrs_plantillas + num_alturas * 2))
-        .Interior.ThemeColor = xlThemeColorAccent2
-        .Interior.TintAndShade = 0.599999
+        .Interior.Color = amarillo_claro()
     End With
         
     fila_ratios = WorksheetFunction.Match("Ratios", ws.Range("F:F"), 0) + header_triangulos
@@ -292,16 +284,15 @@ Function factores_desarrollo(ws, num_ocurrencias, num_alturas, header_triangulos
     ws.Range(ws.Cells(fila_factores + 1, col_ocurrs_plantillas + 1), ws.Cells(fila_factores + UBound(formulas), col_ocurrs_plantillas + 1)).Copy
     ws.Range(ws.Cells(fila_factores + 1, col_ocurrs_plantillas + 1), ws.Cells(fila_factores + UBound(formulas), col_ocurrs_plantillas + num_alturas * 2)).PasteSpecial Paste:=xlPasteAll
     
-    With ws.Range(ws.Cells(fila_factores + 1, col_ocurrs_plantillas), ws.Cells(fila_factores + UBound(nombres), col_ocurrs_plantillas)).Interior
-        .ThemeColor = xlThemeColorAccent1
-        .TintAndShade = 0.799981688894314
+    With ws.Range(ws.Cells(fila_factores + 1, col_ocurrs_plantillas), ws.Cells(fila_factores + UBound(nombres), col_ocurrs_plantillas))
+        .Interior.Color = gris_claro()
     End With
     
 End Function
 
 
 
-Sub limpiar_plantilla(ws_name)
+Sub LimpiarPlantilla(ws_name)
     Set ws = Worksheets(ws_name)
     For Each co In ws.ChartObjects
         co.Delete
@@ -311,90 +302,18 @@ Sub limpiar_plantilla(ws_name)
 End Sub
 
 
+Function CrearEstructuraFactores(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas)
 
-Sub formatear_parametro(ws_name As String, nombre As String, fila As Integer, columna As Integer)
-
-    Set ws = Worksheets(ws_name)
-
-    With ws.Cells(fila, columna)
-        .Interior.Color = RGB(115, 160, 255)
-        .Font.Bold = True
-        .Font.Color = RGB(255, 255, 255)
-        .Value = nombre
-    End With
-
-    ws.Cells(fila, columna + 1).Interior.Color = RGB(242, 242, 242)
-
-End Sub
-
-
-
-Function crear_dropdown(ws, nombre As String, fila As Integer, columna As Integer, contenido As String, valor_defecto As String)
-
-    With ws.Cells(fila, columna - 1)
-        .Interior.Color = RGB(115, 160, 255)
-        .Font.Bold = True
-        .Font.Color = RGB(255, 255, 255)
-        .Value = nombre
-    End With
-
-    With ws.Cells(fila, columna)
-        .Interior.Color = RGB(242, 242, 242)
-        .Validation.Delete
-        .Validation.Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=contenido
-        .Value = valor_defecto
-    End With
-
-End Function
-
-
-
-Sub generar_parametros(ws_name As String, aperturas As String, apertura_defecto As String)
-
-    Set ws = Worksheets(ws_name)
-    Select Case ws.Name
-        Case "Plantilla_Frec"
-            Call crear_dropdown(ws, "Apertura", 2, 3, aperturas, apertura_defecto)
-            Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto", "Bruto")
-            Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
-
-        Case "Plantilla_Seve"
-            Call crear_dropdown(ws, "Apertura", 2, 3, aperturas, apertura_defecto)
-            Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto,Retenido", "Bruto")
-            Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
-
-            Call crear_dropdown(ws, "Tipo de indexacion", 5, 3, "Ninguna,Por fecha de ocurrencia,Por fecha de pago", "Ninguna")
-
-            Call formatear_parametro(ws.Name, "Medida de indexacion", 6, 2)
-            ws.Cells(6, 3).Value = "Ninguna"
-
-        Case "Plantilla_Plata"
-            Call crear_dropdown(ws, "Apertura", 2, 3, aperturas, apertura_defecto)
-            Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto,Retenido", "Bruto")
-            Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
-
-        Case "Completar_diagonal"
-            Call crear_dropdown(ws, "Apertura", 2, 3, aperturas, apertura_defecto)
-            Call crear_dropdown(ws, "Atributo", 3, 3, "Bruto,Retenido", "Bruto")
-            Call crear_dropdown(ws, "Metodologia", 4, 3, "Pago,Incurrido", "Pago")
-            
-    End Select
-
-End Sub
-
-
-Function estructura_factores(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas)
-
-    desref_filas = desref_filas_triangulo(num_ocurrencias, header_triangulos, sep_triangulos)
+    desref_filas = NumFilasEntreTriangulos(num_ocurrencias, header_triangulos, sep_triangulos)
     fila_ind_altura = fila_ini_plantillas + header_triangulos - 1
 
-    Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Ratios", "=IF(OR(R[" & desref_filas & "]C[1] = """", R" & fila_ind_altura & "C[1] < R" & fila_ind_altura & "C), """", IFERROR(R[" & desref_filas & "]C[1]/R[" & desref_filas & "]C, """"))", "#,##0.0000")
-    Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Exclusiones", "=IF(OR(R[" & desref_filas * 2 & "]C[1] = """", R" & fila_ind_altura & "C[1] < R" & fila_ind_altura & "C), """", 1)", "#,##0")
+    Call CrearTriangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Ratios", "=IF(OR(R[" & desref_filas & "]C[1] = """", R" & fila_ind_altura & "C[1] < R" & fila_ind_altura & "C), """", IFERROR(R[" & desref_filas & "]C[1]/R[" & desref_filas & "]C, """"))", "#,##0.0000")
+    Call CrearTriangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Exclusiones", "=IF(OR(R[" & desref_filas * 2 & "]C[1] = """", R" & fila_ind_altura & "C[1] < R" & fila_ind_altura & "C), """", 1)", "#,##0")
     Call factores_desarrollo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, fila_ind_altura)
     
     If ws.Name <> "Completar_diagonal" Then
         fila_fact_sel = WorksheetFunction.Match("FACTORES SELECCIONADOS", ws.Range("F:F"), 0)
-        Call triangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Base", "=IF(R[" & (desref_filas - sep_triangulos) * 2 - 16 & "]C = """", R" & fila_fact_sel & "C,R[" & (desref_filas - sep_triangulos) * 2 - 16 & "]C)", "#,##0.0000")
+        Call CrearTriangulo(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, "Base", "=IF(R[" & (desref_filas - sep_triangulos) * 2 - 16 & "]C = """", R" & fila_fact_sel & "C,R[" & (desref_filas - sep_triangulos) * 2 - 16 & "]C)", "#,##0.0000")
     End If
 
 End Function

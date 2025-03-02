@@ -16,16 +16,12 @@ def generar_plantilla(
 ) -> None:
     s = time.time()
 
-    if modos.plantilla != "completar_diagonal":
-        plantilla_name = f"Plantilla_{modos.plantilla.capitalize()}"
-    else:
-        plantilla_name = "Completar_diagonal"
-
-    wb.macro("limpiar_plantilla")(plantilla_name)
+    hoja_plantilla = modos.plantilla.capitalize()
+    wb.macro("LimpiarPlantilla")(hoja_plantilla)
 
     cantidades = (
         ["pago", "incurrido"]
-        if plantilla_name != "Plantilla_Frec"
+        if hoja_plantilla != "Frecuencia"
         else ["conteo_pago", "conteo_incurrido"]
     )
 
@@ -35,7 +31,7 @@ def generar_plantilla(
         modos.apertura, modos.atributo, aperturas, cantidades
     )
 
-    wb.sheets[plantilla_name].cells(
+    wb.sheets[hoja_plantilla].cells(
         ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS
     ).value = triangulo
 
@@ -45,10 +41,7 @@ def generar_plantilla(
         utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
     )
 
-    wb.macro("formatear_parametro")("Main", "Mes del periodo", 6, 1)
-    wb.sheets["Main"].range((6, 2)).value = mes_del_periodo
-
-    wb.macro(f"generar_{plantilla_name}")(
+    wb.macro(f"Generar{hoja_plantilla}")(
         num_ocurrencias,
         num_alturas,
         ct.HEADER_TRIANGULOS,
@@ -61,7 +54,7 @@ def generar_plantilla(
     )
 
     logger.success(
-        f"""{plantilla_name} generada para {modos.apertura} - {modos.atributo}."""
+        f"""{hoja_plantilla} generada para {modos.apertura} - {modos.atributo}."""
     )
 
     wb.sheets["Main"]["A1"].value = "GENERAR_PLANTILLA"

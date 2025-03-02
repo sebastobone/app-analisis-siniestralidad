@@ -83,7 +83,7 @@ Sub VincularUltimatesEntremes()
 End Sub
 
 
-Sub generar_Completar_Diagonal(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo)
+Sub GenerarCompletar_diagonal(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo)
 
 	Application.ScreenUpdating = False
 	Application.Calculation = xlCalculationManual
@@ -91,7 +91,7 @@ Sub generar_Completar_Diagonal(num_ocurrencias, num_alturas, header_triangulos, 
 	Set ws = ws_completar_diagonal()
 
 	Call color_columnas_triangulo(ws, fila_ini_plantillas, col_ocurrs_plantillas, num_alturas)
-	Call estructura_factores(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas)
+	Call CrearEstructuraFactores(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas)
 
 	fila_factor_compl = last_row(ws, col_ocurrs_plantillas) + sep_triangulos
 	num_meses_periodo = num_meses_periodo_fn(num_ocurrencias, num_alturas)

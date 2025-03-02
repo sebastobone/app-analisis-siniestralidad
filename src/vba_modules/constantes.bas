@@ -46,16 +46,16 @@ End Function
 
 Function fila_valores(ws, fila_ini_plantillas, header_triangulos) As Integer
     If ws.Name = "Severidad" Then
-        fila_valores = WorksheetFunction.Match("Severidad", ws_seve.Range("F:F"), 0) + header_triangulos
+        fila_valores = WorksheetFunction.Match("Severidad", ws_severidad.Range("F:F"), 0) + header_triangulos
     ElseIf ws.Name = "Frecuencia" Then
-        fila_valores = WorksheetFunction.Match("Frecuencia", ws_frec.Range("F:F"), 0) + header_triangulos
+        fila_valores = WorksheetFunction.Match("Frecuencia", ws_frecuencia.Range("F:F"), 0) + header_triangulos
     Else
         fila_valores = fila_ini_plantillas + header_triangulos
     End If
 End Function
 
-Function desref_filas_triangulo(num_ocurrencias, header_triangulos, sep_triangulos) As Integer
-    desref_filas_triangulo = - (num_ocurrencias + header_triangulos + sep_triangulos)
+Function NumFilasEntreTriangulos(num_ocurrencias, header_triangulos, sep_triangulos) As Integer
+    NumFilasEntreTriangulos = - (num_ocurrencias + header_triangulos + sep_triangulos)
 End Function
 
 
@@ -96,6 +96,10 @@ End Function
 
 Function gris_oscuro() As Long
     gris_oscuro = RGB(101, 104, 103)
+End Function
+
+Function gris_claro() As Long
+    gris_claro = RGB(224, 224, 224)
 End Function
 
 Function azul_oscuro() As Long

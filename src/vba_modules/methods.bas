@@ -401,148 +401,99 @@ End Function
 
 
 
-Sub formulas_aux_totales(num_filas_auxtot)
-    ws_auxtot.Range(ws_auxtot.Cells(2, col_auxtot("conteo_ultimate")), ws_auxtot.Cells(num_filas_auxtot + 1, col_auxtot("conteo_ultimate"))).Formula2R1C1 = "=RC" & col_auxtot("frec_ultimate") & " * RC" & col_auxtot("expuestos") & ""
-    ws_auxtot.Range(ws_auxtot.Cells(2, col_auxtot("ibnr_bruto")), ws_auxtot.Cells(num_filas_auxtot + 1, col_auxtot("ibnr_bruto"))).Formula2R1C1 = "=RC" & col_auxtot("plata_ultimate_bruto") & " - RC" & col_auxtot("incurrido_bruto") & ""
-    ws_auxtot.Range(ws_auxtot.Cells(2, col_auxtot("ibnr_retenido")), ws_auxtot.Cells(num_filas_auxtot + 1, col_auxtot("ibnr_retenido"))).Formula2R1C1 = "=RC" & col_auxtot("plata_ultimate_retenido") & " - RC" & col_auxtot("incurrido_retenido") & ""
-    ws_auxtot.Range(ws_auxtot.Cells(2, col_auxtot("ibnr_contable_bruto")), ws_auxtot.Cells(num_filas_auxtot + 1, col_auxtot("ibnr_contable_bruto"))).Formula2R1C1 = "=RC" & col_auxtot("plata_ultimate_contable_bruto") & " - RC" & col_auxtot("incurrido_bruto") & ""
-    ws_auxtot.Range(ws_auxtot.Cells(2, col_auxtot("ibnr_contable_retenido")), ws_auxtot.Cells(num_filas_auxtot + 1, col_auxtot("ibnr_contable_retenido"))).Formula2R1C1 = "=RC" & col_auxtot("plata_ultimate_contable_retenido") & " - RC" & col_auxtot("incurrido_retenido") & ""
-End Sub
+Sub FormatearTablaResumen(NombreHoja As String)
 
+    Set ws = Worksheets(NombreHoja)
 
+    UltimaColumna = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    
+    Set FormatosColumnas = New Collection
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "pago_bruto"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "pago_retenido"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "incurrido_bruto"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "incurrido_retenido"
+    FormatosColumnas.Add Array(cian_claro(), formato_numero()), "conteo_pago"
+    FormatosColumnas.Add Array(cian_claro(), formato_numero()), "conteo_incurrido"
+    FormatosColumnas.Add Array(cian_claro(), formato_numero()), "conteo_desistido"
+    FormatosColumnas.Add Array(cian_claro(), formato_numero()), "expuestos"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "prima_bruta"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "prima_bruta_devengada"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "prima_retenida"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "prima_retenida_devengada"
+    FormatosColumnas.Add Array(cian_claro(), formato_porcentaje()), "frecuencia_ultimate"
+    FormatosColumnas.Add Array(cian_claro(), formato_numero()), "conteo_ultimate"
+    FormatosColumnas.Add Array(verde_oscuro(), formato_plata()), "severidad_ultimate_bruto"
+    FormatosColumnas.Add Array(verde_claro(), formato_plata()), "severidad_ultimate_retenido"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "plata_ultimate_bruto"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "plata_ultimate_contable_bruto"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "plata_ultimate_retenido"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "plata_ultimate_contable_retenido"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "aviso_bruto"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "aviso_retenido"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "ibnr_bruto"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "ibnr_contable_bruto"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "ibnr_retenido"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "ibnr_contable_retenido"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_porcentaje()), "velocidad_pago_bruto_triangulo"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_porcentaje()), "velocidad_incurrido_bruto_triangulo"
+    FormatosColumnas.Add Array(azul_claro(), formato_porcentaje()), "velocidad_pago_retenido_triangulo"
+    FormatosColumnas.Add Array(azul_claro(), formato_porcentaje()), "velocidad_incurrido_retenido_triangulo"
+    FormatosColumnas.Add Array(violeta_oscuro(), formato_porcentaje()), "factor_completitud_pago_bruto"
+    FormatosColumnas.Add Array(violeta_oscuro(), formato_porcentaje()), "factor_completitud_incurrido_bruto"
+    FormatosColumnas.Add Array(violeta_claro(), formato_porcentaje()), "factor_completitud_pago_retenido"
+    FormatosColumnas.Add Array(violeta_claro(), formato_porcentaje()), "factor_completitud_incurrido_retenido"
 
+    NumFilas = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
 
-Function formatear_columnas_tablas_resumen(ws, ini_col, fin_col, tipo, num_filas)
+    For Col = 1 To UltimaColumna
 
-    nombre_hoja = ws.Name
+        NombreColumna = ws.Cells(1, Col).Value
 
-    Select Case nombre_hoja
-        Case "Aux_Anterior"
-            numero_columna_inicial = col_auxant(ini_col)
-            numero_columna_final = col_auxant(fin_col)
-        Case "Aux_Totales"
-            numero_columna_inicial = col_auxtot(ini_col)
-            numero_columna_final = col_auxtot(fin_col)
-        Case "Atipicos"
-            numero_columna_inicial = col_auxtot(ini_col)
-            numero_columna_final = col_auxtot(fin_col)
-        Case "Plantilla_Entremes"
-            numero_columna_inicial = col_entremes(ini_col)
-            numero_columna_final = col_entremes(fin_col)
-    End Select
+        On Error Resume Next
+        Formatos = FormatosColumnas(NombreColumna)
+        If Err.Number <> 0 Then
+            Formatos = Array(gris_oscuro(), "@")
+            Err.Clear
+        End If
+        On Error GoTo 0
 
-    Select Case tipo
-        Case "descriptores"
-            color = gris_oscuro()
-            formato = "@"
-        Case "plata_bruto"
-            color = azul_oscuro()
-            formato = formato_plata()
-        Case "plata_retenido"
-            color = azul_claro()
-            formato = formato_plata()
-        Case "conteo"
-            color = cian_claro()
-            formato = formato_numero()
-        Case "frec"
-            color = cian_claro()
-            formato = formato_porcentaje()
-        Case "seve_bruto"
-            color = verde_oscuro()
-            formato = formato_plata()
-        Case "seve_retenido"
-            color = verde_claro()
-            formato = formato_plata()
-        Case "velocidad_bruto"
-            color = azul_oscuro()
-            formato = formato_porcentaje()
-        Case "velocidad_retenido"
-            color = azul_claro()
-            formato = formato_porcentaje()
-        Case "factor_completitud_bruto"
-            color = violeta_oscuro()
-            formato = formato_porcentaje()
-        Case "factor_completitud_retenido"
-            color = violeta_claro()
-            formato = formato_porcentaje()
-    End Select
+        With ws.Cells(1, Col)
+            .Interior.Color = Formatos(0)
+            .Font.Color = blanco()
+            .Font.Bold = True
+        End With
 
-    With ws.Range(ws.Cells(1, numero_columna_inicial), ws.Cells(1, numero_columna_final))
-        .Interior.Color = color
-        .Font.Bold = True
-        .Font.Color = RGB(255, 255, 255)
-    End With
+        ws.Range(ws.Cells(1, Col), ws.Cells(NumFilas + 1, Col)).NumberFormat = Formatos(1)
 
-    ws.Range(ws.Cells(2, numero_columna_inicial), ws.Cells(num_filas + 1, numero_columna_final)).NumberFormat = formato
-
-End Function
-
-
-Sub formatear_tablas_resumen(ws_name, num_filas)
-
-    Set ws = Worksheets(ws_name)
-    Call formatear_columnas_tablas_resumen(ws, "apertura_reservas", "periodo_ocurrencia", "descriptores", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "pago_bruto", "pago_bruto", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "pago_retenido", "pago_retenido", "plata_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "incurrido_bruto", "incurrido_bruto", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "incurrido_retenido", "incurrido_retenido", "plata_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "conteo_pago", "expuestos", "conteo", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "prima_bruta", "prima_bruta_devengada", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "prima_retenida", "prima_retenida_devengada", "plata_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "frec_ultimate", "frec_ultimate", "frec", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "conteo_ultimate", "conteo_ultimate", "conteo", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "seve_ultimate_bruto", "seve_ultimate_bruto", "seve_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "seve_ultimate_retenido", "seve_ultimate_retenido", "seve_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "plata_ultimate_bruto", "plata_ultimate_contable_bruto", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "plata_ultimate_retenido", "plata_ultimate_contable_retenido", "plata_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "aviso_bruto", "aviso_bruto", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "aviso_retenido", "aviso_retenido", "plata_retenido", num_filas)
-
-    If ws_name <> "Aux_Totales" Then
-        Call formatear_columnas_tablas_resumen(ws, "ibnr_bruto", "ibnr_contable_bruto", "plata_bruto", num_filas)
-        Call formatear_columnas_tablas_resumen(ws, "ibnr_retenido", "ibnr_contable_retenido", "plata_retenido", num_filas)
-    End If
-
-    If ws_name = "Aux_Anterior" Then
-        Call formatear_columnas_tablas_resumen(ws, "atipico", "mes_corte", "conteo", num_filas * 120)
-    End If
-
-    If ws_name = "Aux_Totales" Then
-        Call crear_columna(ws, 1, col_auxtot("conteo_ultimate"), "conteo_ultimate", "=RC" & col_auxtot("frec_ultimate") & " * RC" & col_auxtot("expuestos") & " ", formato_numero(), False, num_filas, cian_claro(), blanco())
-        
-        col_aviso_retenido = col_auxtot("aviso_retenido")
-        Call crear_columna(ws, 1, col_aviso_retenido + 1, "ibnr_bruto", "=RC" & col_auxtot("plata_ultimate_bruto") & " - RC" & col_auxtot("incurrido_bruto") & " ", formato_plata(), False, num_filas, azul_oscuro(), blanco())
-        Call crear_columna(ws, 1, col_aviso_retenido + 2, "ibnr_contable_bruto", "=RC" & col_auxtot("plata_ultimate_contable_bruto") & " - RC" & col_auxtot("incurrido_bruto") & " ", formato_plata(), False, num_filas, azul_oscuro(), blanco())
-        Call crear_columna(ws, 1, col_aviso_retenido + 3, "ibnr_retenido", "=RC" & col_auxtot("plata_ultimate_retenido") & " - RC" & col_auxtot("incurrido_retenido") & " ", formato_plata(), False, num_filas, azul_claro(), blanco())
-        Call crear_columna(ws, 1, col_aviso_retenido + 4, "ibnr_contable_retenido", "=RC" & col_auxtot("plata_ultimate_contable_retenido") & " - RC" & col_auxtot("incurrido_retenido") & " ", formato_plata(), False, num_filas, azul_claro(), blanco())
-    End If
+    Next Col
 
 End Sub
 
 
-Sub formatear_tabla_entremes(num_filas)
+Sub AgregarColumnasResumen()
 
-    Set ws = ws_entremes()
-    Call formatear_columnas_tablas_resumen(ws, "apertura_reservas", "periodo_ocurrencia", "descriptores", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "pago_bruto", "pago_bruto", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "pago_retenido", "pago_retenido", "plata_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "incurrido_bruto", "incurrido_bruto", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "incurrido_retenido", "incurrido_retenido", "plata_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "conteo_pago", "expuestos", "conteo", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "prima_bruta", "prima_bruta_devengada", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "prima_retenida", "prima_retenida_devengada", "plata_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "frec_ultimate_anterior", "frec_ultimate_anterior", "frec", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "seve_ultimate_bruto_anterior", "seve_ultimate_bruto_anterior", "seve_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "seve_ultimate_retenido_anterior", "seve_ultimate_retenido_anterior", "seve_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "plata_ultimate_bruto_anterior", "plata_ultimate_contable_bruto_anterior", "plata_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "plata_ultimate_retenido_anterior", "plata_ultimate_contable_retenido_anterior", "plata_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "velocidad_pago_bruto_triangulo", "velocidad_incurrido_bruto_triangulo", "velocidad_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "velocidad_pago_retenido_triangulo", "velocidad_incurrido_retenido_triangulo", "velocidad_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "factor_completitud_pago_bruto", "factor_completitud_pago_bruto", "factor_completitud_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "factor_completitud_pago_retenido", "factor_completitud_pago_retenido", "factor_completitud_retenido", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "factor_completitud_incurrido_bruto", "factor_completitud_incurrido_bruto", "factor_completitud_bruto", num_filas)
-    Call formatear_columnas_tablas_resumen(ws, "factor_completitud_incurrido_retenido", "factor_completitud_incurrido_retenido", "factor_completitud_retenido", num_filas)
-   
+    Set ws = Worksheets("Resumen")
+
+    Dim num_filas As Integer
+    num_filas = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+
+    Dim col_aviso_retenido As Integer
+    col_aviso_retenido = obtener_numero_columna(ws, "aviso_retenido")
+
+    Call crear_columna(ws, 1, obtener_numero_columna(ws, "conteo_ultimate"), "conteo_ultimate", _
+        "=RC" & obtener_numero_columna(ws, "frecuencia_ultimate") & " * RC" & obtener_numero_columna(ws, "expuestos"), formato_numero(), False, num_filas, cian_claro(), blanco())
+
+    Call crear_columna(ws, 1, col_aviso_retenido + 1, "ibnr_bruto", _
+        "=RC" & obtener_numero_columna(ws, "plata_ultimate_bruto") & " - RC" & obtener_numero_columna(ws, "incurrido_bruto"), formato_plata(), False, num_filas, azul_oscuro(), blanco())
+
+    Call crear_columna(ws, 1, col_aviso_retenido + 2, "ibnr_contable_bruto", _
+        "=RC" & obtener_numero_columna(ws, "plata_ultimate_contable_bruto") & " - RC" & obtener_numero_columna(ws, "incurrido_bruto"), formato_plata(), False, num_filas, azul_oscuro(), blanco())
+
+    Call crear_columna(ws, 1, col_aviso_retenido + 3, "ibnr_retenido", _
+        "=RC" & obtener_numero_columna(ws, "plata_ultimate_retenido") & " - RC" & obtener_numero_columna(ws, "incurrido_retenido"), formato_plata(), False, num_filas, azul_claro(), blanco())
+
+    Call crear_columna(ws, 1, col_aviso_retenido + 4, "ibnr_contable_retenido", _
+        "=RC" & obtener_numero_columna(ws, "plata_ultimate_contable_retenido") & " - RC" & obtener_numero_columna(ws, "incurrido_retenido"), formato_plata(), False, num_filas, azul_claro(), blanco())
 End Sub
 
 

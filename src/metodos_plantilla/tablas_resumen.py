@@ -58,12 +58,12 @@ def generar_tablas_resumen(
         utils.obtener_nombres_aperturas(negocio, "siniestros")
     ).collect()
 
-    tabla_aux_totales = (
+    tabla_resumen = (
         diagonales.with_columns(
-            frec_ultimate=0,
+            frecuencia_ultimate=0,
             conteo_ultimate=0,
-            seve_ultimate_bruto=0,
-            seve_ultimate_retenido=0,
+            severidad_ultimate_bruto=0,
+            severidad_ultimate_retenido=0,
             plata_ultimate_bruto=0,
             plata_ultimate_contable_bruto=0,
             plata_ultimate_retenido=0,
@@ -78,10 +78,11 @@ def generar_tablas_resumen(
     tabla_atipicos = (
         atipicos.pipe(unificar_tablas, aperturas, expuestos, primas)
         .with_columns(
-            frec_ultimate=pl.col("conteo_incurrido") / pl.col("expuestos"),
+            frecuencia_ultimate=pl.col("conteo_incurrido") / pl.col("expuestos"),
             conteo_ultimate=pl.col("conteo_incurrido"),
-            seve_ultimate_bruto=pl.col("incurrido_bruto") / pl.col("conteo_incurrido"),
-            seve_ultimate_retenido=pl.col("incurrido_retenido")
+            severidad_ultimate_bruto=pl.col("incurrido_bruto")
+            / pl.col("conteo_incurrido"),
+            severidad_ultimate_retenido=pl.col("incurrido_retenido")
             / pl.col("conteo_incurrido"),
             plata_ultimate_bruto=pl.col("incurrido_bruto"),
             plata_ultimate_contable_bruto=pl.col("incurrido_bruto"),
@@ -98,7 +99,7 @@ def generar_tablas_resumen(
         .collect()
     )
 
-    return tabla_aux_totales, tabla_atipicos, tabla_entremes
+    return tabla_resumen, tabla_atipicos, tabla_entremes
 
 
 def unificar_tablas(

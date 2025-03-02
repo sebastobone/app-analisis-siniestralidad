@@ -1,35 +1,31 @@
 ' HOJAS
 
-Function ws_main() As Worksheet
-    Set ws_main = Worksheets("Main")
+Function ws_frecuencia() As Worksheet
+    Set ws_frecuencia = Worksheets("Frecuencia")
 End Function
 
-Function ws_frec() As Worksheet
-    Set ws_frec = Worksheets("Plantilla_Frec")
+Function ws_severidad() As Worksheet
+    Set ws_severidad = Worksheets("Severidad")
 End Function
 
-Function ws_seve() As Worksheet
-    Set ws_seve = Worksheets("Plantilla_Seve")
-End Function
-
-Function ws_plat() As Worksheet
-    Set ws_plat = Worksheets("Plantilla_Plata")
+Function ws_plata() As Worksheet
+    Set ws_plata = Worksheets("Plata")
 End Function
 
 Function ws_entremes() As Worksheet
-    Set ws_entremes = Worksheets("Plantilla_Entremes")
+    Set ws_entremes = Worksheets("Entremes")
 End Function
 
 Function ws_completar_diagonal() As Worksheet
     Set ws_completar_diagonal = Worksheets("Completar_diagonal")
 End Function
 
-Function ws_auxtot() As Worksheet
-    Set ws_auxtot = Worksheets("Aux_Totales")
+Function ws_resumen() As Worksheet
+    Set ws_resumen = Worksheets("Resumen")
 End Function
 
-Function ws_auxant() As Worksheet
-    Set ws_auxant = Worksheets("Aux_Anterior")
+Function ws_historico() As Worksheet
+    Set ws_historico = Worksheets("Historico")
 End Function
 
 Function ws_atipicos() As Worksheet
@@ -49,9 +45,9 @@ End Function
 ' FILAS
 
 Function fila_valores(ws, fila_ini_plantillas, header_triangulos) As Integer
-    If ws.Name = "Plantilla_Seve" Then
+    If ws.Name = "Severidad" Then
         fila_valores = WorksheetFunction.Match("Severidad", ws_seve.Range("F:F"), 0) + header_triangulos
-    ElseIf ws.Name = "Plantilla_Frec" Then
+    ElseIf ws.Name = "Frecuencia" Then
         fila_valores = WorksheetFunction.Match("Frecuencia", ws_frec.Range("F:F"), 0) + header_triangulos
     Else
         fila_valores = fila_ini_plantillas + header_triangulos
@@ -66,16 +62,8 @@ End Function
 
 ' COLUMNAS
 
-Function col_auxtot(lookup_string) As Integer
-    col_auxtot = WorksheetFunction.Match(lookup_string, ws_auxtot.Range("1:1"), 0)
-End Function
-
-Function col_auxant(lookup_string) As Integer
-    col_auxant = WorksheetFunction.Match(lookup_string, ws_auxant.Range("1:1"), 0)
-End Function
-
-Function col_entremes(lookup_string) As Integer
-    col_entremes = WorksheetFunction.Match(lookup_string, ws_entremes.Range("1:1"), 0)
+Function obtener_numero_columna(ws, nombre_columna) As Integer
+    obtener_numero_columna = WorksheetFunction.Match(nombre_columna, ws.Range("1:1"), 0)
 End Function
 
 
@@ -168,3 +156,4 @@ End Function
 Function formato_numero() As String
     formato_numero = "#,##0"
 End Function
+

@@ -1,6 +1,5 @@
 from datetime import date
 from typing import Literal
-from unittest.mock import patch
 
 import polars as pl
 import pytest
@@ -80,12 +79,11 @@ def test_analisis_triangulos(
     mock_siniestros: pl.LazyFrame,
     rango_meses: tuple[date, date],
 ):
-    with patch("src.procesamiento.base_siniestros.guardar_archivos"):
-        base_triangulos, _, base_atipicos = base.generar_bases_siniestros(
-            mock_siniestros,
-            "triangulos",
-            *rango_meses,
-        )
+    base_triangulos, _, base_atipicos = base.generar_bases_siniestros(
+        mock_siniestros,
+        "triangulos",
+        *rango_meses,
+    )
 
     base_triangulos = base_triangulos.filter(
         pl.col("periodicidad_ocurrencia") == periodicidad_ocurrencia
@@ -134,10 +132,9 @@ def test_analisis_entremes(
     mock_siniestros: pl.LazyFrame,
     rango_meses: tuple[date, date],
 ):
-    with patch("src.procesamiento.base_siniestros.guardar_archivos"):
-        base_triangulos, base_ult_ocurr, base_atipicos = base.generar_bases_siniestros(
-            mock_siniestros, "entremes", *rango_meses
-        )
+    base_triangulos, base_ult_ocurr, base_atipicos = base.generar_bases_siniestros(
+        mock_siniestros, "entremes", *rango_meses
+    )
 
     base_triangulos = base_triangulos.filter(
         pl.col("periodicidad_ocurrencia") == periodicidad_ocurrencia

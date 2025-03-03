@@ -208,10 +208,6 @@ def construir_diagonales_triangulo(
     return df_diagonales
 
 
-def guardar_archivos(df: pl.DataFrame, nombre_archivo: str) -> None:
-    df.write_parquet(f"data/processed/{nombre_archivo}.parquet")
-
-
 def generar_bases_siniestros(
     df: pl.LazyFrame,
     tipo_analisis: Literal["triangulos", "entremes"],
@@ -291,13 +287,9 @@ def generar_bases_siniestros(
                 ),
             ]
         ).collect()
-        guardar_archivos(base_ult_ocurr, "base_ultima_ocurrencia")
-
-    guardar_archivos(base_triangulos, "base_triangulos")
 
     base_atipicos = construir_diagonales_triangulo(
         df_sinis_atipicos, "Mensual", mes_inicio, mes_corte, "atipicos"
     ).collect()
-    guardar_archivos(base_atipicos, "base_atipicos")
 
     return base_triangulos, base_ult_ocurr, base_atipicos

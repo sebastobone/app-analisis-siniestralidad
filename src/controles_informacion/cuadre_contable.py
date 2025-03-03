@@ -18,11 +18,22 @@ async def realizar_cuadre_contable(
         return await realizar_cuadre_contable_autonomia(file, df, dif_sap_vs_tera)
     else:
         logger.error(
-            f"""Definio hacer el cuadre contable, pero el negocio 
-            {negocio} no tiene ninguna estrategia de cuadre implementada.
-            """
+            utils.limpiar_espacios_log(
+                f"""
+                Definio hacer el cuadre contable, pero el negocio 
+                {negocio} no tiene ninguna estrategia de cuadre implementada.
+                """
+            )
         )
         raise ValueError
+
+
+def obtener_aperturas_para_asignar_diferencia(
+    negocio: str, file: Literal["siniestros", "primas", "expuestos"]
+) -> pl.DataFrame:
+    return pl.read_excel(
+        f"data/segmentacion_{negocio}.xlsx", sheet_name=f"Cuadre_{file.capitalize()}"
+    )
 
 
 async def realizar_cuadre_contable_soat(
@@ -40,7 +51,8 @@ async def realizar_cuadre_contable_soat(
         .rename({col: col.replace("diferencia_", "") for col in dif_cols})
         .with_columns(ramo_desc=pl.lit("AUTOS OBLIGATORIO"))
         .join(
-            apertura_para_asignar_diferencia_soat(), on=["codigo_op", "codigo_ramo_op"]
+            obtener_aperturas_para_asignar_diferencia("soat", file).lazy(),
+            on=["codigo_op", "codigo_ramo_op"],
         )
         .collect()
     )
@@ -68,13 +80,6 @@ async def realizar_cuadre_contable_autonomia(
     df: pl.DataFrame,
     dif_sap_vs_tera: pl.DataFrame,
 ) -> pl.DataFrame:
-    agrups = utils.lowercase_columns(
-        pl.read_excel(
-            "data/segmentacion_autonomia.xlsx",
-            sheet_name=f"Cuadre_Contable_{file.capitalize()}",
-        )
-    )
-
     dif = (
         dif_sap_vs_tera.lazy()
         .with_columns(
@@ -84,7 +89,10 @@ async def realizar_cuadre_contable_autonomia(
                 if "diferencia" in column
             ]
         )
-        .join(pl.LazyFrame(agrups), on=["codigo_op", "codigo_ramo_op"])
+        .join(
+            obtener_aperturas_para_asignar_diferencia("autonomia", file).lazy(),
+            on=["codigo_op", "codigo_ramo_op"],
+        )
         .with_columns(
             conteo_pago=0,
             conteo_incurrido=0,
@@ -119,16 +127,3 @@ async def guardar_archivos(
     df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
     df_cuadre.write_parquet(f"data/raw/{file}.parquet")
     logger.success(f"Cuadre contable para {file} realizado exitosamente.")
-
-
-def apertura_para_asignar_diferencia_soat() -> pl.LazyFrame:
-    return pl.LazyFrame(
-        {
-            "codigo_op": ["01"],
-            "codigo_ramo_op": ["041"],
-            "ramo_desc": ["AUTOS OBLIGATORIO"],
-            "apertura_canal_desc": ["DIGITAL"],
-            "apertura_amparo_desc": ["Total"],
-            "tipo_vehiculo": ["MOTO"],
-        }
-    ).with_columns(utils.crear_columna_apertura_reservas("soat"))

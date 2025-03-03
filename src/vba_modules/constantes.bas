@@ -54,36 +54,9 @@ Function fila_valores(ws, fila_ini_plantillas, header_triangulos) As Integer
     End If
 End Function
 
+
 Function NumFilasEntreTriangulos(num_ocurrencias, header_triangulos, sep_triangulos) As Integer
     NumFilasEntreTriangulos = - (num_ocurrencias + header_triangulos + sep_triangulos)
-End Function
-
-
-
-' COLUMNAS
-
-Function obtener_numero_columna(ws, nombre_columna) As Integer
-    obtener_numero_columna = WorksheetFunction.Match(nombre_columna, ws.Range("1:1"), 0)
-End Function
-
-
-
-' NUMEROS
-
-Function num_filas_auxtot() As Integer
-    num_filas_auxtot = ws_auxtot.Range(ws_auxtot.Cells(2, 1), ws_auxtot.Cells(2, 1).End(xlDown)).Rows.Count
-End Function
-
-Function mes_actual() As Double
-    mes_actual = ws_main.Cells(4, 2).value
-End Function
-
-Function mes_anterior() As Double
-    mes_anterior = ws_main.Cells(5, 2).value
-End Function
-
-Function num_meses_periodo_fn(num_ocurrencias, num_alturas) As Integer
-    num_meses_periodo_fn = WorksheetFunction.RoundUp(num_alturas / num_ocurrencias, 0)
 End Function
 
 
@@ -99,7 +72,7 @@ Function gris_oscuro() As Long
 End Function
 
 Function gris_claro() As Long
-    gris_claro = RGB(224, 224, 224)
+    gris_claro = RGB(226, 226, 226)
 End Function
 
 Function azul_oscuro() As Long

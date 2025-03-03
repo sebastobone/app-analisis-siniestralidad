@@ -8,6 +8,7 @@ import polars as pl
 import xlwings as xw
 
 from src import constantes as ct
+from src.models import RangeDimension
 
 
 def lowercase_columns(df: pl.LazyFrame | pl.DataFrame) -> pl.LazyFrame | pl.DataFrame:
@@ -79,8 +80,8 @@ def min_cols_tera(tipo_query: str) -> list[str]:
     ]
 
 
-def num_ocurrencias(sheet: xw.Sheet) -> int:
-    return sheet.range(
+def obtener_dimensiones_triangulo(sheet: xw.Sheet) -> RangeDimension:
+    numero_ocurrencias = sheet.range(
         sheet.cells(
             ct.FILA_INI_PLANTILLAS + ct.HEADER_TRIANGULOS, ct.COL_OCURRS_PLANTILLAS
         ),
@@ -88,10 +89,7 @@ def num_ocurrencias(sheet: xw.Sheet) -> int:
             ct.FILA_INI_PLANTILLAS + ct.HEADER_TRIANGULOS, ct.COL_OCURRS_PLANTILLAS
         ).end("down"),
     ).count
-
-
-def num_alturas(sheet: xw.Sheet) -> int:
-    return (
+    numero_alturas = (
         sheet.range(
             sheet.cells(
                 ct.FILA_INI_PLANTILLAS + ct.HEADER_TRIANGULOS - 1,
@@ -104,6 +102,7 @@ def num_alturas(sheet: xw.Sheet) -> int:
         ).count
         // 2
     )
+    return RangeDimension(height=numero_ocurrencias, width=numero_alturas)
 
 
 def mes_del_periodo(mes_corte: date, num_ocurrencias: int, num_alturas: int) -> int:

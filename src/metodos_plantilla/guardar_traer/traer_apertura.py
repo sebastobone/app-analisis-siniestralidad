@@ -4,38 +4,36 @@ import polars as pl
 import xlwings as xw
 from src import utils
 from src.logger_config import logger
-from src.models import EstructuraApertura, ModosPlantilla
+from src.models import ModosPlantilla, RangeDimension
 
-from .estructura_apertura import obtener_estructura_apertura
 from .rangos_parametros import obtener_rangos_parametros
 
 
-def traer_apertura(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> None:
+def traer_apertura(wb: xw.Book, modos: ModosPlantilla) -> None:
     s = time.time()
 
-    plantilla_name = f"Plantilla_{modos.plantilla.capitalize()}"
-    estructura_apertura = obtener_estructura_apertura(wb, plantilla_name, mes_corte)
+    hoja_plantilla = modos.plantilla.capitalize()
+    dimensiones_triangulo = utils.obtener_dimensiones_triangulo(
+        wb.sheets[hoja_plantilla]
+    )
 
-    traer_parametros(wb.sheets[plantilla_name], estructura_apertura)
+    traer_parametros(
+        wb.sheets[hoja_plantilla], modos.apertura, modos.atributo, dimensiones_triangulo
+    )
 
     wb.sheets["Main"]["A1"].value = "TRAER_PLANTILLA"
     wb.sheets["Main"]["A2"].value = time.time() - s
 
 
-def traer_parametros(hoja: xw.Sheet, estructura_apertura: EstructuraApertura) -> None:
-    apertura = estructura_apertura.apertura
-    atributo = estructura_apertura.atributo
+def traer_parametros(
+    hoja: xw.Sheet, apertura: str, atributo: str, dimensiones_triangulo: RangeDimension
+) -> None:
     for range_name, range_values in obtener_rangos_parametros(
-        hoja,
-        estructura_apertura.dimensiones_triangulo,
-        estructura_apertura.mes_del_periodo,
-        hoja["C4"].value,
-        hoja["C3"].value,
+        hoja, dimensiones_triangulo, "Ninguna"
     ).items():
         try:
-            range_values.formula = pl.read_csv(
-                f"data/db/{apertura}_{atributo}_{hoja.name}_{range_name}.csv",
-                separator="\t",
+            range_values.formula = pl.read_parquet(
+                f"data/db/{apertura}_{atributo}_{hoja.name}_{range_name}.parquet"
             ).rows()
         except FileNotFoundError:
             logger.exception(

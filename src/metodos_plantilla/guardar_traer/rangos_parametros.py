@@ -8,56 +8,32 @@ from src.models import Offset, RangeDimension
 def obtener_rangos_parametros(
     hoja: xw.Sheet,
     dimensiones_triangulo: RangeDimension,
-    mes_del_periodo: int,
     metodo_indexacion: Literal[
         "Ninguna", "Por fecha de ocurrencia", "Por fecha de pago"
     ],
-    metodo_ult_ocurrencia: Literal["% Siniestralidad", "Frecuencia y Severidad"],
 ) -> dict[str, xw.Range]:
     num_ocurrencias = dimensiones_triangulo.height
     num_alturas = dimensiones_triangulo.width
 
-    rangos = obtener_rangos_parametros_comunes(
-        hoja, num_ocurrencias, num_alturas, mes_del_periodo
-    )
+    rangos = obtener_rangos_parametros_comunes(hoja, num_ocurrencias, num_alturas)
 
-    if hoja.name in ("Plantilla_Frec", "Plantilla_Seve", "Plantilla_Plata"):
+    if hoja.name in ("Frecuencia", "Severidad", "Plata"):
         agregar_rangos_parametros_comunes_triangulos(
             hoja, num_ocurrencias, num_alturas, rangos
         )
 
-        if hoja.name == "Plantilla_Seve":
+        if hoja.name == "Severidad":
             agregar_rangos_parametros_plantilla_severidad(
                 hoja, metodo_indexacion, num_ocurrencias, num_alturas, rangos
-            )
-
-    elif hoja.name == "Plantilla_Entremes":
-        agregar_rangos_parametros_comunes_entremes(
-            hoja, mes_del_periodo, num_ocurrencias, rangos
-        )
-
-        if metodo_ult_ocurrencia == "% Siniestralidad":
-            agregar_rangos_parametros_entremes_pct_siniestralidad(
-                hoja, mes_del_periodo, num_ocurrencias, rangos
-            )
-
-        if metodo_ult_ocurrencia == "Frecuencia y Severidad":
-            agregar_rangos_parametros_entremes_frec_seve(
-                hoja, mes_del_periodo, num_ocurrencias, rangos
             )
 
     return rangos
 
 
 def obtener_rangos_parametros_comunes(
-    hoja: xw.Sheet, num_ocurrencias: int, num_alturas: int, mes_del_periodo: int
+    hoja: xw.Sheet, num_ocurrencias: int, num_alturas: int
 ):
-    ini = ct.FILA_INI_PARAMS
-    rango_ocurrencias_totales = RangeDimension(
-        height=num_ocurrencias + mes_del_periodo - 1, width=1
-    )
     return {
-        "MET_PAGO_INCURRIDO": hoja.range((ini, 3), (ini, 4)),
         "EXCLUSIONES": obtener_rango(
             hoja,
             "Exclusiones",
@@ -79,20 +55,6 @@ def obtener_rangos_parametros_comunes(
             Offset(y=0, x=ct.COL_OCURRS_PLANTILLAS + 1),
             RangeDimension(height=1, width=num_alturas),
         ),
-        "ULTIMATE": obtener_rango(
-            hoja,
-            "Ultimate",
-            "D1:D1000",
-            Offset(y=1, x=4),
-            rango_ocurrencias_totales,
-        ),
-        "METODOLOGIA": obtener_rango(
-            hoja,
-            "Metodologia",
-            "E1:E1000",
-            Offset(y=1, x=5),
-            rango_ocurrencias_totales,
-        ),
     }
 
 
@@ -101,6 +63,27 @@ def agregar_rangos_parametros_comunes_triangulos(
 ):
     rangos.update(
         {
+            "MET_PAGO_INCURRIDO": obtener_rango(
+                hoja,
+                "metodologia",
+                "A1:A1000",
+                Offset(y=0, x=2),
+                RangeDimension(height=1, width=2),
+            ),
+            "ULTIMATE": obtener_rango(
+                hoja,
+                "ultimate",
+                "D1:D1000",
+                Offset(y=1, x=4),
+                RangeDimension(height=num_ocurrencias, width=1),
+            ),
+            "METODOLOGIA": obtener_rango(
+                hoja,
+                "metodologia",
+                "E1:E1000",
+                Offset(y=1, x=5),
+                RangeDimension(height=num_ocurrencias, width=1),
+            ),
             "BASE": obtener_rango(
                 hoja,
                 "Base",
@@ -110,14 +93,14 @@ def agregar_rangos_parametros_comunes_triangulos(
             ),
             "INDICADOR": obtener_rango(
                 hoja,
-                "Indicador",
+                "indicador",
                 "F1:F1000",
                 Offset(y=1, x=6),
                 RangeDimension(height=num_ocurrencias, width=1),
             ),
             "COMENTARIOS": obtener_rango(
                 hoja,
-                "Comentarios",
+                "comentarios",
                 "G1:G1000",
                 Offset(y=1, x=7),
                 RangeDimension(height=num_ocurrencias, width=1),
@@ -155,185 +138,6 @@ def agregar_rangos_parametros_plantilla_severidad(
                 )
             }
         )
-
-
-def agregar_rangos_parametros_comunes_entremes(
-    hoja: xw.Sheet,
-    mes_del_periodo: int,
-    num_ocurrencias: int,
-    rangos: dict[str, xw.Range],
-):
-    ini = ct.FILA_INI_PARAMS
-    rango_ocurrencias_triangulo = RangeDimension(height=num_ocurrencias - 1, width=1)
-    rango_ocurrencias_anteriores = RangeDimension(
-        height=num_ocurrencias + mes_del_periodo - 2, width=1
-    )
-    rangos.update(
-        {
-            "FREC_SEV_ULTIMA_OCURRENCIA": hoja.range((ini + 1, 3), (ini + 1, 4)),
-            "VARIABLE_DESPEJADA": hoja.range((ini + 2, 3), (ini + 2, 4)),
-            "COMENTARIOS": obtener_rango(
-                hoja,
-                "Comentarios",
-                "J1:J1000",
-                Offset(y=1, x=10),
-                rango_ocurrencias_triangulo,
-            ),
-            "FACTOR_COMPLETITUD": obtener_rango(
-                hoja,
-                "Factor completitud",
-                "T1:T1000",
-                Offset(y=1, x=20),
-                rango_ocurrencias_triangulo,
-            ),
-            "PCT_SUE_BF": obtener_rango(
-                hoja,
-                "% SUE BF",
-                "AA1:AA1000",
-                Offset(y=1, x=27),
-                rango_ocurrencias_triangulo,
-            ),
-            "VELOCIDAD_BF": obtener_rango(
-                hoja,
-                "Velocidad BF",
-                "AB1:AB1000",
-                Offset(y=1, x=28),
-                rango_ocurrencias_triangulo,
-            ),
-            "PCT_SUE_NUEVO": obtener_rango(
-                hoja,
-                "% SUE Nuevo",
-                "AG1:AG1000",
-                Offset(y=1, x=33),
-                rango_ocurrencias_triangulo,
-            ),
-            "AJUSTE_PARCIAL": obtener_rango(
-                hoja,
-                "% Ajuste",
-                "AK1:AK1000",
-                Offset(y=1, x=37),
-                rango_ocurrencias_anteriores,
-            ),
-            "COMENTARIOS_AJUSTE": obtener_rango(
-                hoja,
-                "Comentarios Aj.",
-                "AN1:AN1000",
-                Offset(y=1, x=40),
-                rango_ocurrencias_anteriores,
-            ),
-        }
-    )
-
-
-def agregar_rangos_parametros_entremes_pct_siniestralidad(
-    hoja: xw.Sheet,
-    mes_del_periodo: int,
-    num_ocurrencias: int,
-    rangos: dict[str, xw.Range],
-):
-    rango_ocurrencias_entremes = RangeDimension(height=mes_del_periodo, width=1)
-    rango_ocurrencias_totales = crear_rango_ocurrencias_totales(
-        num_ocurrencias, mes_del_periodo
-    )
-    rangos.update(
-        {
-            "ULTIMATE_NUEVO_PERIODO": obtener_rango(
-                hoja,
-                "Ultimate",
-                "D1:D1000",
-                Offset(y=num_ocurrencias, x=4),
-                rango_ocurrencias_entremes,
-            ),
-            "PCT_ULTIMATE_NUEVO_PERIODO": obtener_rango(
-                hoja,
-                "% SUE",
-                "G1:G1000",
-                Offset(y=num_ocurrencias, x=6),
-                rango_ocurrencias_entremes,
-            ),
-            "ULTIMATE_FRECUENCIA_SEVERIDAD": obtener_rango(
-                hoja,
-                "Ultimate",
-                "D1:D1000",
-                Offset(
-                    y=num_ocurrencias + mes_del_periodo + ct.SEP_TRIANGULOS + 1,
-                    x=4,
-                ),
-                rango_ocurrencias_totales,
-            ),
-            "COMENTARIOS_FRECUENCIA_SEVERIDAD": obtener_rango(
-                hoja,
-                "Ultimate",
-                "D1:D1000",
-                Offset(
-                    y=num_ocurrencias + mes_del_periodo + ct.SEP_TRIANGULOS + 1,
-                    x=5,
-                ),
-                rango_ocurrencias_totales,
-            ),
-        }
-    )
-
-
-def agregar_rangos_parametros_entremes_frec_seve(
-    hoja: xw.Sheet,
-    mes_del_periodo: int,
-    num_ocurrencias: int,
-    rangos: dict[str, xw.Range],
-):
-    rango_ocurrencias_totales = crear_rango_ocurrencias_totales(
-        num_ocurrencias, mes_del_periodo
-    )
-    rangos.update(
-        {
-            "ULTIMATE_FRECUENCIA": obtener_rango(
-                hoja,
-                "Ultimate",
-                "D1:D1000",
-                Offset(
-                    y=num_ocurrencias + mes_del_periodo + ct.SEP_TRIANGULOS + 1,
-                    x=4,
-                ),
-                rango_ocurrencias_totales,
-            ),
-            "COMENTARIOS_FRECUENCIA": obtener_rango(
-                hoja,
-                "Ultimate",
-                "D1:D1000",
-                Offset(
-                    y=num_ocurrencias + mes_del_periodo + ct.SEP_TRIANGULOS + 1,
-                    x=5,
-                ),
-                rango_ocurrencias_totales,
-            ),
-            "ULTIMATE_SEVERIDAD": obtener_rango(
-                hoja,
-                "Ultimate",
-                "D1:D1000",
-                Offset(
-                    y=num_ocurrencias + mes_del_periodo + ct.SEP_TRIANGULOS + 1,
-                    x=10,
-                ),
-                rango_ocurrencias_totales,
-            ),
-            "COMENTARIOS_SEVERIDAD": obtener_rango(
-                hoja,
-                "Ultimate",
-                "D1:D1000",
-                Offset(
-                    y=num_ocurrencias + mes_del_periodo + ct.SEP_TRIANGULOS + 1,
-                    x=11,
-                ),
-                rango_ocurrencias_totales,
-            ),
-        }
-    )
-
-
-def crear_rango_ocurrencias_totales(
-    num_ocurrencias: int, mes_del_periodo: int
-) -> RangeDimension:
-    return RangeDimension(height=num_ocurrencias + mes_del_periodo - 1, width=1)
 
 
 def obtener_rango(

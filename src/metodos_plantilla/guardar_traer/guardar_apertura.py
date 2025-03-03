@@ -4,26 +4,35 @@ import polars as pl
 import xlwings as xw
 from src import utils
 from src.logger_config import logger
-from src.models import EstructuraApertura, ModosPlantilla
+from src.models import ModosPlantilla, RangeDimension
 
-from .estructura_apertura import obtener_estructura_apertura
 from .rangos_parametros import obtener_rangos_parametros
 
 
-def guardar_apertura(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> None:
+def guardar_apertura(wb: xw.Book, modos: ModosPlantilla) -> None:
     s = time.time()
 
-    if modos.plantilla != "completar_diagonal":
-        plantilla_name = f"Plantilla_{modos.plantilla.capitalize()}"
-    else:
-        plantilla_name = "Completar_diagonal"
-
-    estructura_apertura = obtener_estructura_apertura(
-        wb, modos.apertura, modos.atributo, plantilla_name, mes_corte
+    hoja_plantilla = modos.plantilla.capitalize()
+    dimensiones_triangulo = utils.obtener_dimensiones_triangulo(
+        wb.sheets[hoja_plantilla]
     )
 
-    guardar_parametros(wb.sheets[plantilla_name], estructura_apertura)
-    guardar_ultimate(wb, plantilla_name, estructura_apertura)
+    guardar_parametros(
+        wb.sheets[hoja_plantilla], modos.apertura, modos.atributo, dimensiones_triangulo
+    )
+
+    if modos.plantilla != "completar_diagonal":
+        guardar_ultimate(
+            wb,
+            modos.plantilla,
+            modos.apertura,
+            modos.atributo,
+            dimensiones_triangulo.height,
+        )
+    else:
+        guardar_factores_completitud(
+            wb, modos.apertura, modos.atributo, dimensiones_triangulo.height
+        )
 
     logger.success(
         utils.limpiar_espacios_log(
@@ -38,43 +47,45 @@ def guardar_apertura(wb: xw.Book, modos: ModosPlantilla, mes_corte: int) -> None
 
 
 def guardar_ultimate(
-    wb: xw.Book, plantilla_name: str, estructura_apertura: EstructuraApertura
+    wb: xw.Book, plantilla: str, apertura: str, atributo: str, num_ocurrencias: int
 ):
-    num_ocurrencias = estructura_apertura.dimensiones_triangulo.height
-    atributo = estructura_apertura.atributo
-    destinos = {
-        "Plantilla_Frec": ["Aux_Totales", "ultimate", "frec_ultimate"],
-        "Plantilla_Seve": ["Aux_Totales", "ultimate", f"seve_ultimate_{atributo}"],
-        "Plantilla_Plata": ["Aux_Totales", "ultimate", f"plata_ultimate_{atributo}"],
-        "Completar_diagonal": [
-            "Plantilla_Entremes",
-            "factor_completitud_pago",
-            f"factor_completitud_pago_{atributo}",
-        ],
-    }
-
-    wb.macro("guardar_vector")(
-        plantilla_name,
-        destinos[plantilla_name][0],
-        estructura_apertura.apertura,
-        estructura_apertura.atributo,
-        destinos[plantilla_name][1],
-        destinos[plantilla_name][2],
+    nombre_columna_destino = (
+        f"{plantilla}_ultimate_{atributo}"
+        if plantilla != "frecuencia"
+        else f"{plantilla}_ultimate"
+    )
+    wb.macro("GuardarVector")(
+        plantilla.capitalize(),
+        "Resumen",
+        apertura,
+        atributo,
+        "ultimate",
+        nombre_columna_destino,
         num_ocurrencias,
     )
 
 
-def guardar_parametros(hoja: xw.Sheet, estructura_apertura: EstructuraApertura) -> None:
-    apertura = estructura_apertura.apertura
-    atributo = estructura_apertura.atributo
+def guardar_factores_completitud(
+    wb: xw.Book, apertura: str, atributo: str, num_ocurrencias: int
+):
+    for metodologia in ["pago", "incurrido"]:
+        wb.macro("GuardarVector")(
+            "Completar_diagonal",
+            "Entremes",
+            apertura,
+            atributo,
+            f"factor_completitud_{metodologia}",
+            f"factor_completitud_{metodologia}_{atributo}",
+            num_ocurrencias,
+        )
+
+
+def guardar_parametros(
+    hoja: xw.Sheet, apertura: str, atributo: str, dimensiones_triangulo: RangeDimension
+) -> None:
     for nombre_rango, valores_rango in obtener_rangos_parametros(
-        hoja,
-        estructura_apertura.dimensiones_triangulo,
-        estructura_apertura.mes_del_periodo,
-        hoja["C4"].value,
-        hoja["C3"].value,
+        hoja, dimensiones_triangulo, "Ninguna"
     ).items():
-        pl.DataFrame(valores_rango.formula).transpose().write_csv(
-            f"data/db/{apertura}_{atributo}_{hoja.name}_{nombre_rango}.csv",
-            separator="\t",
+        pl.DataFrame(valores_rango.formula).transpose().write_parquet(
+            f"data/db/{apertura}_{atributo}_{hoja.name}_{nombre_rango}.parquet"
         )

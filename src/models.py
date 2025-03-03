@@ -40,4 +40,3 @@ class EstructuraApertura(BaseModel):
     apertura: str
     atributo: str
     dimensiones_triangulo: RangeDimension
-    mes_del_periodo: int

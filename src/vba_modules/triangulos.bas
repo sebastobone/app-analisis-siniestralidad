@@ -38,17 +38,17 @@ Sub CrearConsolidadoTriangulos(ws, num_ocurrencias, num_alturas, header_triangul
 	ult_chain_ladder = "IF(" & celda_metodologia & " = ""pago"", R[" & desref_filas_tri * 2 + 1 & "]C" & col_ocurrs_plantillas + num_alturas & ", R[" & desref_filas_tri * 2 + 1 & "]C" & col_ocurrs_plantillas + num_alturas * 2 & ")"
 	
 	If ws.Name = "Plata" Then
-		indicador_bf = "RC[2] * RC[4]"
+		indicador = "RC[2] * RC[4]"
 	Else
-		indicador_bf = "RC[2]"
+		indicador = "RC[2]"
 	End If
 
 	formula_ult = _
 		"=IF(RC5 = ""chain-ladder"", " & _
 		ult_chain_ladder + ", " & _
 		"IF(RC5 = ""bornhuetter-ferguson"", " & _
-		" IF(" & celda_metodologia & " = ""pago"", RC2, RC3) + RC[2] * (1 - " + pct_desarrollo + "), " & _
-		indicador_bf & _
+		" IF(" & celda_metodologia & " = ""pago"", RC2, RC3) + " & indicador  & " * (1 - " + pct_desarrollo + "), " & _
+		indicador & _
 		"))"
 
 	col_ultimate = crear_columna(ws, fila_tabla, 4, "ultimate", formula_ult, formato, True, num_ocurrencias, gris_oscuro(), blanco())
@@ -59,7 +59,7 @@ Sub CrearConsolidadoTriangulos(ws, num_ocurrencias, num_alturas, header_triangul
 	col_factor_escala = 8
 	
 	If ws.Name = "Plata" Then
-		col_prima_devengada = crear_columna(ws, fila_tabla, 8, "prima_devengada", "=SUMIFS(Resumen!C" & obtener_numero_columna(ws_resumen, "prima_" + atributo_fem(atributo) + "_devengada") & ", Resumen!C" & obtener_numero_columna(ws_resumen, "periodo_ocurrencia") & ", RC1, Resumen!C1, """& apertura &""")", formato, True, num_ocurrencias, gris_oscuro(), blanco())
+		col_prima_devengada = crear_columna(ws, fila_tabla, 8, "prima_devengada", "=SUMIFS(Resumen!C" & obtener_numero_columna(ws_resumen, "prima_" + atributo_fem(atributo) + "_devengada") & ", Resumen!C" & obtener_numero_columna(ws_resumen, "periodo_ocurrencia") & ", RC1, Resumen!C1, """& apertura &""")", formato, False, num_ocurrencias, gris_oscuro(), blanco())
 		col_indicador = crear_columna(ws, fila_tabla, 6, "indicador", "=IFERROR( " + ult_chain_ladder + " / RC[2], 0)", formato_porcentaje(), True, num_ocurrencias, gris_oscuro(), blanco())
 		col_factor_escala = 9
 	End If
@@ -71,7 +71,7 @@ End Sub
 
 
 
-Sub GenerarFrecuencia(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo)
+Sub GenerarFrecuencia(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo, num_meses_periodo)
 
 	Application.ScreenUpdating = False
 	Application.Calculation = xlCalculationManual
@@ -99,7 +99,7 @@ End Sub
 
 
 
-Sub GenerarSeveridad(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo)
+Sub GenerarSeveridad(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo, num_meses_periodo)
 
 	Application.ScreenUpdating = False
 	Application.Calculation = xlCalculationManual
@@ -184,7 +184,7 @@ End Sub
 
 
 
-Sub GenerarPlata(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo)
+Sub GenerarPlata(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo, num_meses_periodo)
 
 	Application.ScreenUpdating = False
 	Application.Calculation = xlCalculationManual

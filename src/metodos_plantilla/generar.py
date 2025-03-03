@@ -1,4 +1,5 @@
 import time
+from math import ceil
 
 import pandas as pd
 import polars as pl
@@ -51,6 +52,7 @@ def generar_plantilla(
         modos.apertura,
         modos.atributo,
         mes_del_periodo,
+        ceil(num_alturas / num_ocurrencias),
     )
 
     logger.success(

@@ -1,27 +1,27 @@
-Function guardar_vector(hoja_origen, hoja_destino, apertura, atributo, nombre_columna_origen, nombre_columna_destino, num_filas)
+Function GuardarVector(HojaOrigen, HojaDestino, Apertura, Atributo, NombreColumnaOrigen, NombreColumnaDestino, NumFilas)
 
-    Set ws_origen = Worksheets(hoja_origen)
-    Set ws_destino = Worksheets(hoja_destino)
+    Set wsOrigen = Worksheets(HojaOrigen)
+    Set wsDestino = Worksheets(HojaDestino)
 
-    fila_tabla = WorksheetFunction.Match("Ocurrencia", ws_origen.Range("A:A"), 0)
-    columna_origen = WorksheetFunction.Match(nombre_columna_origen, ws_origen.Range(" " & fila_tabla & ":" & fila_tabla & " "), 0)
+    FilaOrigen = WorksheetFunction.Match("ocurrencia", wsOrigen.Range("A:A"), 0)
+    ColumnaOrigen = WorksheetFunction.Match(NombreColumnaOrigen, wsOrigen.Range(" " & FilaOrigen & ":" & FilaOrigen & " "), 0)
     
-    fila_destino = WorksheetFunction.Match(apertura, ws_destino.Range("A:A"), 0)
-    columna_destino = WorksheetFunction.Match(nombre_columna_destino, ws_destino.Range("1:1"), 0)
-    ws_destino.Range(ws_destino.Cells(fila_destino, columna_destino), ws_destino.Cells(fila_destino + num_filas - 1, columna_destino)).value = ws_origen.Range(ws_origen.Cells(fila_tabla + 1, columna_origen), ws_origen.Cells(fila_tabla + num_filas, columna_origen)).value
+    FilaDestino = WorksheetFunction.Match(Apertura, wsDestino.Range("A:A"), 0)
+    ColumnaDestino = WorksheetFunction.Match(NombreColumnaDestino, wsDestino.Range("1:1"), 0)
+    wsDestino.Range(wsDestino.Cells(FilaDestino, ColumnaDestino), wsDestino.Cells(FilaDestino + NumFilas - 1, ColumnaDestino)).value = wsOrigen.Range(wsOrigen.Cells(FilaOrigen + 1, ColumnaOrigen), wsOrigen.Cells(FilaOrigen + NumFilas, ColumnaOrigen)).value
 
-    col_plata_ultimate = col_auxtot("plata_ultimate_" & atributo)
-    col_plata_ultimate_contable = col_auxtot("plata_ultimate_contable_" & atributo)
-    col_frec_ultimate = col_auxtot("frec_ultimate")
-    col_seve_ultimate = col_auxtot("seve_ultimate_" & atributo)
+    ColPlataUltimate = obtener_numero_columna(ws_resumen, "plata_ultimate_" & Atributo)
+    ColPlataUltimateContable = obtener_numero_columna(ws_resumen, "plata_ultimate_contable_" & Atributo)
+    ColFrecuenciaUltimate = obtener_numero_columna(ws_resumen, "frecuencia_ultimate")
+    ColSeveridadUltimate = obtener_numero_columna(ws_resumen, "severidad_ultimate_" & Atributo)
 
-    If hoja_origen = "Plantilla_Frec" Or hoja_origen = "Plantilla_Seve" Then
-        ws_auxtot.Range(ws_auxtot.Cells(fila_obj, col_plata_ultimate), ws_auxtot.Cells(fila_obj + num_filas - 1, col_plata_ultimate)).Formula2R1C1 = "=RC" & col_auxtot("conteo_ultimate") & " * RC" & col_auxtot("seve_ultimate_" & atributo) & ""
+    If HojaOrigen = "Frecuencia" Or HojaOrigen = "Severidad" Then
+        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColPlataUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColPlataUltimate)).Formula2R1C1 = "=RC" & obtener_numero_columna(ws_resumen, "conteo_ultimate") & " * RC" & obtener_numero_columna(ws_resumen, "seve_ultimate_" & Atributo) & ""
     End If
 
-    If hoja_origen = "Plantilla_Plata" Then
-        ws_auxtot.Range(ws_auxtot.Cells(fila_obj, col_frec_ultimate), ws_auxtot.Cells(fila_obj + num_filas - 1, col_frec_ultimate)).ClearContents
-        ws_auxtot.Range(ws_auxtot.Cells(fila_obj, col_seve_ultimate), ws_auxtot.Cells(fila_obj + num_filas - 1, col_seve_ultimate)).ClearContents
+    If HojaOrigen = "Plata" Then
+        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColFrecuenciaUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColFrecuenciaUltimate)).ClearContents
+        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColSeveridadUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColSeveridadUltimate)).ClearContents
     End If
 
 End Function

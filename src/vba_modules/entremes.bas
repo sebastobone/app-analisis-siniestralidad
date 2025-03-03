@@ -83,7 +83,7 @@ Sub VincularUltimatesEntremes()
 End Sub
 
 
-Sub GenerarCompletar_diagonal(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo)
+Sub GenerarCompletar_diagonal(num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas, apertura, atributo, mes_del_periodo, num_meses_periodo)
 
 	Application.ScreenUpdating = False
 	Application.Calculation = xlCalculationManual
@@ -94,7 +94,6 @@ Sub GenerarCompletar_diagonal(num_ocurrencias, num_alturas, header_triangulos, s
 	Call CrearEstructuraFactores(ws, num_ocurrencias, num_alturas, header_triangulos, sep_triangulos, fila_ini_plantillas, col_ocurrs_plantillas)
 
 	fila_factor_compl = last_row(ws, col_ocurrs_plantillas) + sep_triangulos
-	num_meses_periodo = num_meses_periodo_fn(num_ocurrencias, num_alturas)
 	fila_ind_altura = fila_ini_plantillas + header_triangulos - 1
 	
 	With ws.Range(ws.Cells(fila_factor_compl, col_ocurrs_plantillas + 1), ws.Cells(fila_factor_compl, col_ocurrs_plantillas + num_alturas))

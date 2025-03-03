@@ -234,9 +234,9 @@ async def modos_plantilla(
     if modos.modo == "generar":
         generar.generar_plantilla(wb, p.negocio, modos, p.mes_corte)
     elif modos.modo == "guardar":
-        guardar_apertura.guardar_apertura(wb, modos, p.mes_corte)
+        guardar_apertura.guardar_apertura(wb, modos)
     elif modos.modo == "traer":
-        traer_apertura.traer_apertura(wb, modos, p.mes_corte)
+        traer_apertura.traer_apertura(wb, modos)
     elif modos.modo == "guardar_todo":
         await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
             wb, modos, p.mes_corte, p.negocio

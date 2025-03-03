@@ -439,3 +439,8 @@ Function crear_columna(ws, fila, columna, nombre, formula, formato, modificable,
 	crear_columna = columna
 
 End Function
+
+
+Function obtener_numero_columna(ws, nombre_columna) As Integer
+    obtener_numero_columna = WorksheetFunction.Match(nombre_columna, ws.Range("1:1"), 0)
+End Function

@@ -158,7 +158,7 @@ def generar_hoja_entremes(
     factores_completitud: pl.DataFrame,
     mes_corte: int,
 ) -> None:
-    wb.sheets["Entremes"].clear()
+    wb.macro("LimpiarPlantilla")("Entremes")
     columnas_base = [
         "apertura_reservas",
         "periodicidad_ocurrencia",
@@ -194,8 +194,8 @@ def generar_hoja_entremes(
     )
 
     wb.sheets["Entremes"]["A1"].options(index=False).value = tabla_entremes.to_pandas()
-    wb.macro("PrepararEntremes")()
     wb.macro("FormatearTablaResumen")("Entremes")
+    wb.macro("PrepararEntremes")()
     wb.macro("VincularUltimatesEntremes")()
 
 

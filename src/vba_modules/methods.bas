@@ -361,6 +361,13 @@ Sub FormatearTablaResumen(NombreHoja As String)
     FormatosColumnas.Add Array(violeta_oscuro(), formato_porcentaje()), "factor_completitud_incurrido_bruto"
     FormatosColumnas.Add Array(violeta_claro(), formato_porcentaje()), "factor_completitud_pago_retenido"
     FormatosColumnas.Add Array(violeta_claro(), formato_porcentaje()), "factor_completitud_incurrido_retenido"
+    FormatosColumnas.Add Array(cian_claro(), formato_porcentaje()), "frecuencia_ultimate_anterior"
+    FormatosColumnas.Add Array(verde_oscuro(), formato_plata()), "severidad_ultimate_bruto_anterior"
+    FormatosColumnas.Add Array(verde_claro(), formato_plata()), "severidad_ultimate_retenido_anterior"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "plata_ultimate_bruto_anterior"
+    FormatosColumnas.Add Array(azul_oscuro(), formato_plata()), "plata_ultimate_contable_bruto_anterior"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "plata_ultimate_retenido_anterior"
+    FormatosColumnas.Add Array(azul_claro(), formato_plata()), "plata_ultimate_contable_retenido_anterior"
 
     NumFilas = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
 

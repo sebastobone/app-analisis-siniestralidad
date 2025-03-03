@@ -53,7 +53,7 @@ def obtener_rangos_parametros_comunes(
             "FACTORES SELECCIONADOS",
             "F1:F1000",
             Offset(y=0, x=ct.COL_OCURRS_PLANTILLAS + 1),
-            RangeDimension(height=1, width=num_alturas),
+            RangeDimension(height=1, width=num_alturas * 2),
         ),
     }
 

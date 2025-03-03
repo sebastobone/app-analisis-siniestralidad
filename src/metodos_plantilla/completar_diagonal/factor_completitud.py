@@ -60,8 +60,9 @@ def calcular_factores_completitud(
             )
 
             base_factores_completitud = base_factores_completitud.join(
-                factor_completitud, on="numero_periodo_ocurrencia"
-            )
+                factor_completitud, on="numero_periodo_ocurrencia", how="left"
+            ).fill_null(1)
+
         factores_completitud_aperturas.append(
             base_factores_completitud.drop("numero_periodo_ocurrencia")
         )

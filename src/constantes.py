@@ -50,9 +50,9 @@ COLUMNAS_PRIMAS = [
 ]
 
 COLUMNAS_ULTIMATE = [
-    "frec_ultimate",
-    "seve_ultimate_bruto",
-    "seve_ultimate_retenido",
+    "frecuencia_ultimate",
+    "severidad_ultimate_bruto",
+    "severidad_ultimate_retenido",
     "plata_ultimate_bruto",
     "plata_ultimate_contable_bruto",
     "plata_ultimate_retenido",
@@ -67,7 +67,7 @@ FILA_INI_PLANTILLAS = 2
 FILA_INI_PARAMS = 4
 
 
-LISTA_PLANTILLAS = Literal["frec", "seve", "plata", "completar_diagonal"]
+LISTA_PLANTILLAS = Literal["frecuencia", "severidad", "plata", "completar_diagonal"]
 
 
 COLORES_LOGS = {

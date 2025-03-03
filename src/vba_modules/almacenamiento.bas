@@ -16,12 +16,16 @@ Function GuardarVector(HojaOrigen, HojaDestino, Apertura, Atributo, NombreColumn
     ColSeveridadUltimate = obtener_numero_columna(ws_resumen, "severidad_ultimate_" & Atributo)
 
     If HojaOrigen = "Frecuencia" Or HojaOrigen = "Severidad" Then
-        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColPlataUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColPlataUltimate)).Formula2R1C1 = "=RC" & obtener_numero_columna(ws_resumen, "conteo_ultimate") & " * RC" & obtener_numero_columna(ws_resumen, "seve_ultimate_" & Atributo) & ""
+        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColPlataUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColPlataUltimate)).Formula2R1C1 = "=RC" & obtener_numero_columna(ws_resumen, "conteo_ultimate") & " * RC" & obtener_numero_columna(ws_resumen, "severidad_ultimate_" & Atributo) & ""
     End If
 
     If HojaOrigen = "Plata" Then
         ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColFrecuenciaUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColFrecuenciaUltimate)).ClearContents
         ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColSeveridadUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColSeveridadUltimate)).ClearContents
+    End If
+
+    If HojaOrigen = "Frecuencia" Or HojaOrigen = "Severidad" Or HojaOrigen = "Plata" Then
+        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColPlataUltimateContable), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColPlataUltimateContable)).Formula2R1C1 = "=RC" & obtener_numero_columna(ws_resumen, "plata_ultimate_" & Atributo) & " "
     End If
 
 End Function

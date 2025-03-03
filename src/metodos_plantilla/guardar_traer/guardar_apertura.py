@@ -42,8 +42,7 @@ def guardar_apertura(wb: xw.Book, modos: ModosPlantilla) -> None:
         )
     )
 
-    wb.sheets["Main"]["A1"].value = "GUARDAR_APERTURA"
-    wb.sheets["Main"]["A2"].value = time.time() - s
+    logger.info(f"Tiempo de guardado: {round(time.time() - s, 2)} segundos.")
 
 
 def guardar_ultimate(

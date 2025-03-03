@@ -13,7 +13,11 @@ from src.models import ModosPlantilla
 
 
 def generar_plantilla(
-    wb: xw.Book, negocio: str, modos: ModosPlantilla, mes_corte: int
+    wb: xw.Book,
+    negocio: str,
+    modos: ModosPlantilla,
+    mes_corte: int,
+    solo_triangulo: bool = False,
 ) -> None:
     s = time.time()
 
@@ -36,31 +40,30 @@ def generar_plantilla(
         ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS
     ).value = triangulo
 
-    num_ocurrencias = triangulo.shape[0]
-    num_alturas = triangulo.shape[1] // len(cantidades)
-    mes_del_periodo = utils.mes_del_periodo(
-        utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
-    )
+    if not solo_triangulo:
+        num_ocurrencias = triangulo.shape[0]
+        num_alturas = triangulo.shape[1] // len(cantidades)
+        mes_del_periodo = utils.mes_del_periodo(
+            utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
+        )
 
-    wb.macro(f"Generar{hoja_plantilla}")(
-        num_ocurrencias,
-        num_alturas,
-        ct.HEADER_TRIANGULOS,
-        ct.SEP_TRIANGULOS,
-        ct.FILA_INI_PLANTILLAS,
-        ct.COL_OCURRS_PLANTILLAS,
-        modos.apertura,
-        modos.atributo,
-        mes_del_periodo,
-        ceil(num_alturas / num_ocurrencias),
-    )
+        wb.macro(f"Generar{hoja_plantilla}")(
+            num_ocurrencias,
+            num_alturas,
+            ct.HEADER_TRIANGULOS,
+            ct.SEP_TRIANGULOS,
+            ct.FILA_INI_PLANTILLAS,
+            ct.COL_OCURRS_PLANTILLAS,
+            modos.apertura,
+            modos.atributo,
+            mes_del_periodo,
+            ceil(num_alturas / num_ocurrencias),
+        )
 
     logger.success(
         f"""{hoja_plantilla} generada para {modos.apertura} - {modos.atributo}."""
     )
-
-    wb.sheets["Main"]["A1"].value = "GENERAR_PLANTILLA"
-    wb.sheets["Main"]["A2"].value = time.time() - s
+    logger.info(f"Tiempo de generacion: {round(time.time() - s, 2)} segundos.")
 
 
 def crear_triangulo_base_plantilla(

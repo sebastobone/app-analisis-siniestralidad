@@ -31,10 +31,17 @@ async def traer_y_guardar_todas_las_aperturas(
     num_apertura = 0
     for apertura in aperturas:
         for atributo in atributos:
-            modos_actual = ModosPlantilla(**modos.model_dump())
+            modos_actual = modos.model_copy()
             modos_actual.apertura = apertura
             modos_actual.atributo = atributo  # type: ignore
 
+            if modos.plantilla == "severidad":
+                modos_frec = modos_actual.model_copy(
+                    update={"plantilla": "frecuencia", "atributo": "bruto"}
+                )
+                generar_plantilla(
+                    wb, negocio, modos_frec, mes_corte, solo_triangulo=True
+                )
             generar_plantilla(wb, negocio, modos_actual, mes_corte)
             if traer:
                 traer_apertura(wb, modos_actual)
@@ -57,5 +64,4 @@ async def traer_y_guardar_todas_las_aperturas(
     else:
         logger.success("Todas las aperturas se han guardado correctamente.")
 
-    wb.sheets["Main"]["A1"].value = "TRAER_GUARDAR_TODO" if traer else "GUARDAR_TODO"
-    wb.sheets["Main"]["A2"].value = time.time() - s
+    logger.info(f"Tiempo total: {round(time.time() - s, 2)} segundos.")

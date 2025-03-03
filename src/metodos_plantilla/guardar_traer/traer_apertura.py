@@ -21,8 +21,7 @@ def traer_apertura(wb: xw.Book, modos: ModosPlantilla) -> None:
         wb.sheets[hoja_plantilla], modos.apertura, modos.atributo, dimensiones_triangulo
     )
 
-    wb.sheets["Main"]["A1"].value = "TRAER_PLANTILLA"
-    wb.sheets["Main"]["A2"].value = time.time() - s
+    logger.info(f"Tiempo de traida: {round(time.time() - s, 2)} segundos.")
 
 
 def traer_parametros(

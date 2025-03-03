@@ -43,9 +43,7 @@ def preparar_plantilla(
         )
 
     logger.success("Plantilla preparada.")
-
-    wb.sheets["Main"]["A1"].value = "PREPARAR_PLANTILLA"
-    wb.sheets["Main"]["A2"].value = time.time() - s
+    logger.info(f"Tiempo de preparacion: {round(time.time() - s, 2)} segundos.")
 
 
 def verificar_resultados_anteriores_para_entremes(

@@ -394,7 +394,7 @@ Sub AgregarColumnasResumen()
     Set ws = Worksheets("Resumen")
 
     Dim num_filas As Integer
-    num_filas = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    num_filas = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row - 1
 
     Dim col_aviso_retenido As Integer
     col_aviso_retenido = obtener_numero_columna(ws, "aviso_retenido")

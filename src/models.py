@@ -21,7 +21,6 @@ class Parametros(SQLModel, table=True):
 class ModosPlantilla(BaseModel):
     apertura: str
     atributo: Literal["bruto", "retenido"]
-    metodologia: Literal["pago", "incurrido"]
     plantilla: Literal["frecuencia", "severidad", "plata", "completar_diagonal"]
     modo: Literal["generar", "guardar", "traer", "guardar_todo", "traer_guardar_todo"]
 

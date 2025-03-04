@@ -2,7 +2,9 @@ from datetime import date
 
 import polars as pl
 import pytest
+import xlwings as xw
 from src import utils
+from src.metodos_plantilla import abrir
 
 
 @pytest.fixture(autouse=True)
@@ -23,3 +25,8 @@ def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, d
             "mes_corte": str(utils.date_to_yyyymm(rango_meses[1])),
         }
     )
+
+
+@pytest.fixture(autouse=True)
+def wb_test() -> xw.Book:
+    return abrir.abrir_plantilla("plantillas/wb_test.xlsm")

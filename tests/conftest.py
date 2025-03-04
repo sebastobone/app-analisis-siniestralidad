@@ -26,10 +26,10 @@ def mock_siniestros(rango_meses: tuple[date, date]) -> pl.LazyFrame:
     num_rows = 100000
     return pl.LazyFrame(
         {
-            "codigo_op": np.random.choice(["01", "02"], size=num_rows),
-            "codigo_ramo_op": np.random.choice(["001", "002", "003"], size=num_rows),
-            "apertura_1": np.random.choice(["A", "B", "C"], size=num_rows),
-            "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
+            "codigo_op": np.random.choice(["01"], size=num_rows),
+            "codigo_ramo_op": np.random.choice(["001", "002"], size=num_rows),
+            "apertura_1": np.random.choice(["A", "B"], size=num_rows),
+            "apertura_2": np.random.choice(["D", "E"], size=num_rows),
             "atipico": np.random.choice([0, 1], size=num_rows, p=[0.95, 0.05]),
             "fecha_siniestro": np.random.choice(
                 pl.date_range(
@@ -44,9 +44,9 @@ def mock_siniestros(rango_meses: tuple[date, date]) -> pl.LazyFrame:
                 size=num_rows,
             ),
             "pago_bruto": np.random.random(size=num_rows) * 1e8,
-            "pago_retenido": np.random.random(size=num_rows) * 1e8,
+            "pago_retenido": np.random.random(size=num_rows) * 1e6,
             "aviso_bruto": np.random.random(size=num_rows) * 1e7,
-            "aviso_retenido": np.random.random(size=num_rows) * 1e7,
+            "aviso_retenido": np.random.random(size=num_rows) * 1e6,
             "conteo_pago": np.random.randint(0, 100, size=num_rows),
             "conteo_incurrido": np.random.randint(0, 110, size=num_rows),
             "conteo_desistido": np.random.randint(0, 10, size=num_rows),
@@ -59,10 +59,10 @@ def mock_primas(rango_meses: tuple[date, date]) -> pl.LazyFrame:
     num_rows = 10000
     return pl.LazyFrame(
         {
-            "codigo_op": np.random.choice(["01", "02"], size=num_rows),
-            "codigo_ramo_op": np.random.choice(["001", "002", "003"], size=num_rows),
-            "apertura_1": np.random.choice(["A", "B", "C"], size=num_rows),
-            "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
+            "codigo_op": np.random.choice(["01"], size=num_rows),
+            "codigo_ramo_op": np.random.choice(["001", "002"], size=num_rows),
+            "apertura_1": np.random.choice(["A", "B"], size=num_rows),
+            "apertura_2": np.random.choice(["D", "E"], size=num_rows),
             "fecha_registro": np.random.choice(
                 pl.date_range(
                     rango_meses[0], rango_meses[1], interval="1mo", eager=True
@@ -70,9 +70,9 @@ def mock_primas(rango_meses: tuple[date, date]) -> pl.LazyFrame:
                 size=num_rows,
             ),
             "prima_bruta": np.random.random(size=num_rows) * 1e8,
-            "prima_retenida": np.random.random(size=num_rows) * 1e8,
+            "prima_retenida": np.random.random(size=num_rows) * 1e7,
             "prima_bruta_devengada": np.random.random(size=num_rows) * 1e8,
-            "prima_retenida_devengada": np.random.random(size=num_rows) * 1e8,
+            "prima_retenida_devengada": np.random.random(size=num_rows) * 1e7,
         }
     ).with_columns(utils.crear_columna_apertura_reservas("mock"))
 
@@ -83,12 +83,10 @@ def mock_expuestos(rango_meses: tuple[date, date]) -> pl.LazyFrame:
     return (
         pl.LazyFrame(
             {
-                "codigo_op": np.random.choice(["01", "02"], size=num_rows),
-                "codigo_ramo_op": np.random.choice(
-                    ["001", "002", "003"], size=num_rows
-                ),
-                "apertura_1": np.random.choice(["A", "B", "C"], size=num_rows),
-                "apertura_2": np.random.choice(["D", "E", "F"], size=num_rows),
+                "codigo_op": np.random.choice(["01"], size=num_rows),
+                "codigo_ramo_op": np.random.choice(["001", "002"], size=num_rows),
+                "apertura_1": np.random.choice(["A", "B"], size=num_rows),
+                "apertura_2": np.random.choice(["D", "E"], size=num_rows),
                 "fecha_registro": np.random.choice(
                     pl.date_range(
                         rango_meses[0], rango_meses[1], interval="1mo", eager=True
@@ -169,7 +167,7 @@ def assert_igual(
     assert abs(df1.get_column(col1).sum() - df2.get_column(col2).sum()) < 100
 
 
-def borrar_archivos(directorio: str) -> None:
+def vaciar_directorio(directorio: str) -> None:
     for file in os.listdir(directorio):
         if file != ".gitkeep":
-            os.remove(directorio)
+            os.remove(f"{directorio}/{file}")

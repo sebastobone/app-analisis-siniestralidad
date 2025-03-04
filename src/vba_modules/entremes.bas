@@ -18,8 +18,8 @@ Sub PrepararEntremes()
 
 	inicio_columnas_calculadas = obtener_numero_columna(ws_entremes, "factor_completitud_incurrido_retenido")
 
-	col_ultimate_bruto_actuarial = crear_columna(ws, 1, inicio_columnas_calculadas + 1, "plata_ultimate_bruto", "=IF(RC1 <> R[1]C1, RC" & col_prima_bruta_devengada & " * R[-1]C[2], RC" & col_ultimate_bruto_actuarial_anterior &")", formato_plata(), True, num_filas, azul_oscuro(), blanco())
-	col_ultimate_retenido_actuarial = crear_columna(ws, 1, inicio_columnas_calculadas + 2, "plata_ultimate_retenido", "=IF(RC1 <> R[1]C1, RC" & col_prima_retenida_devengada & " * R[-1]C[2], RC" & col_ultimate_retenido_actuarial_anterior &")", formato_plata(), True, num_filas, azul_claro(), blanco())
+	col_ultimate_bruto_actuarial = crear_columna(ws, 1, inicio_columnas_calculadas + 1, "plata_ultimate_bruto", "=IF(RC2 = ""Mensual"", RC" & col_prima_bruta_devengada & " * R[-1]C[2], RC" & col_ultimate_bruto_actuarial_anterior &")", formato_plata(), True, num_filas, azul_oscuro(), blanco())
+	col_ultimate_retenido_actuarial = crear_columna(ws, 1, inicio_columnas_calculadas + 2, "plata_ultimate_retenido", "=IF(RC2 = ""Mensual"", RC" & col_prima_retenida_devengada & " * R[-1]C[2], RC" & col_ultimate_retenido_actuarial_anterior &")", formato_plata(), True, num_filas, azul_claro(), blanco())
 	col_pct_sue_bruto = crear_columna(ws, 1, inicio_columnas_calculadas + 3, "pct_sue_bruto", "=IFERROR(RC" & col_ultimate_bruto_actuarial & " / RC" & col_prima_bruta_devengada & ", 0)", formato_porcentaje(), False, num_filas, azul_oscuro(), blanco())
 	col_pct_sue_retenido = crear_columna(ws, 1, inicio_columnas_calculadas + 4, "pct_sue_retenido", "=IFERROR(RC" & col_ultimate_retenido_actuarial & " / RC" & col_prima_retenida_devengada & ", 0)", formato_porcentaje(), False, num_filas, azul_claro(), blanco())
 

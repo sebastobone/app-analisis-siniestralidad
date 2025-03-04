@@ -20,8 +20,8 @@ Function GuardarVector(HojaOrigen, HojaDestino, Apertura, Atributo, NombreColumn
     End If
 
     If HojaOrigen = "Plata" Then
-        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColFrecuenciaUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColFrecuenciaUltimate)).ClearContents
-        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColSeveridadUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColSeveridadUltimate)).ClearContents
+        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColFrecuenciaUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColFrecuenciaUltimate)).Value = 0
+        ws_resumen.Range(ws_resumen.Cells(FilaDestino, ColSeveridadUltimate), ws_resumen.Cells(FilaDestino + NumFilas - 1, ColSeveridadUltimate)).Value = 0
     End If
 
     If HojaOrigen = "Frecuencia" Or HojaOrigen = "Severidad" Or HojaOrigen = "Plata" Then

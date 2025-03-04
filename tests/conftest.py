@@ -167,6 +167,14 @@ def assert_igual(
     assert abs(df1.get_column(col1).sum() - df2.get_column(col2).sum()) < 100
 
 
+def assert_diferente(
+    df1: pl.DataFrame, df2: pl.DataFrame, col1: str, col2: str | None = None
+) -> None:
+    if not col2:
+        col2 = col1
+    assert not abs(df1.get_column(col1).sum() - df2.get_column(col2).sum()) < 100
+
+
 def vaciar_directorio(directorio: str) -> None:
     for file in os.listdir(directorio):
         if file != ".gitkeep":

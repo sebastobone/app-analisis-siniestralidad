@@ -22,10 +22,8 @@ def obtener_rangos_parametros(
             hoja, num_ocurrencias, num_alturas, rangos
         )
 
-        if hoja.name == "Severidad":
-            agregar_rangos_parametros_plantilla_severidad(
-                hoja, metodo_indexacion, num_ocurrencias, num_alturas, rangos
-            )
+        if hoja.name == "Severidad" and metodo_indexacion != "Ninguna":
+            agregar_rangos_unidad_indexacion(hoja, num_ocurrencias, num_alturas, rangos)
 
     return rangos
 
@@ -109,35 +107,20 @@ def agregar_rangos_parametros_comunes_triangulos(
     )
 
 
-def agregar_rangos_parametros_plantilla_severidad(
-    hoja: xw.Sheet,
-    metodo_indexacion: Literal[
-        "Ninguna", "Por fecha de ocurrencia", "Por fecha de pago"
-    ],
-    num_ocurrencias: int,
-    num_alturas: int,
-    rangos: dict[str, xw.Range],
+def agregar_rangos_unidad_indexacion(
+    hoja: xw.Sheet, num_ocurrencias: int, num_alturas: int, rangos: dict[str, xw.Range]
 ):
-    ini = ct.FILA_INI_PARAMS
     rangos.update(
         {
-            "TIPO_INDEXACION": hoja.range((ini + 1, 3), (ini + 1, 4)),
-            "MEDIDA_INDEXACION": hoja.range((ini + 2, 3), (ini + 2, 4)),
+            "UNIDAD_INDEXACION": obtener_rango(
+                hoja,
+                "Unidad_Indexacion",
+                "F1:F1000",
+                Offset(y=ct.HEADER_TRIANGULOS, x=ct.COL_OCURRS_PLANTILLAS + 1),
+                RangeDimension(height=num_ocurrencias, width=num_alturas),
+            )
         }
     )
-
-    if metodo_indexacion in ("Por fecha de ocurrencia", "Por fecha de pago"):
-        rangos.update(
-            {
-                "UNIDAD_INDEXACION": obtener_rango(
-                    hoja,
-                    "Unidad_Indexacion",
-                    "F1:F1000",
-                    Offset(y=ct.HEADER_TRIANGULOS, x=ct.COL_OCURRS_PLANTILLAS + 1),
-                    RangeDimension(height=num_ocurrencias, width=num_alturas),
-                )
-            }
-        )
 
 
 def obtener_rango(

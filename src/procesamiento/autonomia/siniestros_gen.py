@@ -22,10 +22,10 @@ def calcular_conteo(
             (~pl.col("tipo_estado_siniestro_cd").is_in(["N", "O", "D", "C"])) & cond
         )
         .group_by(cols_fijas + ["siniestro_id"])
-        .agg([pl.col("fecha_registro").min(), pl.col(agg_col).sum()])
+        .agg([pl.min("fecha_registro"), pl.sum(agg_col)])
         .filter(pl.col(agg_col) > 1000)
         .group_by(cols_fijas + ["fecha_registro"])
-        .agg(pl.col("siniestro_id").n_unique())
+        .agg(pl.n_unique("siniestro_id"))
         .rename({"siniestro_id": column_name})
     )
 

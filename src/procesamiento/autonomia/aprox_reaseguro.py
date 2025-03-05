@@ -51,7 +51,7 @@ def calcular_pcts_retencion(df_incurrido: pl.LazyFrame, mes_corte: int) -> pl.La
                 "atipico",
             ]
         )
-        .agg([pl.col("incurrido_bruto").sum(), pl.col("incurrido_retenido").sum()])
+        .agg([pl.sum("incurrido_bruto"), pl.sum("incurrido_retenido")])
         .with_columns(
             porcentaje_retencion=(
                 pl.col("incurrido_retenido") / pl.col("incurrido_bruto")
@@ -109,7 +109,7 @@ def procesar_incurridos_cedidos_atipicos(segm: dict[str, pl.DataFrame]) -> pl.La
                 "apertura_amparo_desc",
             ]
         )
-        .agg([pl.col("pago_cedido").sum(), pl.col("aviso_cedido").sum()])
+        .agg([pl.sum("pago_cedido"), pl.sum("aviso_cedido")])
         .with_columns(
             incurrido_cedido=pl.col("pago_cedido") + pl.col("aviso_cedido"),
         )
@@ -349,7 +349,7 @@ def limpiar_atipicos_sap(
 ) -> pl.LazyFrame:
     inc_atip = (
         inc_atip.group_by(["codigo_op", "codigo_ramo_op"])
-        .agg([pl.col("pago_cedido").sum(), pl.col("incurrido_cedido").sum()])
+        .agg([pl.sum("pago_cedido"), pl.sum("incurrido_cedido")])
         .sum()
     )
 
@@ -410,10 +410,10 @@ def cuadrar_reaseguro_con_sap(
         .group_by(["codigo_op", "codigo_ramo_op"])
         .agg(
             [
-                pl.col("pago_cedido_tipicos_cuadrables_tera").sum(),
-                pl.col("pago_cedido_tipicos_no_cuadrables_tera").sum(),
-                pl.col("incurrido_cedido_tipicos_cuadrables_tera").sum(),
-                pl.col("incurrido_cedido_tipicos_no_cuadrables_tera").sum(),
+                pl.sum("pago_cedido_tipicos_cuadrables_tera"),
+                pl.sum("pago_cedido_tipicos_no_cuadrables_tera"),
+                pl.sum("incurrido_cedido_tipicos_cuadrables_tera"),
+                pl.sum("incurrido_cedido_tipicos_no_cuadrables_tera"),
             ]
         )
     )
@@ -439,7 +439,11 @@ def cuadrar_reaseguro_con_sap(
         df_incurrido.join(escala_sap, on=["codigo_op", "codigo_ramo_op"], how="left")
         .with_columns(
             [
-                pl.when(cond_meses_ant(mes_corte) | aperturas_no_cuadrables_083())
+                pl.when(
+                    cond_meses_ant(mes_corte)
+                    | aperturas_no_cuadrables_083()
+                    | (pl.col("atipico") == 1)
+                )
                 .then(pl.col(f"{qty}_cedido"))
                 .otherwise(
                     pl.col(f"{qty}_cedido")

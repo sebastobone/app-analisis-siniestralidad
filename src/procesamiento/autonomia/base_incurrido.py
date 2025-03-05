@@ -115,10 +115,7 @@ def base_incurrido() -> pl.LazyFrame:
         .with_columns(
             codigo_ramo_op=pl.when(cond_aav)
             .then(pl.lit("AAV"))
-            .otherwise(pl.col("codigo_ramo_op")),
-            ramo_desc=pl.when(cond_aav)
-            .then(pl.lit("ANEXOS VI"))
-            .otherwise(pl.col("ramo_desc")),
+            .otherwise(pl.col("codigo_ramo_op"))
         )
         .join(pl.scan_parquet("data/catalogos/sucursales.parquet"), on="sucursal_id")
         .pipe(cruzar_segmentaciones, segm)
@@ -165,10 +162,10 @@ def base_incurrido() -> pl.LazyFrame:
         )
         .agg(
             [
-                pl.col("pago_bruto").sum(),
-                pl.col("aviso_bruto").sum(),
-                pl.col("pago_cedido").sum(),
-                pl.col("aviso_cedido").sum(),
+                pl.sum("pago_bruto"),
+                pl.sum("aviso_bruto"),
+                pl.sum("pago_cedido"),
+                pl.sum("aviso_cedido"),
             ]
         )
         .with_columns(

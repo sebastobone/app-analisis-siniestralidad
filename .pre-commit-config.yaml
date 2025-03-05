@@ -36,6 +36,20 @@ repos:
         entry: npx prettier --write .
         always_run: true
         pass_filenames: false
+      - id: sqlfluff-linting
+        name: sqlfluff => SQL linting
+        stages: [pre-push]
+        language: system
+        entry: sqlfluff lint .
+        always_run: true
+        pass_filenames: false
+      - id: sqlfluff-formatting
+        name: sqlfluff => SQL formatting
+        stages: [pre-push]
+        language: system
+        entry: sqlfluff format .
+        always_run: true
+        pass_filenames: false
       - id: pip-audit
         name: pip-audit => vulnerability checking
         stages: [pre-push]

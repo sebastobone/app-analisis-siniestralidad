@@ -118,7 +118,7 @@ max-complexity = 6
 convention = "google"
 
 
-[tool.sqlfluff]
+[tool.sqlfluff.core]
 dialect = "teradata"
 large_file_skip_byte_limit = 0
 

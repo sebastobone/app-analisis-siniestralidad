@@ -1,9 +1,11 @@
 import polars as pl
+from teradatasql import OperationalError
 
 from src import utils
 from src.controles_informacion import generacion as ctrl
 from src.controles_informacion.evidencias import generar_evidencias_parametros
 from src.extraccion.tera_connect import correr_query
+from src.logger_config import logger
 from src.models import Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
 from src.procesamiento import base_siniestros as bsin
@@ -12,31 +14,52 @@ from src.procesamiento.autonomia import adds, siniestros_gen
 
 async def correr_query_siniestros(p: Parametros) -> None:
     if p.negocio == "autonomia":
-        await correr_query(
-            "data/queries/catalogos/planes.sql",
-            "data/catalogos/planes",
-            "parquet",
-            p,
-        )
-        await correr_query(
-            "data/queries/catalogos/sucursales.sql",
-            "data/catalogos/sucursales",
-            "parquet",
-            p,
-        )
-        await correr_query(
-            "data/queries/autonomia/siniestros_cedidos.sql",
-            "data/raw/siniestros_cedidos",
-            "parquet",
-            p,
-        )
-        await correr_query(
-            "data/queries/autonomia/siniestros_brutos.sql",
-            "data/raw/siniestros_brutos",
-            "parquet",
-            p,
-        )
-        await siniestros_gen.main(p.mes_inicio, p.mes_corte, p.aproximar_reaseguro)
+        try:
+            await correr_query(
+                "data/queries/autonomia/siniestros.sql",
+                "data/raw/siniestros",
+                "parquet",
+                p,
+            )
+        except OperationalError as exc:
+            if "spool space" in str(exc):
+                logger.warning(
+                    utils.limpiar_espacios_log(
+                        """
+                        Error de spool corriendo el query de siniestros principal. 
+                        Se ejecutara el metodo alternativo.
+                        """
+                    )
+                )
+                await correr_query(
+                    "data/queries/catalogos/planes.sql",
+                    "data/catalogos/planes",
+                    "parquet",
+                    p,
+                )
+                await correr_query(
+                    "data/queries/catalogos/sucursales.sql",
+                    "data/catalogos/sucursales",
+                    "parquet",
+                    p,
+                )
+                await correr_query(
+                    "data/queries/autonomia/siniestros_cedidos.sql",
+                    "data/raw/siniestros_cedidos",
+                    "parquet",
+                    p,
+                )
+                await correr_query(
+                    "data/queries/autonomia/siniestros_brutos.sql",
+                    "data/raw/siniestros_brutos",
+                    "parquet",
+                    p,
+                )
+                await siniestros_gen.main(
+                    p.mes_inicio, p.mes_corte, p.aproximar_reaseguro
+                )
+            else:
+                raise
     else:
         await correr_query(
             f"data/queries/{p.negocio}/siniestros.sql",

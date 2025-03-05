@@ -44,7 +44,7 @@ def crear_hoja_segmentacion(df: pl.DataFrame, nombre_hoja: str) -> None:
 
 async def sap_sinis_ced(mes_corte: int) -> None:
     df_sinis = await cantidades_sap(["pago_cedido", "aviso_cedido"], mes_corte)
-    crear_hoja_segmentacion(df_sinis, "SAP_Sinis_Ced")
+    crear_hoja_segmentacion(df_sinis, "add_s_SAP_Sinis_Ced")
 
 
 async def sap_primas_ced(mes_corte: int) -> None:

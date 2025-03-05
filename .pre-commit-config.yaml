@@ -40,14 +40,14 @@ repos:
         name: sqlfluff => SQL linting
         stages: [pre-push]
         language: system
-        entry: sqlfluff lint .
+        entry: uv run sqlfluff lint .
         always_run: true
         pass_filenames: false
       - id: sqlfluff-formatting
         name: sqlfluff => SQL formatting
         stages: [pre-push]
         language: system
-        entry: sqlfluff format .
+        entry: uv run sqlfluff format .
         always_run: true
         pass_filenames: false
       - id: pip-audit

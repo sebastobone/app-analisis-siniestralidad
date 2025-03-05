@@ -141,7 +141,7 @@ def definir_cantidades_control(
     file: Literal["siniestros", "primas", "expuestos"],
 ) -> tuple[list[str], list[str]]:
     if file == "siniestros":
-        qtys = ["pago_bruto", "aviso_bruto", "pago_retenido", "aviso_retenido"]
+        qtys = ct.COLUMNAS_SINIESTROS_CUADRE
         group_cols = ["apertura_reservas", "fecha_siniestro", "fecha_registro"]
 
     elif file == "primas":

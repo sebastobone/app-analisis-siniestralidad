@@ -46,7 +46,7 @@ def mock_siniestros(rango_meses: tuple[date, date]) -> pl.LazyFrame:
             "pago_bruto": np.random.random(size=num_rows) * 1e8,
             "pago_retenido": np.random.random(size=num_rows) * 1e6,
             "aviso_bruto": np.random.random(size=num_rows) * 1e7,
-            "aviso_retenido": np.random.random(size=num_rows) * 1e6,
+            "aviso_retenido": np.random.random(size=num_rows) * 1e5,
             "conteo_pago": np.random.randint(0, 100, size=num_rows),
             "conteo_incurrido": np.random.randint(0, 110, size=num_rows),
             "conteo_desistido": np.random.randint(0, 10, size=num_rows),

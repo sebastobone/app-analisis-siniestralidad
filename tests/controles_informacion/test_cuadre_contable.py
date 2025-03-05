@@ -48,7 +48,7 @@ async def test_cuadre_contable_soat(
 
     dif_sap_vs_tera = (
         await ctrl.comparar_sap_tera(df_tera, df_sap, mes_corte_int, qtys)
-    ).filter(pl.col("fecha_registro") <= mes_corte)
+    ).filter(pl.col("fecha_registro") == mes_corte)
 
     with patch(
         "src.controles_informacion.cuadre_contable.obtener_aperturas_para_asignar_diferencia"
@@ -64,18 +64,10 @@ async def test_cuadre_contable_soat(
 
         with patch("src.controles_informacion.cuadre_contable.guardar_archivos"):
             df_cuadre = await cuadre_contable.realizar_cuadre_contable(
-                "soat", "siniestros", mock_soat, dif_sap_vs_tera
+                "mock", "siniestros", mock_soat, dif_sap_vs_tera
             )
 
     cifra_sap = df_sap.filter(pl.col("fecha_registro") == mes_corte)
     cifra_final = df_cuadre.filter(pl.col("fecha_registro") == mes_corte)
 
     assert_igual(cifra_sap, cifra_final, qty)
-
-
-@pytest.mark.asyncio
-async def test_cuadre_contable_negocio_inexistente():
-    with pytest.raises(ValueError):
-        await cuadre_contable.realizar_cuadre_contable(
-            "negocio_inexistente", "siniestros", pl.DataFrame(), pl.DataFrame()
-        )

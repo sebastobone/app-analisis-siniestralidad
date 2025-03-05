@@ -42,6 +42,13 @@ COLUMNAS_QTYS = [
     "conteo_desistido",
 ]
 
+COLUMNAS_SINIESTROS_CUADRE = [
+    "pago_bruto",
+    "aviso_bruto",
+    "pago_retenido",
+    "aviso_retenido",
+]
+
 COLUMNAS_PRIMAS = [
     "prima_bruta",
     "prima_bruta_devengada",
@@ -67,6 +74,8 @@ FILA_INI_PLANTILLAS = 2
 FILA_INI_PARAMS = 4
 
 
+LISTA_QUERIES_CUADRE = Literal["siniestros", "primas"]
+LISTA_QUERIES = Literal["siniestros", "primas", "expuestos"]
 LISTA_PLANTILLAS = Literal["frecuencia", "severidad", "plata", "completar_diagonal"]
 
 

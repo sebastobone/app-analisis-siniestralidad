@@ -3,11 +3,11 @@ from datetime import date
 
 import polars as pl
 import pytest
-import xlwings as xw
 from fastapi import status
 from fastapi.testclient import TestClient
 from src import constantes as ct
 from src import utils
+from src.metodos_plantilla import abrir
 from src.models import Parametros
 from src.procesamiento.base_siniestros import mes_ult_ocurr_triangulos
 from tests.conftest import assert_igual, vaciar_directorio
@@ -16,9 +16,7 @@ from tests.metodos_plantilla.conftest import agregar_meses_params
 
 @pytest.mark.plantilla
 @pytest.mark.integration
-def test_preparar_triangulos(
-    client: TestClient, rango_meses: tuple[date, date], wb_test: xw.Book
-):
+def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date]):
     params_form = {
         "negocio": "mock",
         "tipo_analisis": "triangulos",
@@ -28,6 +26,7 @@ def test_preparar_triangulos(
 
     response = client.post("/ingresar-parametros", data=params_form)
     p = Parametros.model_validate_json(response.read())
+    wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     response = client.post("/preparar-plantilla")
 
@@ -83,9 +82,7 @@ def test_preparar_entremes_sin_resultados_anteriores(
 
 @pytest.mark.plantilla
 @pytest.mark.integration
-def test_preparar_entremes(
-    client: TestClient, wb_test: xw.Book, rango_meses: tuple[date, date]
-):
+def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     params_form = {
         "negocio": "mock",
         "tipo_analisis": "triangulos",
@@ -117,7 +114,10 @@ def test_preparar_entremes(
         else (mes_corte_para_triangulo // 100) * 100 + 1
     )
     params_form.update({"tipo_analisis": "entremes", "mes_corte": str(siguiente_mes)})
-    _ = client.post("/ingresar-parametros", data=params_form)
+    response = client.post("/ingresar-parametros", data=params_form)
+    p = Parametros.model_validate_json(response.read())
+    wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+
     _ = client.post("/preparar-plantilla")
 
     assert wb_test.sheets["Entremes"].visible

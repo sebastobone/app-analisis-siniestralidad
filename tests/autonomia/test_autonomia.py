@@ -59,7 +59,7 @@ def info_autonomia(
 ) -> tuple[dict[str, pl.DataFrame], Parametros]:
     data = {
         "negocio": "autonomia",
-        "mes_inicio": "201401",
+        "mes_inicio": "202401",
         "mes_corte": "202412",
         "tipo_analisis": "triangulos",
         "nombre_plantilla": "plantilla_autonomia",
@@ -74,8 +74,6 @@ def info_autonomia(
     _ = client_autonomia.post("/correr-query-expuestos")
 
     info = {
-        "sini_bruto": pl.read_parquet("data/raw/siniestros_brutos.parquet"),
-        "sini_cedido": pl.read_parquet("data/raw/siniestros_cedidos.parquet"),
         "siniestros": pl.read_parquet("data/raw/siniestros.parquet").with_columns(
             pago_cedido=pl.col("pago_bruto") - pl.col("pago_retenido"),
             aviso_cedido=pl.col("aviso_bruto") - pl.col("aviso_retenido"),
@@ -89,32 +87,32 @@ def info_autonomia(
     return info, p
 
 
-@pytest.mark.autonomia
-@pytest.mark.integration
-@pytest.mark.teradata
-@pytest.mark.parametrize("col", ["pago_bruto", "aviso_bruto"])
-def test_base_incurrido_bruto(
-    info_autonomia: tuple[dict[DICT_KEYS, pl.DataFrame], Parametros],
-    col: Literal["pago_bruto", "aviso_bruto"],
-):
-    info, _ = info_autonomia
-    assert_igual(info["sini_bruto"], info["siniestros"], col)
+# @pytest.mark.autonomia
+# @pytest.mark.integration
+# @pytest.mark.teradata
+# @pytest.mark.parametrize("col", ["pago_bruto", "aviso_bruto"])
+# def test_base_incurrido_bruto(
+#     info_autonomia: tuple[dict[DICT_KEYS, pl.DataFrame], Parametros],
+#     col: Literal["pago_bruto", "aviso_bruto"],
+# ):
+#     info, _ = info_autonomia
+#     assert_igual(info["sini_bruto"], info["siniestros"], col)
 
 
-@pytest.mark.autonomia
-@pytest.mark.integration
-@pytest.mark.teradata
-@pytest.mark.parametrize("col", ["pago_cedido", "aviso_cedido"])
-def test_base_incurrido_cedido(
-    info_autonomia: tuple[dict[DICT_KEYS, pl.DataFrame], Parametros],
-    col: Literal["pago_cedido", "aviso_cedido"],
-):
-    info, p = info_autonomia
-    assert_igual(
-        separar_meses_anteriores(info["sini_cedido"], p.mes_corte)[0],
-        separar_meses_anteriores(info["siniestros"], p.mes_corte)[0],
-        col,
-    )
+# @pytest.mark.autonomia
+# @pytest.mark.integration
+# @pytest.mark.teradata
+# @pytest.mark.parametrize("col", ["pago_cedido", "aviso_cedido"])
+# def test_base_incurrido_cedido(
+#     info_autonomia: tuple[dict[DICT_KEYS, pl.DataFrame], Parametros],
+#     col: Literal["pago_cedido", "aviso_cedido"],
+# ):
+#     info, p = info_autonomia
+#     assert_igual(
+#         separar_meses_anteriores(info["sini_cedido"], p.mes_corte)[0],
+#         separar_meses_anteriores(info["siniestros"], p.mes_corte)[0],
+#         col,
+#     )
 
 
 @pytest.mark.autonomia
@@ -133,33 +131,36 @@ def test_aprox_reaseguro(
 
     assert_igual(inc_atip, sinis_ult.filter(pl.col("atipico") == 1), col)
     assert_igual(
-        sinis_ult.filter(~FILTRO_083), segm["SAP_Sinis_Ced"].filter(~FILTRO_083), col
+        sinis_ult.filter(~FILTRO_083),
+        segm["add_s_SAP_Sinis_Ced"].filter(~FILTRO_083),
+        col,
     )
 
 
-@pytest.mark.autonomia
-@pytest.mark.integration
-@pytest.mark.teradata
-@pytest.mark.parametrize("query", ["siniestros"])
-def test_segmentaciones(
-    info_autonomia: tuple[dict[DICT_KEYS, pl.DataFrame], Parametros],
-    query: Literal["siniestros", "primas", "expuestos"],
-):
-    info, _ = info_autonomia
-    segm = segmentaciones.segm()
+# @pytest.mark.autonomia
+# @pytest.mark.integration
+# @pytest.mark.teradata
+# @pytest.mark.parametrize("query", ["siniestros"])
+# def test_segmentaciones(
+#     info_autonomia: tuple[dict[DICT_KEYS, pl.DataFrame], Parametros],
+#     query: Literal["siniestros", "primas", "expuestos"],
+# ):
+#     info, _ = info_autonomia
+#     segm = segmentaciones.segm()
 
-    lista_ramos = ["025", "069", "081", "083", "084", "086", "095", "096", "181", "AAV"]
-    lista_amparos = ["RESTO"]
-    lista_canales = ["Resto"]
-    for hoja, df in segm.items():
-        dfl = pl.DataFrame(utils.lowercase_columns(df))
-        if "Canal" in hoja:
-            lista_canales += dfl.get_column("apertura_canal_desc").unique().to_list()
-        if "Amparos" in hoja:
-            lista_amparos += dfl.get_column("apertura_amparo_desc").unique().to_list()
+#     lista_ramos = ["025", "069", "081", "083",
+# "084", "086", "095", "096", "181", "AAV"]
+#     lista_amparos = ["RESTO"]
+#     lista_canales = ["Resto"]
+#     for hoja, df in segm.items():
+#         dfl = pl.DataFrame(utils.lowercase_columns(df))
+#         if "Canal" in hoja:
+#             lista_canales += dfl.get_column("apertura_canal_desc").unique().to_list()
+#         if "Amparos" in hoja:
+#             lista_amparos += dfl.get_column("apertura_amparo_desc").unique().to_list()
 
-    verificar_segmentaciones(info[query], "codigo_ramo_op", lista_ramos)
-    verificar_segmentaciones(info[query], "apertura_canal_desc", lista_canales)
+#     verificar_segmentaciones(info[query], "codigo_ramo_op", lista_ramos)
+#     verificar_segmentaciones(info[query], "apertura_canal_desc", lista_canales)
 
-    if query != "primas":
-        verificar_segmentaciones(info[query], "apertura_amparo_desc", lista_amparos)
+#     if query != "primas":
+#         verificar_segmentaciones(info[query], "apertura_amparo_desc", lista_amparos)

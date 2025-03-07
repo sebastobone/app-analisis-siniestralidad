@@ -71,7 +71,7 @@ CREATE MULTISET VOLATILE TABLE atipicos
     compania_id, codigo_ramo_op, siniestro_id, apertura_amparo_desc
 ) ON COMMIT PRESERVE ROWS;
 INSERT INTO atipicos VALUES (?, ?, ?, ?, ?, ?, ?);  -- noqa:
-COLLECT STATISTICS ON amparos INDEX (compania_id, codigo_ramo_op, siniestro_id, apertura_amparo_desc);  -- noqa:
+COLLECT STATISTICS ON atipicos INDEX (compania_id, codigo_ramo_op, siniestro_id, apertura_amparo_desc);  -- noqa:
 
 
 CREATE MULTISET VOLATILE TABLE incurridos_cedidos_atipicos
@@ -116,8 +116,8 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS
         , cia.codigo_op
         , CASE
             WHEN
-                esc.ramo_id = 78
-                AND esc.amparo_id NOT IN (
+                pro.ramo_id = 78
+                AND ersc.amparo_id NOT IN (
                     930, 641, 64082, 61296, 18647, -1
                 )
                 THEN 'AAV'
@@ -234,7 +234,7 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
     HAVING NOT (pago_cedido = 0 AND aviso_cedido = 0)
 
-) PRIMARY INDEX (
+) WITH DATA PRIMARY INDEX (
     fecha_siniestro
     , fecha_registro
     , numero_poliza
@@ -371,7 +371,7 @@ CREATE MULTISET VOLATILE TABLE base_bruto AS
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
     HAVING NOT (pago_bruto = 0 AND aviso_bruto = 0)
 
-) PRIMARY INDEX (
+) WITH DATA PRIMARY INDEX (
     fecha_siniestro
     , fecha_registro
     , numero_poliza
@@ -402,11 +402,11 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_prelim AS
             , nombre_canal_comercial
             , nombre_sucursal
             , apertura_amparo_desc
-            , pago_bruto
-            , CAST(0 AS FLOAT) AS pago_cedido
-            , aviso_bruto
-            , CAST(0 AS FLOAT) AS aviso_cedido
-        FROM base_bruto
+            , CAST(0 AS FLOAT) AS pago_bruto
+            , pago_cedido
+            , CAST(0 AS FLOAT) AS aviso_bruto
+            , aviso_cedido
+        FROM base_cedido
 
         UNION ALL
 
@@ -425,10 +425,10 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_prelim AS
             , nombre_canal_comercial
             , nombre_sucursal
             , apertura_amparo_desc
-            , CAST(0 AS FLOAT) AS pago_bruto
-            , pago_cedido
-            , CAST(0 AS FLOAT) AS aviso_bruto
-            , aviso_cedido
+            , pago_bruto
+            , CAST(0 AS FLOAT) AS pago_cedido
+            , aviso_bruto
+            , CAST(0 AS FLOAT) AS aviso_cedido
         FROM base_bruto
     )
 
@@ -583,11 +583,11 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_no_083 AS (
         , base.numero_poliza
         , base.nombre_tecnico
         , base.codigo_op
-        , base.codigo_ramo_aux
+        , base.codigo_ramo_op
         , base.siniestro_id
         , base.atipico
         , base.tipo_estado_siniestro_cd
-        , base.apertura_canal_aux
+        , base.apertura_canal_desc
         , base.nombre_canal_comercial
         , base.nombre_sucursal
         , base.apertura_amparo_desc
@@ -648,11 +648,11 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_083 AS (
         , base.numero_poliza
         , base.nombre_tecnico
         , base.codigo_op
-        , base.codigo_ramo_aux
+        , base.codigo_ramo_op
         , base.siniestro_id
         , base.atipico
         , base.tipo_estado_siniestro_cd
-        , base.apertura_canal_aux
+        , base.apertura_canal_desc
         , base.nombre_canal_comercial
         , base.nombre_sucursal
         , base.apertura_amparo_desc
@@ -842,11 +842,11 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_reaseguro_aprox AS (
         , numero_poliza
         , nombre_tecnico
         , codigo_op
-        , codigo_ramo_aux
+        , codigo_ramo_op
         , siniestro_id
         , atipico
         , tipo_estado_siniestro_cd
-        , apertura_canal_aux
+        , apertura_canal_desc
         , nombre_canal_comercial
         , nombre_sucursal
         , apertura_amparo_desc
@@ -866,11 +866,11 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_reaseguro_aprox AS (
         , numero_poliza
         , nombre_tecnico
         , codigo_op
-        , codigo_ramo_aux
+        , codigo_ramo_op
         , siniestro_id
         , atipico
         , tipo_estado_siniestro_cd
-        , apertura_canal_aux
+        , apertura_canal_desc
         , nombre_canal_comercial
         , nombre_sucursal
         , apertura_amparo_desc
@@ -894,7 +894,7 @@ CREATE MULTISET VOLATILE TABLE sap_sin_atipicos AS (
             codigo_op
             , codigo_ramo_op
             , SUM(pago_cedido) AS pago_cedido_atipicos
-            , SUM(incurrido_cedido) AS incurrido_cedido_atipicos
+            , SUM(pago_cedido + aviso_cedido) AS incurrido_cedido_atipicos
         FROM incurridos_cedidos_atipicos
         GROUP BY 1, 2
     )
@@ -1040,12 +1040,12 @@ CREATE MULTISET VOLATILE TABLE base_incurrido AS
         , asegurado_id
         , numero_poliza
         , nombre_tecnico
-        , codigo_op
-        , codigo_ramo_aux
+        , base.codigo_op
+        , base.codigo_ramo_op
         , siniestro_id
         , atipico
         , tipo_estado_siniestro_cd
-        , apertura_canal_aux
+        , apertura_canal_desc
         , nombre_canal_comercial
         , nombre_sucursal
         , apertura_amparo_desc
@@ -1117,9 +1117,9 @@ CREATE MULTISET VOLATILE TABLE conteo_pago_bruto AS
         , codigo_ramo_op
         , apertura_canal_desc
         , apertura_amparo_desc
-        , fecha_registro
+        , fecha_primer_pago AS fecha_registro
         , atipico
-        , ZEROIFNULL(COUNT(DISTINCT siniestro_id)) AS conteo_pago
+        , COUNT(DISTINCT siniestro_id) AS conteo_pago
 
     FROM
         (
@@ -1131,14 +1131,13 @@ CREATE MULTISET VOLATILE TABLE conteo_pago_bruto AS
                 , apertura_amparo_desc
                 , siniestro_id
                 , atipico
-                , MIN(fecha_registro) AS fecha_registro
+                , MIN(fecha_registro) AS fecha_primer_pago
 
             FROM base_incurrido
             WHERE
                 tipo_estado_siniestro_cd NOT IN ('N', 'O', 'D', 'C')
                 AND ABS(pago_bruto) > 1000
             GROUP BY 1, 2, 3, 4, 5, 6, 7
-            HAVING SUM(pago_bruto) > 1000
         ) AS fmin
     GROUP BY 1, 2, 3, 4, 5, 6, 7
 
@@ -1154,11 +1153,11 @@ CREATE MULTISET VOLATILE TABLE conteo_incurrido_bruto AS
         fecha_siniestro
         , codigo_op
         , codigo_ramo_op
-        , fecha_registro
+        , fecha_conocimiento AS fecha_registro
         , apertura_canal_desc
         , apertura_amparo_desc
         , atipico
-        , ZEROIFNULL(COUNT(DISTINCT siniestro_id)) AS conteo_incurrido
+        , COUNT(DISTINCT siniestro_id) AS conteo_incurrido
 
     FROM
         (
@@ -1170,72 +1169,18 @@ CREATE MULTISET VOLATILE TABLE conteo_incurrido_bruto AS
                 , apertura_canal_desc
                 , apertura_amparo_desc
                 , atipico
-                , MIN(fecha_registro) AS fecha_registro
+                , MIN(fecha_registro) AS fecha_conocimiento
 
             FROM base_incurrido
             WHERE
                 tipo_estado_siniestro_cd NOT IN ('N', 'O', 'D', 'C')
-                AND NOT (ABS(pago_bruto) < 1000 AND ABS(aviso_bruto) < 1000)
+                AND ABS(pago_bruto) > 1000 OR ABS(aviso_bruto) > 1000
             GROUP BY 1, 2, 3, 4, 5, 6, 7
-            HAVING NOT (SUM(pago_bruto) < 1000 AND SUM(aviso_bruto) < 1000)
         ) AS fmin
     GROUP BY 1, 2, 3, 4, 5, 6, 7
 
 ) WITH DATA PRIMARY INDEX (
     fecha_siniestro, fecha_registro, codigo_ramo_op
-) ON COMMIT PRESERVE ROWS;
-
-
-
-CREATE MULTISET VOLATILE TABLE sin_pagos_bruto AS
-(
-    SELECT
-        base.fecha_siniestro
-        , base.codigo_op
-        , base.codigo_ramo_op
-        , base.siniestro_id
-        , base.tipo_estado_siniestro_cd
-        , base.apertura_canal_desc
-        , base.apertura_amparo_desc
-        , base.atipico
-        , ZEROIFNULL(rva.en_reserva) AS en_rva
-        , ZEROIFNULL(MAX(ABS(base.pago_bruto))) AS pago_max
-
-    FROM base_incurrido AS base
-    LEFT JOIN
-        (
-            SELECT
-                fecha_siniestro
-                , codigo_op
-                , codigo_ramo_op
-                , siniestro_id
-                , tipo_estado_siniestro_cd
-                , apertura_canal_desc
-                , apertura_amparo_desc
-                , atipico
-                , 1 AS en_reserva
-                , SUM(aviso_bruto) AS aviso_bruto
-
-            FROM base_incurrido
-            GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
-            HAVING SUM(aviso_bruto) > 1000
-        ) AS rva
-        ON
-            (base.fecha_siniestro = rva.fecha_siniestro)
-            AND (base.codigo_ramo_op = rva.codigo_ramo_op)
-            AND (base.codigo_op = rva.codigo_op)
-            AND (base.siniestro_id = rva.siniestro_id)
-            AND (base.tipo_estado_siniestro_cd = rva.tipo_estado_siniestro_cd)
-            AND (base.apertura_canal_desc = rva.apertura_canal_desc)
-            AND (base.apertura_amparo_desc = rva.apertura_amparo_desc)
-            AND (base.atipico = rva.atipico)
-
-    WHERE en_rva = 0
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-    HAVING pago_max < 1000
-
-) WITH DATA PRIMARY INDEX (
-    fecha_siniestro, siniestro_id, codigo_ramo_op
 ) ON COMMIT PRESERVE ROWS;
 
 
@@ -1246,44 +1191,33 @@ CREATE MULTISET VOLATILE TABLE conteo_desistido_bruto AS
         fecha_siniestro
         , codigo_op
         , codigo_ramo_op
-        , fecha_registro
+        , fecha_desistimiento AS fecha_registro
         , apertura_canal_desc
         , apertura_amparo_desc
         , atipico
-        , ZEROIFNULL(COUNT(DISTINCT siniestro_id)) AS conteo_desistido
+        , COUNT(DISTINCT siniestro_id) AS conteo_desistido
 
     FROM
         (
             SELECT
-                base.fecha_siniestro
-                , base.codigo_op
-                , base.codigo_ramo_op
-                , base.siniestro_id
-                , base.apertura_canal_desc
-                , base.apertura_amparo_desc
-                , base.atipico
-                , MAX(base.fecha_registro) AS fecha_registro
+                fecha_siniestro
+                , codigo_op
+                , codigo_ramo_op
+                , siniestro_id
+                , apertura_canal_desc
+                , apertura_amparo_desc
+                , atipico
+                , MAX(fecha_registro) AS fecha_desistimiento
+                , SUM(aviso_bruto) AS aviso_actual
+                , MAX(ABS(pago_bruto)) AS pago_maximo
 
-            FROM base_incurrido AS base
-            INNER JOIN sin_pagos_bruto AS pag
-                ON
-                    (base.fecha_siniestro = pag.fecha_siniestro)
-                    AND (base.codigo_ramo_op = pag.codigo_ramo_op)
-                    AND (base.codigo_op = pag.codigo_op)
-                    AND (base.siniestro_id = pag.siniestro_id)
-                    AND (
-                        base.tipo_estado_siniestro_cd
-                        = pag.tipo_estado_siniestro_cd
-                    )
-                    AND (base.apertura_canal_desc = pag.apertura_canal_desc)
-                    AND (base.apertura_amparo_desc = pag.apertura_amparo_desc)
-                    AND (base.atipico = pag.atipico)
+            FROM base_incurrido
             WHERE
-                base.tipo_estado_siniestro_cd NOT IN ('N', 'O', 'D', 'C')
-                AND NOT (pago_bruto = 0 AND aviso_bruto = 0)
+                tipo_estado_siniestro_cd NOT IN ('N', 'O', 'D', 'C')
+                AND ABS(pago_bruto) > 1000 OR ABS(aviso_bruto) > 1000
             GROUP BY 1, 2, 3, 4, 5, 6, 7
-            HAVING NOT (SUM(pago_bruto) < 1000 AND SUM(aviso_bruto) < 1000)
-        ) AS fecha
+            HAVING aviso_actual < 1000 AND pago_maximo < 1000
+        ) AS base
 
     GROUP BY 1, 2, 3, 4, 5, 6, 7
 
@@ -1303,13 +1237,13 @@ CREATE MULTISET VOLATILE TABLE base_pagos_aviso AS
         , apertura_canal_desc
         , apertura_amparo_desc
         , atipico
-        , ZEROIFNULL(SUM(pago_bruto)) AS pago_bruto
-        , ZEROIFNULL(SUM(pago_retenido)) AS pago_retenido
-        , ZEROIFNULL(SUM(aviso_bruto)) AS aviso_bruto
-        , ZEROIFNULL(SUM(aviso_retenido)) AS aviso_retenido
+        , SUM(pago_bruto) AS pago_bruto
+        , SUM(pago_retenido) AS pago_retenido
+        , SUM(aviso_bruto) AS aviso_bruto
+        , SUM(aviso_retenido) AS aviso_retenido
 
     FROM base_incurrido
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
 
 ) WITH DATA PRIMARY INDEX (
     fecha_siniestro, fecha_registro, codigo_ramo_op
@@ -1317,15 +1251,12 @@ CREATE MULTISET VOLATILE TABLE base_pagos_aviso AS
 
 
 
-CREATE MULTISET VOLATILE TABLE fechas AS
-(
+WITH fechas AS (
     SELECT DISTINCT
         dia_dt
         , MIN(dia_dt) OVER (PARTITION BY mes_id) AS primer_dia_mes
     FROM mdb_seguros_colombia.v_dia
-) WITH DATA PRIMARY INDEX (dia_dt) ON COMMIT PRESERVE ROWS;
-
-
+)
 
 SELECT
     base.codigo_op
@@ -1351,7 +1282,6 @@ LEFT JOIN conteo_pago_bruto AS contp
         base.fecha_siniestro = contp.fecha_siniestro
         AND base.fecha_registro = contp.fecha_registro
         AND base.codigo_ramo_op = contp.codigo_ramo_op
-        AND base.ramo_desc = contp.ramo_desc
         AND base.codigo_op = contp.codigo_op
         AND base.apertura_amparo_desc = contp.apertura_amparo_desc
         AND base.apertura_canal_desc = contp.apertura_canal_desc
@@ -1362,7 +1292,6 @@ LEFT JOIN conteo_incurrido_bruto AS conti
         AND base.fecha_registro = conti.fecha_registro
         AND base.codigo_op = conti.codigo_op
         AND base.codigo_ramo_op = conti.codigo_ramo_op
-        AND base.ramo_desc = conti.ramo_desc
         AND base.apertura_amparo_desc = conti.apertura_amparo_desc
         AND base.apertura_canal_desc = conti.apertura_canal_desc
         AND base.atipico = conti.atipico
@@ -1371,7 +1300,6 @@ LEFT JOIN conteo_desistido_bruto AS contd
         base.fecha_siniestro = contd.fecha_siniestro
         AND base.fecha_registro = contd.fecha_registro
         AND base.codigo_ramo_op = contd.codigo_ramo_op
-        AND base.ramo_desc = contd.ramo_desc
         AND base.codigo_op = contd.codigo_op
         AND base.apertura_amparo_desc = contd.apertura_amparo_desc
         AND base.apertura_canal_desc = contd.apertura_canal_desc
@@ -1380,7 +1308,7 @@ LEFT JOIN conteo_desistido_bruto AS contd
 INNER JOIN fechas AS focurr ON base.fecha_siniestro = focurr.dia_dt
 INNER JOIN fechas AS fmov ON base.fecha_registro = fmov.dia_dt
 
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+GROUP BY 1, 2, 3, 4, 5, 6, 7
 
 HAVING
     NOT (
@@ -1393,4 +1321,4 @@ HAVING
         AND COALESCE(SUM(base.aviso_retenido), 0) = 0
     )
 
-ORDER BY 1, 2, 3, 4, 5, 6, 7, 8
+ORDER BY 1, 2, 3, 4, 5, 6, 7

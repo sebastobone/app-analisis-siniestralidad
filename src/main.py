@@ -15,6 +15,7 @@ from src.procesamiento.autonomia import adds, siniestros_gen
 async def correr_query_siniestros(p: Parametros) -> None:
     if p.negocio == "autonomia":
         try:
+            await adds.sap_sinis_ced(p.mes_corte)
             await correr_query(
                 "data/queries/autonomia/siniestros.sql",
                 "data/raw/siniestros",

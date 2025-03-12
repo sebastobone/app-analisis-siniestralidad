@@ -137,7 +137,7 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
     LEFT JOIN mdb_seguros_colombia.v_AMPARO ampa 
     ON (ersc.Amparo_Id = ampa.Amparo_Id)
     LEFT JOIN mdb_seguros_colombia.v_COMPANIA cia 
-    ON (pro.Compania_Id = cia.Compania_Id) --?
+    ON (pro.Compania_Id = cia.Compania_Id) 
     LEFT JOIN mdb_seguros_colombia.v_poliza_certificado AS polc
     ON ersc.poliza_certificado_id = polc.poliza_certificado_id
     AND ersc.plan_individual_id = polc.plan_individual_id

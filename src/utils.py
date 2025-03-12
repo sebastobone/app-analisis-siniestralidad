@@ -1,7 +1,7 @@
 import textwrap
 from datetime import date
 from math import ceil
-from typing import Literal
+from typing import Literal, overload
 
 import pandas as pd
 import polars as pl
@@ -11,7 +11,15 @@ from src import constantes as ct
 from src.models import RangeDimension
 
 
-def lowercase_columns(df: pl.LazyFrame | pl.DataFrame) -> pl.LazyFrame | pl.DataFrame:
+@overload
+def lowercase_columns(df: pl.LazyFrame) -> pl.LazyFrame: ...
+
+
+@overload
+def lowercase_columns(df: pl.DataFrame) -> pl.DataFrame: ...
+
+
+def lowercase_columns(df: pl.DataFrame | pl.LazyFrame) -> pl.DataFrame | pl.LazyFrame:
     return df.rename({column: column.lower() for column in df.collect_schema().names()})
 
 

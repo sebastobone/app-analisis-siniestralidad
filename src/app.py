@@ -154,7 +154,7 @@ async def ingresar_parametros(
 
     logger.info(f"""Parametros ingresados: {parametros.model_dump()}""")
 
-    return params
+    return parametros
 
 
 @app.post("/correr-query-siniestros")

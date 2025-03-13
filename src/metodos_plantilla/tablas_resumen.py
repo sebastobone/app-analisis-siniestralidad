@@ -4,21 +4,17 @@ import polars as pl
 
 from src import constantes as ct
 from src import utils
-from src.metodos_plantilla import insumos as ins
 
 
 def generar_tablas_resumen(
+    insumos: dict[str, pl.LazyFrame],
     negocio: str,
     tipo_analisis: Literal["triangulos", "entremes"],
     aperturas: pl.LazyFrame,
 ) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
-    diagonales = ins.df_triangulos()
-    atipicos = ins.df_atipicos()
-    expuestos = ins.df_expuestos()
-    primas = ins.df_primas()
-
     diagonales = (
-        diagonales.filter(pl.col("diagonal") == 1)
+        insumos["base_triangulos"]
+        .filter(pl.col("diagonal") == 1)
         .join(
             aperturas.select(["apertura_reservas", "periodicidad_ocurrencia"]),
             on=["apertura_reservas", "periodicidad_ocurrencia"],
@@ -27,12 +23,12 @@ def generar_tablas_resumen(
             ["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"]
             + ct.COLUMNAS_QTYS
         )
-        .pipe(unificar_tablas, aperturas, expuestos, primas)
+        .pipe(unificar_tablas, aperturas, insumos["expuestos"], insumos["primas"])
     )
 
     if tipo_analisis == "entremes":
         ult_ocurr = (
-            ins.df_ult_ocurr()
+            insumos["base_ult_ocurr"]
             .join(
                 aperturas.select(
                     pl.col("apertura_reservas"),
@@ -41,7 +37,7 @@ def generar_tablas_resumen(
                 on=["apertura_reservas", "periodicidad_triangulo"],
             )
             .drop("periodicidad_triangulo")
-            .pipe(unificar_tablas, aperturas, expuestos, primas)
+            .pipe(unificar_tablas, aperturas, insumos["expuestos"], insumos["primas"])
         )
 
         diagonales = (
@@ -76,7 +72,8 @@ def generar_tablas_resumen(
     )
 
     tabla_atipicos = (
-        atipicos.pipe(unificar_tablas, aperturas, expuestos, primas)
+        insumos["base_atipicos"]
+        .pipe(unificar_tablas, aperturas, insumos["expuestos"], insumos["primas"])
         .with_columns(
             frecuencia_ultimate=pl.col("conteo_incurrido") / pl.col("expuestos"),
             conteo_ultimate=pl.col("conteo_incurrido"),
@@ -124,7 +121,3 @@ def unificar_tablas(
         .join(primas, on=columnas_aperturas + ["periodo_ocurrencia"], how="left")
         .fill_null(0)
     )
-
-
-def df_aperturas() -> pl.LazyFrame:
-    return pl.scan_parquet("data/raw/siniestros.parquet")

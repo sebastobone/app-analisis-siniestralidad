@@ -24,8 +24,18 @@ def preparar_plantilla(
 
     mostrar_plantillas_relevantes(wb, tipo_analisis)
 
+    insumos = {
+        "base_triangulos": pl.scan_parquet("data/processed/base_triangulos.parquet"),
+        "base_ult_ocurr": pl.scan_parquet(
+            "data/processed/base_ultima_ocurrencia.parquet"
+        ),
+        "base_atipicos": pl.scan_parquet("data/processed/base_atipicos.parquet"),
+        "primas": pl.scan_parquet("data/processed/primas.parquet"),
+        "expuestos": pl.scan_parquet("data/processed/expuestos.parquet"),
+    }
+
     resumen, atipicos, entremes = tablas_resumen.generar_tablas_resumen(
-        negocio, tipo_analisis, aperturas.lazy()
+        insumos, negocio, tipo_analisis, aperturas.lazy()
     )
     resultados_anteriores = resultados.concatenar_archivos_resultados()
 

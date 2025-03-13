@@ -6,36 +6,36 @@ import pytest
 import xlwings as xw
 from fastapi import status
 from fastapi.testclient import TestClient
-from sqlmodel import Session
 from src import utils
-from src.app import obtener_parametros_usuario
 from src.metodos_plantilla import abrir
 from src.metodos_plantilla.guardar_traer.rangos_parametros import (
     obtener_indice_en_rango,
 )
-from tests.conftest import assert_diferente, assert_igual, vaciar_directorio
-from tests.metodos_plantilla.conftest import agregar_meses_params
+from src.models import Parametros
+from tests.conftest import (
+    agregar_meses_params,
+    assert_diferente,
+    assert_igual,
+    vaciar_directorio,
+)
 
 
 @pytest.mark.plantilla
 @pytest.mark.integration
 def test_actualizar_resultados(
-    client: TestClient,
-    client_2: TestClient,
-    test_session: Session,
-    rango_meses: tuple[date, date],
+    client: TestClient, client_2: TestClient, rango_meses: tuple[date, date]
 ):
     apertura = "01_001_A_D"
     atributo = "bruto"
     apertura_2 = "01_001_A_E"
 
     params_form_usuario_1 = {
-        "negocio": "mock",
+        "negocio": "demo",
         "tipo_analisis": "triangulos",
         "nombre_plantilla": "wb_test",
     }
     params_form_usuario_2 = {
-        "negocio": "mock",
+        "negocio": "demo",
         "tipo_analisis": "triangulos",
         "nombre_plantilla": "wb_test_u2",
     }
@@ -43,13 +43,19 @@ def test_actualizar_resultados(
     agregar_meses_params(params_form_usuario_1, rango_meses)
     agregar_meses_params(params_form_usuario_2, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form_usuario_1)
-    p1 = obtener_parametros_usuario(test_session, "test-usuario-1")
-    _ = client_2.post("/ingresar-parametros", data=params_form_usuario_2)
-    p2 = obtener_parametros_usuario(test_session, "test-usuario-2")
+    response1 = client.post("/ingresar-parametros", data=params_form_usuario_1).json()
+    response2 = client_2.post("/ingresar-parametros", data=params_form_usuario_2).json()
+
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")
+
+    p1 = Parametros.model_validate(response1)
+    p2 = Parametros.model_validate(response2)
 
     # Usuario 1 estima apertura 1
     _ = client.post("/preparar-plantilla")
+
     wb_u1 = abrir.abrir_plantilla(f"plantillas/{p1.nombre_plantilla}.xlsm")
 
     _ = client.post(

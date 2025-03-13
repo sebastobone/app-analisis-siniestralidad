@@ -61,6 +61,10 @@ async def correr_query_siniestros(p: Parametros) -> None:
                 )
             else:
                 raise
+    elif p.negocio == "demo":
+        utils.generar_mock_siniestros(
+            (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
+        ).write_parquet("data/raw/siniestros.parquet")
     else:
         await correr_query(
             f"data/queries/{p.negocio}/siniestros.sql",
@@ -73,18 +77,29 @@ async def correr_query_siniestros(p: Parametros) -> None:
 async def correr_query_primas(p: Parametros) -> None:
     if p.negocio == "autonomia":
         await adds.sap_primas_ced(p.mes_corte)
-    await correr_query(
-        f"data/queries/{p.negocio}/primas.sql", "data/raw/primas", "parquet", p
-    )
+
+    if p.negocio == "demo":
+        utils.generar_mock_primas(
+            (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
+        ).write_parquet("data/raw/primas.parquet")
+    else:
+        await correr_query(
+            f"data/queries/{p.negocio}/primas.sql", "data/raw/primas", "parquet", p
+        )
 
 
 async def correr_query_expuestos(p: Parametros) -> None:
-    await correr_query(
-        f"data/queries/{p.negocio}/expuestos.sql",
-        "data/raw/expuestos",
-        "parquet",
-        p,
-    )
+    if p.negocio == "demo":
+        utils.generar_mock_expuestos(
+            (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
+        ).write_parquet("data/raw/expuestos.parquet")
+    else:
+        await correr_query(
+            f"data/queries/{p.negocio}/expuestos.sql",
+            "data/raw/expuestos",
+            "parquet",
+            p,
+        )
 
 
 async def generar_controles(p: Parametros) -> None:

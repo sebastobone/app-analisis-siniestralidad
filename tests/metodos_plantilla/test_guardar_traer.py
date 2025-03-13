@@ -4,21 +4,24 @@ from datetime import date
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from tests.conftest import vaciar_directorio
-from tests.metodos_plantilla.conftest import agregar_meses_params
+from tests.conftest import agregar_meses_params, vaciar_directorio
 
 
 @pytest.mark.plantilla
 @pytest.mark.integration
 def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
     params_form = {
-        "negocio": "mock",
+        "negocio": "demo",
         "tipo_analisis": "triangulos",
         "nombre_plantilla": "wb_test",
     }
     agregar_meses_params(params_form, rango_meses)
 
-    response = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", data=params_form)
+
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")
 
     _ = client.post("/preparar-plantilla")
 

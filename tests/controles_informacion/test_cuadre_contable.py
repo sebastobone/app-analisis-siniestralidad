@@ -13,11 +13,7 @@ from tests.controles_informacion.test_generacion import mock_hoja_afo
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("qty", ["pago_bruto"])
-async def test_cuadre_contable_soat(
-    mock_siniestros: pl.LazyFrame,
-    rango_meses: tuple[date, date],
-    qty: str,
-) -> None:
+async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) -> None:
     mes_corte = rango_meses[1]
     mes_corte_int = utils.date_to_yyyymm(mes_corte)
 
@@ -37,9 +33,11 @@ async def test_cuadre_contable_soat(
             .filter((pl.col("codigo_ramo_op") == "001") & (pl.col("codigo_op") == "01"))
         )
 
+    mock_siniestros = utils.generar_mock_siniestros(rango_meses)
+
     mock_soat = mock_siniestros.filter(
         (pl.col("codigo_ramo_op") == "001") & (pl.col("codigo_op") == "01")
-    ).collect()
+    )
 
     qtys = ["pago_bruto", "pago_retenido", "aviso_bruto", "aviso_retenido"]
     df_tera = ctrl.agrupar_tera(
@@ -60,11 +58,11 @@ async def test_cuadre_contable_soat(
                 "apertura_1": ["A"],
                 "apertura_2": ["D"],
             }
-        ).with_columns(utils.crear_columna_apertura_reservas("mock"))
+        ).with_columns(utils.crear_columna_apertura_reservas("demo"))
 
         with patch("src.controles_informacion.cuadre_contable.guardar_archivos"):
             df_cuadre = await cuadre_contable.realizar_cuadre_contable(
-                "mock", "siniestros", mock_soat, dif_sap_vs_tera
+                "demo", "siniestros", mock_soat, dif_sap_vs_tera
             )
 
     cifra_sap = df_sap.filter(pl.col("fecha_registro") == mes_corte)

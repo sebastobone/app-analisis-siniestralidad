@@ -179,3 +179,12 @@ def vaciar_directorio(directorio: str) -> None:
     for file in os.listdir(directorio):
         if file != ".gitkeep":
             os.remove(f"{directorio}/{file}")
+
+
+def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, date]):
+    params_form.update(
+        {
+            "mes_inicio": str(utils.date_to_yyyymm(rango_meses[0])),
+            "mes_corte": str(utils.date_to_yyyymm(rango_meses[1])),
+        }
+    )

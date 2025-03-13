@@ -8,7 +8,6 @@ import xlwings as xw
 import src.constantes as ct
 from src import utils
 from src.logger_config import logger
-from src.metodos_plantilla import insumos as ins
 from src.models import ModosPlantilla
 
 
@@ -33,7 +32,11 @@ def generar_plantilla(
     aperturas = utils.obtener_aperturas(negocio, "siniestros")
 
     triangulo = crear_triangulo_base_plantilla(
-        modos.apertura, modos.atributo, aperturas, cantidades
+        pl.scan_parquet("data/processed/base_triangulos.parquet"),
+        modos.apertura,
+        modos.atributo,
+        aperturas,
+        cantidades,
     )
 
     wb.sheets[hoja_plantilla].cells(
@@ -67,14 +70,14 @@ def generar_plantilla(
 
 
 def crear_triangulo_base_plantilla(
+    base_triangulos: pl.LazyFrame,
     apertura: str,
     atributo: str,
     aperturas: pl.DataFrame,
     cantidades: list[str],
 ) -> pd.DataFrame:
     return (
-        ins.df_triangulos()
-        .filter(pl.col("apertura_reservas") == apertura)
+        base_triangulos.filter(pl.col("apertura_reservas") == apertura)
         .join(
             aperturas.select(["apertura_reservas", "periodicidad_ocurrencia"]).lazy(),
             on=["apertura_reservas", "periodicidad_ocurrencia"],

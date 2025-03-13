@@ -11,9 +11,4 @@ def abrir_plantilla(plantilla_path: str) -> xw.Book:
         shutil.copyfile("plantillas/plantilla.xlsm", plantilla_path)
         logger.info(f"Nueva plantilla creada en {plantilla_path}.")
 
-    wb = xw.Book(plantilla_path)
-
-    # wb.macro("eliminar_modulos")()
-    # wb.macro("crear_modulos")()
-
-    return wb
+    return xw.Book(plantilla_path)

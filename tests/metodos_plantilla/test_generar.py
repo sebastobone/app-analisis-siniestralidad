@@ -4,9 +4,9 @@ from typing import Literal
 import polars as pl
 import pytest
 from src import constantes as ct
+from src import utils
 from src.metodos_plantilla import generar
 from src.procesamiento import base_siniestros
-from tests.conftest import vaciar_directorio
 
 
 @pytest.mark.integration
@@ -25,15 +25,15 @@ from tests.conftest import vaciar_directorio
 def test_forma_triangulo(
     tipo_analisis: Literal["triangulos", "entremes"],
     periodicidad_ocurrencia: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
-    mock_siniestros: pl.LazyFrame,
     rango_meses: tuple[date, date],
 ):
+    mock_siniestros = utils.generar_mock_siniestros(rango_meses)
     base_triangulos, _, _ = base_siniestros.generar_bases_siniestros(
-        mock_siniestros, tipo_analisis, *rango_meses
+        mock_siniestros.lazy(), tipo_analisis, *rango_meses
     )
-    base_triangulos.write_parquet("data/processed/base_triangulos.parquet")
 
     df = generar.crear_triangulo_base_plantilla(
+        base_triangulos.lazy(),
         "01_001_A_D",
         "bruto",
         pl.DataFrame(
@@ -51,6 +51,3 @@ def test_forma_triangulo(
         assert (
             df.shape[0] * ct.PERIODICIDADES[periodicidad_ocurrencia] >= df.shape[1] // 2
         )
-
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")

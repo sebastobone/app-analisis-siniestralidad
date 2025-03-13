@@ -161,24 +161,22 @@ async def test_check_nulls():
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_check_final_info(
-    mock_siniestros: pl.LazyFrame, rango_meses: tuple[date, date]
-):
+async def test_check_final_info(rango_meses: tuple[date, date]):
     mes_inicio_int = utils.date_to_yyyymm(rango_meses[0])
     mes_corte_int = utils.date_to_yyyymm(rango_meses[1])
 
-    df = mock_siniestros.collect()
+    df = utils.generar_mock_siniestros(rango_meses)
 
     with pytest.raises(ValueError):
         await tera_connect.verificar_resultado_siniestros_primas_expuestos(
-            "siniestros", df.drop("codigo_op"), "mock", mes_inicio_int, mes_corte_int
+            "siniestros", df.drop("codigo_op"), "demo", mes_inicio_int, mes_corte_int
         )
 
     with pytest.raises(ValueError):
         await tera_connect.verificar_resultado_siniestros_primas_expuestos(
             "siniestros",
             df.with_columns(pl.col("fecha_siniestro").cast(pl.String)),
-            "mock",
+            "demo",
             mes_inicio_int,
             mes_corte_int,
         )
@@ -192,7 +190,7 @@ async def test_check_final_info(
         await tera_connect.verificar_resultado_siniestros_primas_expuestos(
             "siniestros",
             df_fechas_por_fuera,
-            "mock",
+            "demo",
             mes_inicio_int,
             mes_corte_int,
         )
@@ -200,14 +198,14 @@ async def test_check_final_info(
     df_falt = df.slice(0, 2).with_columns(
         [
             pl.lit(None).alias(col)
-            for col in utils.obtener_nombres_aperturas("mock", "siniestros")
+            for col in utils.obtener_nombres_aperturas("demo", "siniestros")
         ]
     )
     with pytest.raises(ValueError):
         await tera_connect.verificar_resultado_siniestros_primas_expuestos(
             "siniestros",
             pl.concat([df, df_falt]),
-            "mock",
+            "demo",
             mes_inicio_int,
             mes_corte_int,
         )

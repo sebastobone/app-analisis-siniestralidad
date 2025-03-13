@@ -154,7 +154,7 @@ async def ingresar_parametros(
 
     logger.info(f"""Parametros ingresados: {parametros.model_dump()}""")
 
-    return params
+    return parametros
 
 
 @app.post("/correr-query-siniestros")
@@ -255,7 +255,7 @@ async def almacenar_analisis(
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte)
+    almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte, p.tipo_analisis)
 
 
 @app.post("/actualizar-wb-resultados")

@@ -10,22 +10,26 @@ from src import utils
 from src.metodos_plantilla import abrir
 from src.models import Parametros
 from src.procesamiento.base_siniestros import mes_ult_ocurr_triangulos
-from tests.conftest import assert_igual, vaciar_directorio
-from tests.metodos_plantilla.conftest import agregar_meses_params
+from tests.conftest import agregar_meses_params, assert_igual, vaciar_directorio
 
 
 @pytest.mark.plantilla
 @pytest.mark.integration
 def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date]):
     params_form = {
-        "negocio": "mock",
+        "negocio": "demo",
         "tipo_analisis": "triangulos",
         "nombre_plantilla": "wb_test",
     }
     agregar_meses_params(params_form, rango_meses)
 
-    response = client.post("/ingresar-parametros", data=params_form)
-    p = Parametros.model_validate_json(response.read())
+    response = client.post("/ingresar-parametros", data=params_form).json()
+    p = Parametros.model_validate(response)
+
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")
+
     wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     response = client.post("/preparar-plantilla")
@@ -68,7 +72,7 @@ def test_preparar_entremes_sin_resultados_anteriores(
     vaciar_directorio("output/resultados")
 
     params_form = {
-        "negocio": "mock",
+        "negocio": "demo",
         "tipo_analisis": "entremes",
         "nombre_plantilla": "wb_test",
     }
@@ -76,15 +80,22 @@ def test_preparar_entremes_sin_resultados_anteriores(
 
     _ = client.post("/ingresar-parametros", data=params_form)
 
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")
+
     with pytest.raises(ValueError):
         _ = client.post("/preparar-plantilla")
+
+    vaciar_directorio("data/raw")
+    vaciar_directorio("data/processed")
 
 
 @pytest.mark.plantilla
 @pytest.mark.integration
 def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     params_form = {
-        "negocio": "mock",
+        "negocio": "demo",
         "tipo_analisis": "triangulos",
         "nombre_plantilla": "wb_test",
     }
@@ -95,6 +106,11 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     params_form.update({"mes_corte": str(mes_corte_para_triangulo)})
 
     _ = client.post("/ingresar-parametros", data=params_form)
+
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")
+
     _ = client.post("/preparar-plantilla")
     _ = client.post(
         "/modos-plantilla",

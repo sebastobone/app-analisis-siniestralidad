@@ -4,7 +4,7 @@ Sub PrepararEntremes()
 	Application.Calculation = xlCalculationManual
 	
 	Set ws = ws_entremes()
-	num_filas = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row - 2
+	num_filas = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row - 1
 
 	col_expuestos = obtener_numero_columna(ws_entremes, "expuestos")
 	col_prima_bruta_devengada = obtener_numero_columna(ws_entremes, "prima_bruta_devengada")
@@ -104,7 +104,7 @@ End Sub
 
 Sub VincularUltimatesEntremes()
 
-	num_filas = ws_resumen.Cells(Rows.Count, 1).End(xlUp).Row
+	num_filas = ws_resumen.Cells(Rows.Count, 1).End(xlUp).Row - 1
 
 	Call crear_columna(ws_resumen, 1, obtener_numero_columna(ws_resumen, "frecuencia_ultimate"), "frecuencia_ultimate", "=Entremes!RC" & obtener_numero_columna(ws_entremes, "frecuencia_ultimate") & " ", formato_porcentaje(), False, num_filas, cian_claro(), blanco())
 	Call crear_columna(ws_resumen, 1, obtener_numero_columna(ws_resumen, "severidad_ultimate_bruto"), "severidad_ultimate_bruto", "=Entremes!RC" & obtener_numero_columna(ws_entremes, "severidad_ultimate_bruto") & " ", formato_plata(), False, num_filas, verde_oscuro(), blanco())

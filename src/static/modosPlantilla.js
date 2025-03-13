@@ -6,7 +6,6 @@ document
     const formData = new URLSearchParams({
       apertura: document.getElementById("apertura").value,
       atributo: document.getElementById("atributo").value,
-      metodologia: document.getElementById("metodologia").value,
       plantilla: document.getElementById("plantilla").value,
       modo: document.getElementById("modo").value,
     });

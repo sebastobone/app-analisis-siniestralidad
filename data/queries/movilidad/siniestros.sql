@@ -1,5 +1,4 @@
 
-
 CREATE MULTISET VOLATILE TABLE base_bruto AS (
     SELECT
         LAST_DAY(sini.fecha_siniestro) AS fecha_siniestro

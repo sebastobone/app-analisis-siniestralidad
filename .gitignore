@@ -203,12 +203,7 @@ data/raw/autonomia/*
 !data/segmentacion.xlsx
 
 output/*
-!output/resultados.xlsx
-output/resultados/*
 !output/resultados/.gitkeep
-
-backups
-!data/queries/backups
 
 data/database.db
 

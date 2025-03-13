@@ -3,6 +3,7 @@ import os
 import polars as pl
 import xlwings as xw
 
+from src import utils
 from src.logger_config import logger
 
 
@@ -37,12 +38,20 @@ def concatenar_archivos_resultados() -> pl.DataFrame:
 
 
 def actualizar_wb_resultados() -> xw.Book:
-    wb = xw.Book("output/resultados.xlsx")
+    if not os.path.exists("output/resultados.xlsx"):
+        wb = xw.Book()
+        wb.sheets.add("Resultados")
+        wb.save("output/resultados.xlsx")
+        logger.info("Nuevo libro de resultados creado en output/resultados.xlsx.")
+    else:
+        wb = xw.Book("output/resultados.xlsx")
 
     wb.sheets["Resultados"].clear_contents()
-    wb.sheets["Resultados"]["A1"].options(
-        index=False
-    ).value = concatenar_archivos_resultados().to_pandas()
+    wb.sheets["Resultados"]["A1"].options(index=False).value = (
+        concatenar_archivos_resultados()
+        .pipe(utils.mantener_formato_columnas)
+        .to_pandas()
+    )
 
     return wb
 

@@ -11,8 +11,9 @@ CREATE MULTISET VOLATILE TABLE fechas AS (
 
 CREATE MULTISET VOLATILE TABLE primas AS (
     SELECT
-        ultimo_dia_mes
-        , codigo_ramo_op
+        codigo_op
+        , codigo_ramo_op 
+        , primer_dia_mes AS fecha_registro 
         , cobertura_general_desc
         ,SUM(prima_bruta) AS prima_bruta
 		,SUM(prima_bruta_devengada) AS prima_bruta_devengada
@@ -21,10 +22,12 @@ CREATE MULTISET VOLATILE TABLE primas AS (
 
     FROM (
         SELECT
-        fechas.ultimo_dia_mes
+        fechas.primer_dia_mes 
+        ,'01' AS codigo_op
         , '040' AS codigo_ramo_op
         , CASE 
-            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) THEN 'MOTOS'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND pol.sucursal_id IN (21170919, 20056181, 52915901) THEN 'MOTOS SUFI'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) THEN 'MOTOS RESTO'
             WHEN rtdc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
             WHEN rtdc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694) THEN 'RC'
             ELSE 'PARCIALES'
@@ -49,22 +52,25 @@ CREATE MULTISET VOLATILE TABLE primas AS (
             ON fas.fasecolda_cd = vehi.fasecolda_cd
         LEFT JOIN mdb_seguros_colombia.v_plan AS plan   
             ON plan.plan_id = pcetl.plan_id
-        
+        LEFT JOIN mdb_seguros_colombia.v_poliza AS pol
+            ON pol.poliza_id = rtdc.poliza_id
         INNER JOIN fechas AS fechas     
             ON fechas.mes_id = rtdc.mes_id
     WHERE rtdc.ramo_id = 168
     AND plan.compania_id = 4
     AND n1.nivel_indicador_uno_id IN (1,2,5)
     
-    GROUP BY 1, 2, 3
+    GROUP BY 1, 2, 3, 4
 
     UNION ALL    
 
     SELECT
-        fechas.ultimo_dia_mes
+        fechas.primer_dia_mes 
+        , '01' AS codigo_op 
         , '040' AS codigo_ramo_op
         , CASE 
-            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) THEN 'MOTOS'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND rtrs.sucursal_id IN (21170919, 20056181, 52915901) THEN 'MOTOS SUFI'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) THEN 'MOTOS RESTO'
             WHEN rtrs.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
             WHEN rtrs.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694) THEN 'RC'
             ELSE 'PARCIALES'
@@ -96,10 +102,15 @@ CREATE MULTISET VOLATILE TABLE primas AS (
     AND plan.compania_id = 4
     AND n1.nivel_indicador_uno_id IN (1,2,5)
 
-    GROUP BY  1, 2, 3
+    GROUP BY  1, 2, 3, 4
     ) AS base
+    GROUP BY 1, 2, 3, 4
  ) WITH DATA PRIMARY INDEX (
-    ultimo_dia_mes
+    fecha_registro
+    , codigo_op
     , codigo_ramo_op
     , cobertura_general_desc
-) ON COMMIT PRESERVE ROWS
+) ON COMMIT PRESERVE ROWS;
+
+SELECT * FROM primas
+ORDER BY 1, 2, 3, 4

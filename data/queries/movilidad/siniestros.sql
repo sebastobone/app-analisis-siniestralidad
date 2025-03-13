@@ -1,4 +1,3 @@
-
 CREATE MULTISET VOLATILE TABLE base_bruto AS (
     SELECT
         LAST_DAY(sini.fecha_siniestro) AS fecha_siniestro
@@ -6,7 +5,6 @@ CREATE MULTISET VOLATILE TABLE base_bruto AS (
         , '040' AS codigo_ramo_op 
         , esc.siniestro_id
         , CASE 
-            
             WHEN esc.reserva_id = 18635 THEN 'PARCIALES'
             WHEN esc.tipo_oper_siniestro_cd IN (131, 132) THEN 'TOTALES'
             WHEN esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
@@ -95,7 +93,6 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
     ramo.Codigo_Ramo_Op,
     ersc.siniestro_id
     , CASE 
-            
             WHEN ersc.reserva_id = 18635 THEN 'PARCIALES'
             WHEN ersc.Tipo_Operacion_Cd IN (131, 127) THEN 'TOTALES'
             WHEN ersc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
@@ -218,7 +215,6 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
         , sini.fecha_siniestro
         , ramo.codigo_ramo_op
        , CASE 
-            
             WHEN esc.reserva_id = 18635 THEN 'PARCIALES'
             WHEN esc.tipo_oper_siniestro_cd IN (131, 132) THEN 'TOTALES'
             WHEN esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)

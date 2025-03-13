@@ -9,7 +9,7 @@ CREATE MULTISET VOLATILE TABLE fechas AS
     WHERE
         mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER) AND CAST(
             '{mes_corte}' AS INTEGER)
-            
+           
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 COLLECT STATISTICS ON fechas INDEX (mes_id);
 
@@ -104,6 +104,7 @@ CREATE MULTISET VOLATILE TABLE expuestos_final AS (
         , SUM(ZEROIFNULL(base.vigentes)) AS vigentes
     FROM expuestos AS base
     GROUP BY 1, 2, 3, 4
+
 ) WITH DATA PRIMARY INDEX (
     codigo_op
     , codigo_ramo_op

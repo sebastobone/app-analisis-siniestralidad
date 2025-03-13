@@ -115,15 +115,6 @@ def mostrar_plantillas_relevantes(wb: xw.Book, tipo_analisis: str):
             wb.sheets[plantilla].visible = False
 
 
-def mantener_formato_columnas(df: pl.DataFrame) -> pl.DataFrame:
-    return df.with_columns(
-        [
-            pl.concat_str(pl.lit("'"), pl.col(column)).alias(column)
-            for column in ["codigo_op", "codigo_ramo_op"]
-        ]
-    )
-
-
 def generar_hojas_resumen(
     wb: xw.Book,
     resumen: pl.DataFrame,
@@ -136,14 +127,16 @@ def generar_hojas_resumen(
     if resultados_anteriores.shape[0] != 0:
         wb.sheets["Historico"]["A1"].options(
             index=False
-        ).value = resultados_anteriores.pipe(mantener_formato_columnas).to_pandas()
+        ).value = resultados_anteriores.pipe(
+            utils.mantener_formato_columnas
+        ).to_pandas()
         wb.macro("FormatearTablaResumen")("Historico")
 
     wb.sheets["Resumen"]["A1"].options(index=False).value = resumen.pipe(
-        mantener_formato_columnas
+        utils.mantener_formato_columnas
     ).to_pandas()
     wb.sheets["Atipicos"]["A1"].options(index=False).value = atipicos.pipe(
-        mantener_formato_columnas
+        utils.mantener_formato_columnas
     ).to_pandas()
 
     wb.macro("FormatearTablaResumen")("Resumen")
@@ -208,16 +201,11 @@ def obtener_resultados_ultimo_triangulo(
             .replace(ct.PERIODICIDADES)
             .cast(pl.Int32)
         )
+        .filter((pl.col("tipo_analisis") == "triangulos") & (pl.col("atipico") == 0))
+        .filter(
+            pl.col("mes_corte") == pl.col("mes_corte").max().over("apertura_reservas")
+        )
         .with_columns(
-            mes_ultimo_triangulo=(
-                pl.when(pl.col("mes_corte") % 100 < pl.col("periodicidad"))
-                .then((pl.col("mes_corte") // 100 - 1) * 100 + 12)
-                .otherwise(
-                    (pl.col("mes_corte") // 100) * 100
-                    + (pl.col("mes_corte") % 100).floordiv(pl.col("periodicidad"))
-                    * pl.col("periodicidad")
-                )
-            ),
             velocidad_pago_bruto_triangulo=pl.col("pago_bruto")
             / pl.col("plata_ultimate_bruto"),
             velocidad_incurrido_bruto_triangulo=pl.col("incurrido_bruto")
@@ -226,10 +214,6 @@ def obtener_resultados_ultimo_triangulo(
             / pl.col("plata_ultimate_retenido"),
             velocidad_incurrido_retenido_triangulo=pl.col("incurrido_retenido")
             / pl.col("plata_ultimate_retenido"),
-        )
-        .filter(
-            (pl.col("mes_corte") == pl.col("mes_ultimo_triangulo"))
-            & (pl.col("atipico") == 0)
         )
         .select(
             [

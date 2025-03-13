@@ -257,3 +257,12 @@ def generar_mock_expuestos(rango_meses: tuple[date, date]) -> pl.DataFrame:
         )
         .mean()
     )
+
+
+def mantener_formato_columnas(df: pl.DataFrame) -> pl.DataFrame:
+    return df.with_columns(
+        [
+            pl.concat_str(pl.lit("'"), pl.col(column)).alias(column)
+            for column in ["codigo_op", "codigo_ramo_op"]
+        ]
+    )

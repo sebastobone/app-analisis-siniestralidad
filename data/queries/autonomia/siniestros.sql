@@ -472,7 +472,6 @@ CREATE MULTISET VOLATILE TABLE porcentajes_retencion AS
         , codigo_ramo_op
         , apertura_canal_desc
         , apertura_amparo_desc
-        , atipico
         , LEAST(SUM(incurrido_retenido) / SUM(incurrido_bruto), 1)
             AS porcentaje_retencion
     FROM base_incurrido_prelim
@@ -483,7 +482,7 @@ CREATE MULTISET VOLATILE TABLE porcentajes_retencion AS
         ADD_MONTHS(LAST_DAY((DATE '{fecha_mes_corte}')), -13)
         AND ADD_MONTHS(LAST_DAY((DATE '{fecha_mes_corte}')), -1)
 
-    GROUP BY 1, 2, 3, 4, 5
+    GROUP BY 1, 2, 3, 4
 
 ) WITH DATA PRIMARY INDEX (
     codigo_op, codigo_ramo_op, apertura_canal_desc, apertura_amparo_desc
@@ -624,7 +623,6 @@ CREATE MULTISET VOLATILE TABLE base_incurrido_no_083 AS (
             AND base.codigo_ramo_op = pct_ret.codigo_ramo_op
             AND base.apertura_canal_desc = pct_ret.apertura_canal_desc
             AND base.apertura_amparo_desc = pct_ret.apertura_amparo_desc
-            AND base.atipico = pct_ret.atipico
     LEFT JOIN inc_atip
         ON
             base.codigo_op = inc_atip.codigo_op
@@ -995,15 +993,19 @@ CREATE MULTISET VOLATILE TABLE factor_cuadre_sap AS
             ) AS incurrido_cedido_tipicos_no_cuadrables
 
         FROM base_incurrido_reaseguro_aprox
-        WHERE LAST_DAY(fecha_registro) = LAST_DAY((DATE '{fecha_mes_corte}'))
-        AND atipico = 0
+        WHERE
+            LAST_DAY(fecha_registro) = LAST_DAY((DATE '{fecha_mes_corte}'))
+            AND atipico = 0
         GROUP BY 1, 2
     )
 
     SELECT
         sap.codigo_op
         , sap.codigo_ramo_op
-        , (sap.pago_cedido_tipicos - ZEROIFNULL(tera.pago_cedido_tipicos_no_cuadrables))
+        , (
+            sap.pago_cedido_tipicos
+            - ZEROIFNULL(tera.pago_cedido_tipicos_no_cuadrables)
+        )
         / CASE
             WHEN
                 tera.pago_cedido_tipicos_cuadrables <> 0

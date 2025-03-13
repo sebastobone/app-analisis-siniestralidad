@@ -12,7 +12,7 @@ async def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:
         (pl.col("fecha_registro") == utils.yyyymm_to_date(mes_corte))
         & (
             pl.col("codigo_ramo_op").is_in(
-                ["025", "069", "081", "083", "084", "086", "095", "096", "181"]
+                ["025", "069", "081", "083", "084", "086", "095", "096", "181", "AAV"]
             )
         )
     )

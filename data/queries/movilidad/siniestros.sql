@@ -1,5 +1,3 @@
--- where con 168
-
 CREATE MULTISET VOLATILE TABLE base_bruto AS (
     SELECT
         LAST_DAY(sini.fecha_siniestro) AS fecha_siniestro
@@ -11,7 +9,8 @@ CREATE MULTISET VOLATILE TABLE base_bruto AS (
             WHEN esc.tipo_oper_siniestro_cd IN (131, 132) THEN 'TOTALES'
             WHEN esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 AND sini.acontecimiento_id IN (19866, 58026, 15268, 20052, 7634, 19867, 20112) THEN 'RC'
-            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) THEN 'MOTOS'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND pol.sucursal_id in (21170919, 20056181, 52915901) THEN 'MOTOS SUFI'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND pol.sucursal_id NOT IN (21170919, 20056181, 52915901) THEN 'MOTOS RESTO'
             WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
             WHEN esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694) THEN 'RC'
             ELSE 'PARCIALES'
@@ -95,12 +94,13 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
     ersc.siniestro_id
     , CASE 
             WHEN ersc.reserva_id = 18635 THEN 'PARCIALES'
-            WHEN ersc.Tipo_Operacion_Cd IN (131, 132) THEN 'TOTALES'
+            WHEN ersc.Tipo_Operacion_Cd IN (131, 127) THEN 'TOTALES'
             WHEN ersc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 AND sini.acontecimiento_id IN (19866, 58026, 15268, 20052, 7634, 19867, 20112) THEN 'RC'
-            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) THEN 'MOTOS'
-            WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
-            WHEN esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694) THEN 'RC'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND pol.sucursal_id in (21170919, 20056181, 52915901) THEN 'MOTOS SUFI'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND pol.sucursal_id NOT IN (21170919, 20056181, 52915901) THEN 'MOTOS RESTO'
+            WHEN ersc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN ersc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694) THEN 'RC'
             ELSE 'PARCIALES'
         END AS cobertura_general_desc 
     , CASE
@@ -137,7 +137,7 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
     LEFT JOIN mdb_seguros_colombia.v_AMPARO ampa 
     ON (ersc.Amparo_Id = ampa.Amparo_Id)
     LEFT JOIN mdb_seguros_colombia.v_COMPANIA cia 
-    ON (pro.Compania_Id = cia.Compania_Id) --?
+    ON (pro.Compania_Id = cia.Compania_Id) 
     LEFT JOIN mdb_seguros_colombia.v_poliza_certificado AS polc
     ON ersc.poliza_certificado_id = polc.poliza_certificado_id
     AND ersc.plan_individual_id = polc.plan_individual_id
@@ -151,7 +151,7 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
         AND  ersc.Mes_Id BETWEEN CAST(
     '{mes_primera_ocurrencia}' AS INTEGER
     ) AND CAST('{mes_corte}' AS INTEGER)
-        AND  cia.Codigo_Op = '01' -- para que?
+        AND  cia.Codigo_Op = '01' 
     
     GROUP BY 1, 2, 3, 4, 5, 6
     HAVING NOT ( Pago_Cedido = 0 AND Aviso_Cedido = 0)
@@ -203,8 +203,7 @@ WITH DATA PRIMARY INDEX
 ) ON COMMIT PRESERVE ROWS;
 
 CREATE MULTISET VOLATILE TABLE atipicos AS (
-    SELECT
-    , atip.cobertura_desc
+    SELECT atip.cobertura_desc
     , atip.cobertura_general_desc
     , atip.codigo_ramo_op
     , atip.siniestro_id
@@ -220,7 +219,8 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
             WHEN esc.tipo_oper_siniestro_cd IN (131, 132) THEN 'TOTALES'
             WHEN esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 AND sini.acontecimiento_id IN (19866, 58026, 15268, 20052, 7634, 19867, 20112) THEN 'RC'
-            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) THEN 'MOTOS'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND pol.sucursal_id in (21170919, 20056181, 52915901) THEN 'MOTOS SUFI'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND pol.sucursal_id NOT IN (21170919, 20056181, 52915901) THEN 'MOTOS RESTO'
             WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
             WHEN esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694) THEN 'RC'
             ELSE 'PARCIALES'
@@ -400,7 +400,7 @@ CREATE MULTISET VOLATILE TABLE conteo_desistido_bruto AS (
             HAVING sum_aviso < 1000 
                 AND pago_maximo < 1000 
                 AND aviso_maximo > 1000
-            GROUP BY 1, 2, 3, 4, 5, 6
+            GROUP BY 1, 2, 3, 4, 5, 7
         ) AS fmax GROUP BY 1, 2, 3, 4, 5, 6
         
 )
@@ -514,7 +514,9 @@ HAVING NOT (
         AND ZEROIFNULL(SUM(base.aviso_retenido)) = 0
 )
 ) WITH DATA PRIMARY INDEX (
-    cobertura_desc
+    codigo_op
+    , codigo_ramo_op
+    , cobertura_desc
     , cobertura_general_desc
     , ramo_desc
     , atipico
@@ -522,4 +524,4 @@ HAVING NOT (
     , fecha_registro
 ) ON COMMIT PRESERVE ROWS;
 
-SELECT * FROM siniestros_final ORDER BY 1, 2, 3, 4, 5, 6, 7, 8;
+SELECT * FROM siniestros_final ORDER BY 1, 2, 3, 4, 5, 6, 7, 8

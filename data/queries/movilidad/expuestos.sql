@@ -9,7 +9,7 @@ CREATE MULTISET VOLATILE TABLE fechas AS
     WHERE
         mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER) AND CAST(
             '{mes_corte}' AS INTEGER)
-    GROUP BY 1
+           
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 COLLECT STATISTICS ON fechas INDEX (mes_id);
 
@@ -18,7 +18,8 @@ CREATE MULTISET VOLATILE TABLE base_expuestos AS (
         pc.poliza_certificado_id
         , '040' AS codigo_ramo_op
         , CASE 
-            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) THEN 'MOTOS'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND pol.sucursal_id NOT IN (21170919, 20056181, 52915901) THEN 'MOTOS RESTO'
+            WHEN fas.clase_tarifa_cd IN (3, 4, 5, 6) AND pol.sucursal_id IN (21170919, 20056181, 52915901) THEN 'MOTOS SUFI'
             WHEN vpc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694) THEN 'RC'
                 --AND sini.acontecimiento_id IN (19866, 58026, 15268, 20052, 7634, 19867, 20112) THEN 'RC'
             WHEN vpc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
@@ -46,7 +47,7 @@ CREATE MULTISET VOLATILE TABLE base_expuestos AS (
     GROUP BY 1, 2, 3, 4
     WHERE pro.ramo_id = 168
 		AND pro.compania_id = 4
-    HAVING MAX(vpc.fecha_exclusion_cobertura) >= CAST('{mes_primera_ocurrencia}' AS DATE FORMAT 'YYYY/MM/DD')
+    HAVING MAX(vpc.fecha_exclusion_cobertura) >= CAST('{fecha_primera_ocurrencia}' AS DATE FORMAT 'YYYY-MM-DD')
 ) WITH DATA PRIMARY INDEX (
     poliza_certificado_id
     , cobertura_general_desc
@@ -98,20 +99,16 @@ CREATE MULTISET VOLATILE TABLE expuestos_final AS (
         '01' AS codigo_op
         , '040' AS codigo_ramo_op
         , COALESCE(base.cobertura_general_desc, '-1') AS cobertura_general_desc
-        , CONCAT(base.cobertura_general_desc, '_',
-            base.tipo_negocio_desc) AS agrupacion_reservas
-
         , base.primer_dia_mes AS fecha_registro
-
         , SUM(ZEROIFNULL(base.expuestos)) AS expuestos
         , SUM(ZEROIFNULL(base.vigentes)) AS vigentes
     FROM expuestos AS base
-    GROUP BY 1, 2, 3, 4, 5
+    GROUP BY 1, 2, 3, 4
+
 ) WITH DATA PRIMARY INDEX (
     codigo_op
     , codigo_ramo_op
     , cobertura_general_desc
-    , agrupacion_reservas
     , fecha_registro
 ) ON COMMIT PRESERVE ROWS;
 

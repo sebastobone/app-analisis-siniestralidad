@@ -27,7 +27,7 @@ def generar_tablas_resumen(
             ["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"]
             + ct.COLUMNAS_QTYS
         )
-        .pipe(unificar_tablas, aperturas, expuestos, primas)
+        .pipe(unificar_tablas, negocio, aperturas, expuestos, primas)
     )
 
     if tipo_analisis == "entremes":
@@ -41,7 +41,7 @@ def generar_tablas_resumen(
                 on=["apertura_reservas", "periodicidad_triangulo"],
             )
             .drop("periodicidad_triangulo")
-            .pipe(unificar_tablas, aperturas, expuestos, primas)
+            .pipe(unificar_tablas, negocio, aperturas, expuestos, primas)
         )
 
         diagonales = (
@@ -76,7 +76,7 @@ def generar_tablas_resumen(
     )
 
     tabla_atipicos = (
-        atipicos.pipe(unificar_tablas, aperturas, expuestos, primas)
+        atipicos.pipe(unificar_tablas, negocio, aperturas, expuestos, primas)
         .with_columns(
             frecuencia_ultimate=pl.col("conteo_incurrido") / pl.col("expuestos"),
             conteo_ultimate=pl.col("conteo_incurrido"),
@@ -104,11 +104,11 @@ def generar_tablas_resumen(
 
 def unificar_tablas(
     df: pl.LazyFrame,
+    negocio: str,
     aperturas: pl.LazyFrame,
     expuestos: pl.LazyFrame,
     primas: pl.LazyFrame,
 ) -> pl.LazyFrame:
-    columnas_aperturas = aperturas.drop("apertura_reservas").collect_schema().names()
     return (
         df.join(aperturas.drop("periodicidad_ocurrencia"), on="apertura_reservas")
         .select(
@@ -118,10 +118,10 @@ def unificar_tablas(
         )
         .join(
             expuestos.drop("vigentes"),
-            on=columnas_aperturas + ["periodo_ocurrencia"],
+            on=utils.obtener_nombres_aperturas(negocio, "expuestos") + ["periodicidad_ocurrencia", "periodo_ocurrencia"],
             how="left",
         )
-        .join(primas, on=columnas_aperturas + ["periodo_ocurrencia"], how="left")
+        .join(primas, on=utils.obtener_nombres_aperturas(negocio, "primas") + ["periodicidad_ocurrencia", "periodo_ocurrencia"], how="left")
         .fill_null(0)
     )
 

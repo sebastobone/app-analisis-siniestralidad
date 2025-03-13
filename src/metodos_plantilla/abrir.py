@@ -13,7 +13,7 @@ def abrir_plantilla(plantilla_path: str) -> xw.Book:
 
     wb = xw.Book(plantilla_path)
 
-    wb.macro("eliminar_modulos")()
-    wb.macro("crear_modulos")()
+    # wb.macro("eliminar_modulos")()
+    # wb.macro("crear_modulos")()
 
     return wb

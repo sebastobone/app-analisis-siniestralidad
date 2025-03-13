@@ -92,7 +92,7 @@ FROM (
     LEFT JOIN mdb_seguros_colombia.v_plan AS plan
         ON plan.plan_id = pcetl.plan_id
     LEFT JOIN mdb_seguros_colombia.v_poliza AS pol
-        ON pol.poliza_id = rtdc.poliza_id
+        ON pol.poliza_id = pcetl.poliza_id
     INNER JOIN fechas AS fechas
         ON fechas.mes_id = rtdc.mes_id
     WHERE

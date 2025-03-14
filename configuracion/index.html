@@ -532,18 +532,18 @@
 <h2 id="definicion-de-aperturas">Definición de aperturas</h2>
 <p>Para definir las aperturas sobre las cuales se calculará la siniestralidad última, se tienen dos alternativas:</p>
 <ol>
-<li>
-<p>Definir la apertura directamente desde el query. Este camino se recomienda si la apertura es sencilla y no depende de otras aperturas. Por ejemplo:</p>
+<li>Definir la apertura directamente desde el query. Este camino se recomienda si la apertura es sencilla y no depende de otras aperturas. Por ejemplo:</li>
+</ol>
 <div class="language-sql highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">CASE</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="k">WHEN</span><span class="w"> </span><span class="n">fas</span><span class="p">.</span><span class="n">clase_tarifa_cd</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;MOTOS&#39;</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="k">WHEN</span><span class="w"> </span><span class="n">fas</span><span class="p">.</span><span class="n">clase_tarifa_cd</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;UTILITARIOS&#39;</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;LIVIANOS&#39;</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tipo_vehiculo_desc</span>
 </span></code></pre></div>
-</li>
+<ol>
 <li>
 <p>Definir la apertura desde el archivo <code>data/segmentacion.xlsx</code>. Este camino se recomienda si la apertura tiene una lógica compleja o depende de otras aperturas. Para ello, se deben seguir los siguientes pasos:</p>
-<ol>
+</li>
 <li>
 <p>Crear una nueva hoja en el Excel. El nombre de la hoja debe seguir el siguiente formato: <code>add_{indicador_cantidad}_{alias_apertura}</code>.</p>
 <p><code>indicador_cantidad</code> admite tres posibles valores: <code>s</code> para siniestros, <code>p</code> para primas, y <code>e</code> para expuestos. Por ejemplo, si los siniestros se van a aperturar por amparo, el nombre de la hoja sería <code>add_s_Amparos</code>. Si tanto siniestros como primas y expuestos se van a aperturar por esta variable, el nombre sería <code>add_spe_Amparos</code>.</p>
@@ -593,8 +593,6 @@
 </span></code></pre></div>
 </li>
 </ol>
-</li>
-</ol>
 
 
 
@@ -612,6 +610,8 @@
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -641,7 +641,7 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "content.tabs.link"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}}</script>
     
     
       <script src="../assets/javascripts/bundle.f1b6f286.min.js"></script>

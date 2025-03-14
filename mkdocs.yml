@@ -18,6 +18,7 @@ theme:
   features:
     - content.code.copy
     - content.code.select
+    - content.tabs.link
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -27,3 +28,5 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true

@@ -111,7 +111,7 @@ async def ejecutar_queries(
                 add_num += 1
 
         except td.OperationalError as exc:
-            logger.error(f"Error en {query[:100]}: \n{str(exc)}")
+            logger.error(f"Error en query: {query[:100]}: \n{str(exc)}")
             raise
 
     resultado = pl.read_database(queries[-1], con)

@@ -65,6 +65,7 @@ async def correr_query_siniestros(p: Parametros) -> None:
         utils.generar_mock_siniestros(
             (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
         ).write_parquet("data/raw/siniestros.parquet")
+        logger.info("Datos ficticios de siniestros generados.")
     else:
         await correr_query(
             f"data/queries/{p.negocio}/siniestros.sql",
@@ -82,6 +83,7 @@ async def correr_query_primas(p: Parametros) -> None:
         utils.generar_mock_primas(
             (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
         ).write_parquet("data/raw/primas.parquet")
+        logger.info("Datos ficticios de primas generados.")
     else:
         await correr_query(
             f"data/queries/{p.negocio}/primas.sql", "data/raw/primas", "parquet", p
@@ -93,6 +95,7 @@ async def correr_query_expuestos(p: Parametros) -> None:
         utils.generar_mock_expuestos(
             (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
         ).write_parquet("data/raw/expuestos.parquet")
+        logger.info("Datos ficticios de expuestos generados.")
     else:
         await correr_query(
             f"data/queries/{p.negocio}/expuestos.sql",

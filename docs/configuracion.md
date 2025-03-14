@@ -108,3 +108,14 @@ Para definir las aperturas sobre las cuales se calculará la siniestralidad últ
       WHERE ...
       GROUP BY ...
       ```
+
+Las aperturas esperadas deben estar almacenadas en el archivo `data/segmentacion.xlsx`, en las hojas definidas como "Apertura_Siniestros", "Apertura_Primas", y "Apertura_Expuestos". Estas aperturas deben contener todas las aperturas que salen de los queries, pero no es necesario que las aperturas que salen de los queries contengan todas las aperturas que están en estas tablas. Por ejemplo, si en un rango de fechas en el que se va a hacer el análisis una de las aperturas no estaba a la venta, es posible que quede en la tabla pero no en la salida del query.
+
+Adicionalmente, en la tabla "Apertura_Siniestros" se deben llenar dos columnas adicionales:
+
+- **apertura_reservas**: Representa la llave única que identifica cada apertura, se debe construir como el concatenado de las demás columnas.
+- **periodicidad_ocurrencia**: Representa la granularidad del triángulo y del entremés que se va a realizar para cada apertura. Puede tomar cuatro valores de periodicidad - Mensual, Trimestral, Semestral, o Anual.
+
+Todas las tablas definidas en estas hojas de apertura deben contener las columnas codigo_op (código de la compañía) y codigo_ramo_op (código del ramo).
+
+A modo de ejemplo, consulte el archivo `data/segmentacion_demo.xlsx`.

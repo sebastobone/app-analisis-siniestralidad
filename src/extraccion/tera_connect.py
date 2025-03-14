@@ -7,7 +7,6 @@ from typing import Literal
 import pandas as pd
 import polars as pl
 import teradatasql as td
-from tqdm import tqdm
 
 from src import utils
 from src.configuracion import configuracion
@@ -99,7 +98,7 @@ async def ejecutar_queries(
     executor = ThreadPoolExecutor()
 
     add_num = 0
-    for n_query, query in tqdm(enumerate(queries)):
+    for n_query, query in enumerate(queries):
         logger.info(f"Ejecutando query {n_query + 1} de {len(queries)}...")
         try:
             if "?" not in query:
@@ -131,7 +130,8 @@ def ejecutar_query_de_procesamiento(
 def ejecutar_query_particionado_en_fechas(
     cur: td.TeradataCursor, query: str, particiones_fechas: list[tuple[date, date]]
 ) -> None:
-    for chunk_ini, chunk_fin in tqdm(particiones_fechas):
+    for chunk_ini, chunk_fin in particiones_fechas:
+        logger.info(f"Ejecutando query para el rango {chunk_ini} - {chunk_fin}...")
         cur.execute(
             query.format(
                 chunk_ini=chunk_ini.strftime(format="%Y%m"),

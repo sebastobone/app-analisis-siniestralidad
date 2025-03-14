@@ -35,7 +35,6 @@ dev = [
     "pytest-cov>=6.0.0",
     "ruff>=0.9.6",
     "sqlfluff>=3.3.1",
-    "tqdm>=4.67.1",
     "types-openpyxl>=3.1.5.20241225",
     "types-pyautogui>=0.9.3.20241230",
     "types-tqdm>=4.67.0.20241221",

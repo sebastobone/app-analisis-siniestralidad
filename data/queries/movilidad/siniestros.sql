@@ -580,7 +580,7 @@ LEFT JOIN conteo_desistido_bruto AS contd
 INNER JOIN fechas AS focurr ON base.fecha_siniestro = focurr.dia_dt
 INNER JOIN fechas AS fmov ON base.fecha_registro = fmov.dia_dt
 
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+GROUP BY 1, 2, 3, 4, 5, 6, 7
 
 HAVING
     NOT (

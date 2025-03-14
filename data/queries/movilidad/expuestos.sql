@@ -1,17 +1,16 @@
-CREATE MULTISET VOLATILE TABLE fechas AS
-(
-    SELECT DISTINCT
+CREATE MULTISET VOLATILE TABLE fechas AS (
+    SELECT
         mes_id
-        , MIN(dia_dt) OVER (PARTITION BY mes_id) AS primer_dia_mes
-        , MAX(dia_dt) OVER (PARTITION BY mes_id) AS ultimo_dia_mes
-        , CAST((ultimo_dia_mes - primer_dia_mes + 1) * 1.00 AS DECIMAL(18, 0))
-            AS num_dias_mes
+        , MIN(dia_dt) AS primer_dia_mes
+        , MAX(dia_dt) AS ultimo_dia_mes
+        , CAST(
+            (ultimo_dia_mes - primer_dia_mes + 1) * 1.00 AS DECIMAL(18, 0)) AS
+        num_dias_mes
     FROM mdb_seguros_colombia.v_dia
     WHERE
-        mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER) AND CAST(
-            '{mes_corte}' AS INTEGER
-        )
-
+        mes_id BETWEEN CAST('{mes_primera_ocurrencia}' AS INTEGER)
+        AND CAST('{mes_corte}' AS INTEGER)
+    GROUP BY 1
 ) WITH DATA PRIMARY INDEX (mes_id) ON COMMIT PRESERVE ROWS;
 COLLECT STATISTICS ON fechas INDEX (mes_id);  -- noqa:
 

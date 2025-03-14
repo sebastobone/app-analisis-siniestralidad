@@ -90,8 +90,7 @@ async def obtener_logs(request: Request) -> AsyncIterator[str]:
 
 @app.get("/stream-logs")
 async def stream_logs(request: Request):
-    dev = True
-    return EventSourceResponse(obtener_logs(request)) if not dev else None
+    return EventSourceResponse(obtener_logs(request))
 
 
 def obtener_parametros_usuario(

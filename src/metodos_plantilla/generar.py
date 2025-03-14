@@ -8,6 +8,7 @@ import xlwings as xw
 import src.constantes as ct
 from src import utils
 from src.logger_config import logger
+from src.metodos_plantilla import resultados
 from src.models import ModosPlantilla
 
 
@@ -50,6 +51,16 @@ def generar_plantilla(
             utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
         )
 
+        resultados_anteriores = resultados.concatenar_archivos_resultados()
+        mes_ultimos_resultados = (
+            resultados_anteriores.filter(
+                (pl.col("apertura_reservas") == modos.apertura)
+                & (pl.col("tipo_analisis") == "entremes")
+            )
+            .get_column("mes_corte")
+            .max()
+        )
+
         wb.macro(f"Generar{hoja_plantilla}")(
             num_ocurrencias,
             num_alturas,
@@ -61,6 +72,7 @@ def generar_plantilla(
             modos.atributo,
             mes_del_periodo,
             ceil(num_alturas / num_ocurrencias),
+            mes_ultimos_resultados,
         )
 
     logger.success(

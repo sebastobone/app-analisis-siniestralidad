@@ -28,6 +28,7 @@ def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
     rangos = [
         "EXCLUSIONES",
         "VENTANAS",
+        "TIPO_FACTORES_SELECCIONADOS",
         "FACTORES_SELECCIONADOS",
         "MET_PAGO_INCURRIDO",
         "ULTIMATE",

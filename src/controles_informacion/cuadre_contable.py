@@ -10,11 +10,9 @@ async def realizar_cuadre_contable(
     file: ct.LISTA_QUERIES_CUADRE,
     base: pl.DataFrame,
     dif_sap_vs_tera: pl.DataFrame,
+    meses_a_cuadrar: pl.DataFrame,
 ) -> pl.DataFrame:
-    if negocio == "soat":
-        dif_sap_vs_tera = dif_sap_vs_tera.filter(
-            pl.col("fecha_registro") == pl.col("fecha_registro").max()
-        )
+    dif_sap_vs_tera = dif_sap_vs_tera.join(meses_a_cuadrar, on="fecha_registro")
 
     diferencias = (
         obtener_aperturas_para_asignar_diferencia(negocio, file)

@@ -33,8 +33,11 @@ async def generar_controles(
             df.write_csv, f"data/raw/{file}_pre_cuadre.csv", separator="\t"
         )
         await asyncio.to_thread(df.write_parquet, f"data/raw/{file}_pre_cuadre.parquet")
+        meses_a_cuadrar = pl.read_excel(
+            f"data/segmentacion_{p.negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
+        )
         df = await realizar_cuadre_contable(
-            p.negocio, file, df, difs_sap_tera_pre_cuadre
+            p.negocio, file, df, difs_sap_tera_pre_cuadre, meses_a_cuadrar
         )
         _ = await generar_controles_estado_cuadre(
             df,

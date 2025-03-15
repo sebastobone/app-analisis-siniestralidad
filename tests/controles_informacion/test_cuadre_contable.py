@@ -7,14 +7,14 @@ import pytest
 from src import utils
 from src.controles_informacion import cuadre_contable, sap
 from src.controles_informacion import generacion as ctrl
-from tests.conftest import assert_igual
+from tests.conftest import assert_diferente, assert_igual
 from tests.controles_informacion.test_generacion import mock_hoja_afo
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("qty", ["pago_bruto"])
+@pytest.mark.parametrize("qty", ["pago_bruto", "aviso_bruto"])
 async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) -> None:
-    mes_corte = rango_meses[1]
+    mes_inicio, mes_corte = rango_meses
     mes_corte_int = utils.date_to_yyyymm(mes_corte)
 
     with patch("src.controles_informacion.sap.pl.read_excel") as mock_read_excel:
@@ -44,9 +44,9 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
         mock_soat, ["codigo_op", "codigo_ramo_op", "fecha_registro"], qtys
     )
 
-    dif_sap_vs_tera = (
-        await ctrl.comparar_sap_tera(df_tera, df_sap, mes_corte_int, qtys)
-    ).filter(pl.col("fecha_registro") == mes_corte)
+    dif_sap_vs_tera = await ctrl.comparar_sap_tera(df_tera, df_sap, mes_corte_int, qtys)
+
+    meses_a_cuadrar = pl.DataFrame({"fecha_registro": [mes_inicio, mes_corte]})
 
     with patch(
         "src.controles_informacion.cuadre_contable.obtener_aperturas_para_asignar_diferencia"
@@ -62,10 +62,22 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
 
         with patch("src.controles_informacion.cuadre_contable.guardar_archivos"):
             df_cuadre = await cuadre_contable.realizar_cuadre_contable(
-                "demo", "siniestros", mock_soat, dif_sap_vs_tera
+                "demo", "siniestros", mock_soat, dif_sap_vs_tera, meses_a_cuadrar
             )
 
-    cifra_sap = df_sap.filter(pl.col("fecha_registro") == mes_corte)
-    cifra_final = df_cuadre.filter(pl.col("fecha_registro") == mes_corte)
+    cifra_sap_meses_a_cuadrar = df_sap.filter(
+        pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
+    )
+    cifra_final_meses_a_cuadrar = df_cuadre.filter(
+        pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
+    )
 
-    assert_igual(cifra_sap, cifra_final, qty)
+    cifra_sap_meses_sin_cuadre = df_sap.filter(
+        ~pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
+    )
+    cifra_final_meses_sin_cuadre = df_cuadre.filter(
+        ~pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
+    )
+
+    assert_igual(cifra_sap_meses_a_cuadrar, cifra_final_meses_a_cuadrar, qty)
+    assert_diferente(cifra_sap_meses_sin_cuadre, cifra_final_meses_sin_cuadre, qty)

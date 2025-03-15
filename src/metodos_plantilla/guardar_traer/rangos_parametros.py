@@ -46,6 +46,13 @@ def obtener_rangos_parametros_comunes(
             Offset(y=1, x=2),
             RangeDimension(height=16, width=3),
         ),
+        "TIPO_FACTORES_SELECCIONADOS": obtener_rango(
+            hoja,
+            "Periodo inicial",
+            "B1:B1000",
+            Offset(y=0, x=ct.COL_OCURRS_PLANTILLAS),
+            RangeDimension(height=1, width=2),
+        ),
         "FACTORES_SELECCIONADOS": obtener_rango(
             hoja,
             "FACTORES SELECCIONADOS",

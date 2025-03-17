@@ -4,10 +4,27 @@ site_author: Gerencia de Modelacion Tecnica
 repo_url: https://github.com/sebastobone/app-analisis-siniestralidad
 
 nav:
-  - Introducción: index.md
+  - Introducción: introduccion.md
   - Instalación: instalacion.md
-  - Configuración: configuracion.md
-  - Uso de la plantilla: uso.md
+  - Configuración:
+    - Fuentes de información y permisos: config/fuentes.md
+    - Consultas: config/queries.md
+    - Definición de aperturas: config/aperturas.md
+    - Actualización de estados financieros (SAP): config/sap.md
+    - Cuadre contable: config/cuadre_contable.md
+  - Uso:
+    - Inicio: uso/inicio.md
+    - Ingreso de parámetros: uso/parametros.md
+    - Extracción de información: uso/extraccion.md
+    - Generación de controles: uso/controles.md
+    - Abrir o preparar plantilla: uso/plantilla.md
+    - Modos de la plantilla: uso/modos.md
+    - Almacenar análisis: uso/almacenar_analisis.md
+    - Consolidar resultados: uso/consolidar_resultados.md
+    - Generación de informes: uso/informes.md
+  - Diccionario: diccionario.md
+  - Particularidades por negocio:
+    - SOAT: particularidades/soat.md
 
 theme:
   name: material

@@ -33,7 +33,14 @@ repos:
         name: prettier => code formatting
         stages: [pre-commit]
         language: system
-        entry: npx prettier --write .
+        entry: npx prettier --write src
+        always_run: true
+        pass_filenames: false
+      - id: documentation-formatting
+        name: markdownlint => markdown formatting
+        stages: [pre-commit]
+        language: system
+        entry: markdownlint --fix docs --disable MD013
         always_run: true
         pass_filenames: false
       - id: sqlfluff-linting

@@ -17,10 +17,9 @@ nav:
     - Ingreso de parámetros: uso/parametros.md
     - Extracción de información: uso/extraccion.md
     - Generación de controles: uso/controles.md
-    - Abrir o preparar plantilla: uso/plantilla.md
-    - Modos de la plantilla: uso/modos.md
-    - Almacenar análisis: uso/almacenar_analisis.md
-    - Consolidar resultados: uso/consolidar_resultados.md
+    - Descripción de la plantilla: uso/plantilla.md
+    - Funciones de la plantilla: uso/funciones_plantilla.md
+    - Consolidación de resultados: uso/resultados.md
     - Generación de informes: uso/informes.md
   - Diccionario: diccionario.md
   - Particularidades por negocio:

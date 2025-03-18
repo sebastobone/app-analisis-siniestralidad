@@ -127,7 +127,7 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     siguiente_mes = (
         mes_corte_para_triangulo + 1
         if mes_corte_para_triangulo % 100 < 12
-        else (mes_corte_para_triangulo // 100) * 100 + 1
+        else (mes_corte_para_triangulo // 100 + 1) * 100 + 1
     )
     params_form.update({"tipo_analisis": "entremes", "mes_corte": str(siguiente_mes)})
     response = client.post("/ingresar-parametros", data=params_form)

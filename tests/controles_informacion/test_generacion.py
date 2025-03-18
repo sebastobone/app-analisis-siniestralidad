@@ -5,6 +5,7 @@ import polars as pl
 import pytest
 from src import constantes as ct
 from src import utils
+from src.controles_informacion import generacion as gen
 from src.controles_informacion import sap
 
 
@@ -115,3 +116,10 @@ async def test_consolidar_sap(cias, qtys, mes_corte, expected_columns):
         == ["codigo_op", "codigo_ramo_op", "fecha_registro"] + expected_columns
     )
     assert result.shape[0] > 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_verificar_existencia_afos():
+    with pytest.raises(FileNotFoundError):
+        await gen.verificar_existencia_afos("demo")

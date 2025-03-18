@@ -12,6 +12,22 @@ from src.logger_config import logger
 from src.models import Parametros
 
 
+async def verificar_existencia_afos(negocio: str):
+    logger.info("Verificando existencia de AFOS...")
+    afos_necesarios = ct.AFOS_NECESARIOS[negocio]
+    for afo in afos_necesarios:
+        if not os.path.exists(f"data/afo/{afo}"):
+            logger.error(
+                utils.limpiar_espacios_log(
+                    """
+                    El AFO no se encuentra en la ruta data/afo/,
+                    por favor agregarlo en la carpeta.
+                    """
+                )
+            )
+            raise FileNotFoundError
+
+
 async def generar_controles(
     file: Literal["siniestros", "primas", "expuestos"], p: Parametros
 ) -> None:

@@ -37,6 +37,9 @@ theme:
     - content.code.select
     - content.tabs.link
 
+plugins:
+  - include-markdown
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true

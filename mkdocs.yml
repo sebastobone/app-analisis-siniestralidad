@@ -4,7 +4,7 @@ site_author: Gerencia de Modelacion Tecnica
 repo_url: https://github.com/sebastobone/app-analisis-siniestralidad
 
 nav:
-  - Introducción: introduccion.md
+  - Introducción: index.md
   - Instalación: instalacion.md
   - Estructura: estructura.md
   - Configuración:
@@ -36,6 +36,9 @@ theme:
     - content.code.copy
     - content.code.select
     - content.tabs.link
+
+plugins:
+  - include-markdown
 
 markdown_extensions:
   - pymdownx.highlight:

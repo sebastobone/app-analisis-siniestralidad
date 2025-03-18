@@ -106,6 +106,8 @@ async def correr_query_expuestos(p: Parametros) -> None:
 
 
 async def generar_controles(p: Parametros) -> None:
+    await ctrl.verificar_existencia_afos(p.negocio)
+
     await ctrl.generar_controles("siniestros", p)
     await ctrl.generar_controles("primas", p)
     await ctrl.generar_controles("expuestos", p)

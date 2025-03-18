@@ -86,3 +86,14 @@ COLORES_LOGS = {
     "ERROR": "red",
     "CRITICAL": "red",
 }
+
+AFOS_NECESARIOS = {
+    "movilidad": ["Generales.xlsx"],
+    "autonomia": ["Generales.xlsx", "Vida.xlsx"],
+    "salud": ["Vida.xlsx"],
+    "eps": ["EPS.xlsx"],
+    "arl": ["Vida.xlsx"],
+    "soat": ["Generales.xlsx"],
+    "empresariales": ["Generales.xlsx"],
+    "demo": ["AFO_Inexistente.xlsx"],
+}

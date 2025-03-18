@@ -1,14 +1,20 @@
 # Funciones de la plantilla
 
+## Abrir
+
+Esta función crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada. A diferencia de la función "Preparar plantilla", esta función no elimina los contenidos actuales de la plantilla.
+
 ## Preparar
 
 Esta función cumple las siguientes funciones:
 
-- Crea una nueva plantilla con el nombre especificado, si aún no está creado. De lo contrario, abre la que está actualmente creada y elimina todos los contenidos.
+- Crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada y elimina todos los contenidos.
 - Genera la hoja de Resumen con las periodicidades especificadas en la hoja "Apertura_Siniestros" del archivo `data/segmentacion.xlsx`.
 - Genera la hoja de Atípicos.
 - Genera la hoja de Histórico a partir de los archivos almacenados en la carpeta `output/resultados`.
 - Esconde las hojas no relevantes y muestra las relevantes. Por ejemplo, en un análisis de triángulos, esconde las hojas de Entremés y Completar_diagonal.
+
+¡Cuidado! Si utiliza esta función sobre una plantilla ya creada, sobrescribirá sus resultados (los tendría que recuperar desde el historial de versiones de OneDrive). Si simplemente desea abrir una plantilla que ya había preparado, utilice la función "Abrir plantilla".
 
 ## Funciones por apertura
 

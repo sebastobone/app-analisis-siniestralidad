@@ -6,6 +6,7 @@ repo_url: https://github.com/sebastobone/app-analisis-siniestralidad
 nav:
   - Introducción: introduccion.md
   - Instalación: instalacion.md
+  - Estructura: estructura.md
   - Configuración:
     - Fuentes de información y permisos: config/fuentes.md
     - Consultas: config/queries.md
@@ -46,3 +47,6 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg

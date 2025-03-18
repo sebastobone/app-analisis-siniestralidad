@@ -1,8 +1,10 @@
+<!--markdownlint-disable MD046-->
+
 # Instalación
 
 ## Prerrequisitos
 
-Para instalar la plantilla y empezarla a usar en un nuevo análisis, debe tener instalado previamente en su equipo [Git](https://git-scm.com/) y [uv](https://docs.astral.sh/uv/getting-started/installation/).
+Para instalar la aplicación y empezarla a usar en un nuevo análisis, debe tener instalado previamente en su equipo [Git](https://git-scm.com/), [uv](https://docs.astral.sh/uv/getting-started/installation/), y Excel.
 
 ## Instrucciones
 
@@ -10,11 +12,11 @@ Para instalar la plantilla y empezarla a usar en un nuevo análisis, debe tener 
 2. Abra una terminal en esta carpeta. Para ello, seleccione la carpeta, presione click derecho, y seleccione abrir nueva terminal.
 3. En la terminal, copie lo siguiente y presione enter:
 
-   ```sh
-   git clone https://github.com/sebastobone/app-analisis-siniestralidad.git
-   cd app-analisis-siniestralidad
-   uv sync --no-dev
-   ```
+      ```sh
+      git clone https://github.com/sebastobone/app-analisis-siniestralidad.git
+      cd app-analisis-siniestralidad
+      uv sync --no-dev
+      ```
 
 Para hacer la extraccion de queries, se creará un archivo para almacenar sus credenciales de Teradata. Pegue lo siguiente en la terminal:
 

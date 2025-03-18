@@ -1,12 +1,15 @@
+import os
 from datetime import date
 from typing import Literal
 
 import polars as pl
 import pytest
+from fastapi.testclient import TestClient
 from src import constantes as ct
 from src import utils
-from src.metodos_plantilla import generar
+from src.metodos_plantilla import abrir, generar
 from src.procesamiento import base_siniestros
+from tests.conftest import agregar_meses_params, vaciar_directorio
 
 
 @pytest.mark.integration
@@ -51,3 +54,35 @@ def test_forma_triangulo(
         assert (
             df.shape[0] * ct.PERIODICIDADES[periodicidad_ocurrencia] >= df.shape[1] // 2
         )
+
+
+@pytest.mark.integration
+def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, date]):
+    params_form = {
+        "negocio": "demo",
+        "tipo_analisis": "triangulos",
+        "nombre_plantilla": "wb_test_no_prep",
+    }
+    agregar_meses_params(params_form, rango_meses)
+
+    _ = client.post("/ingresar-parametros", data=params_form)
+    wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
+
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")
+
+    with pytest.raises(ValueError):
+        _ = client.post(
+            "/modos-plantilla",
+            data={
+                "apertura": "01_001_A_D",
+                "atributo": "bruto",
+                "plantilla": "plata",
+                "modo": "generar",
+            },
+        )
+
+    vaciar_directorio("data/raw")
+    wb.close()
+    os.remove(f"plantillas/{params_form['nombre_plantilla']}.xlsm")

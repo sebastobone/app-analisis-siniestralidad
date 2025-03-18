@@ -230,6 +230,8 @@ async def modos_plantilla(
     p = obtener_parametros_usuario(session, session_id)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
+    utils.verificar_plantilla_preparada(wb)
+
     if modos.modo == "generar":
         if modos.plantilla == "severidad":
             modos_frec = modos.model_copy(update={"plantilla": "frecuencia"})

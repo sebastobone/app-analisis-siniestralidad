@@ -209,3 +209,13 @@ async def test_check_final_info(rango_meses: tuple[date, date]):
             mes_inicio_int,
             mes_corte_int,
         )
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_verificar_aperturas_faltantes():
+    with pytest.raises(ValueError):
+        await tera_connect.verificar_aperturas_faltantes(["a", "b"], ["a", "c"])
+    await tera_connect.verificar_aperturas_faltantes(["a", "b"], ["a", "b"])
+    await tera_connect.verificar_aperturas_sobrantes(["a", "b"], ["a", "b"])
+    await tera_connect.verificar_aperturas_sobrantes(["a", "b", "c"], ["a", "b"])

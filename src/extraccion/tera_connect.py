@@ -41,6 +41,18 @@ async def correr_query(
                 utils.crear_columna_apertura_reservas(p.negocio),
                 pl.all(),
             )
+            aperturas_generadas = sorted(
+                df.get_column("apertura_reservas").unique().to_list()
+            )
+            aperturas_esperadas = sorted(
+                utils.obtener_nombres_aperturas(tipo_query, "siniestros")
+            )
+            await verificar_aperturas_faltantes(
+                aperturas_esperadas, aperturas_generadas
+            )
+            await verificar_aperturas_sobrantes(
+                aperturas_esperadas, aperturas_generadas
+            )
 
     await guardar_resultado(df, save_path, save_format, tipo_query)
 
@@ -353,3 +365,32 @@ async def verificar_resultado_siniestros_primas_expuestos(
             """
         )
         raise ValueError
+
+
+async def verificar_aperturas_faltantes(
+    aperturas_generadas: list[str], aperturas_esperadas: list[str]
+) -> None:
+    faltantes = []
+    for apertura_esperada in aperturas_esperadas:
+        if apertura_esperada not in aperturas_generadas:
+            faltantes.append(apertura_esperada)
+
+    if len(faltantes) > 0:
+        logger.error(
+            f"¡Error! Las siguientes aperturas no fueron generadas: {faltantes}"
+        )
+        raise ValueError
+
+
+async def verificar_aperturas_sobrantes(
+    aperturas_generadas: list[str], aperturas_esperadas: list[str]
+) -> None:
+    sobrantes = []
+    for apertura_generada in aperturas_generadas:
+        if apertura_generada not in aperturas_esperadas:
+            sobrantes.append(apertura_generada)
+
+    if len(sobrantes) > 0:
+        logger.warning(
+            f"¡Alerta! Se generaron las siguientes aperturas no esperadas: {sobrantes}"
+        )

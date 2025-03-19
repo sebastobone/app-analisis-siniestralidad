@@ -139,6 +139,8 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
             ELSE 'PARCIALES'
         END AS cobertura_general_desc
         , CASE
+            WHEN ersc.reserva_id = 18635 THEN 'SUBR'
+            WHEN ersc.tipo_operacion_cd IN (131, 127) THEN 'SALV'
             WHEN
                 ersc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 AND sini.acontecimiento_id IN (
@@ -152,8 +154,6 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN ersc.reserva_id = 18635 THEN 'SUBR'
-            WHEN ersc.tipo_operacion_cd IN (131, 127) THEN 'SALV'
             WHEN ersc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
             WHEN
                 ersc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
@@ -297,6 +297,8 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
                 ELSE 'PARCIALES'
             END AS cobertura_general_desc
             , CASE
+                WHEN esc.reserva_id = 18635 THEN 'SUBR'
+                WHEN esc.tipo_oper_siniestro_cd IN (131, 132) THEN 'SALV'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                     AND sini.acontecimiento_id IN (
@@ -310,8 +312,6 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
                 WHEN
                     fas.clase_tarifa_cd IN (3, 4, 5, 6)
                     THEN 'MOTOS RESTO'
-                WHEN esc.reserva_id = 18635 THEN 'SUBR'
-                WHEN esc.tipo_oper_siniestro_cd IN (131, 132) THEN 'SALV'
                 WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
@@ -456,46 +456,96 @@ WITH DATA PRIMARY INDEX
 ) ON COMMIT PRESERVE ROWS;
 
 
-
-CREATE MULTISET VOLATILE TABLE conteo_desistido_bruto AS (
-    SELECT
-        fecha_siniestro
-        , fecha_registro
-        , codigo_ramo_op
-        , cobertura_general_desc
-        , cobertura_desc
-        , atipico
-        , ZEROIFNULL(COUNT(DISTINCT siniestro_id)) AS conteo_desistido
-    FROM (
+CREATE MULTISET VOLATILE TABLE sin_pagos_bruto AS (
+    WITH rva AS (
         SELECT
-            base.fecha_siniestro
-            , base.codigo_ramo_op
-            , base.cobertura_general_desc
-            , base.cobertura_desc
-            , base.atipico
-            , base.siniestro_id
-            , MAX(base.fecha_registro) AS fecha_registro
-            , SUM(base.aviso_bruto) AS sum_aviso
-            , MAX(ABS(base.pago_bruto)) AS pago_maximo
-            , MAX(ABS(base.aviso_bruto)) AS aviso_maximo
-        FROM base_incurrido AS base
-        GROUP BY 1, 2, 3, 4, 5, 6
-        HAVING
-            sum_aviso < 1000
-            AND pago_maximo < 1000
-            AND aviso_maximo > 1000
-    ) AS fmax
+            fecha_siniestro
+            , codigo_ramo_op
+            , siniestro_id
+            , cobertura_general_desc
+            , cobertura_desc
+            , atipico
+            , 1 AS en_reserva
+            , SUM(aviso_bruto) AS aviso_bruto
 
-    GROUP BY 1, 2, 3, 4, 5, 6
-)
-WITH DATA PRIMARY INDEX (
+        FROM base_incurrido
+        GROUP BY 1, 2, 3, 4, 5, 6, 7
+        HAVING SUM(aviso_bruto) > 1000
+    )
+
+    SELECT
+        base.fecha_siniestro
+        , base.codigo_ramo_op
+        , base.siniestro_id
+        , base.cobertura_general_desc
+        , base.cobertura_desc
+        , base.atipico
+        , ZEROIFNULL(rva.en_reserva) AS en_rva
+        , ZEROIFNULL(SUM(base.pago_bruto)) AS pago
+
+    FROM base_incurrido AS base
+    LEFT JOIN rva
+        ON
+            (base.fecha_siniestro = rva.fecha_siniestro)
+            AND (base.codigo_ramo_op = rva.codigo_ramo_op)
+            AND (base.siniestro_id = rva.siniestro_id)
+            AND (base.cobertura_general_desc = rva.cobertura_general_desc)
+            AND (base.cobertura_desc = rva.cobertura_desc)
+            AND (base.atipico = rva.atipico)
+
+    WHERE en_rva = 0
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
+    HAVING pago = 0
+) WITH DATA PRIMARY INDEX (
     fecha_siniestro
-    , fecha_registro
     , codigo_ramo_op
     , cobertura_general_desc
     , cobertura_desc
     , atipico
 ) ON COMMIT PRESERVE ROWS;
+
+CREATE MULTISET VOLATILE TABLE conteo_desistido_bruto AS (
+    SELECT
+        fecha_siniestro
+        , codigo_ramo_op
+        , fecha_registro
+        , cobertura_general_desc
+        , cobertura_desc
+        , atipico
+        , ZEROIFNULL(COUNT(DISTINCT siniestro_id)) AS conteo_desistido
+
+    FROM (
+        SELECT
+            base.fecha_siniestro
+            , base.codigo_ramo_op
+            , base.siniestro_id
+            , base.cobertura_general_desc
+            , base.cobertura_desc
+            , base.atipico
+            , MAX(base.fecha_registro) AS fecha_registro
+
+        FROM base_incurrido AS base
+        INNER JOIN sin_pagos_bruto AS pag
+            ON
+                (base.fecha_siniestro = pag.fecha_siniestro)
+                AND (base.codigo_ramo_op = pag.codigo_ramo_op)
+                AND (base.siniestro_id = pag.siniestro_id)
+                AND (base.cobertura_general_desc = pag.cobertura_general_desc)
+                AND (base.cobertura_desc = pag.cobertura_desc)
+                AND (base.atipico = pag.atipico)
+        WHERE base.aviso_bruto <> 0
+        GROUP BY 1, 2, 3, 4, 5, 6
+    ) AS fecha
+
+    GROUP BY 1, 2, 3, 4, 5, 6
+) WITH DATA PRIMARY INDEX (
+    fecha_siniestro
+    , fecha_registro
+    , codigo_ramo_op
+    , cobertura_general_desc
+    , cobertura_desc
+) ON COMMIT PRESERVE ROWS;
+
 
 
 
@@ -544,13 +594,13 @@ SELECT
         AS fecha_siniestro
     , GREATEST(CAST('{fecha_primera_ocurrencia}' AS DATE), fmov.mes_id)
         AS fecha_registro
-    , SUM(contp.conteo_pago) AS conteo_pago
-    , SUM(conti.conteo_incurrido) AS conteo_incurrido
-    , SUM(contd.conteo_desistido) AS conteo_desistido
-    , SUM(base.pago_bruto) AS pago_bruto
-    , SUM(base.pago_retenido) AS pago_retenido
-    , SUM(base.aviso_bruto) AS aviso_bruto
-    , SUM(base.aviso_retenido) AS aviso_retenido
+    , SUM(ZEROIFNULL(contp.conteo_pago)) AS conteo_pago
+    , SUM(ZEROIFNULL(conti.conteo_incurrido)) AS conteo_incurrido
+    , SUM(ZEROIFNULL(contd.conteo_desistido)) AS conteo_desistido
+    , SUM(ZEROIFNULL(base.pago_bruto)) AS pago_bruto
+    , SUM(ZEROIFNULL(base.pago_retenido)) AS pago_retenido
+    , SUM(ZEROIFNULL(base.aviso_bruto)) AS aviso_bruto
+    , SUM(ZEROIFNULL(base.aviso_retenido)) AS aviso_retenido
 
 FROM base_pagos_aviso AS base
 LEFT JOIN conteo_pago_bruto AS contp
@@ -584,13 +634,13 @@ GROUP BY 1, 2, 3, 4, 5, 6, 7
 
 HAVING
     NOT (
-        SUM(contp.conteo_pago) = 0
-        AND SUM(conti.conteo_incurrido) = 0
-        AND SUM(contd.conteo_desistido) = 0
-        AND SUM(base.pago_bruto) = 0
-        AND SUM(base.aviso_bruto) = 0
-        AND SUM(base.pago_retenido) = 0
-        AND SUM(base.aviso_retenido) = 0
+        SUM(ZEROIFNULL(contp.conteo_pago)) = 0
+        AND SUM(ZEROIFNULL(conti.conteo_incurrido)) = 0
+        AND SUM(ZEROIFNULL(contd.conteo_desistido)) = 0
+        AND SUM(ZEROIFNULL(base.pago_bruto)) = 0
+        AND SUM(ZEROIFNULL(base.aviso_bruto)) = 0
+        AND SUM(ZEROIFNULL(base.pago_retenido)) = 0
+        AND SUM(ZEROIFNULL(base.aviso_retenido)) = 0
     )
 
 ORDER BY 1, 2, 3, 4, 5, 6, 7

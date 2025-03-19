@@ -45,13 +45,16 @@ async def correr_query(
                 df.get_column("apertura_reservas").unique().to_list()
             )
             aperturas_esperadas = sorted(
-                utils.obtener_nombres_aperturas(tipo_query, "siniestros")
+                utils.obtener_aperturas(p.negocio, "siniestros")
+                .get_column("apertura_reservas")
+                .unique()
+                .to_list()
             )
             await verificar_aperturas_faltantes(
-                aperturas_esperadas, aperturas_generadas
+                aperturas_generadas, aperturas_esperadas
             )
             await verificar_aperturas_sobrantes(
-                aperturas_esperadas, aperturas_generadas
+                aperturas_generadas, aperturas_esperadas
             )
 
     await guardar_resultado(df, save_path, save_format, tipo_query)

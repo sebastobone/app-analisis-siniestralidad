@@ -234,7 +234,9 @@ async def modos_plantilla(
 
     if modos.modo == "generar":
         if modos.plantilla == "severidad":
-            modos_frec = modos.model_copy(update={"plantilla": "frecuencia", "atributo" : "bruto"})
+            modos_frec = modos.model_copy(
+                update={"plantilla": "frecuencia", "atributo": "bruto"}
+            )
             generar.generar_plantilla(
                 wb, p.negocio, modos_frec, p.mes_corte, solo_triangulo=True
             )

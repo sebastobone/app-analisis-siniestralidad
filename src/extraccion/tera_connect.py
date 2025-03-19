@@ -45,7 +45,10 @@ async def correr_query(
                 df.get_column("apertura_reservas").unique().to_list()
             )
             aperturas_esperadas = sorted(
-                utils.obtener_aperturas(p.negocio,'siniestros').get_column('apertura_reservas').unique().to_list()
+                utils.obtener_aperturas(p.negocio, "siniestros")
+                .get_column("apertura_reservas")
+                .unique()
+                .to_list()
             )
             await verificar_aperturas_faltantes(
                 aperturas_generadas, aperturas_esperadas

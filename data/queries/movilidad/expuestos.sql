@@ -553,8 +553,8 @@ CREATE MULTISET VOLATILE TABLE expuestos_2 AS (
         SELECT DISTINCT
             traza_id
             , CASE
-                WHEN tcob.termino_cobert_desc IN ('Pérdida Total') THEN 'TOTALES'
-                WHEN cob.cobertura_desc IN ('Responsabilidad Civil') THEN 'RC'
+                WHEN tcob.termino_cobert_id IN (5962, 6089, 5945) THEN 'TOTALES'
+                WHEN cob.cobertura_id IN (3230, 8233, 2812) THEN 'RC'
                 ELSE 'PARCIALES'
             END AS cobertura
 
@@ -569,48 +569,42 @@ CREATE MULTISET VOLATILE TABLE expuestos_2 AS (
         WHERE tc.valor_prima <> 0
     )
 
-    , meses AS (
-        SELECT
-            mes_id
-            , MIN(dia_dt) AS primer_dia
-            , MAX(dia_dt) AS ultimo_dia
-        FROM mdb_seguros_colombia.v_dia
-        GROUP BY 1
-        WHERE mes_id <= CAST('{mes_corte}' AS INTEGER)
-    )
+    
 
     , trazas AS (
         SELECT
             traza.*
-            , meses.mes_id
+            , fechas.mes_id
             , CAST(CASE
-                WHEN traza.fecha_fin_v5 < meses.primer_dia THEN 0
-                WHEN traza.fecha_inicio_v4 > meses.ultimo_dia THEN 0
+                WHEN traza.fecha_fin_v5 < fechas.primer_dia_mes THEN 0
+                WHEN traza.fecha_inicio_v4 > fechas.ultimo_dia_mes THEN 0
                 WHEN
-                    traza.fecha_inicio_v4 <= meses.primer_dia
-                    AND meses.ultimo_dia <= traza.fecha_fin_v5
-                    THEN (meses.ultimo_dia - meses.primer_dia) + 1
+                    traza.fecha_inicio_v4 <= fechas.primer_dia_mes
+                    AND fechas.ultimo_dia_mes <= traza.fecha_fin_v5
+                    THEN (fechas.ultimo_dia_mes - fechas.primer_dia_mes) + 1
                 WHEN
-                    traza.fecha_inicio_v4 >= meses.primer_dia
-                    AND meses.ultimo_dia >= traza.fecha_fin_v5
+                    traza.fecha_inicio_v4 >= fechas.primer_dia_mes
+                    AND fechas.ultimo_dia_mes >= traza.fecha_fin_v5
                     THEN (traza.fecha_fin_v5 - traza.fecha_inicio_v4) + 1
                 WHEN
-                    traza.fecha_inicio_v4 >= meses.primer_dia
-                    AND meses.ultimo_dia <= traza.fecha_fin_v5
-                    THEN (meses.ultimo_dia - traza.fecha_inicio_v4) + 1
-                WHEN meses.primer_dia = traza.fecha_fin_v5 THEN 1
+                    traza.fecha_inicio_v4 >= fechas.primer_dia_mes
+                    AND fechas.ultimo_dia_mes <= traza.fecha_fin_v5
+                    THEN (fechas.ultimo_dia_mes - traza.fecha_inicio_v4) + 1
+                WHEN fechas.primer_dia_mes = traza.fecha_fin_v5 THEN 1
                 WHEN
-                    traza.fecha_inicio_v4 <= meses.primer_dia
-                    AND meses.ultimo_dia >= traza.fecha_fin_v5
-                    THEN (traza.fecha_fin_v5 - meses.primer_dia) + 1
+                    traza.fecha_inicio_v4 <= fechas.primer_dia_mes
+                    AND fechas.ultimo_dia_mes >= traza.fecha_fin_v5
+                    THEN (traza.fecha_fin_v5 - fechas.primer_dia_mes) + 1
                 ELSE 0
             END AS FLOAT) AS dias_expuesto_mes
-            , CAST((meses.ultimo_dia - meses.primer_dia) + 1 AS FLOAT) AS dias_periodo
+            , CAST((fechas.ultimo_dia_mes - fechas.primer_dia_mes) + 1 AS FLOAT) AS dias_periodo
             , dias_expuesto_mes / dias_periodo AS exposicion
         FROM traza
-        INNER JOIN meses ON 1 = 1
+        INNER JOIN fechas 
+                    ON traza.fecha_inicio_v4 <= fechas.ultimo_dia_mes 
+                    AND COALESCE(traza.fecha_fin_v5,CAST('3000-01-01' AS DATE)) >= fechas.primer_dia_mes
         WHERE 1 = 1
-        --and meses.ultimo_dia between cast(fecha_inicio_v4 as date) and cast(fecha_fin_v5 as date)
+        --and fechas.ultimo_dia_mes between cast(fecha_inicio_v4 as date) and cast(fecha_fin_v5 as date)
         --and exposicion > 0
         AND dias_expuesto_mes > 0
     )

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 from uuid import uuid4
 
+import xlwings as xw
 from fastapi import Cookie, Depends, FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, Response
@@ -161,7 +162,11 @@ async def correr_query_siniestros(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.correr_query_siniestros(params)
+    try:
+        await main.correr_query_siniestros(params)
+    except Exception as e:
+        logger.exception(str(e))
+        raise
 
 
 @app.post("/correr-query-primas")
@@ -169,7 +174,11 @@ async def correr_query_primas(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.correr_query_primas(params)
+    try:
+        await main.correr_query_primas(params)
+    except Exception as e:
+        logger.exception(str(e))
+        raise
 
 
 @app.post("/correr-query-expuestos")
@@ -177,7 +186,11 @@ async def correr_query_expuestos(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.correr_query_expuestos(params)
+    try:
+        await main.correr_query_expuestos(params)
+    except Exception as e:
+        logger.exception(str(e))
+        raise
 
 
 @app.post("/generar-controles")
@@ -185,7 +198,11 @@ async def generar_controles(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.generar_controles(params)
+    try:
+        await main.generar_controles(params)
+    except Exception as e:
+        logger.exception(str(e))
+        raise
 
 
 @app.get("/generar-aperturas")
@@ -193,13 +210,18 @@ async def generar_aperturas(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ):
     params = obtener_parametros_usuario(session, session_id)
-    aperturas = sorted(
-        utils.obtener_aperturas(params.negocio, "siniestros")
-        .get_column("apertura_reservas")
-        .unique()
-        .to_list()
-    )
-    logger.success("Aperturas generadas.")
+    try:
+        aperturas = sorted(
+            utils.obtener_aperturas(params.negocio, "siniestros")
+            .get_column("apertura_reservas")
+            .unique()
+            .to_list()
+        )
+        logger.success("Aperturas generadas.")
+    except Exception as e:
+        logger.exception(str(e))
+        raise
+
     return {"aperturas": aperturas}
 
 
@@ -218,7 +240,11 @@ async def preparar_plantilla(
     p = obtener_parametros_usuario(session, session_id)
     main.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    preparar.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
+    try:
+        preparar.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
+    except Exception as e:
+        logger.exception(str(e))
+        raise
 
 
 @app.post("/modos-plantilla")
@@ -232,24 +258,32 @@ async def modos_plantilla(
 
     utils.verificar_plantilla_preparada(wb)
 
-    if modos.modo == "generar":
-        if modos.plantilla == "severidad":
-            modos_frec = modos.model_copy(
-                update={"plantilla": "frecuencia", "atributo": "bruto"}
+    try:
+        if modos.modo == "generar":
+            generar_plantillas(wb, p, modos)
+        elif modos.modo == "guardar":
+            guardar_apertura.guardar_apertura(wb, modos)
+        elif modos.modo == "traer":
+            traer_apertura.traer_apertura(wb, modos)
+        elif modos.modo in ("traer_guardar_todo", "guardar_todo"):
+            traer = True if modos.modo == "traer_guardar_todo" else False
+            await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
+                wb, modos, p.mes_corte, p.negocio, traer
             )
-            generar.generar_plantilla(
-                wb, p.negocio, modos_frec, p.mes_corte, solo_triangulo=True
-            )
-        generar.generar_plantilla(wb, p.negocio, modos, p.mes_corte)
-    elif modos.modo == "guardar":
-        guardar_apertura.guardar_apertura(wb, modos)
-    elif modos.modo == "traer":
-        traer_apertura.traer_apertura(wb, modos)
-    elif modos.modo in ("traer_guardar_todo", "guardar_todo"):
-        traer = True if modos.modo == "traer_guardar_todo" else False
-        await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
-            wb, modos, p.mes_corte, p.negocio, traer
+    except Exception as e:
+        logger.exception(str(e))
+        raise
+
+
+def generar_plantillas(wb: xw.Book, p: Parametros, modos: ModosPlantilla):
+    if modos.plantilla == "severidad":
+        modos_frec = modos.model_copy(
+            update={"plantilla": "frecuencia", "atributo": "bruto"}
         )
+        generar.generar_plantilla(
+            wb, p.negocio, modos_frec, p.mes_corte, solo_triangulo=True
+        )
+    generar.generar_plantilla(wb, p.negocio, modos, p.mes_corte)
 
 
 @app.post("/almacenar-analisis")
@@ -258,12 +292,22 @@ async def almacenar_analisis(
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte, p.tipo_analisis)
+    try:
+        almacenar.almacenar_analisis(
+            wb, p.nombre_plantilla, p.mes_corte, p.tipo_analisis
+        )
+    except Exception as e:
+        logger.exception(str(e))
+        raise
 
 
 @app.post("/actualizar-wb-resultados")
 async def actualizar_wb_resultados() -> None:
-    _ = resultados.actualizar_wb_resultados()
+    try:
+        _ = resultados.actualizar_wb_resultados()
+    except Exception as e:
+        logger.exception(str(e))
+        raise
 
 
 @app.post("/generar-informe-ar")
@@ -271,4 +315,8 @@ async def generar_informe_actuario_responsable(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
-    resultados.generar_informe_actuario_responsable(p.negocio, p.mes_corte)
+    try:
+        resultados.generar_informe_actuario_responsable(p.negocio, p.mes_corte)
+    except Exception as e:
+        logger.exception(str(e))
+        raise

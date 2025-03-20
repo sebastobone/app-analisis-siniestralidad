@@ -1,3 +1,5 @@
+import { showToast } from "./toast.js";
+
 document
   .getElementById("ingresarParametros")
   .addEventListener("submit", async function (event) {
@@ -17,11 +19,17 @@ document
       nombre_plantilla: document.getElementById("nombrePlantilla").value,
     });
 
-    await fetch("http://127.0.0.1:8000/ingresar-parametros", {
+    const response = await fetch("http://127.0.0.1:8000/ingresar-parametros", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: formData.toString(),
     });
+
+    if (response.ok) {
+      showToast("Parametros ingresados correctamente", "success");
+    } else {
+      showToast("Error al ingresar los parametros", "error");
+    }
   });

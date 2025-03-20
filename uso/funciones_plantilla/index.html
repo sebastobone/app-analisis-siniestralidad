@@ -120,43 +120,6 @@
     
     
     
-      <label class="md-header__button md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-      </label>
-      <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Buscar">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Inicializando búsqueda
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-    
     
       <div class="md-header__source">
         <a href="https://github.com/sebastobone/app-analisis-siniestralidad" title="Ir al repositorio" class="md-source" data-md-component="source">
@@ -637,6 +600,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#abrir" class="md-nav__link">
+    <span class="md-ellipsis">
+      Abrir
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#preparar" class="md-nav__link">
     <span class="md-ellipsis">
       Preparar
@@ -887,6 +859,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#abrir" class="md-nav__link">
+    <span class="md-ellipsis">
+      Abrir
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#preparar" class="md-nav__link">
     <span class="md-ellipsis">
       Preparar
@@ -984,15 +965,18 @@
 
 
 <h1 id="funciones-de-la-plantilla">Funciones de la plantilla</h1>
+<h2 id="abrir">Abrir</h2>
+<p>Esta función crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada. A diferencia de la función "Preparar plantilla", esta función no elimina los contenidos actuales de la plantilla.</p>
 <h2 id="preparar">Preparar</h2>
 <p>Esta función cumple las siguientes funciones:</p>
 <ul>
-<li>Crea una nueva plantilla con el nombre especificado, si aún no está creado. De lo contrario, abre la que está actualmente creada y elimina todos los contenidos.</li>
+<li>Crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada y elimina todos los contenidos.</li>
 <li>Genera la hoja de Resumen con las periodicidades especificadas en la hoja "Apertura_Siniestros" del archivo <code>data/segmentacion.xlsx</code>.</li>
 <li>Genera la hoja de Atípicos.</li>
 <li>Genera la hoja de Histórico a partir de los archivos almacenados en la carpeta <code>output/resultados</code>.</li>
 <li>Esconde las hojas no relevantes y muestra las relevantes. Por ejemplo, en un análisis de triángulos, esconde las hojas de Entremés y Completar_diagonal.</li>
 </ul>
+<p>¡Cuidado! Si utiliza esta función sobre una plantilla ya creada, sobrescribirá sus resultados (los tendría que recuperar desde el historial de versiones de OneDrive). Si simplemente desea abrir una plantilla que ya había preparado, utilice la función "Abrir plantilla".</p>
 <h2 id="funciones-por-apertura">Funciones por apertura</h2>
 <p>Las siguientes funciones aplican únicamente para las hojas donde se desarrollan análisis de triángulos por apertura, es decir:</p>
 <ul>

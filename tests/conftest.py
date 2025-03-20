@@ -1,6 +1,7 @@
 import os
 import sys
 from datetime import date
+from pathlib import Path
 
 import numpy as np
 import polars as pl
@@ -175,10 +176,11 @@ def assert_diferente(
     assert not abs(df1.get_column(col1).sum() - df2.get_column(col2).sum()) < 100
 
 
-def vaciar_directorio(directorio: str) -> None:
-    for file in os.listdir(directorio):
-        if file != ".gitkeep":
-            os.remove(f"{directorio}/{file}")
+def vaciar_directorio(directorio_path: str) -> None:
+    directorio = Path(directorio_path)
+    for file in directorio.iterdir():
+        if file.is_file() and file.name != ".gitkeep":
+            file.unlink()
 
 
 def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, date]):

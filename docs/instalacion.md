@@ -36,4 +36,6 @@ Para hacer la extraccion de queries, se creará un archivo para almacenar sus cr
 
 Este archivo queda almacenado dentro de la carpeta principal. Si necesita editarlo, puede abrirlo en el bloc de notas.
 
+Para hacer la comparación entre las cifras de Teradata y SAP, se deben descargar los archivos de Excel que permiten conectarse con SAP a través del complemento Analysis for Office (AFO). [Descargue los archivos](https://suramericana-my.sharepoint.com/:f:/g/personal/sebastiantobon_sura_com_co/ErrqzjH-aIRMsAgGij4ptPABWbknTTpJMxfBjFJPU6YIWQ?e=1dPTF6) y péguelos en la carpeta `data/afo`.
+
 ¡Eso es todo! Ahora puede proceder con la configuración del análisis. No cierre la terminal, la usará para ejecutar el proceso después.

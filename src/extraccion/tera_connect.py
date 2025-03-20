@@ -374,13 +374,19 @@ async def verificar_aperturas_faltantes(
     aperturas_generadas: list[str], aperturas_esperadas: list[str]
 ) -> None:
     faltantes = []
-    for apertura_esperada in aperturas_esperadas:
-        if apertura_esperada not in aperturas_generadas:
-            faltantes.append(apertura_esperada)
+    for apertura_generada in aperturas_generadas:
+        if apertura_generada not in aperturas_esperadas:
+            faltantes.append(apertura_generada)
 
     if len(faltantes) > 0:
         logger.error(
-            f"¡Error! Las siguientes aperturas no fueron generadas: {faltantes}"
+            utils.limpiar_espacios_log(
+                f"""
+                ¡Error! Las siguientes aperturas se generaron, pero no se
+                esperaban: {faltantes}. Agregue estas aperturas al archivo de
+                segmentacion.
+                """
+            )
         )
         raise ValueError
 
@@ -389,11 +395,11 @@ async def verificar_aperturas_sobrantes(
     aperturas_generadas: list[str], aperturas_esperadas: list[str]
 ) -> None:
     sobrantes = []
-    for apertura_generada in aperturas_generadas:
-        if apertura_generada not in aperturas_esperadas:
-            sobrantes.append(apertura_generada)
+    for apertura_esperada in aperturas_esperadas:
+        if apertura_esperada not in aperturas_generadas:
+            sobrantes.append(apertura_esperada)
 
     if len(sobrantes) > 0:
         logger.warning(
-            f"¡Alerta! Se generaron las siguientes aperturas no esperadas: {sobrantes}"
+            f"¡Alerta! No se generaron las siguientes aperturas: {sobrantes}"
         )

@@ -468,9 +468,8 @@ SELECT
     , fecha_registro
     , SUM(prima_bruta) AS prima_bruta
     , SUM(prima_bruta) AS prima_retenida
-    , SUM(prima_bruta_devengada) AS prima_bruta_devengada
+    , SUM(prima_devengada_mod) AS prima_bruta_devengada
     , SUM(prima_bruta_devengada) AS prima_retenida_devengada
-    , SUM(prima_devengada_mod) AS prima_devengada_mod
 FROM primas_final
 WHERE fecha_registro >= (DATE '{fecha_primera_ocurrencia}')
 GROUP BY 1, 2, 3, 4, 5, 6

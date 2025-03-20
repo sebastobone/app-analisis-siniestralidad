@@ -14,6 +14,11 @@ document
         let option = document.createElement("option");
         option.value = plantilla;
         option.text = plantilla.charAt(0).toUpperCase() + plantilla.slice(1);
+
+        if (plantilla === "plata") {
+          option.selected = true;
+        }
+
         dropdownPlantillas.appendChild(option);
       });
     } catch (error) {

@@ -1,6 +1,7 @@
 import polars as pl
 import pytest
 from fastapi.testclient import TestClient
+from src import constantes as ct
 from src import utils
 from src.controles_informacion.sap import consolidar_sap
 from src.models import Parametros
@@ -13,6 +14,7 @@ from tests.conftest import assert_diferente, assert_igual, vaciar_directorio
 @pytest.mark.integration
 @pytest.mark.teradata
 async def test_info_soat(client: TestClient):
+    vaciar_directorio("data/raw")
     vaciar_directorio("data/controles_informacion")
     vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
     vaciar_directorio("data/controles_informacion/post_cuadre_contable")
@@ -23,7 +25,6 @@ async def test_info_soat(client: TestClient):
         "mes_inicio": "201901",
         "mes_corte": "202401",
         "tipo_analisis": "triangulos",
-        "aproximar_reaseguro": "False",
         "nombre_plantilla": "plantilla_test_soat",
         "cuadre_contable_sinis": "True",
         "add_fraude_soat": "True",
@@ -52,14 +53,10 @@ async def test_info_soat(client: TestClient):
     )
 
     sap_siniestros = (
-        await consolidar_sap(
-            ["Generales"],
-            ["pago_bruto", "pago_retenido", "aviso_bruto", "aviso_retenido"],
-            p.mes_corte,
-        )
+        await consolidar_sap(["Generales"], ct.COLUMNAS_SINIESTROS_CUADRE, p.mes_corte)
     ).filter(pl.col("codigo_ramo_op") == "041")
 
-    for col in ["pago_bruto", "pago_retenido", "aviso_bruto", "aviso_retenido"]:
+    for col in ct.COLUMNAS_SINIESTROS_CUADRE:
         assert_igual(
             df_sinis_post_cuadre.filter(pl.col("fecha_registro") >= mes_inicio_dt),
             sap_siniestros.filter(pl.col("fecha_registro") >= mes_inicio_dt),
@@ -77,16 +74,7 @@ async def test_info_soat(client: TestClient):
     df_primas_post_cuadre = pl.read_parquet("data/raw/primas.parquet")
 
     sap_primas = (
-        await consolidar_sap(
-            ["Generales"],
-            [
-                "prima_bruta",
-                "prima_bruta_devengada",
-                "prima_retenida",
-                "prima_retenida_devengada",
-            ],
-            p.mes_corte,
-        )
+        await consolidar_sap(["Generales"], ct.COLUMNAS_PRIMAS, p.mes_corte)
     ).filter(pl.col("codigo_ramo_op") == "041")
 
     for col in ["prima_bruta", "prima_retenida", "prima_retenida_devengada"]:

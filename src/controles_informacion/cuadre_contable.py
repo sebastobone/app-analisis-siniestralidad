@@ -14,11 +14,16 @@ async def realizar_cuadre_contable(
 ) -> pl.DataFrame:
     dif_sap_vs_tera = dif_sap_vs_tera.join(meses_a_cuadrar, on="fecha_registro")
 
+    if negocio == "soat":
+        dif_sap_vs_tera = dif_sap_vs_tera.with_columns(
+            diferencia_prima_bruta_devengada=0
+        )
+
     diferencias = (
         obtener_aperturas_para_asignar_diferencia(negocio, file)
         .pipe(calcular_pesos_aperturas, base, file, negocio)
         .pipe(repartir_diferencias, dif_sap_vs_tera, file)
-        .pipe(agregar_columnas_faltantes, file)
+        .pipe(agregar_columnas_faltantes, file, negocio)
         .select(base.collect_schema().names())
     )
 
@@ -48,6 +53,7 @@ def obtener_aperturas_para_asignar_diferencia(
                 """
             )
         )
+        raise
     return aperturas
 
 
@@ -62,8 +68,8 @@ def calcular_pesos_aperturas(
         ct.COLUMNAS_SINIESTROS_CUADRE if file == "siniestros" else ct.COLUMNAS_PRIMAS
     )
     return (
-        base.join(aperturas, on="apertura_reservas")
-        .group_by(["apertura_reservas"] + columnas_aperturas)
+        base.join(aperturas, on=columnas_aperturas)
+        .group_by(columnas_aperturas)
         .agg([pl.sum(col) for col in columnas_cantidades])
         .with_columns(
             [
@@ -97,10 +103,11 @@ def repartir_diferencias(
 
 
 def agregar_columnas_faltantes(
-    diferencias: pl.DataFrame, file: ct.LISTA_QUERIES_CUADRE
+    diferencias: pl.DataFrame, file: ct.LISTA_QUERIES_CUADRE, negocio: str
 ) -> pl.DataFrame:
     if file == "siniestros":
         diferencias = diferencias.with_columns(
+            apertura_reservas=utils.crear_columna_apertura_reservas(negocio),
             conteo_pago=0,
             conteo_incurrido=0,
             conteo_desistido=0,

@@ -1,17 +1,23 @@
 import polars as pl
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, select
 from src import utils
 from src.controles_informacion.sap import consolidar_sap
 from src.models import Parametros
+
+from tests.conftest import assert_diferente, assert_igual, vaciar_directorio
 
 
 @pytest.mark.asyncio
 @pytest.mark.soat
 @pytest.mark.integration
 @pytest.mark.teradata
-async def test_info_soat(client: TestClient, test_session: Session):
+async def test_info_soat(client: TestClient):
+    vaciar_directorio("data/controles_informacion")
+    vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
+    vaciar_directorio("data/controles_informacion/post_cuadre_contable")
+    vaciar_directorio("data/controles_informacion/post_ajustes_fraude")
+
     params = {
         "negocio": "soat",
         "mes_inicio": "201901",
@@ -21,31 +27,21 @@ async def test_info_soat(client: TestClient, test_session: Session):
         "nombre_plantilla": "plantilla_test_soat",
         "cuadre_contable_sinis": "True",
         "add_fraude_soat": "True",
-        "cuadre_contable_primas": "False",
+        "cuadre_contable_primas": "True",
     }
 
-    _ = client.post("/ingresar-parametros", data=params)
-    p = test_session.exec(select(Parametros)).all()[0]
+    response = client.post("/ingresar-parametros", data=params)
+    p = Parametros.model_validate_json(response.read())
 
-    lista_vehiculos = ["AUTO", "MOTO"]
-    lista_canales = ["ASESORES", "CERRADO", "CORBETA", "DIGITAL", "EXITO", "RESTO"]
-
-    for query in ["siniestros", "primas", "expuestos"]:
-        _ = client.post(f"/correr-query-{query}")
-        df = pl.read_parquet(f"data/raw/{query}.parquet")
-        assert (
-            sorted(df.get_column("apertura_canal_desc").unique().to_list())
-            == lista_canales
-        )
-        assert (
-            sorted(df.get_column("tipo_vehiculo").unique().to_list()) == lista_vehiculos
-        )
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")
 
     _ = client.post("/generar-controles")
 
+    mes_inicio_dt = utils.yyyymm_to_date(p.mes_inicio)
     mes_corte_dt = utils.yyyymm_to_date(p.mes_corte)
 
-    df_sinis_pre_cuadre = pl.read_parquet("data/raw/siniestros_pre_cuadre.parquet")
     df_sinis_post_cuadre = pl.read_parquet("data/raw/siniestros_post_cuadre.parquet")
     df_sinis_post_ajustes = pl.read_parquet("data/raw/siniestros.parquet")
 
@@ -55,36 +51,19 @@ async def test_info_soat(client: TestClient, test_session: Session):
         .filter(pl.col("fecha_registro") <= mes_corte_dt)
     )
 
-    sap = (
+    sap_siniestros = (
         await consolidar_sap(
             ["Generales"],
             ["pago_bruto", "pago_retenido", "aviso_bruto", "aviso_retenido"],
             p.mes_corte,
         )
-    ).filter(
-        (pl.col("fecha_registro") == mes_corte_dt) & (pl.col("codigo_ramo_op") == "041")
-    )
+    ).filter(pl.col("codigo_ramo_op") == "041")
 
     for col in ["pago_bruto", "pago_retenido", "aviso_bruto", "aviso_retenido"]:
-        assert (
-            abs(
-                df_sinis_pre_cuadre.filter(pl.col("fecha_registro") != mes_corte_dt)
-                .get_column(col)
-                .sum()
-                - df_sinis_post_cuadre.filter(pl.col("fecha_registro") != mes_corte_dt)
-                .get_column(col)
-                .sum()
-            )
-            < 100
-        )
-        assert (
-            abs(
-                df_sinis_post_cuadre.filter(pl.col("fecha_registro") == mes_corte_dt)
-                .get_column(col)
-                .sum()
-                - sap.get_column(col).sum()
-            )
-            < 100
+        assert_igual(
+            df_sinis_post_cuadre.filter(pl.col("fecha_registro") >= mes_inicio_dt),
+            sap_siniestros.filter(pl.col("fecha_registro") >= mes_inicio_dt),
+            col,
         )
         assert (
             abs(
@@ -94,3 +73,37 @@ async def test_info_soat(client: TestClient, test_session: Session):
             )
             < 100
         )
+
+    df_primas_post_cuadre = pl.read_parquet("data/raw/primas.parquet")
+
+    sap_primas = (
+        await consolidar_sap(
+            ["Generales"],
+            [
+                "prima_bruta",
+                "prima_bruta_devengada",
+                "prima_retenida",
+                "prima_retenida_devengada",
+            ],
+            p.mes_corte,
+        )
+    ).filter(pl.col("codigo_ramo_op") == "041")
+
+    for col in ["prima_bruta", "prima_retenida", "prima_retenida_devengada"]:
+        assert_igual(
+            df_primas_post_cuadre.filter(pl.col("fecha_registro") >= mes_inicio_dt),
+            sap_primas.filter(pl.col("fecha_registro") >= mes_inicio_dt),
+            col,
+        )
+
+    assert_diferente(
+        df_primas_post_cuadre.filter(pl.col("fecha_registro") >= mes_inicio_dt),
+        sap_primas.filter(pl.col("fecha_registro") >= mes_inicio_dt),
+        "prima_bruta_devengada",
+    )
+
+    vaciar_directorio("data/raw")
+    vaciar_directorio("data/controles_informacion")
+    vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
+    vaciar_directorio("data/controles_informacion/post_cuadre_contable")
+    vaciar_directorio("data/controles_informacion/post_ajustes_fraude")

@@ -31,7 +31,6 @@ async def verificar_existencia_afos(negocio: str):
 async def generar_controles(
     file: Literal["siniestros", "primas", "expuestos"], p: Parametros
 ) -> None:
-    logger.info(f"Generando controles de informacion para {file}...")
     df = await asyncio.to_thread(pl.read_parquet, f"data/raw/{file}.parquet")
 
     difs_sap_tera_pre_cuadre = await generar_controles_estado_cuadre(
@@ -91,6 +90,15 @@ async def generar_controles_estado_cuadre(
         "pre_cuadre_contable", "post_cuadre_contable", "post_ajustes_fraude"
     ],
 ) -> pl.DataFrame:
+    logger.info(
+        utils.limpiar_espacios_log(
+            f"""
+            Generando controles de informacion para {file}
+            en el estado {estado_cuadre}...
+            """
+        )
+    )
+
     qtys, group_cols = definir_cantidades_control(negocio, file)
     await asyncio.to_thread(
         agrupar_tera(df, group_cols, qtys).write_excel,
@@ -283,7 +291,7 @@ def agrupar_tera(
     return df.select(group_cols + qtys).group_by(group_cols).sum().sort(group_cols)
 
 
-def ajustar_fraude(df: pl.DataFrame, mes_corte: int):
+async def ajustar_fraude(df: pl.DataFrame, mes_corte: int):
     fraude = (
         pl.LazyFrame(
             pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")

@@ -20,13 +20,12 @@ async def traer_y_guardar_todas_las_aperturas(
 ) -> None:
     s = time.time()
 
-    hoja_plantilla = modos.plantilla.capitalize()
     aperturas = (
         utils.obtener_aperturas(negocio, "siniestros")
         .get_column("apertura_reservas")
         .to_list()
     )
-    atributos = ["bruto", "retenido"] if hoja_plantilla != "Frecuencia" else ["bruto"]
+    atributos = ["bruto", "retenido"] if modos.plantilla != "frecuencia" else ["bruto"]
 
     num_apertura = 0
     for apertura in aperturas:

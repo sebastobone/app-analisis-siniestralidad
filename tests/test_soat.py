@@ -53,7 +53,7 @@ async def test_info_soat(client: TestClient):
     )
 
     sap_siniestros = (
-        await consolidar_sap(["Generales"], ct.COLUMNAS_SINIESTROS_CUADRE, p.mes_corte)
+        await consolidar_sap("soat", ct.COLUMNAS_SINIESTROS_CUADRE, p.mes_corte)
     ).filter(pl.col("codigo_ramo_op") == "041")
 
     for col in ct.COLUMNAS_SINIESTROS_CUADRE:
@@ -73,9 +73,9 @@ async def test_info_soat(client: TestClient):
 
     df_primas_post_cuadre = pl.read_parquet("data/raw/primas.parquet")
 
-    sap_primas = (
-        await consolidar_sap(["Generales"], ct.COLUMNAS_PRIMAS, p.mes_corte)
-    ).filter(pl.col("codigo_ramo_op") == "041")
+    sap_primas = (await consolidar_sap("soat", ct.COLUMNAS_PRIMAS, p.mes_corte)).filter(
+        pl.col("codigo_ramo_op") == "041"
+    )
 
     for col in ["prima_bruta", "prima_retenida", "prima_retenida_devengada"]:
         assert_igual(

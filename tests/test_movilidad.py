@@ -59,7 +59,7 @@ async def validar_cuadre(
 ) -> None:
     mes_inicio_dt = utils.yyyymm_to_date(mes_inicio)
     base_post_cuadre = pl.read_parquet(f"data/raw/{file}.parquet")
-    sap = (await consolidar_sap(["Generales"], columnas_cantidades, mes_corte)).filter(
+    sap = (await consolidar_sap("movilidad", columnas_cantidades, mes_corte)).filter(
         pl.col("codigo_ramo_op") == "040"
     )
     for col in columnas_cantidades:

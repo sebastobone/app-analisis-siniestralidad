@@ -23,7 +23,7 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
         df_sap = (
             (
                 await sap.consolidar_sap(
-                    ["Generales"], ["pago_bruto", "pago_retenido"], mes_corte_int
+                    "soat", ["pago_bruto", "pago_retenido"], mes_corte_int
                 )
             )
             .with_columns(

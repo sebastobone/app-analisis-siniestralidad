@@ -88,12 +88,12 @@ COLORES_LOGS = {
 }
 
 AFOS_NECESARIOS = {
-    "movilidad": ["Generales.xlsx"],
-    "autonomia": ["Generales.xlsx", "Vida.xlsx"],
-    "salud": ["Vida.xlsx"],
-    "eps": ["EPS.xlsx"],
-    "arl": ["Vida.xlsx"],
-    "soat": ["Generales.xlsx"],
-    "empresariales": ["Generales.xlsx"],
-    "demo": ["AFO_Inexistente.xlsx"],
+    "movilidad": ["Generales"],
+    "autonomia": ["Generales", "Vida"],
+    "salud": ["Vida"],
+    "eps": ["EPS"],
+    "arl": ["Vida"],
+    "soat": ["Generales"],
+    "empresariales": ["Generales"],
+    "demo": ["AFO_Inexistente"],
 }

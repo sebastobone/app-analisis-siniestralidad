@@ -16,11 +16,11 @@ async def verificar_existencia_afos(negocio: str):
     logger.info("Verificando existencia de AFOS...")
     afos_necesarios = ct.AFOS_NECESARIOS[negocio]
     for afo in afos_necesarios:
-        if not os.path.exists(f"data/afo/{afo}"):
+        if not os.path.exists(f"data/afo/{afo}.xlsx"):
             logger.error(
                 utils.limpiar_espacios_log(
-                    """
-                    El AFO no se encuentra en la ruta data/afo/,
+                    f"""
+                    El AFO no se encuentra en la ruta data/afo/{afo}.xlsx,
                     por favor agregarlo en la carpeta.
                     """
                 )
@@ -48,8 +48,12 @@ async def generar_controles(
             df.write_csv, f"data/raw/{file}_pre_cuadre.csv", separator="\t"
         )
         await asyncio.to_thread(df.write_parquet, f"data/raw/{file}_pre_cuadre.parquet")
-        meses_a_cuadrar = pl.read_excel(
-            f"data/segmentacion_{p.negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
+        meses_a_cuadrar = (
+            pl.read_excel(
+                f"data/segmentacion_{p.negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
+            )
+            .filter(pl.col("incluir") == 1)
+            .drop("incluir")
         )
         df = await realizar_cuadre_contable(
             p.negocio, file, df, difs_sap_tera_pre_cuadre, meses_a_cuadrar
@@ -120,9 +124,7 @@ async def generar_controles_estado_cuadre(
     )
 
     if file in ("siniestros", "primas"):
-        df_sap = (
-            await sap.consolidar_sap(["Vida", "Generales"], qtys, int(mes_corte))
-        ).filter(
+        df_sap = (await sap.consolidar_sap(negocio, qtys, int(mes_corte))).filter(
             pl.col("codigo_ramo_op").is_in(df.get_column("codigo_ramo_op").unique())
         )
         await asyncio.to_thread(

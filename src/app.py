@@ -225,18 +225,6 @@ async def generar_aperturas(
     return {"aperturas": aperturas}
 
 
-@app.get("/generar-dropdown-plantillas")
-async def generar_dropdown_plantillas(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-):
-    params = obtener_parametros_usuario(session, session_id)
-    if params.tipo_analisis == "entremes":
-        plantillas = ["completar_diagonal"]
-    else:
-        plantillas = ["frecuencia", "severidad", "plata"]
-    return {"plantillas": plantillas}
-
-
 @app.post("/abrir-plantilla")
 async def abrir_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None

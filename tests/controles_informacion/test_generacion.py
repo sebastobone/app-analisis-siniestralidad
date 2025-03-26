@@ -93,24 +93,14 @@ async def test_transformar_hoja_afo(cia: str, qty: str, rango_meses: tuple[date,
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    "cias, qtys, mes_corte, expected_columns",
+    "qtys, mes_corte, expected_columns",
     [
-        (
-            ["Vida", "Generales"],
-            ["prima_bruta", "prima_cedida"],
-            202201,
-            ["prima_bruta", "prima_cedida"],
-        ),
-        (
-            ["Vida"],
-            ["pago_retenido"],
-            202201,
-            ["pago_retenido"],
-        ),
+        (["prima_bruta", "prima_cedida"], 202201, ["prima_bruta", "prima_cedida"]),
+        (["pago_retenido"], 202201, ["pago_retenido"]),
     ],
 )
-async def test_consolidar_sap(cias, qtys, mes_corte, expected_columns):
-    result = await sap.consolidar_sap(cias, qtys, mes_corte)
+async def test_consolidar_sap(qtys, mes_corte, expected_columns):
+    result = await sap.consolidar_sap("autonomia", qtys, mes_corte)
     assert (
         result.collect_schema().names()
         == ["codigo_op", "codigo_ramo_op", "fecha_registro"] + expected_columns

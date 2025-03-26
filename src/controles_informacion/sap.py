@@ -5,11 +5,9 @@ from src import utils
 from src.logger_config import logger
 
 
-async def consolidar_sap(
-    cias: list[str], qtys: list[str], mes_corte: int
-) -> pl.DataFrame:
+async def consolidar_sap(negocio: str, qtys: list[str], mes_corte: int) -> pl.DataFrame:
     dfs_sap = []
-    for cia in cias:
+    for cia in ct.AFOS_NECESARIOS[negocio]:
         for hoja_afo in definir_hojas_afo(qtys):
             dfs_sap.append(
                 await transformar_hoja_afo(

@@ -8,7 +8,7 @@ from src.controles_informacion.sap import consolidar_sap
 
 
 async def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:
-    return (await consolidar_sap(["Generales", "Vida"], hojas_afo, mes_corte)).filter(
+    return (await consolidar_sap("autonomia", hojas_afo, mes_corte)).filter(
         (pl.col("fecha_registro") == utils.yyyymm_to_date(mes_corte))
         & (
             pl.col("codigo_ramo_op").is_in(

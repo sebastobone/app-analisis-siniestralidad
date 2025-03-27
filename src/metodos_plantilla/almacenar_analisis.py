@@ -21,7 +21,7 @@ def almacenar_analisis(
     if df_resultados_atipicos.shape[0] != 0:
         df_resultados = df_resultados.vstack(df_resultados_atipicos)
 
-    ruta = f"output/resultados/{nombre_plantilla}_{mes_corte}.parquet"
+    ruta = f"output/resultados/{nombre_plantilla}_{mes_corte}_{tipo_analisis}.parquet"
     df_resultados.write_parquet(ruta)
 
     logger.success(f"Analisis almacenado en {ruta}.")

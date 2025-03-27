@@ -153,10 +153,10 @@ def test_actualizar_resultados(
     # Verificamos que, en caso de aperturas guardadas por dos usuarios,
     # se lea solamente el archivo mas reciente
     info_u1 = pl.read_parquet(
-        f"output/resultados/{p1.nombre_plantilla}_{p1.mes_corte}.parquet"
+        f"output/resultados/{p1.nombre_plantilla}_{p1.mes_corte}_{p1.tipo_analisis}.parquet"
     )
     info_u2 = pl.read_parquet(
-        f"output/resultados/{p2.nombre_plantilla}_{p2.mes_corte}.parquet"
+        f"output/resultados/{p2.nombre_plantilla}_{p2.mes_corte}_{p2.tipo_analisis}.parquet"
     )
     filtro_apertura = pl.col("apertura_reservas") == "01_001_A_D"
 

@@ -1,16 +1,15 @@
 import asyncio
 import os
+import shutil
+from datetime import datetime
+
+import openpyxl as xl
+import pyautogui
 
 from src.logger_config import logger
 
 
-async def generar_evidencias_parametros(negocio: str, mes_corte: int):
-    import shutil
-    from datetime import datetime
-
-    import openpyxl as xl
-    import pyautogui
-
+async def generar_evidencias_parametros(negocio: str, mes_corte: int) -> None:
     original_file = f"data/segmentacion_{negocio}.xlsx"
     stored_file = f"data/controles_informacion/{mes_corte}_segmentacion_{negocio}.xlsx"
 
@@ -28,12 +27,12 @@ async def generar_evidencias_parametros(negocio: str, mes_corte: int):
 
     # Reloj
     if os.name == "nt":
-        pyautogui.hotkey("winleft", "alt", "d")
+        pyautogui.hotkey("winleft", "n")
         await asyncio.sleep(0.5)
 
     pyautogui.screenshot(f"data/controles_informacion/{mes_corte}_extraccion.png")
 
     if os.name == "nt":
-        pyautogui.hotkey("winleft", "alt", "d")
+        pyautogui.hotkey("winleft", "n")
 
     logger.success("Evidencias de controles generadas exitosamente.")

@@ -22,6 +22,7 @@ nav:
     - Funciones de la plantilla: uso/funciones_plantilla.md
     - Consolidación de resultados: uso/resultados.md
     - Generación de informes: uso/informes.md
+  - Actualización: actualizacion.md
   - Diccionario: diccionario.md
   - Particularidades por negocio:
     - SOAT: particularidades/soat.md

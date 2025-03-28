@@ -264,6 +264,7 @@ async def modos_plantilla(
         elif modos.modo == "guardar":
             guardar_apertura.guardar_apertura(wb, modos)
         elif modos.modo == "traer":
+            generar_plantillas(wb, p, modos)
             traer_apertura.traer_apertura(wb, modos)
         elif modos.modo in ("traer_guardar_todo", "guardar_todo"):
             traer = True if modos.modo == "traer_guardar_todo" else False

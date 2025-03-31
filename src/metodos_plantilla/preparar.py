@@ -182,7 +182,7 @@ def generar_hoja_entremes(
             resultados_mes_anterior, on=columnas_base, how="left", validate="1:1"
         )
         .join(
-            obtener_resultados_ultimo_triangulo(resultados_anteriores),
+            obtener_resultados_ultimo_triangulo(resultados_anteriores, mes_corte),
             on=columnas_base,
             how="left",
             validate="1:1",
@@ -204,6 +204,7 @@ def generar_hoja_entremes(
 
 def obtener_resultados_ultimo_triangulo(
     resultados_anteriores: pl.DataFrame,
+    mes_corte: int,
 ) -> pl.DataFrame:
     return (
         resultados_anteriores.with_columns(
@@ -211,9 +212,10 @@ def obtener_resultados_ultimo_triangulo(
             .replace(ct.PERIODICIDADES)
             .cast(pl.Int32)
         )
-        .filter((pl.col("tipo_analisis") == "triangulos") & (pl.col("atipico") == 0))
         .filter(
-            pl.col("mes_corte") == pl.col("mes_corte").max().over("apertura_reservas")
+            (pl.col("tipo_analisis") == "triangulos")
+            & (pl.col("atipico") == 0)
+            & (pl.col("mes_corte") < mes_corte)
         )
         .with_columns(
             velocidad_pago_bruto_triangulo=pl.col("pago_bruto")

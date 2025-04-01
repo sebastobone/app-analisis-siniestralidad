@@ -73,7 +73,7 @@ def atrapar_excepciones(func):
         try:
             return await func(*args, **kwargs)
         except Exception as e:
-            logger.exception(str(e))
+            logger.exception(utils.limpiar_espacios_log(str(e)))
             raise
 
     return wrapper
@@ -174,11 +174,7 @@ async def correr_query_siniestros(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    try:
-        await main.correr_query_siniestros(params)
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+    await main.correr_query_siniestros(params)
 
 
 @app.post("/correr-query-primas")
@@ -186,53 +182,40 @@ async def correr_query_primas(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    try:
-        await main.correr_query_primas(params)
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+    await main.correr_query_primas(params)
 
 
 @app.post("/correr-query-expuestos")
+@atrapar_excepciones
 async def correr_query_expuestos(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    try:
-        await main.correr_query_expuestos(params)
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+    await main.correr_query_expuestos(params)
 
 
 @app.post("/generar-controles")
+@atrapar_excepciones
 async def generar_controles(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    try:
-        await main.generar_controles(params)
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+    await main.generar_controles(params)
 
 
 @app.get("/generar-aperturas")
+@atrapar_excepciones
 async def generar_aperturas(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ):
     params = obtener_parametros_usuario(session, session_id)
-    try:
-        aperturas = sorted(
-            utils.obtener_aperturas(params.negocio, "siniestros")
-            .get_column("apertura_reservas")
-            .unique()
-            .to_list()
-        )
-        logger.success("Aperturas generadas.")
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+    aperturas = sorted(
+        utils.obtener_aperturas(params.negocio, "siniestros")
+        .get_column("apertura_reservas")
+        .unique()
+        .to_list()
+    )
+    logger.success("Aperturas generadas.")
 
     return {"aperturas": aperturas}
 
@@ -337,36 +320,25 @@ async def traer_guardar_todo_end(
 
 
 @app.post("/almacenar-analisis")
+@atrapar_excepciones
 async def almacenar_analisis(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    try:
-        almacenar.almacenar_analisis(
-            wb, p.nombre_plantilla, p.mes_corte, p.tipo_analisis
-        )
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+    almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte, p.tipo_analisis)
 
 
 @app.post("/actualizar-wb-resultados")
+@atrapar_excepciones
 async def actualizar_wb_resultados() -> None:
-    try:
-        _ = resultados.actualizar_wb_resultados()
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+    _ = resultados.actualizar_wb_resultados()
 
 
 @app.post("/generar-informe-ar")
+@atrapar_excepciones
 async def generar_informe_actuario_responsable(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
-    try:
-        resultados.generar_informe_actuario_responsable(p.negocio, p.mes_corte)
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+    resultados.generar_informe_actuario_responsable(p.negocio, p.mes_corte)

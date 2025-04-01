@@ -22,6 +22,7 @@ def preparar_plantilla(
 
     aperturas = utils.obtener_aperturas(negocio, "siniestros")
 
+    limpiar_plantillas(wb)
     mostrar_plantillas_relevantes(wb, tipo_analisis)
 
     insumos = {
@@ -109,6 +110,11 @@ def verificar_resultados_anteriores_para_entremes(
         raise ValueError
 
 
+def limpiar_plantillas(wb: xw.Book):
+    for hoja in ["Frecuencia", "Severidad", "Plata", "Entremes", "Completar_diagonal"]:
+        wb.macro("LimpiarPlantilla")(hoja)
+
+
 def mostrar_plantillas_relevantes(wb: xw.Book, tipo_analisis: str):
     if tipo_analisis == "triangulos":
         wb.sheets["Entremes"].visible = False
@@ -161,7 +167,6 @@ def generar_hoja_entremes(
     factores_completitud: pl.DataFrame,
     mes_corte: int,
 ) -> None:
-    wb.macro("LimpiarPlantilla")("Entremes")
     columnas_base = [
         "apertura_reservas",
         "periodicidad_ocurrencia",

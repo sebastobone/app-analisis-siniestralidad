@@ -145,6 +145,7 @@ def eliminar_parametros_anteriores(
 
 
 @app.post("/ingresar-parametros")
+@atrapar_excepciones
 async def ingresar_parametros(
     params: Annotated[Parametros, Form()],
     response: Response,
@@ -170,6 +171,7 @@ async def ingresar_parametros(
 
 
 @app.post("/correr-query-siniestros")
+@atrapar_excepciones
 async def correr_query_siniestros(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
@@ -178,6 +180,7 @@ async def correr_query_siniestros(
 
 
 @app.post("/correr-query-primas")
+@atrapar_excepciones
 async def correr_query_primas(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:

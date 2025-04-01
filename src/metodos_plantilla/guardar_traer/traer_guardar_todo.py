@@ -4,7 +4,7 @@ import time
 import xlwings as xw
 from src import utils
 from src.logger_config import logger
-from src.metodos_plantilla.generar import generar_plantillas
+from src.metodos_plantilla import actualizar, generar
 from src.models import ModosPlantilla, Parametros
 
 from .guardar_apertura import guardar_apertura
@@ -33,7 +33,13 @@ async def traer_y_guardar_todas_las_aperturas(
             modos_actual.apertura = apertura
             modos_actual.atributo = atributo  # type: ignore
 
-            generar_plantillas(wb, p, modos_actual)
+            try:
+                actualizar.actualizar_plantillas(wb, p, modos_actual)
+            except (
+                actualizar.PlantillaNoGeneradaError,
+                actualizar.PeriodicidadDiferenteError,
+            ):
+                generar.generar_plantillas(wb, p, modos_actual)
             if traer:
                 traer_apertura(wb, modos_actual)
             guardar_apertura(wb, modos_actual)

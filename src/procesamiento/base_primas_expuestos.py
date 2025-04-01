@@ -11,7 +11,7 @@ def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
         (col.dt.year() * 100 + col.dt.month()).alias("Mensual"),
         (col.dt.year() * 100 + (col.dt.month() / 3).ceil() * 3).alias("Trimestral"),
         (col.dt.year() * 100 + (col.dt.month() / 6).ceil() * 6).alias("Semestral"),
-        col.dt.year().alias("Anual"),
+        (col.dt.year() * 100 + 12).alias("Anual"),
     )
 
 

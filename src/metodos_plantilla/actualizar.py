@@ -49,7 +49,7 @@ def actualizar_plantilla(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> N
 
     hoja.cells(ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS).value = triangulo
 
-    fila_apertura = obtener_indice_en_rango("apertura", hoja.range("A1:A1000"))
+    fila_apertura = obtener_indice_en_rango("apertura", hoja.range("A1:A10000"))
     hoja.cells(fila_apertura, 2).value = modos.apertura
     hoja.cells(fila_apertura + 1, 2).value = modos.atributo
 
@@ -60,7 +60,7 @@ def actualizar_plantilla(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> N
 
 
 def verificar_plantilla_generada(hoja: xw.Sheet) -> None:
-    if "apertura" not in hoja.range("A1:A1000").value:
+    if "apertura" not in hoja.range("A1:A10000").value:
         raise PlantillaNoGeneradaError(
             f"""
             La plantilla {hoja.name} no esta generada, entonces no se puede actualizar.
@@ -71,7 +71,7 @@ def verificar_plantilla_generada(hoja: xw.Sheet) -> None:
 def obtener_apertura_actual(wb: xw.Book, plantilla: str) -> str:
     hoja_plantilla = wb.sheets[plantilla.capitalize()]
     fila_apertura = obtener_indice_en_rango(
-        "apertura", hoja_plantilla.range("A1:A1000")
+        "apertura", hoja_plantilla.range("A1:A10000")
     )
     return hoja_plantilla.cells(fila_apertura, 2).value
 

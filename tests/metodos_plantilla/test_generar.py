@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from src import constantes as ct
 from src import utils
-from src.metodos_plantilla import abrir, generar
+from src.metodos_plantilla import abrir, actualizar, generar
 from src.procesamiento import base_siniestros
 from tests.conftest import agregar_meses_params, vaciar_directorio
 
@@ -74,15 +74,40 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
 
     with pytest.raises(ValueError):
         _ = client.post(
-            "/modos-plantilla",
-            data={
-                "apertura": "01_001_A_D",
-                "atributo": "bruto",
-                "plantilla": "plata",
-                "modo": "generar",
-            },
+            "/generar-plantilla",
+            data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
         )
 
     vaciar_directorio("data/raw")
     wb.close()
     os.remove(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
+
+
+def test_generar_severidad(client: TestClient, rango_meses: tuple[date, date]):
+    params_form = {
+        "negocio": "demo",
+        "tipo_analisis": "triangulos",
+        "nombre_plantilla": "wb_test",
+    }
+    agregar_meses_params(params_form, rango_meses)
+
+    _ = client.post("/ingresar-parametros", data=params_form).json()
+    wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
+
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")
+
+    _ = client.post("/preparar-plantilla")
+
+    _ = client.post(
+        "/generar-plantilla",
+        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "severidad"},
+    )
+
+    apertura_en_frecuencia = actualizar.obtener_apertura_actual(wb, "frecuencia")
+    apertura_en_severidad = actualizar.obtener_apertura_actual(wb, "severidad")
+    assert apertura_en_frecuencia == apertura_en_severidad
+
+    vaciar_directorio("data/raw")
+    vaciar_directorio("data/processed")

@@ -1,8 +1,7 @@
 import { showToast } from "./toast.js";
 
-document
-  .getElementById("modosPlantilla")
-  .addEventListener("submit", async function (event) {
+document.querySelectorAll(".modo").forEach((button) => {
+  button.addEventListener("click", async function (event) {
     event.preventDefault();
 
     showToast("Ejecutando...");
@@ -11,10 +10,10 @@ document
       apertura: document.getElementById("apertura").value,
       atributo: document.getElementById("atributo").value,
       plantilla: document.getElementById("plantilla").value,
-      modo: document.getElementById("modo").value,
     });
 
-    const response = await fetch("http://127.0.0.1:8000/modos-plantilla", {
+    const endpoint = button.getAttribute("endpoint");
+    const response = await fetch(`http://127.0.0.1:8000/${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -28,3 +27,4 @@ document
       showToast("Error en la ejecucion", "error");
     }
   });
+});

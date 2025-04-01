@@ -9,7 +9,6 @@ from src import constantes as ct
 from src import utils
 from src.metodos_plantilla import abrir
 from src.models import Parametros
-from src.procesamiento.base_siniestros import mes_ult_ocurr_triangulos
 from tests.conftest import agregar_meses_params, assert_igual, vaciar_directorio
 
 
@@ -42,10 +41,18 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
     assert wb_test.sheets["Severidad"].visible
     assert wb_test.sheets["Plata"].visible
 
-    base_tipicos_original = pl.read_parquet(
-        "data/processed/base_triangulos.parquet"
-    ).filter(
-        (pl.col("periodicidad_ocurrencia") == "Trimestral") & (pl.col("diagonal") == 1)
+    periodicidades = utils.obtener_aperturas("demo", "siniestros").select(
+        "apertura_reservas", "periodicidad_ocurrencia"
+    )
+
+    base_tipicos_original = (
+        pl.read_parquet("data/processed/base_triangulos.parquet")
+        .filter(pl.col("diagonal") == 1)
+        .join(
+            periodicidades,
+            on=["apertura_reservas", "periodicidad_ocurrencia"],
+            how="inner",
+        )
     )
     base_atipicos_original = pl.read_parquet("data/processed/base_atipicos.parquet")
 
@@ -100,9 +107,7 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
         "nombre_plantilla": "wb_test",
     }
     agregar_meses_params(params_form, rango_meses)
-    mes_corte_para_triangulo = utils.date_to_yyyymm(
-        mes_ult_ocurr_triangulos(rango_meses[1], origin_grain="Trimestral")
-    )
+    mes_corte_para_triangulo = 202412
     params_form.update({"mes_corte": str(mes_corte_para_triangulo)})
 
     _ = client.post("/ingresar-parametros", data=params_form)
@@ -113,22 +118,13 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
 
     _ = client.post("/preparar-plantilla")
     _ = client.post(
-        "/modos-plantilla",
-        data={
-            "apertura": "01_001_A_D",
-            "atributo": "bruto",
-            "plantilla": "plata",
-            "modo": "guardar_todo",
-        },
+        "/guardar-todo",
+        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
 
     _ = client.post("/almacenar-analisis")
 
-    siguiente_mes = (
-        mes_corte_para_triangulo + 1
-        if mes_corte_para_triangulo % 100 < 12
-        else (mes_corte_para_triangulo // 100 + 1) * 100 + 1
-    )
+    siguiente_mes = 202501
     params_form.update({"tipo_analisis": "entremes", "mes_corte": str(siguiente_mes)})
     response = client.post("/ingresar-parametros", data=params_form)
     p = Parametros.model_validate_json(response.read())
@@ -141,12 +137,18 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     assert not wb_test.sheets["Severidad"].visible
     assert not wb_test.sheets["Plata"].visible
 
+    periodicidades = utils.obtener_aperturas("demo", "siniestros").select(
+        "apertura_reservas", "periodicidad_ocurrencia"
+    )
+
     base_tipicos_original = (
         pl.read_parquet("data/processed/base_triangulos.parquet")
-        .filter(
-            (pl.col("periodicidad_ocurrencia") == "Trimestral")
-            & (pl.col("diagonal") == 1)
+        .join(
+            periodicidades,
+            on=["apertura_reservas", "periodicidad_ocurrencia"],
+            how="inner",
         )
+        .filter(pl.col("diagonal") == 1)
         .filter(
             pl.col("periodo_ocurrencia")
             != pl.col("periodo_ocurrencia").max().over("apertura_reservas")
@@ -157,7 +159,13 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
         )
         .vstack(
             pl.read_parquet("data/processed/base_ultima_ocurrencia.parquet")
-            .filter(pl.col("periodicidad_triangulo") == "Trimestral")
+            .join(
+                periodicidades.rename(
+                    {"periodicidad_ocurrencia": "periodicidad_triangulo"}
+                ),
+                on=["apertura_reservas", "periodicidad_triangulo"],
+                how="inner",
+            )
             .drop("periodicidad_triangulo")
         )
     )

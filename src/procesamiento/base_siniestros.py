@@ -252,6 +252,9 @@ def generar_bases_siniestros(
         base_triangulos = pl.concat(
             [
                 construir_triangulos(
+                    df_sinis_tipicos, "Mensual", "Mensual", mes_corte, tipo_analisis
+                ),
+                construir_triangulos(
                     df_sinis_tipicos, "Trimestral", "Mensual", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
@@ -264,6 +267,13 @@ def generar_bases_siniestros(
         ).collect()
         base_ult_ocurr = pl.concat(
             [
+                construir_diagonales_triangulo(
+                    df_sinis_tipicos,
+                    "Mensual",
+                    mes_inicio,
+                    mes_corte,
+                    "ultima_ocurrencia",
+                ),
                 construir_diagonales_triangulo(
                     df_sinis_tipicos,
                     "Trimestral",

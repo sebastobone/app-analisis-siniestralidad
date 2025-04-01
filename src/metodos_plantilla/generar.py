@@ -8,29 +8,39 @@ import xlwings as xw
 import src.constantes as ct
 from src import utils
 from src.logger_config import logger
-from src.metodos_plantilla import resultados
-from src.models import ModosPlantilla
+from src.metodos_plantilla import actualizar, resultados
+from src.models import ModosPlantilla, Parametros
 
 
-def generar_plantilla(
-    wb: xw.Book,
-    negocio: str,
-    modos: ModosPlantilla,
-    mes_corte: int,
-    solo_triangulo: bool = False,
-) -> None:
+def generar_plantillas(wb: xw.Book, p: Parametros, modos: ModosPlantilla):
+    if modos.plantilla == "severidad":
+        modos_frec = modos.model_copy(
+            update={"plantilla": "frecuencia", "atributo": "bruto"}
+        )
+        try:
+            actualizar.actualizar_plantilla(wb, p, modos_frec)
+        except (
+            actualizar.PlantillaNoGeneradaError,
+            actualizar.PeriodicidadDiferenteError,
+        ):
+            generar_plantilla(wb, p, modos_frec)
+
+    generar_plantilla(wb, p, modos)
+
+
+def generar_plantilla(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> None:
     s = time.time()
 
-    hoja_plantilla = modos.plantilla.capitalize()
-    wb.macro("LimpiarPlantilla")(hoja_plantilla)
+    hoja = wb.sheets[modos.plantilla.capitalize()]
+    wb.macro("LimpiarPlantilla")(hoja.name)
 
     cantidades = (
         ["pago", "incurrido"]
-        if hoja_plantilla != "Frecuencia"
+        if hoja.name != "Frecuencia"
         else ["conteo_pago", "conteo_incurrido"]
     )
 
-    aperturas = utils.obtener_aperturas(negocio, "siniestros")
+    aperturas = utils.obtener_aperturas(p.negocio, "siniestros")
 
     triangulo = crear_triangulo_base_plantilla(
         pl.scan_parquet("data/processed/base_triangulos.parquet"),
@@ -40,35 +50,32 @@ def generar_plantilla(
         cantidades,
     )
 
-    wb.sheets[hoja_plantilla].cells(
-        ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS
-    ).value = triangulo
+    hoja.cells(ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS).value = triangulo
 
-    if not solo_triangulo:
-        num_ocurrencias = triangulo.shape[0]
-        num_alturas = triangulo.shape[1] // len(cantidades)
-        mes_del_periodo = utils.mes_del_periodo(
-            utils.yyyymm_to_date(mes_corte), num_ocurrencias, num_alturas
-        )
+    num_ocurrencias = triangulo.shape[0]
+    num_alturas = triangulo.shape[1] // len(cantidades)
+    mes_del_periodo = utils.mes_del_periodo(
+        utils.yyyymm_to_date(p.mes_corte), num_ocurrencias, num_alturas
+    )
 
-        mes_ultimos_resultados = obtener_mes_ultimos_resultados(modos.apertura)
+    mes_ultimos_resultados = obtener_mes_ultimos_resultados(modos.apertura)
 
-        wb.macro(f"Generar{hoja_plantilla}")(
-            num_ocurrencias,
-            num_alturas,
-            ct.HEADER_TRIANGULOS,
-            ct.SEP_TRIANGULOS,
-            ct.FILA_INI_PLANTILLAS,
-            ct.COL_OCURRS_PLANTILLAS,
-            modos.apertura,
-            modos.atributo,
-            mes_del_periodo,
-            ceil(num_alturas / num_ocurrencias),
-            mes_ultimos_resultados,
-        )
+    wb.macro(f"Generar{hoja.name}")(
+        num_ocurrencias,
+        num_alturas,
+        ct.HEADER_TRIANGULOS,
+        ct.SEP_TRIANGULOS,
+        ct.FILA_INI_PLANTILLAS,
+        ct.COL_OCURRS_PLANTILLAS,
+        modos.apertura,
+        modos.atributo,
+        mes_del_periodo,
+        ceil(num_alturas / num_ocurrencias),
+        mes_ultimos_resultados,
+    )
 
     logger.success(
-        f"""{hoja_plantilla} generada para {modos.apertura} - {modos.atributo}."""
+        f"""Plantilla {hoja.name} generada para {modos.apertura} - {modos.atributo}."""
     )
     logger.info(f"Tiempo de generacion: {round(time.time() - s, 2)} segundos.")
 

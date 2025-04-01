@@ -1,9 +1,9 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from functools import wraps
 from typing import Annotated
 from uuid import uuid4
 
-import xlwings as xw
 from fastapi import Cookie, Depends, FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, Response
@@ -16,7 +16,7 @@ from sse_starlette.sse import EventSourceResponse
 from src import constantes as ct
 from src import main, utils
 from src.logger_config import log_queue, logger
-from src.metodos_plantilla import abrir, generar, preparar, resultados
+from src.metodos_plantilla import abrir, actualizar, generar, preparar, resultados
 from src.metodos_plantilla import almacenar_analisis as almacenar
 from src.metodos_plantilla.guardar_traer import (
     guardar_apertura,
@@ -65,6 +65,18 @@ app.add_middleware(
 
 templates = Jinja2Templates(directory="src/templates")
 app.mount("/static", StaticFiles(directory="src/static"), name="static")
+
+
+def atrapar_excepciones(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except Exception as e:
+            logger.exception(str(e))
+            raise
+
+    return wrapper
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -234,57 +246,94 @@ async def abrir_plantilla(
 
 
 @app.post("/preparar-plantilla")
+@atrapar_excepciones
 async def preparar_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
     main.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    try:
-        preparar.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+    preparar.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
 
 
-@app.post("/modos-plantilla")
-async def modos_plantilla(
+def obtener_plantilla(session: SessionDep, session_id: str | None):
+    p = obtener_parametros_usuario(session, session_id)
+    wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+    utils.verificar_plantilla_preparada(wb)
+    return wb, p
+
+
+@app.post("/generar-plantilla")
+@atrapar_excepciones
+async def generar_plantilla(
     modos: Annotated[ModosPlantilla, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
-    p = obtener_parametros_usuario(session, session_id)
-    wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+    wb, p = obtener_plantilla(session, session_id)
+    generar.generar_plantillas(wb, p, modos)
 
-    utils.verificar_plantilla_preparada(wb)
 
+@app.post("/actualizar-plantilla")
+@atrapar_excepciones
+async def actualizar_plantilla(
+    modos: Annotated[ModosPlantilla, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
+) -> None:
+    wb, p = obtener_plantilla(session, session_id)
+    actualizar.actualizar_plantillas(wb, p, modos)
+
+
+@app.post("/guardar-apertura")
+@atrapar_excepciones
+async def guardar(
+    modos: Annotated[ModosPlantilla, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
+) -> None:
+    wb, p = obtener_plantilla(session, session_id)
+    guardar_apertura.guardar_apertura(wb, modos)
+
+
+@app.post("/traer-apertura")
+@atrapar_excepciones
+async def traer(
+    modos: Annotated[ModosPlantilla, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
+):
+    wb, p = obtener_plantilla(session, session_id)
     try:
-        if modos.modo == "generar":
-            generar_plantillas(wb, p, modos)
-        elif modos.modo == "guardar":
-            guardar_apertura.guardar_apertura(wb, modos)
-        elif modos.modo == "traer":
-            generar_plantillas(wb, p, modos)
-            traer_apertura.traer_apertura(wb, modos)
-        elif modos.modo in ("traer_guardar_todo", "guardar_todo"):
-            traer = True if modos.modo == "traer_guardar_todo" else False
-            await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(
-                wb, modos, p.mes_corte, p.negocio, traer
-            )
-    except Exception as e:
-        logger.exception(str(e))
-        raise
+        actualizar.actualizar_plantillas(wb, p, modos)
+    except (
+        actualizar.PlantillaNoGeneradaError,
+        actualizar.PeriodicidadDiferenteError,
+    ):
+        generar.generar_plantillas(wb, p, modos)
+    traer_apertura.traer_apertura(wb, modos)
 
 
-def generar_plantillas(wb: xw.Book, p: Parametros, modos: ModosPlantilla):
-    if modos.plantilla == "severidad":
-        modos_frec = modos.model_copy(
-            update={"plantilla": "frecuencia", "atributo": "bruto"}
-        )
-        generar.generar_plantilla(
-            wb, p.negocio, modos_frec, p.mes_corte, solo_triangulo=True
-        )
-    generar.generar_plantilla(wb, p.negocio, modos, p.mes_corte)
+@app.post("/guardar-todo")
+@atrapar_excepciones
+async def guardar_todo(
+    modos: Annotated[ModosPlantilla, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
+) -> None:
+    wb, p = obtener_plantilla(session, session_id)
+    await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(wb, p, modos, False)
+
+
+@app.post("/traer-guardar-todo")
+@atrapar_excepciones
+async def traer_guardar_todo_end(
+    modos: Annotated[ModosPlantilla, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
+) -> None:
+    wb, p = obtener_plantilla(session, session_id)
+    await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(wb, p, modos, True)
 
 
 @app.post("/almacenar-analisis")

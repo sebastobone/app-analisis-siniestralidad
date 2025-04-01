@@ -4,8 +4,8 @@ import time
 import xlwings as xw
 from src import utils
 from src.logger_config import logger
-from src.metodos_plantilla.generar import generar_plantilla
-from src.models import ModosPlantilla
+from src.metodos_plantilla.generar import generar_plantillas
+from src.models import ModosPlantilla, Parametros
 
 from .guardar_apertura import guardar_apertura
 from .traer_apertura import traer_apertura
@@ -13,15 +13,14 @@ from .traer_apertura import traer_apertura
 
 async def traer_y_guardar_todas_las_aperturas(
     wb: xw.Book,
+    p: Parametros,
     modos: ModosPlantilla,
-    mes_corte: int,
-    negocio: str,
     traer: bool = False,
 ) -> None:
     s = time.time()
 
     aperturas = (
-        utils.obtener_aperturas(negocio, "siniestros")
+        utils.obtener_aperturas(p.negocio, "siniestros")
         .get_column("apertura_reservas")
         .to_list()
     )
@@ -34,14 +33,7 @@ async def traer_y_guardar_todas_las_aperturas(
             modos_actual.apertura = apertura
             modos_actual.atributo = atributo  # type: ignore
 
-            if modos.plantilla == "severidad":
-                modos_frec = modos_actual.model_copy(
-                    update={"plantilla": "frecuencia", "atributo": "bruto"}
-                )
-                generar_plantilla(
-                    wb, negocio, modos_frec, mes_corte, solo_triangulo=True
-                )
-            generar_plantilla(wb, negocio, modos_actual, mes_corte)
+            generar_plantillas(wb, p, modos_actual)
             if traer:
                 traer_apertura(wb, modos_actual)
             guardar_apertura(wb, modos_actual)

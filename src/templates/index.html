@@ -146,18 +146,16 @@
         <select id="plantilla" name="plantilla">
           <option value="">Ninguna</option>
         </select>
-
-        <label for="modo">Modo:</label>
-        <select id="modo" name="modo">
-          <option value="generar">Generar</option>
-          <option value="guardar">Guardar</option>
-          <option value="traer">Traer</option>
-          <option value="guardar_todo">Guardar todo</option>
-          <option value="traer_guardar_todo">Traer y guardar todo</option>
-        </select>
-
-        <button type="submit">Ejecutar</button>
       </form>
+
+      <button class="modo" endpoint="generar-plantilla">Generar</button>
+      <button class="modo" endpoint="actualizar-plantilla">Actualizar</button>
+      <button class="modo" endpoint="guardar-apertura">Guardar</button>
+      <button class="modo" endpoint="traer-apertura">Traer</button>
+      <button class="modo" endpoint="guardar-todo">Guardar todo</button>
+      <button class="modo" endpoint="traer-guardar-todo">
+        Traer y guardar todo
+      </button>
 
       <button class="apiButton" endpoint="almacenar-analisis">
         Almacenar analisis

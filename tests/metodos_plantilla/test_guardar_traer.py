@@ -42,12 +42,11 @@ def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
     atributo = "bruto"
     for plantilla in ["frecuencia", "severidad", "plata"]:
         _ = client.post(
-            "/modos-plantilla",
+            "/generar-plantilla",
             data={
                 "apertura": "01_001_A_D",
                 "atributo": "bruto",
                 "plantilla": plantilla,
-                "modo": "generar",
             },
         )
 
@@ -59,36 +58,25 @@ def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
         vaciar_directorio("data/db")
         with pytest.raises(FileNotFoundError):
             _ = client.post(
-                "/modos-plantilla",
+                "/traer-apertura",
                 data={
                     "apertura": apertura,
                     "atributo": atributo,
                     "plantilla": plantilla,
-                    "modo": "traer",
                 },
             )
 
         response = client.post(
-            "/modos-plantilla",
-            data={
-                "apertura": apertura,
-                "atributo": atributo,
-                "plantilla": plantilla,
-                "modo": "guardar",
-            },
+            "/guardar-apertura",
+            data={"apertura": apertura, "atributo": atributo, "plantilla": plantilla},
         )
         assert response.status_code == status.HTTP_200_OK
         for archivo in archivos_guardados:
             assert os.path.exists(f"data/db/{archivo}.parquet")
 
         response = client.post(
-            "/modos-plantilla",
-            data={
-                "apertura": apertura,
-                "atributo": atributo,
-                "plantilla": plantilla,
-                "modo": "traer",
-            },
+            "/traer-apertura",
+            data={"apertura": apertura, "atributo": atributo, "plantilla": plantilla},
         )
         assert response.status_code == status.HTTP_200_OK
 

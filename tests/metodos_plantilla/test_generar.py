@@ -74,13 +74,8 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
 
     with pytest.raises(ValueError):
         _ = client.post(
-            "/modos-plantilla",
-            data={
-                "apertura": "01_001_A_D",
-                "atributo": "bruto",
-                "plantilla": "plata",
-                "modo": "generar",
-            },
+            "/generar-plantilla",
+            data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
         )
 
     vaciar_directorio("data/raw")

@@ -61,23 +61,13 @@ def test_actualizar_resultados(
     wb_u1 = abrir.abrir_plantilla(f"plantillas/{p1.nombre_plantilla}.xlsm")
 
     _ = client.post(
-        "/modos-plantilla",
-        data={
-            "apertura": apertura,
-            "atributo": atributo,
-            "plantilla": "plata",
-            "modo": "generar",
-        },
+        "/generar-plantilla",
+        data={"apertura": apertura, "atributo": atributo, "plantilla": "plata"},
     )
 
     _ = client.post(
-        "/modos-plantilla",
-        data={
-            "apertura": apertura,
-            "atributo": atributo,
-            "plantilla": "plata",
-            "modo": "guardar",
-        },
+        "/guardar-apertura",
+        data={"apertura": apertura, "atributo": atributo, "plantilla": "plata"},
     )
     _ = client.post("/almacenar-analisis")
     wb_u1.close()
@@ -87,13 +77,8 @@ def test_actualizar_resultados(
     wb_u2 = abrir.abrir_plantilla(f"plantillas/{p2.nombre_plantilla}.xlsm")
 
     _ = client_2.post(
-        "/modos-plantilla",
-        data={
-            "apertura": apertura,
-            "atributo": atributo,
-            "plantilla": "plata",
-            "modo": "generar",
-        },
+        "/generar-plantilla",
+        data={"apertura": apertura, "atributo": atributo, "plantilla": "plata"},
     )
 
     hoja_plata = wb_u2.sheets["Plata"]
@@ -104,33 +89,18 @@ def test_actualizar_resultados(
     hoja_plata.range(celda_metodologia).value = "incurrido"
 
     _ = client_2.post(
-        "/modos-plantilla",
-        data={
-            "apertura": apertura,
-            "atributo": atributo,
-            "plantilla": "plata",
-            "modo": "guardar",
-        },
+        "/guardar-apertura",
+        data={"apertura": apertura, "atributo": atributo, "plantilla": "plata"},
     )
 
     # Usuario 2 estima apertura 2
     _ = client_2.post(
-        "/modos-plantilla",
-        data={
-            "apertura": apertura_2,
-            "atributo": atributo,
-            "plantilla": "plata",
-            "modo": "generar",
-        },
+        "/generar-plantilla",
+        data={"apertura": apertura_2, "atributo": atributo, "plantilla": "plata"},
     )
     _ = client_2.post(
-        "/modos-plantilla",
-        data={
-            "apertura": apertura_2,
-            "atributo": atributo,
-            "plantilla": "plata",
-            "modo": "guardar",
-        },
+        "/guardar-apertura",
+        data={"apertura": apertura_2, "atributo": atributo, "plantilla": "plata"},
     )
 
     _ = client_2.post("/almacenar-analisis")

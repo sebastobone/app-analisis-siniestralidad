@@ -7,9 +7,6 @@ from src import constantes as ct
 from src import utils
 from src.logger_config import logger
 from src.metodos_plantilla.generar import crear_triangulo_base_plantilla
-from src.metodos_plantilla.guardar_traer.rangos_parametros import (
-    obtener_indice_en_rango,
-)
 from src.models import ModosPlantilla, Parametros
 
 
@@ -48,10 +45,8 @@ def actualizar_plantilla(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> N
     )
 
     hoja.cells(ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS).value = triangulo
-
-    fila_apertura = obtener_indice_en_rango("apertura", hoja.range("A1:A10000"))
-    hoja.cells(fila_apertura, 2).value = modos.apertura
-    hoja.cells(fila_apertura + 1, 2).value = modos.atributo
+    hoja.cells(1, 1).value = modos.apertura
+    hoja.cells(2, 1).value = modos.atributo
 
     logger.success(
         f"Plantilla {hoja.name} actualizada para {modos.apertura} - {modos.atributo}."
@@ -70,10 +65,7 @@ def verificar_plantilla_generada(hoja: xw.Sheet) -> None:
 
 def obtener_apertura_actual(wb: xw.Book, plantilla: str) -> str:
     hoja_plantilla = wb.sheets[plantilla.capitalize()]
-    fila_apertura = obtener_indice_en_rango(
-        "apertura", hoja_plantilla.range("A1:A10000")
-    )
-    return hoja_plantilla.cells(fila_apertura, 2).value
+    return hoja_plantilla.cells(1, 1).value
 
 
 def verificar_misma_periodicidad(

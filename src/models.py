@@ -32,9 +32,3 @@ class Offset(BaseModel):
 class RangeDimension(BaseModel):
     height: int
     width: int
-
-
-class EstructuraApertura(BaseModel):
-    apertura: str
-    atributo: str
-    dimensiones_triangulo: RangeDimension

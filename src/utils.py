@@ -9,7 +9,6 @@ import polars as pl
 import xlwings as xw
 
 from src import constantes as ct
-from src.logger_config import logger
 from src.models import RangeDimension
 
 
@@ -275,12 +274,3 @@ def mantener_formato_columnas(df: pl.DataFrame) -> pl.DataFrame:
             for column in ["codigo_op", "codigo_ramo_op"]
         ]
     )
-
-
-def verificar_plantilla_preparada(wb: xw.Book):
-    resumen = sheet_to_dataframe(wb, "Resumen")
-    if resumen.is_empty():
-        logger.error(
-            "La plantilla no ha sido preparada. Preparela y vuelva a intentar."
-        )
-        raise ValueError

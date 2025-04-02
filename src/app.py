@@ -239,13 +239,13 @@ async def preparar_plantilla(
     p = obtener_parametros_usuario(session, session_id)
     main.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    preparar.preparar_plantilla(wb, p.mes_corte, p.tipo_analisis, p.negocio)
+    preparar.preparar_plantilla(wb, p)
 
 
 def obtener_plantilla(session: SessionDep, session_id: str | None):
     p = obtener_parametros_usuario(session, session_id)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    utils.verificar_plantilla_preparada(wb)
+    preparar.verificar_plantilla_preparada(wb)
     return wb, p
 
 

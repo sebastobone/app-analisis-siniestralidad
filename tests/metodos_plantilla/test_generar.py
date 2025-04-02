@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from src import constantes as ct
 from src import utils
-from src.metodos_plantilla import abrir, actualizar, generar
+from src.metodos_plantilla import abrir, actualizar, generar, preparar
 from src.procesamiento import base_siniestros
 from tests.conftest import agregar_meses_params, vaciar_directorio
 
@@ -72,7 +72,7 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
     _ = client.post("/correr-query-primas")
     _ = client.post("/correr-query-expuestos")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(preparar.PlantillaNoPreparadaError):
         _ = client.post(
             "/generar-plantilla",
             data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},

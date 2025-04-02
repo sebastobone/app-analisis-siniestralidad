@@ -1,5 +1,4 @@
 import time
-from typing import Literal
 
 import polars as pl
 import xlwings as xw
@@ -8,22 +7,18 @@ from src import constantes as ct
 from src import utils
 from src.logger_config import logger
 from src.metodos_plantilla import resultados, tablas_resumen
+from src.models import Parametros
 
 from .completar_diagonal import factor_completitud as compl
 
 
-def preparar_plantilla(
-    wb: xw.Book,
-    mes_corte: int,
-    tipo_analisis: Literal["triangulos", "entremes"],
-    negocio: str,
-) -> None:
+def preparar_plantilla(wb: xw.Book, p: Parametros) -> None:
     s = time.time()
 
-    aperturas = utils.obtener_aperturas(negocio, "siniestros")
+    aperturas = utils.obtener_aperturas(p.negocio, "siniestros")
 
     limpiar_plantillas(wb)
-    mostrar_plantillas_relevantes(wb, tipo_analisis)
+    mostrar_plantillas_relevantes(wb, p.tipo_analisis)
 
     insumos = {
         "base_triangulos": pl.scan_parquet("data/processed/base_triangulos.parquet"),
@@ -36,21 +31,21 @@ def preparar_plantilla(
     }
 
     resumen, atipicos, entremes = tablas_resumen.generar_tablas_resumen(
-        insumos, negocio, tipo_analisis, aperturas.lazy()
+        insumos, p.negocio, p.tipo_analisis, aperturas.lazy()
     )
     resultados_anteriores = resultados.concatenar_archivos_resultados()
 
     generar_hojas_resumen(wb, resumen, resultados_anteriores, atipicos)
 
-    if tipo_analisis == "entremes":
+    if p.tipo_analisis == "entremes":
         verificar_resultados_anteriores_para_entremes(
-            resumen, resultados_anteriores, mes_corte
+            resumen, resultados_anteriores, p.mes_corte
         )
         factores_completitud = compl.calcular_factores_completitud(
-            aperturas.lazy(), mes_corte
+            aperturas.lazy(), p.mes_corte
         )
         generar_hoja_entremes(
-            wb, entremes, resultados_anteriores, factores_completitud, mes_corte
+            wb, entremes, resultados_anteriores, factores_completitud, p.mes_corte
         )
 
     logger.success("Plantilla preparada.")
@@ -244,3 +239,15 @@ def obtener_resultados_ultimo_triangulo(
             ]
         )
     )
+
+
+def verificar_plantilla_preparada(wb: xw.Book):
+    resumen = utils.sheet_to_dataframe(wb, "Resumen")
+    if resumen.is_empty():
+        raise PlantillaNoPreparadaError(
+            "La plantilla no ha sido preparada. Preparela y vuelva a intentar."
+        )
+
+
+class PlantillaNoPreparadaError(Exception):
+    pass

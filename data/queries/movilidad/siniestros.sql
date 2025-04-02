@@ -91,9 +91,7 @@ CREATE MULTISET VOLATILE TABLE base_bruto AS (
     WHERE
         esc.ramo_id = 168
         AND pro.compania_id = 4
-        AND esc.mes_id BETWEEN CAST(
-            '{mes_primera_ocurrencia}' AS INTEGER
-        ) AND CAST('{mes_corte}' AS INTEGER)
+        AND esc.mes_id <= CAST('{mes_corte}' AS INTEGER)
 
     GROUP BY 1, 2, 3, 4, 5, 6
     HAVING NOT (pago_bruto = 0 AND aviso_bruto = 0)
@@ -199,10 +197,8 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
 
     WHERE
         pro.ramo_id = 168
-        AND ersc.mes_id BETWEEN CAST(
-            '{mes_primera_ocurrencia}' AS INTEGER
-        ) AND CAST('{mes_corte}' AS INTEGER)
         AND pro.compania_id = 4
+        AND ersc.mes_id <= CAST('{mes_corte}' AS INTEGER)
 
     GROUP BY 1, 2, 3, 4, 5, 6
     HAVING NOT (pago_cedido = 0 AND aviso_cedido = 0)

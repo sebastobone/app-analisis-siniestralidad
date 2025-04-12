@@ -20,7 +20,7 @@ def test_ingresar_parametros(client: TestClient, test_session: Session):
         "mes_corte": "203012",
         "tipo_analisis": "triangulos",
         "aproximar_reaseguro": "False",
-        "nombre_plantilla": "plantilla",
+        "nombre_plantilla": "wb_test",
         "cuadre_contable_sinis": "False",
         "add_fraude_soat": "False",
         "cuadre_contable_primas": "False",

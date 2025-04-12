@@ -56,7 +56,7 @@ def verificar_resultados_anteriores_para_entremes(
     diagonales: pl.DataFrame, resultados_anteriores: pl.DataFrame, mes_corte: int
 ) -> None:
     if resultados_anteriores.shape[0] == 0:
-        logger.error(
+        raise ValueError(
             utils.limpiar_espacios_log(
                 """
                 No se encontraron resultados anteriores.
@@ -64,7 +64,6 @@ def verificar_resultados_anteriores_para_entremes(
                 """
             )
         )
-        raise ValueError
 
     mes_corte_anterior = utils.mes_anterior_corte(mes_corte)
     resultados_mes_anterior = resultados_anteriores.filter(
@@ -72,7 +71,7 @@ def verificar_resultados_anteriores_para_entremes(
     )
 
     if resultados_mes_anterior.shape[0] == 0:
-        logger.error(
+        raise ValueError(
             utils.limpiar_espacios_log(
                 f"""
                 No se encontraron resultados anteriores
@@ -81,7 +80,6 @@ def verificar_resultados_anteriores_para_entremes(
                 """
             )
         )
-        raise ValueError
 
     aperturas_actuales = sorted(
         diagonales.get_column("apertura_reservas").unique().to_list()
@@ -90,7 +88,7 @@ def verificar_resultados_anteriores_para_entremes(
         resultados_mes_anterior.get_column("apertura_reservas").unique().to_list()
     )
     if aperturas_actuales != aperturas_anteriores:
-        logger.error(
+        raise ValueError(
             utils.limpiar_espacios_log(
                 f"""
                 Las aperturas no coinciden con los analisis anteriores,
@@ -102,7 +100,6 @@ def verificar_resultados_anteriores_para_entremes(
                 """
             )
         )
-        raise ValueError
 
 
 def limpiar_plantillas(wb: xw.Book):

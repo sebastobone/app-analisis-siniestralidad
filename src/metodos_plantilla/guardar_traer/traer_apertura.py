@@ -34,8 +34,8 @@ def traer_parametros(
             range_values.formula = pl.read_parquet(
                 f"data/db/{apertura}_{atributo}_{hoja.name}_{range_name}.parquet"
             ).rows()
-        except FileNotFoundError:
-            logger.exception(
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(
                 utils.limpiar_espacios_log(
                     f"""
                     No se encontraron formulas para la apertura {apertura}
@@ -43,7 +43,6 @@ def traer_parametros(
                     Para traer un analisis, primero tiene que haberse guardado.
                     """
                 )
-            )
-            raise
+            ) from exc
 
     logger.success(f"Parametros para {apertura} - {atributo} traidos.")

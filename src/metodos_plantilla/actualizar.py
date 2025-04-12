@@ -76,11 +76,13 @@ def verificar_misma_periodicidad(
     )
     if len(aperturas.get_column("periodicidad_ocurrencia").unique()) != 1:
         raise PeriodicidadDiferenteError(
-            f"""
-            Las aperturas {apertura_actual} y {apertura_nueva}
-            no tienen la misma periodicidad de ocurrencia. Debe
-            generar la plantilla de la nueva apertura.
-            """
+            utils.limpiar_espacios_log(
+                f"""
+                Las aperturas {apertura_actual} y {apertura_nueva}
+                no tienen la misma periodicidad de ocurrencia. Debe
+                generar la plantilla de la nueva apertura.
+                """
+            )
         )
 
 

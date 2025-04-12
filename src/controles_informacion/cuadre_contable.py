@@ -43,8 +43,8 @@ def obtener_aperturas_para_asignar_diferencia(
             f"data/segmentacion_{negocio}.xlsx",
             sheet_name=f"Cuadre_{file.capitalize()}",
         )
-    except ValueError:
-        logger.error(
+    except ValueError as exc:
+        raise ValueError(
             utils.limpiar_espacios_log(
                 """
                 Definio hacer el cuadre contable, pero no se encontraron
@@ -52,8 +52,7 @@ def obtener_aperturas_para_asignar_diferencia(
                 diferencia.
                 """
             )
-        )
-        raise
+        ) from exc
     return aperturas
 
 

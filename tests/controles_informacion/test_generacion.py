@@ -1,4 +1,6 @@
+import tempfile
 from datetime import date
+from pathlib import Path
 
 import numpy as np
 import polars as pl
@@ -113,3 +115,48 @@ async def test_consolidar_sap(qtys, mes_corte, expected_columns):
 async def test_verificar_existencia_afos():
     with pytest.raises(FileNotFoundError):
         await gen.verificar_existencia_afos("demo")
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_restablecer_archivos_queries():
+    archivos_permanentes = [
+        "expuestos.csv",
+        "expuestos.parquet",
+        "primas.csv",
+        "primas.parquet",
+        "siniestros.csv",
+        "siniestros.parquet",
+    ]
+    dates = (date(2020, 1, 1), date(2024, 12, 1))
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_dir_path = Path(tmp_dir)
+
+        siniestros = utils.generar_mock_siniestros(dates)
+        primas = utils.generar_mock_primas(dates)
+        expuestos = utils.generar_mock_expuestos(dates)
+
+        await gen.restablecer_salidas_queries(tmp_dir)
+
+        siniestros.write_parquet(tmp_dir_path / "siniestros.parquet")
+        siniestros.write_parquet(tmp_dir_path / "siniestros.csv")
+        primas.write_parquet(tmp_dir_path / "primas.parquet")
+        primas.write_parquet(tmp_dir_path / "primas.csv")
+        expuestos.write_parquet(tmp_dir_path / "expuestos.parquet")
+        expuestos.write_parquet(tmp_dir_path / "expuestos.csv")
+
+        await gen.restablecer_salidas_queries(tmp_dir)
+
+        archivos_guardados = sorted([file.name for file in tmp_dir_path.iterdir()])
+        assert archivos_guardados == archivos_permanentes
+
+        for base in ["siniestros", "primas"]:
+            for suffix in ["_pre_cuadre", "_post_cuadre"]:
+                for ext in [".parquet", ".csv"]:
+                    siniestros.write_parquet(tmp_dir_path / f"{base}{suffix}{ext}")
+
+        await gen.restablecer_salidas_queries(tmp_dir)
+
+        archivos_guardados = sorted([file.name for file in tmp_dir_path.iterdir()])
+        assert archivos_guardados == archivos_permanentes

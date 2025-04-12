@@ -9,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import ValidationError
 from sqlmodel import Session, SQLModel, create_engine, select
 from sse_starlette.sse import EventSourceResponse
 
@@ -73,7 +72,7 @@ def atrapar_excepciones(func):
         try:
             return await func(*args, **kwargs)
         except Exception as e:
-            logger.exception(utils.limpiar_espacios_log(str(e)))
+            logger.exception(str(e))
             raise
 
     return wrapper
@@ -114,24 +113,6 @@ def obtener_parametros_usuario(
     ).all()[0]
 
 
-def validar_parametros_ingresados(params: Parametros) -> Parametros:
-    try:
-        parametros = Parametros.model_validate(params)
-    except ValidationError:
-        logger.error(
-            utils.limpiar_espacios_log(
-                f"""
-                Parametros no validos. Revise que los meses de inicio
-                y corte sean numeros enteros entre 199001 y 204001,
-                y vuelva a intentar. Los parametros que ingreso fueron: 
-                {params.model_dump()}.
-                """
-            )
-        )
-        raise
-    return parametros
-
-
 def eliminar_parametros_anteriores(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
@@ -156,7 +137,7 @@ async def ingresar_parametros(
         session_id = str(uuid4())
         response.set_cookie(key="session_id", value=session_id)
 
-    parametros = validar_parametros_ingresados(params)
+    parametros = Parametros.model_validate(params)
     parametros.session_id = session_id
 
     eliminar_parametros_anteriores(session, session_id)
@@ -165,7 +146,7 @@ async def ingresar_parametros(
     session.commit()
     session.refresh(parametros)
 
-    logger.info(f"""Parametros ingresados: {parametros.model_dump()}""")
+    logger.info(f"Parametros ingresados: {parametros.model_dump()}")
 
     return parametros
 

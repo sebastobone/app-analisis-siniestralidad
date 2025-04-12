@@ -1,5 +1,4 @@
 import asyncio
-import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from typing import Literal
@@ -170,7 +169,7 @@ def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
     }
 
     try:
-        con = td.connect(json.dumps(creds))  # type: ignore
+        con = td.connect(**creds)  # type: ignore
     except td.OperationalError as exc:
         if "Hostname lookup failed" in str(exc):
             logger.error(

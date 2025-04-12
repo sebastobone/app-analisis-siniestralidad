@@ -1,5 +1,6 @@
 import asyncio
-import os
+import shutil
+from pathlib import Path
 from typing import Literal
 
 import polars as pl
@@ -12,11 +13,34 @@ from src.logger_config import logger
 from src.models import Parametros
 
 
+async def restablecer_salidas_queries(path_salidas_queries: str) -> None:
+    logger.info("Restableciendo las salidas de los queries...")
+    data_raw = Path(path_salidas_queries)
+    archivos_permanentes = {
+        "siniestros.parquet",
+        "siniestros.csv",
+        "primas.parquet",
+        "primas.csv",
+        "expuestos.parquet",
+        "expuestos.csv",
+    }
+    archivos_removibles: list[Path] = []
+
+    for file in data_raw.iterdir():
+        if "pre_cuadre" in file.name:
+            shutil.copyfile(file, data_raw / file.name.replace("_pre_cuadre", ""))
+        if file.name not in archivos_permanentes:
+            archivos_removibles.append(file)
+
+    for file in archivos_removibles:
+        file.unlink()
+
+
 async def verificar_existencia_afos(negocio: str):
     logger.info("Verificando existencia de AFOS...")
     afos_necesarios = ct.AFOS_NECESARIOS[negocio]
     for afo in afos_necesarios:
-        if not os.path.exists(f"data/afo/{afo}.xlsx"):
+        if not Path(f"data/afo/{afo}.xlsx").exists():
             logger.error(
                 utils.limpiar_espacios_log(
                     f"""
@@ -247,12 +271,12 @@ def generar_consistencia_historica(
     fuente: str,
 ) -> None:
     available_files = [
-        f
-        for f in os.listdir(f"data/controles_informacion/{estado_cuadre}")
-        if f"{file}_{fuente}" in f
-        and "sap_vs_tera" not in f
-        and "ramo" not in f
-        and "consistencia" not in f
+        f.name
+        for f in Path(f"data/controles_informacion/{estado_cuadre}").iterdir()
+        if f"{file}_{fuente}" in f.name
+        and "sap_vs_tera" not in f.name
+        and "ramo" not in f.name
+        and "consistencia" not in f.name
     ]
 
     dfs = pl.LazyFrame(schema=group_cols)

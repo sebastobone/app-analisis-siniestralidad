@@ -2,7 +2,6 @@ import polars as pl
 
 from src import constantes as ct
 from src import utils
-from src.logger_config import logger
 
 
 async def consolidar_sap(negocio: str, qtys: list[str], mes_corte: int) -> pl.DataFrame:
@@ -37,7 +36,7 @@ async def transformar_hoja_afo(
         f"{ct.NOMBRE_MES[mes_corte % 100]} {mes_corte // 100}"
         not in df.get_column("Ejercicio/Período").unique()
     ):
-        logger.error(
+        raise ValueError(
             utils.limpiar_espacios_log(
                 f"""
                 ¡Error! No se pudo encontrar el mes {mes_corte}
@@ -45,7 +44,6 @@ async def transformar_hoja_afo(
                 """
             )
         )
-        raise ValueError
 
     return (
         df.lazy()

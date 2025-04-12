@@ -76,9 +76,10 @@ async def obtener_segmentaciones(
             for hoja in pd.ExcelFile(path_archivo_segm).sheet_names
             if str(hoja).startswith("add")
         ]
-    except FileNotFoundError:
-        logger.error(f"No se encuentra el archivo {path_archivo_segm}.")
-        raise
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(
+            f"No se encuentra el archivo {path_archivo_segm}."
+        ) from exc
 
     if hojas_segm:
         await verificar_nombre_hojas_segmentacion(hojas_segm)
@@ -125,8 +126,7 @@ async def ejecutar_queries(
                 add_num += 1
 
         except td.OperationalError as exc:
-            logger.error(f"Error en query: {query[:100]}: \n{str(exc)}")
-            raise
+            raise ValueError(f"Error en query: {query[:100]}: \n{str(exc)}") from exc
 
     resultado = pl.read_database(queries[-1], con)
     return pl.DataFrame(utils.lowercase_columns(resultado))
@@ -170,26 +170,7 @@ def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
 
     try:
         con = td.connect(**creds)  # type: ignore
-    except td.OperationalError as exc:
-        if "Hostname lookup failed" in str(exc):
-            logger.error(
-                utils.limpiar_espacios_log(
-                    """
-                    Error al conectar con Teradata. Revise que se
-                    encuentre conectado a la VPN en caso de no estar
-                    conectado a la red "+SURA".
-                    """
-                )
-            )
-        else:
-            logger.error(
-                utils.limpiar_espacios_log(
-                    """
-                    Error al conectar con Teradata. Revise sus
-                    credenciales.
-                    """
-                )
-            )
+    except td.OperationalError:
         raise
 
     return con, con.cursor()  # type: ignore
@@ -227,7 +208,7 @@ async def verificar_nombre_hojas_segmentacion(segm_sheets: list[str]) -> None:
     for sheet in segm_sheets:
         partes = sheet.split("_")
         if (len(partes) < 3) or not any(char in partes[1] for char in "spe"):
-            logger.error(
+            raise ValueError(
                 """
                 El nombre de las hojas con tablas a cargar debe seguir el formato
                 "add_[indicador de queries que la utilizan]_[nombre de la tabla]".
@@ -239,7 +220,6 @@ async def verificar_nombre_hojas_segmentacion(segm_sheets: list[str]) -> None:
                 Corregir el nombre de la hoja.
                 """
             )
-            raise ValueError
 
 
 async def verificar_numero_segmentaciones(
@@ -247,7 +227,7 @@ async def verificar_numero_segmentaciones(
 ) -> None:
     num_adds_necesarios = queries.count("?);")
     if num_adds_necesarios != len(adds):
-        logger.error(
+        raise ValueError(
             f"""
             Necesita {num_adds_necesarios} tablas adicionales para 
             ejecutar el query {file_path},
@@ -258,14 +238,13 @@ async def verificar_numero_segmentaciones(
             Hojas actuales: {adds}
             """
         )
-        raise ValueError
 
 
 async def verificar_numero_columnas_segmentacion(query: str, add: pl.DataFrame) -> None:
     num_cols = query.count("?")
     num_cols_add = len(add.collect_schema().names())
     if num_cols != num_cols_add:
-        logger.error(
+        raise ValueError(
             f"""
             Error en {query}:
             La tabla creada en Teradata recibe {num_cols} columnas, pero la
@@ -275,7 +254,6 @@ async def verificar_numero_columnas_segmentacion(query: str, add: pl.DataFrame) 
             sea el mismo que el del query.
             """
         )
-        raise ValueError
 
 
 async def verificar_registros_duplicados(add: pl.DataFrame) -> pl.DataFrame:
@@ -293,26 +271,24 @@ async def verificar_registros_duplicados(add: pl.DataFrame) -> pl.DataFrame:
 async def verificar_valores_nulos(add: pl.DataFrame) -> None:
     num_nulls = add.null_count().max_horizontal().max()
     if isinstance(num_nulls, int) and num_nulls > 0:
-        logger.error(
+        raise ValueError(
             f"""
             Error -> tiene valores nulos en la siguiente tabla: {add}
             Corrija estos valores antes de ejecutar el proceso.
-            """.replace("\n", " ")
+            """
         )
-        raise ValueError
 
 
 async def verificar_formato_fecha(col: pl.Series) -> None:
     if col.dtype != pl.Date:
-        logger.error(f"""La columna {col.name} debe estar en formato fecha.""")
-        raise ValueError
+        raise ValueError(f"La columna {col.name} debe estar en formato fecha.")
 
 
 async def verificar_fechas_dentro_de_rangos(
     col: pl.Series, lim_inf: date, lim_sup: date
 ) -> None:
     if col.dt.min() < lim_inf or col.dt.max() > lim_sup:  # type: ignore
-        logger.error(
+        raise ValueError(
             utils.limpiar_espacios_log(
                 f"""La columna {col.name} debe estar entre {lim_inf} y {lim_sup},
                 pero la informacion generada esta entre {col.dt.min()} y {col.dt.max()}.
@@ -320,7 +296,6 @@ async def verificar_fechas_dentro_de_rangos(
                 """
             )
         )
-        raise ValueError
 
 
 async def verificar_resultado_siniestros_primas_expuestos(
@@ -361,12 +336,11 @@ async def verificar_resultado_siniestros_primas_expuestos(
         )
     )
     if not segmentaciones_faltantes.is_empty():
-        logger.error(
+        raise ValueError(
             f"""
             ¡Alerta! Revise las segmentaciones faltantes. {segmentaciones_faltantes}
             """
         )
-        raise ValueError
 
 
 async def verificar_aperturas_faltantes(
@@ -378,7 +352,7 @@ async def verificar_aperturas_faltantes(
             faltantes.append(apertura_generada)
 
     if len(faltantes) > 0:
-        logger.error(
+        raise ValueError(
             utils.limpiar_espacios_log(
                 f"""
                 ¡Error! Las siguientes aperturas se generaron, pero no se
@@ -387,7 +361,6 @@ async def verificar_aperturas_faltantes(
                 """
             )
         )
-        raise ValueError
 
 
 async def verificar_aperturas_sobrantes(

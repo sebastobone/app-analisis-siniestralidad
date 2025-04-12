@@ -41,7 +41,7 @@ async def verificar_existencia_afos(negocio: str):
     afos_necesarios = ct.AFOS_NECESARIOS[negocio]
     for afo in afos_necesarios:
         if not Path(f"data/afo/{afo}.xlsx").exists():
-            logger.error(
+            raise FileNotFoundError(
                 utils.limpiar_espacios_log(
                     f"""
                     El AFO no se encuentra en la ruta data/afo/{afo}.xlsx,
@@ -49,7 +49,6 @@ async def verificar_existencia_afos(negocio: str):
                     """
                 )
             )
-            raise FileNotFoundError
 
 
 async def generar_controles(

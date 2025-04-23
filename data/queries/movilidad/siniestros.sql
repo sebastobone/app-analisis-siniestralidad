@@ -88,7 +88,7 @@ CREATE MULTISET VOLATILE TABLE base_pago_bruto AS (
 
 
 
-CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
+CREATE MULTISET VOLATILE TABLE base_aviso_bruto_saldos AS (
     WITH saldos AS (
         SELECT
             sini.fecha_siniestro
@@ -160,7 +160,7 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
         WHERE
             esc.ramo_id = 168
             AND pro.compania_id = 4
-            AND esc.mes_id <= CAST('{mes_corte}' AS INTEGER)
+            AND esc.mes_id < 201901
 
         GROUP BY 1, 2, 3, 4, 5
         HAVING saldo_aviso_bruto <> 0
@@ -262,6 +262,113 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
 ) ON COMMIT PRESERVE ROWS;
 
 
+
+CREATE MULTISET VOLATILE TABLE base_aviso_bruto_movimientos AS (
+    SELECT
+        LAST_DAY(sini.fecha_siniestro) AS fecha_siniestro
+        , LAST_DAY(esc.fecha_registro) AS fecha_registro
+        , esc.siniestro_id
+        , CASE
+            WHEN esc.reserva_id = 18635 THEN 'PARCIALES'
+            WHEN esc.tipo_oper_siniestro_cd IN (131, 132) THEN 'TOTALES'
+            WHEN
+                esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
+                AND sini.acontecimiento_id IN (
+                    19866, 58026, 15268, 20052, 7634, 19867, 20112
+                )
+                THEN 'RC'
+            WHEN
+                fas.clase_tarifa_cd IN (3, 4, 5, 6)
+                AND poli.sucursal_id IN (21170919, 20056181, 52915901)
+                THEN 'MOTOS SUFI'
+            WHEN
+                fas.clase_tarifa_cd IN (3, 4, 5, 6)
+                THEN 'MOTOS RESTO'
+            WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN
+                esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
+                THEN 'RC'
+            ELSE 'PARCIALES'
+        END AS cobertura_general_desc
+
+        , CASE
+            WHEN esc.reserva_id = 18635 THEN 'SUBR'
+            WHEN esc.tipo_oper_siniestro_cd IN (131, 132) THEN 'SALV'
+            WHEN
+                esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
+                AND sini.acontecimiento_id IN (
+                    19866, 58026, 15268, 20052, 7634, 19867, 20112
+                )
+                THEN 'RC PJ'
+            WHEN
+                fas.clase_tarifa_cd IN (3, 4, 5, 6)
+                AND poli.sucursal_id IN (21170919, 20056181, 52915901)
+                THEN 'MOTOS SUFI'
+            WHEN
+                fas.clase_tarifa_cd IN (3, 4, 5, 6)
+                THEN 'MOTOS RESTO'
+            WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN
+                esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
+                THEN 'RC NO PJ'
+            ELSE 'PARCIALES_RESTO'
+        END AS cobertura_desc
+        , CAST(0 AS FLOAT) AS pago_bruto
+        , SUM( esc.valor_siniestro * esc.valor_tasa
+        ) AS aviso_bruto
+
+    FROM mdb_seguros_colombia.v_evento_siniestro_cobertura AS esc
+    LEFT JOIN mdb_seguros_colombia.v_plan_individual AS pind
+        ON esc.plan_individual_id = pind.plan_individual_id
+    LEFT JOIN mdb_seguros_colombia.v_producto AS pro
+        ON pind.producto_id = pro.producto_id
+    LEFT JOIN mdb_seguros_colombia.v_siniestro AS sini
+        ON esc.siniestro_id = sini.siniestro_id
+
+    LEFT JOIN mdb_seguros_colombia.v_poliza AS poli
+        ON esc.poliza_id = poli.poliza_id
+
+    LEFT JOIN mdb_seguros_colombia.v_poliza_certificado AS polc
+        ON
+            esc.poliza_certificado_id = polc.poliza_certificado_id
+            AND esc.plan_individual_id = polc.plan_individual_id
+
+    LEFT JOIN mdb_seguros_colombia.v_vehiculo AS vehi
+        ON polc.bien_id = vehi.bien_id
+
+    LEFT JOIN mdb_seguros_colombia.v_fasecolda AS fas
+        ON vehi.fasecolda_cd = fas.fasecolda_cd
+
+    WHERE
+        esc.ramo_id = 168
+        AND pro.compania_id = 4
+        AND esc.mes_id BETWEEN 201901 AND CAST('{mes_corte}' AS INTEGER)
+    AND esc.tipo_oper_siniestro_cd = '130'
+
+    GROUP BY 1, 2, 3, 4, 5, 6
+    HAVING NOT (aviso_bruto = 0)
+)
+WITH DATA PRIMARY INDEX
+(
+    fecha_siniestro
+    , fecha_registro
+    , codigo_ramo_op
+    , siniestro_id
+    , cobertura_general_desc
+    , cobertura_desc
+) ON COMMIT PRESERVE ROWS;
+
+CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
+    SELECT * FROM base_aviso_bruto_saldos
+    UNION ALL
+    SELECT * FROM base_aviso_bruto_movimientos
+)WITH DATA PRIMARY INDEX (
+    fecha_siniestro
+    , fecha_registro
+    , siniestro_id
+    , cobertura_general_desc
+    , cobertura_desc
+)ON COMMIT PRESERVE ROWS;
 
 CREATE MULTISET VOLATILE TABLE base_bruto AS (
     WITH consolidado AS (

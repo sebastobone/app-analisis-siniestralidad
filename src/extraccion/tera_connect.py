@@ -307,10 +307,9 @@ async def verificar_resultado_siniestros_primas_expuestos(
 ) -> None:
     cols = df.collect_schema().names()
 
-    for column in utils.min_cols_tera(tipo_query):
+    for column in utils.columnas_minimas_salida_tera(negocio, tipo_query):
         if column not in cols:
-            logger.error(f"""¡Falta la columna {column}!""")
-            raise ValueError
+            raise ValueError(f"¡Falta la columna {column}!")
 
     await verificar_formato_fecha(df.get_column("fecha_registro"))
     await verificar_fechas_dentro_de_rangos(

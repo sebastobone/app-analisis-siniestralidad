@@ -50,43 +50,23 @@ def date_to_yyyymm_pl(column: pl.Expr, grain: str = "Mensual") -> pl.Expr:
     ).cast(pl.Int32)
 
 
-def min_cols_tera(tipo_query: str) -> list[str]:
-    """Define las columnas minimas que tienen que salir de un query
-    que consolida la informacion de primas, siniestros, o expuestos.
-    """
+def columnas_minimas_salida_tera(
+    negocio: str, tipo_query: Literal["siniestros", "primas", "expuestos"]
+) -> list[str]:
     if tipo_query == "siniestros":
-        return [
-            "codigo_op",
-            "codigo_ramo_op",
+        columnas_descriptoras_adicionales = [
             "atipico",
             "fecha_siniestro",
             "fecha_registro",
-            "conteo_pago",
-            "conteo_incurrido",
-            "conteo_desistido",
-            "pago_bruto",
-            "pago_retenido",
-            "aviso_bruto",
-            "aviso_retenido",
         ]
-    elif tipo_query == "primas":
-        return [
-            "codigo_op",
-            "codigo_ramo_op",
-            "fecha_registro",
-            "prima_bruta",
-            "prima_bruta_devengada",
-            "prima_retenida",
-            "prima_retenida_devengada",
-        ]
+    else:
+        columnas_descriptoras_adicionales = ["fecha_registro"]
 
-    return [
-        "codigo_op",
-        "codigo_ramo_op",
-        "fecha_registro",
-        "expuestos",
-        "vigentes",
-    ]
+    return (
+        obtener_nombres_aperturas(negocio, tipo_query)
+        + columnas_descriptoras_adicionales
+        + ct.COLUMNAS_VALORES_TERADATA[tipo_query]
+    )
 
 
 def obtener_dimensiones_triangulo(sheet: xw.Sheet) -> RangeDimension:

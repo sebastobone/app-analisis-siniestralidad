@@ -64,7 +64,9 @@ def calcular_pesos_aperturas(
 ) -> pl.DataFrame:
     columnas_aperturas = utils.obtener_nombres_aperturas(negocio, file)
     columnas_cantidades = (
-        ct.COLUMNAS_SINIESTROS_CUADRE if file == "siniestros" else ct.COLUMNAS_PRIMAS
+        ct.COLUMNAS_SINIESTROS_CUADRE
+        if file == "siniestros"
+        else ct.COLUMNAS_VALORES_TERADATA["primas"]
     )
     return (
         base.join(aperturas, on=columnas_aperturas)
@@ -86,7 +88,9 @@ def repartir_diferencias(
     file: ct.LISTA_QUERIES_CUADRE,
 ) -> pl.DataFrame:
     columnas_cantidades = (
-        ct.COLUMNAS_SINIESTROS_CUADRE if file == "siniestros" else ct.COLUMNAS_PRIMAS
+        ct.COLUMNAS_SINIESTROS_CUADRE
+        if file == "siniestros"
+        else ct.COLUMNAS_VALORES_TERADATA["primas"]
     )
     return (
         dif_sap_vs_tera.lazy()

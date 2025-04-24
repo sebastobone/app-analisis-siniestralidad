@@ -1,4 +1,4 @@
-CREATE MULTISET VOLATILE TABLE base_pago_bruto AS (
+CREATE MULTISET VOLATILE TABLE base_movimientos_bruto AS (
     SELECT
         sini.fecha_siniestro
         , esc.fecha_registro
@@ -19,7 +19,8 @@ CREATE MULTISET VOLATILE TABLE base_pago_bruto AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC'
@@ -42,14 +43,29 @@ CREATE MULTISET VOLATILE TABLE base_pago_bruto AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC NO PJ'
             ELSE 'PARCIALES_RESTO'
         END AS cobertura_desc
-        , SUM(esc.valor_siniestro * esc.valor_tasa) AS pago_bruto
-        , SUM(CAST(0 AS FLOAT)) AS aviso_bruto
+        , SUM(
+            CASE
+                WHEN
+                    esc.tipo_oper_siniestro_cd <> '130'
+                    THEN esc.valor_siniestro * esc.valor_tasa
+                ELSE 0
+            END
+        ) AS pago_bruto
+        , SUM(
+            CASE
+                WHEN
+                    esc.tipo_oper_siniestro_cd = '130' AND esc.mes_id >= 201901
+                    THEN esc.valor_siniestro * esc.valor_tasa
+                ELSE 0
+            END
+        ) AS aviso_bruto
 
     FROM mdb_seguros_colombia.v_evento_siniestro_cobertura AS esc
     LEFT JOIN mdb_seguros_colombia.v_plan_individual AS pind
@@ -73,10 +89,9 @@ CREATE MULTISET VOLATILE TABLE base_pago_bruto AS (
         esc.ramo_id = 168
         AND pro.compania_id = 4
         AND esc.mes_id <= CAST('{mes_corte}' AS INTEGER)
-        AND esc.tipo_oper_siniestro_cd <> '130'
 
     GROUP BY 1, 2, 3, 4, 5
-    HAVING pago_bruto <> 0
+    HAVING pago_bruto <> 0 OR aviso_bruto <> 0
 
 ) WITH DATA PRIMARY INDEX (
     fecha_siniestro
@@ -88,7 +103,7 @@ CREATE MULTISET VOLATILE TABLE base_pago_bruto AS (
 
 
 
-CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
+CREATE MULTISET VOLATILE TABLE base_aviso_bruto_saldos AS (
     WITH saldos AS (
         SELECT
             sini.fecha_siniestro
@@ -109,7 +124,8 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
                 WHEN
                     fas.clase_tarifa_cd IN (3, 4, 5, 6)
                     THEN 'MOTOS RESTO'
-                WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+                WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                    THEN 'TOTALES'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                     THEN 'RC'
@@ -131,7 +147,8 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
                 WHEN
                     fas.clase_tarifa_cd IN (3, 4, 5, 6)
                     THEN 'MOTOS RESTO'
-                WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+                WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                    THEN 'TOTALES'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                     THEN 'RC NO PJ'
@@ -160,7 +177,7 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
         WHERE
             esc.ramo_id = 168
             AND pro.compania_id = 4
-            AND esc.mes_id <= CAST('{mes_corte}' AS INTEGER)
+            AND esc.mes_id < 201901
 
         GROUP BY 1, 2, 3, 4, 5
         HAVING saldo_aviso_bruto <> 0
@@ -182,7 +199,7 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
             mes_id
             , MAX(dia_dt) AS ultimo_dia_mes
         FROM mdb_seguros_colombia.v_dia
-        WHERE mes_id <= CAST('{mes_corte}' AS INTEGER)
+        WHERE mes_id < 201901
         GROUP BY 1
     )
 
@@ -265,9 +282,9 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
 
 CREATE MULTISET VOLATILE TABLE base_bruto AS (
     WITH consolidado AS (
-        SELECT * FROM base_pago_bruto
+        SELECT * FROM base_movimientos_bruto
         UNION ALL
-        SELECT * FROM base_aviso_bruto
+        SELECT * FROM base_aviso_bruto_saldos
     )
 
     SELECT
@@ -312,7 +329,8 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN ersc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN ersc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 ersc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC'
@@ -334,7 +352,8 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN ersc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN ersc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 ersc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC NO PJ'
@@ -432,7 +451,6 @@ CREATE MULTISET VOLATILE TABLE base_ced_y_bruto AS
 
 
 
-
 CREATE MULTISET VOLATILE TABLE atipicos AS (
     SELECT
         atip.cobertura_desc
@@ -460,7 +478,8 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
                 WHEN
                     fas.clase_tarifa_cd IN (3, 4, 5, 6)
                     THEN 'MOTOS RESTO'
-                WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+                WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                    THEN 'TOTALES'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                     THEN 'RC'
@@ -482,7 +501,8 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
                 WHEN
                     fas.clase_tarifa_cd IN (3, 4, 5, 6)
                     THEN 'MOTOS RESTO'
-                WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+                WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                    THEN 'TOTALES'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                     THEN 'RC NO PJ'
@@ -517,6 +537,7 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
         HAVING total >= 800000000
     ) AS atip
 ) WITH DATA PRIMARY INDEX (siniestro_id) ON COMMIT PRESERVE ROWS;
+
 
 
 CREATE MULTISET VOLATILE TABLE base_incurrido AS (

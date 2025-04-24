@@ -19,7 +19,8 @@ CREATE MULTISET VOLATILE TABLE base_pago_bruto AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC'
@@ -42,7 +43,8 @@ CREATE MULTISET VOLATILE TABLE base_pago_bruto AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC NO PJ'
@@ -109,7 +111,8 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto_saldos AS (
                 WHEN
                     fas.clase_tarifa_cd IN (3, 4, 5, 6)
                     THEN 'MOTOS RESTO'
-                WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+                WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                    THEN 'TOTALES'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                     THEN 'RC'
@@ -131,7 +134,8 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto_saldos AS (
                 WHEN
                     fas.clase_tarifa_cd IN (3, 4, 5, 6)
                     THEN 'MOTOS RESTO'
-                WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+                WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                    THEN 'TOTALES'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                     THEN 'RC NO PJ'
@@ -284,7 +288,8 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto_movimientos AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC'
@@ -307,7 +312,8 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto_movimientos AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC NO PJ'
@@ -434,7 +440,8 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN ersc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN ersc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 ersc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC'
@@ -456,7 +463,8 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
             WHEN
                 fas.clase_tarifa_cd IN (3, 4, 5, 6)
                 THEN 'MOTOS RESTO'
-            WHEN ersc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+            WHEN ersc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                THEN 'TOTALES'
             WHEN
                 ersc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC NO PJ'
@@ -582,7 +590,8 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
                 WHEN
                     fas.clase_tarifa_cd IN (3, 4, 5, 6)
                     THEN 'MOTOS RESTO'
-                WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+                WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                    THEN 'TOTALES'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                     THEN 'RC'
@@ -604,7 +613,8 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
                 WHEN
                     fas.clase_tarifa_cd IN (3, 4, 5, 6)
                     THEN 'MOTOS RESTO'
-                WHEN esc.articulo_id IN (79, 190, 163, 249) THEN 'TOTALES'
+                WHEN esc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
+                    THEN 'TOTALES'
                 WHEN
                     esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                     THEN 'RC NO PJ'

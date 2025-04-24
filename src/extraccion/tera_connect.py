@@ -40,10 +40,7 @@ async def correr_query(
         df = await eliminar_columnas_extra(df, p.negocio, tipo_query)
 
         if tipo_query == "siniestros":
-            df = df.select(
-                utils.crear_columna_apertura_reservas(p.negocio),
-                pl.all(),
-            )
+            df = df.select(utils.crear_columna_apertura_reservas(p.negocio), pl.all())
             aperturas_generadas = sorted(
                 df.get_column("apertura_reservas").unique().to_list()
             )
@@ -74,16 +71,11 @@ def determinar_tipo_query(
 async def obtener_segmentaciones(
     path_archivo_segm: str, tipo_query: str
 ) -> list[pl.DataFrame]:
-    try:
-        hojas_segm = [
-            str(hoja)
-            for hoja in pd.ExcelFile(path_archivo_segm).sheet_names
-            if str(hoja).startswith("add")
-        ]
-    except FileNotFoundError as exc:
-        raise FileNotFoundError(
-            f"No se encuentra el archivo {path_archivo_segm}."
-        ) from exc
+    hojas_segm = [
+        str(hoja)
+        for hoja in pd.ExcelFile(path_archivo_segm).sheet_names
+        if str(hoja).startswith("add")
+    ]
 
     if hojas_segm:
         await verificar_nombre_hojas_segmentacion(hojas_segm)
@@ -171,12 +163,7 @@ def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
         "user": configuracion.teradata_user,
         "password": configuracion.teradata_password,
     }
-
-    try:
-        con = td.connect(**creds)  # type: ignore
-    except td.OperationalError:
-        raise
-
+    con = td.connect(**creds)  # type: ignore
     return con, con.cursor()  # type: ignore
 
 
@@ -360,6 +347,7 @@ async def eliminar_columnas_extra(
         df.select(columnas_necesarias)
         .group_by(columnas_descriptoras)
         .agg([pl.sum(col) for col in columnas_valores])
+        .sort(columnas_descriptoras)
     )
 
 

@@ -7,6 +7,7 @@ import pandas as pd
 import polars as pl
 import teradatasql as td
 
+from src import constantes as ct
 from src import utils
 from src.configuracion import configuracion
 from src.logger_config import logger
@@ -34,6 +35,9 @@ async def correr_query(
         await verificar_resultado_siniestros_primas_expuestos(
             tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte
         )
+
+        df.write_csv(f"data/raw/{tipo_query}_teradata.csv", separator="\t")
+        df = await eliminar_columnas_extra(df, p.negocio, tipo_query)
 
         if tipo_query == "siniestros":
             df = df.select(
@@ -340,6 +344,23 @@ async def verificar_resultado_siniestros_primas_expuestos(
             ¡Alerta! Revise las segmentaciones faltantes. {segmentaciones_faltantes}
             """
         )
+
+
+async def eliminar_columnas_extra(
+    df: pl.DataFrame,
+    negocio: str,
+    tipo_query: Literal["siniestros", "primas", "expuestos"],
+) -> pl.DataFrame:
+    columnas_necesarias = utils.columnas_minimas_salida_tera(negocio, tipo_query)
+    columnas_valores = ct.COLUMNAS_VALORES_TERADATA[tipo_query]
+    columnas_descriptoras = [
+        col for col in columnas_necesarias if col not in columnas_valores
+    ]
+    return (
+        df.select(columnas_necesarias)
+        .group_by(columnas_descriptoras)
+        .agg([pl.sum(col) for col in columnas_valores])
+    )
 
 
 async def verificar_aperturas_faltantes(

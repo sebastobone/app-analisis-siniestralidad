@@ -182,7 +182,7 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto_saldos AS (
             mes_id
             , MAX(dia_dt) AS ultimo_dia_mes
         FROM mdb_seguros_colombia.v_dia
-        WHERE mes_id <= CAST('{mes_corte}' AS INTEGER)
+        WHERE mes_id < 201901
         GROUP BY 1
     )
 
@@ -265,8 +265,8 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto_saldos AS (
 
 CREATE MULTISET VOLATILE TABLE base_aviso_bruto_movimientos AS (
     SELECT
-        LAST_DAY(sini.fecha_siniestro) AS fecha_siniestro
-        , LAST_DAY(esc.fecha_registro) AS fecha_registro
+        sini.fecha_siniestro
+        , esc.fecha_registro
         , esc.siniestro_id
         , CASE
             WHEN esc.reserva_id = 18635 THEN 'PARCIALES'
@@ -314,8 +314,7 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto_movimientos AS (
             ELSE 'PARCIALES_RESTO'
         END AS cobertura_desc
         , CAST(0 AS FLOAT) AS pago_bruto
-        , SUM( esc.valor_siniestro * esc.valor_tasa
-        ) AS aviso_bruto
+        , SUM(esc.valor_siniestro * esc.valor_tasa) AS aviso_bruto
 
     FROM mdb_seguros_colombia.v_evento_siniestro_cobertura AS esc
     LEFT JOIN mdb_seguros_colombia.v_plan_individual AS pind
@@ -343,32 +342,48 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto_movimientos AS (
         esc.ramo_id = 168
         AND pro.compania_id = 4
         AND esc.mes_id BETWEEN 201901 AND CAST('{mes_corte}' AS INTEGER)
-    AND esc.tipo_oper_siniestro_cd = '130'
+        AND esc.tipo_oper_siniestro_cd = '130'
 
     GROUP BY 1, 2, 3, 4, 5, 6
-    HAVING NOT (aviso_bruto = 0)
-)
-WITH DATA PRIMARY INDEX
-(
+    HAVING aviso_bruto <> 0
+
+) WITH DATA PRIMARY INDEX (
     fecha_siniestro
     , fecha_registro
-    , codigo_ramo_op
     , siniestro_id
     , cobertura_general_desc
     , cobertura_desc
 ) ON COMMIT PRESERVE ROWS;
 
+
+
 CREATE MULTISET VOLATILE TABLE base_aviso_bruto AS (
-    SELECT * FROM base_aviso_bruto_saldos
-    UNION ALL
-    SELECT * FROM base_aviso_bruto_movimientos
-)WITH DATA PRIMARY INDEX (
+    WITH base AS (
+        SELECT * FROM base_aviso_bruto_saldos
+        UNION ALL
+        SELECT * FROM base_aviso_bruto_movimientos
+    )
+
+    SELECT
+        fecha_siniestro
+        , fecha_registro
+        , siniestro_id
+        , cobertura_general_desc
+        , cobertura_desc
+        , SUM(pago_bruto) AS pago_bruto
+        , SUM(aviso_bruto) AS aviso_bruto
+    FROM base
+    GROUP BY 1, 2, 3, 4, 5
+
+) WITH DATA PRIMARY INDEX (
     fecha_siniestro
     , fecha_registro
     , siniestro_id
     , cobertura_general_desc
     , cobertura_desc
-)ON COMMIT PRESERVE ROWS;
+) ON COMMIT PRESERVE ROWS;
+
+
 
 CREATE MULTISET VOLATILE TABLE base_bruto AS (
     WITH consolidado AS (

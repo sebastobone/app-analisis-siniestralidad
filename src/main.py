@@ -118,7 +118,7 @@ async def generar_controles(p: Parametros) -> None:
 
 
 def generar_bases_plantilla(p: Parametros) -> None:
-    base_triangulos, base_ult_ocurr, base_atipicos = bsin.generar_bases_siniestros(
+    base_triangulos, base_ult_ocurr = bsin.generar_bases_siniestros(
         pl.scan_parquet("data/raw/siniestros.parquet"),
         p.tipo_analisis,
         utils.yyyymm_to_date(p.mes_inicio),
@@ -127,7 +127,6 @@ def generar_bases_plantilla(p: Parametros) -> None:
 
     base_triangulos.write_parquet("data/processed/base_triangulos.parquet")
     base_ult_ocurr.write_parquet("data/processed/base_ultima_ocurrencia.parquet")
-    base_atipicos.write_parquet("data/processed/base_atipicos.parquet")
 
     bpdn.generar_base_primas_expuestos(
         pl.scan_parquet("data/raw/primas.parquet"), "primas", p.negocio

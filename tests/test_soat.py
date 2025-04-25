@@ -73,9 +73,11 @@ async def test_info_soat(client: TestClient):
 
     df_primas_post_cuadre = pl.read_parquet("data/raw/primas.parquet")
 
-    sap_primas = (await consolidar_sap("soat", ct.COLUMNAS_PRIMAS, p.mes_corte)).filter(
-        pl.col("codigo_ramo_op") == "041"
-    )
+    sap_primas = (
+        await consolidar_sap(
+            "soat", ct.COLUMNAS_VALORES_TERADATA["primas"], p.mes_corte
+        )
+    ).filter(pl.col("codigo_ramo_op") == "041")
 
     for col in ["prima_bruta", "prima_retenida", "prima_retenida_devengada"]:
         assert_igual(

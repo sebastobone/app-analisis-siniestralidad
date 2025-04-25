@@ -7,6 +7,7 @@ import pandas as pd
 import polars as pl
 import teradatasql as td
 
+from src import constantes as ct
 from src import utils
 from src.configuracion import configuracion
 from src.logger_config import logger
@@ -35,11 +36,11 @@ async def correr_query(
             tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte
         )
 
+        df.write_csv(f"data/raw/{tipo_query}_teradata.csv", separator="\t")
+        df = await eliminar_columnas_extra(df, p.negocio, tipo_query)
+
         if tipo_query == "siniestros":
-            df = df.select(
-                utils.crear_columna_apertura_reservas(p.negocio),
-                pl.all(),
-            )
+            df = df.select(utils.crear_columna_apertura_reservas(p.negocio), pl.all())
             aperturas_generadas = sorted(
                 df.get_column("apertura_reservas").unique().to_list()
             )
@@ -70,16 +71,11 @@ def determinar_tipo_query(
 async def obtener_segmentaciones(
     path_archivo_segm: str, tipo_query: str
 ) -> list[pl.DataFrame]:
-    try:
-        hojas_segm = [
-            str(hoja)
-            for hoja in pd.ExcelFile(path_archivo_segm).sheet_names
-            if str(hoja).startswith("add")
-        ]
-    except FileNotFoundError as exc:
-        raise FileNotFoundError(
-            f"No se encuentra el archivo {path_archivo_segm}."
-        ) from exc
+    hojas_segm = [
+        str(hoja)
+        for hoja in pd.ExcelFile(path_archivo_segm).sheet_names
+        if str(hoja).startswith("add")
+    ]
 
     if hojas_segm:
         await verificar_nombre_hojas_segmentacion(hojas_segm)
@@ -167,12 +163,7 @@ def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
         "user": configuracion.teradata_user,
         "password": configuracion.teradata_password,
     }
-
-    try:
-        con = td.connect(**creds)  # type: ignore
-    except td.OperationalError:
-        raise
-
+    con = td.connect(**creds)  # type: ignore
     return con, con.cursor()  # type: ignore
 
 
@@ -307,10 +298,9 @@ async def verificar_resultado_siniestros_primas_expuestos(
 ) -> None:
     cols = df.collect_schema().names()
 
-    for column in utils.min_cols_tera(tipo_query):
+    for column in utils.columnas_minimas_salida_tera(negocio, tipo_query):
         if column not in cols:
-            logger.error(f"""¡Falta la columna {column}!""")
-            raise ValueError
+            raise ValueError(f"¡Falta la columna {column}!")
 
     await verificar_formato_fecha(df.get_column("fecha_registro"))
     await verificar_fechas_dentro_de_rangos(
@@ -341,6 +331,24 @@ async def verificar_resultado_siniestros_primas_expuestos(
             ¡Alerta! Revise las segmentaciones faltantes. {segmentaciones_faltantes}
             """
         )
+
+
+async def eliminar_columnas_extra(
+    df: pl.DataFrame,
+    negocio: str,
+    tipo_query: Literal["siniestros", "primas", "expuestos"],
+) -> pl.DataFrame:
+    columnas_necesarias = utils.columnas_minimas_salida_tera(negocio, tipo_query)
+    columnas_valores = ct.COLUMNAS_VALORES_TERADATA[tipo_query]
+    columnas_descriptoras = [
+        col for col in columnas_necesarias if col not in columnas_valores
+    ]
+    return (
+        df.select(columnas_necesarias)
+        .group_by(columnas_descriptoras)
+        .agg([pl.sum(col) for col in columnas_valores])
+        .sort(columnas_descriptoras)
+    )
 
 
 async def verificar_aperturas_faltantes(

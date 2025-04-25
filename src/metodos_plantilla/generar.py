@@ -88,12 +88,14 @@ def crear_triangulo_base_plantilla(
     cantidades: list[str],
 ) -> pd.DataFrame:
     return (
-        base_triangulos.filter(pl.col("apertura_reservas") == apertura)
+        base_triangulos.filter(
+            (pl.col("apertura_reservas") == apertura) & (pl.col("atipico") == 0)
+        )
         .join(
             aperturas.select(["apertura_reservas", "periodicidad_ocurrencia"]).lazy(),
             on=["apertura_reservas", "periodicidad_ocurrencia"],
         )
-        .drop(["diagonal", "periodo_desarrollo"])
+        .drop(["atipico", "diagonal", "periodo_desarrollo"])
         .unpivot(
             index=[
                 "apertura_reservas",

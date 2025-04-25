@@ -9,10 +9,8 @@ from src.procesamiento import base_siniestros as base
 from tests.conftest import assert_igual
 
 
-def plata_original(
-    df_siniestros: pl.LazyFrame,
-    rango_meses: tuple[date, date],
-    atipicos: Literal[1, 0],
+def filtrar_fechas(
+    df_siniestros: pl.LazyFrame, rango_meses: tuple[date, date]
 ) -> pl.DataFrame:
     return (
         df_siniestros.with_columns(
@@ -21,7 +19,6 @@ def plata_original(
         .filter(
             (pl.col("fecha_siniestro").is_between(*rango_meses))
             & (pl.col("fecha_registro").is_between(*rango_meses))
-            & (pl.col("atipico") == atipicos)
         )
         .collect()
     )
@@ -79,7 +76,7 @@ def test_analisis_triangulos(
     rango_meses: tuple[date, date],
 ):
     mock_siniestros = utils.generar_mock_siniestros(rango_meses)
-    base_triangulos, _, base_atipicos = base.generar_bases_siniestros(
+    base_triangulos, _ = base.generar_bases_siniestros(
         mock_siniestros.lazy(), "triangulos", *rango_meses
     )
 
@@ -101,23 +98,12 @@ def test_analisis_triangulos(
     assert col_dllo.min() == utils.date_to_yyyymm(mes_inicio, periodicidad_ocurrencia)
     assert col_dllo.max() == utils.date_to_yyyymm(mes_corte_tipicos)
 
-    plata_original_tipicos = plata_original(
-        mock_siniestros.lazy(), (mes_inicio, mes_corte_tipicos), 0
+    plata_original = filtrar_fechas(
+        mock_siniestros.lazy(), (mes_inicio, mes_corte_tipicos)
     )
-    plata_procesada_tipicos = base_triangulos.filter(pl.col("diagonal") == 1)
+    plata_procesada = base_triangulos.filter(pl.col("diagonal") == 1)
 
-    assert_igual(plata_procesada_tipicos, plata_original_tipicos, "pago_bruto")
-
-    col_ocurr_at = base_atipicos.get_column("periodo_ocurrencia")
-
-    # Puede que no hayan llegado atipicos todos los meses,
-    # entonces no se exige igualdad
-    assert col_ocurr_at.min() >= utils.date_to_yyyymm(rango_meses[0])  # type: ignore
-    assert col_ocurr_at.max() <= utils.date_to_yyyymm(rango_meses[1])  # type: ignore
-
-    plata_original_atipicos = plata_original(mock_siniestros.lazy(), rango_meses, 1)
-
-    assert_igual(base_atipicos, plata_original_atipicos, "pago_bruto")
+    assert_igual(plata_procesada, plata_original, "pago_bruto")
 
 
 @pytest.mark.unit
@@ -130,7 +116,7 @@ def test_analisis_entremes(
     rango_meses: tuple[date, date],
 ):
     mock_siniestros = utils.generar_mock_siniestros(rango_meses)
-    base_triangulos, base_ult_ocurr, base_atipicos = base.generar_bases_siniestros(
+    base_triangulos, base_ult_ocurr = base.generar_bases_siniestros(
         mock_siniestros.lazy(), "entremes", *rango_meses
     )
 
@@ -149,11 +135,10 @@ def test_analisis_entremes(
     assert col_dllo.min() == utils.date_to_yyyymm(mes_inicio)
     assert col_dllo.max() == utils.date_to_yyyymm(mes_corte)
 
-    plata_original_tipicos = plata_original(mock_siniestros.lazy(), rango_meses, 0)
+    plata_original = filtrar_fechas(mock_siniestros.lazy(), rango_meses)
+    plata_procesada = base_triangulos.filter(pl.col("diagonal") == 1)
 
-    plata_procesada_tipicos = base_triangulos.filter(pl.col("diagonal") == 1)
-
-    assert_igual(plata_procesada_tipicos, plata_original_tipicos, "pago_bruto")
+    assert_igual(plata_procesada, plata_original, "pago_bruto")
 
     base_ult_ocurr = base_ult_ocurr.filter(
         pl.col("periodicidad_triangulo") == periodicidad_ocurrencia
@@ -165,18 +150,8 @@ def test_analisis_entremes(
     assert col_ocurr_ult.min() == utils.date_to_yyyymm(prim_ocurr)
     assert col_ocurr_ult.max() == utils.date_to_yyyymm(mes_corte)
 
-    plata_original_ult_ocurr = plata_original(
-        mock_siniestros.lazy(), (prim_ocurr, mes_corte), 0
+    plata_original_ult_ocurr = filtrar_fechas(
+        mock_siniestros.lazy(), (prim_ocurr, mes_corte)
     )
 
     assert_igual(base_ult_ocurr, plata_original_ult_ocurr, "pago_bruto")
-
-    # Puede que no hayan llegado atipicos todos los meses,
-    # entonces no se exige igualdad
-    col_ocurr_at = base_atipicos.get_column("periodo_ocurrencia")
-    assert col_ocurr_at.min() >= utils.date_to_yyyymm(mes_inicio)  # type: ignore
-    assert col_ocurr_at.max() <= utils.date_to_yyyymm(mes_corte)  # type: ignore
-
-    plata_original_atipicos = plata_original(mock_siniestros.lazy(), rango_meses, 1)
-
-    assert_igual(base_atipicos, plata_original_atipicos, "pago_bruto")

@@ -28,8 +28,7 @@ CREATE MULTISET VOLATILE TABLE base_expuestos AS
             WHEN
                 vpc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
                 THEN 'RC'
-            WHEN vpc.articulo_id IN (79, 97, 102, 163, 190, 249, 370)
-                THEN 'TOTALES'
+            WHEN vpc.articulo_id IN (79, 97, 102, 249, 370) THEN 'TOTALES'
             ELSE 'PARCIALES'
         END AS cobertura_general_desc
         , pc.fecha_cancelacion

@@ -31,6 +31,24 @@ NOMBRE_MES = {
     )
 }
 
+COLUMNAS_VALORES_TERADATA = {
+    "siniestros": [
+        "conteo_pago",
+        "conteo_incurrido",
+        "conteo_desistido",
+        "pago_bruto",
+        "pago_retenido",
+        "aviso_bruto",
+        "aviso_retenido",
+    ],
+    "primas": [
+        "prima_bruta",
+        "prima_bruta_devengada",
+        "prima_retenida",
+        "prima_retenida_devengada",
+    ],
+    "expuestos": ["expuestos", "vigentes"],
+}
 
 COLUMNAS_QTYS = [
     "pago_bruto",
@@ -47,13 +65,6 @@ COLUMNAS_SINIESTROS_CUADRE = [
     "aviso_bruto",
     "pago_retenido",
     "aviso_retenido",
-]
-
-COLUMNAS_PRIMAS = [
-    "prima_bruta",
-    "prima_bruta_devengada",
-    "prima_retenida",
-    "prima_retenida_devengada",
 ]
 
 COLUMNAS_ULTIMATE = [

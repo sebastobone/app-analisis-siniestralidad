@@ -10,7 +10,7 @@ from src import utils
 
 def preparar_base_siniestros(
     df: pl.LazyFrame, mes_inicio: date, mes_corte: date
-) -> tuple[pl.LazyFrame, pl.LazyFrame]:
+) -> pl.LazyFrame:
     df_sinis = df.with_columns(
         pl.col("fecha_siniestro").clip(upper_bound=pl.col("fecha_registro"))
     )
@@ -28,9 +28,6 @@ def preparar_base_siniestros(
         + ct.COLUMNAS_QTYS
     )
 
-    df_sinis_tipicos = df_sinis.filter(pl.col("atipico") == 0).drop("atipico")
-    df_sinis_atipicos = df_sinis.filter(pl.col("atipico") == 1).drop("atipico")
-
     bases_fechas = []
     for tipo_fecha in ["fecha_siniestro", "fecha_registro"]:
         bases_fechas.append(
@@ -42,21 +39,21 @@ def preparar_base_siniestros(
         )
 
     base = (
-        df_sinis_tipicos.select("apertura_reservas")
+        df_sinis.select(["apertura_reservas", "atipico"])
         .unique()
         .join(bases_fechas[0], how="cross")
         .join(bases_fechas[1], how="cross")
         .filter(pl.col("fecha_siniestro") <= pl.col("fecha_registro"))
     )
 
-    df_sinis_tipicos = df_sinis_tipicos.join(
+    df_sinis = df_sinis.join(
         base,
-        on=["apertura_reservas", "fecha_siniestro", "fecha_registro"],
+        on=["apertura_reservas", "atipico", "fecha_siniestro", "fecha_registro"],
         how="full",
         coalesce=True,
     ).fill_null(0)
 
-    return df_sinis_tipicos, df_sinis_atipicos
+    return df_sinis
 
 
 def mes_ult_ocurr_triangulos(
@@ -90,7 +87,7 @@ def construir_triangulos(
     mes_corte: date,
     tipo_analisis: Literal["triangulos", "entremes"],
 ) -> pl.LazyFrame:
-    df_tri = (
+    return (
         df_tri.filter(
             pl.col("fecha_registro")
             <= (
@@ -108,19 +105,23 @@ def construir_triangulos(
             ),
         )
         .drop(["fecha_siniestro", "fecha_registro"])
-        .group_by(["apertura_reservas", "periodo_ocurrencia", "periodo_desarrollo"])
+        .group_by(
+            ["apertura_reservas", "atipico", "periodo_ocurrencia", "periodo_desarrollo"]
+        )
         .sum()
-        .sort(["apertura_reservas", "periodo_ocurrencia", "periodo_desarrollo"])
+        .sort(
+            ["apertura_reservas", "atipico", "periodo_ocurrencia", "periodo_desarrollo"]
+        )
         .with_columns(
             [
                 pl.col(qty_column)
                 .cum_sum()
-                .over(["apertura_reservas", "periodo_ocurrencia"])
+                .over(["apertura_reservas", "atipico", "periodo_ocurrencia"])
                 for qty_column in ct.COLUMNAS_QTYS
             ],
             index_desarrollo=pl.col("periodo_desarrollo")
             .cum_count()
-            .over(["apertura_reservas", "periodo_ocurrencia"]),
+            .over(["apertura_reservas", "atipico", "periodo_ocurrencia"]),
             periodicidad_ocurrencia=pl.lit(origin_grain),
             periodicidad_desarrollo=pl.lit(development_grain),
         )
@@ -132,6 +133,7 @@ def construir_triangulos(
                 .over(
                     [
                         "apertura_reservas",
+                        "atipico",
                         "periodo_ocurrencia",
                         "periodicidad_desarrollo",
                     ]
@@ -143,6 +145,7 @@ def construir_triangulos(
         .select(
             [
                 "apertura_reservas",
+                "atipico",
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
                 "periodicidad_desarrollo",
@@ -154,25 +157,17 @@ def construir_triangulos(
         )
     )
 
-    return df_tri
 
-
-def construir_diagonales_triangulo(
+def construir_base_ultima_ocurrencia(
     df_tri: pl.LazyFrame,
     origin_grain: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
-    mes_inicio: date,
     mes_corte: date,
-    base_output: Literal["atipicos", "ultima_ocurrencia"],
 ) -> pl.LazyFrame:
-    df_diagonales = (
+    return (
         df_tri.filter(
             (
                 pl.col("fecha_siniestro")
-                >= (
-                    mes_prim_ocurr_periodo_act(mes_corte, origin_grain)
-                    if base_output == "ultima_ocurrencia"
-                    else mes_inicio
-                )
+                >= mes_prim_ocurr_periodo_act(mes_corte, origin_grain)
             )
             & (pl.col("fecha_registro") <= mes_corte)
         )
@@ -186,26 +181,23 @@ def construir_diagonales_triangulo(
         .group_by(
             [
                 "apertura_reservas",
+                "atipico",
                 "periodicidad_triangulo",
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
             ]
         )
-        .agg([pl.col(qty_column).sum() for qty_column in ct.COLUMNAS_QTYS])
+        .agg([pl.sum(qty_column) for qty_column in ct.COLUMNAS_QTYS])
         .sort(
             [
                 "apertura_reservas",
+                "atipico",
                 "periodicidad_triangulo",
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
             ]
         )
     )
-
-    if base_output == "atipicos":
-        df_diagonales = df_diagonales.drop("periodicidad_triangulo")
-
-    return df_diagonales
 
 
 def generar_bases_siniestros(
@@ -213,35 +205,30 @@ def generar_bases_siniestros(
     tipo_analisis: Literal["triangulos", "entremes"],
     mes_inicio: date,
     mes_corte: date,
-) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
-    df_sinis_tipicos, df_sinis_atipicos = preparar_base_siniestros(
-        df, mes_inicio, mes_corte
-    )
+) -> tuple[pl.DataFrame, pl.DataFrame]:
+    df_sinis = preparar_base_siniestros(df, mes_inicio, mes_corte)
 
     if tipo_analisis == "triangulos":
         base_triangulos = pl.concat(
             [
                 construir_triangulos(
-                    df_sinis_tipicos, "Mensual", "Mensual", mes_corte, tipo_analisis
+                    df_sinis, "Mensual", "Mensual", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos,
-                    "Trimestral",
-                    "Trimestral",
-                    mes_corte,
-                    tipo_analisis,
+                    df_sinis, "Trimestral", "Trimestral", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos, "Semestral", "Semestral", mes_corte, tipo_analisis
+                    df_sinis, "Semestral", "Semestral", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos, "Anual", "Anual", mes_corte, tipo_analisis
+                    df_sinis, "Anual", "Anual", mes_corte, tipo_analisis
                 ),
             ]
         ).collect()
         base_ult_ocurr = pl.DataFrame(
             schema=[
                 "apertura_reservas",
+                "atipico",
                 "periodicidad_triangulo",
                 "periodicidad_ocurrencia",
                 "periodo_ocurrencia",
@@ -252,54 +239,26 @@ def generar_bases_siniestros(
         base_triangulos = pl.concat(
             [
                 construir_triangulos(
-                    df_sinis_tipicos, "Mensual", "Mensual", mes_corte, tipo_analisis
+                    df_sinis, "Mensual", "Mensual", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos, "Trimestral", "Mensual", mes_corte, tipo_analisis
+                    df_sinis, "Trimestral", "Mensual", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos, "Semestral", "Mensual", mes_corte, tipo_analisis
+                    df_sinis, "Semestral", "Mensual", mes_corte, tipo_analisis
                 ),
                 construir_triangulos(
-                    df_sinis_tipicos, "Anual", "Mensual", mes_corte, tipo_analisis
+                    df_sinis, "Anual", "Mensual", mes_corte, tipo_analisis
                 ),
             ]
         ).collect()
         base_ult_ocurr = pl.concat(
             [
-                construir_diagonales_triangulo(
-                    df_sinis_tipicos,
-                    "Mensual",
-                    mes_inicio,
-                    mes_corte,
-                    "ultima_ocurrencia",
-                ),
-                construir_diagonales_triangulo(
-                    df_sinis_tipicos,
-                    "Trimestral",
-                    mes_inicio,
-                    mes_corte,
-                    "ultima_ocurrencia",
-                ),
-                construir_diagonales_triangulo(
-                    df_sinis_tipicos,
-                    "Semestral",
-                    mes_inicio,
-                    mes_corte,
-                    "ultima_ocurrencia",
-                ),
-                construir_diagonales_triangulo(
-                    df_sinis_tipicos,
-                    "Anual",
-                    mes_inicio,
-                    mes_corte,
-                    "ultima_ocurrencia",
-                ),
+                construir_base_ultima_ocurrencia(df_sinis, "Mensual", mes_corte),
+                construir_base_ultima_ocurrencia(df_sinis, "Trimestral", mes_corte),
+                construir_base_ultima_ocurrencia(df_sinis, "Semestral", mes_corte),
+                construir_base_ultima_ocurrencia(df_sinis, "Anual", mes_corte),
             ]
         ).collect()
 
-    base_atipicos = construir_diagonales_triangulo(
-        df_sinis_atipicos, "Mensual", mes_inicio, mes_corte, "atipicos"
-    ).collect()
-
-    return base_triangulos, base_ult_ocurr, base_atipicos
+    return base_triangulos, base_ult_ocurr

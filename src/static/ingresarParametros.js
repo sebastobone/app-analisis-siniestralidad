@@ -52,8 +52,8 @@ async function generarDropdownPlantillas(tipoAnalisis) {
 }
 
 document
-  .getElementById("ingresarParametros")
-  .addEventListener("submit", async function (event) {
+  .getElementById("guardarParametros")
+  .addEventListener("click", async function (event) {
     event.preventDefault();
 
     const tipoAnalisis = document.getElementById("tipoAnalisis").value;

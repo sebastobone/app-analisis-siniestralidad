@@ -63,26 +63,26 @@
 
         <label for="aproximarReaseguro">Aproximar reaseguro:</label>
         <select id="aproximarReaseguro" name="aproximarReaseguro">
-          <option value="0">No</option>
-          <option value="1">Si</option>
+          <option value="false">No</option>
+          <option value="true">Si</option>
         </select>
 
         <label for="cuadreContableSinis">Cuadrar siniestros contra SAP</label>
         <select id="cuadreContableSinis" name="cuadreContableSinis">
-          <option value="0">No</option>
-          <option value="1">Si</option>
+          <option value="false">No</option>
+          <option value="true">Si</option>
         </select>
 
         <label for="addFraudeSoat">Añadir fraude a siniestros (SOAT)</label>
         <select id="addFraudeSoat" name="addFraudeSoat">
-          <option value="0">No</option>
-          <option value="1">Si</option>
+          <option value="false">No</option>
+          <option value="true">Si</option>
         </select>
 
         <label for="cuadreContablePrimas">Cuadrar primas contra SAP</label>
         <select id="cuadreContablePrimas" name="cuadreContablePrimas">
-          <option value="0">No</option>
-          <option value="1">Si</option>
+          <option value="false">No</option>
+          <option value="true">Si</option>
         </select>
 
         <label for="nombrePlantilla">Nombre de la plantilla:</label>
@@ -94,7 +94,8 @@
           required
         />
 
-        <button type="submit">Guardar parametros</button>
+        <button id="guardarParametros">Guardar parametros</button>
+        <button id="traerParametros">Traer parametros</button>
       </form>
     </div>
 
@@ -174,6 +175,7 @@
 
     <script src="static/logViewer.js"></script>
     <script type="module" src="static/ingresarParametros.js"></script>
+    <script type="module" src="static/traerParametros.js"></script>
     <script src="static/dropdowns/generarAperturas.js"></script>
     <script src="static/dropdowns/generarAtributos.js"></script>
     <script type="module" src="static/apiButtons.js"></script>

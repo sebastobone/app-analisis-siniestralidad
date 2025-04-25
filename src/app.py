@@ -151,6 +151,14 @@ async def ingresar_parametros(
     return parametros
 
 
+@app.get("/traer-parametros")
+@atrapar_excepciones
+async def traer_parametros(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> Parametros:
+    return obtener_parametros_usuario(session, session_id)
+
+
 @app.post("/correr-query-siniestros")
 @atrapar_excepciones
 async def correr_query_siniestros(

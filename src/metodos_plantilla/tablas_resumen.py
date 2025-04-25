@@ -20,7 +20,12 @@ def generar_tablas_resumen(
             on=["apertura_reservas", "periodicidad_ocurrencia"],
         )
         .select(
-            ["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"]
+            [
+                "apertura_reservas",
+                "atipico",
+                "periodicidad_ocurrencia",
+                "periodo_ocurrencia",
+            ]
             + ct.COLUMNAS_QTYS
         )
         .pipe(
@@ -58,12 +63,16 @@ def generar_tablas_resumen(
             .lazy()
         )
 
-    tabla_entremes = diagonales.drop(
-        utils.obtener_nombres_aperturas(negocio, "siniestros")
-    ).collect()
+    tabla_entremes = (
+        diagonales.filter(pl.col("atipico") == 0)
+        .drop(utils.obtener_nombres_aperturas(negocio, "siniestros") + ["atipico"])
+        .collect()
+    )
 
     tabla_resumen = (
-        diagonales.with_columns(
+        diagonales.filter(pl.col("atipico") == 0)
+        .drop("atipico")
+        .with_columns(
             frecuencia_ultimate=0,
             conteo_ultimate=0,
             severidad_ultimate_bruto=0,
@@ -80,10 +89,8 @@ def generar_tablas_resumen(
     )
 
     tabla_atipicos = (
-        insumos["base_atipicos"]
-        .pipe(
-            unificar_tablas, negocio, aperturas, insumos["expuestos"], insumos["primas"]
-        )
+        diagonales.filter(pl.col("atipico") == 1)
+        .drop("atipico")
         .with_columns(
             frecuencia_ultimate=pl.col("conteo_incurrido") / pl.col("expuestos"),
             conteo_ultimate=pl.col("conteo_incurrido"),
@@ -120,7 +127,7 @@ def unificar_tablas(
         df.join(aperturas.drop("periodicidad_ocurrencia"), on="apertura_reservas")
         .select(
             aperturas.collect_schema().names()
-            + ["periodo_ocurrencia"]
+            + ["periodo_ocurrencia", "atipico"]
             + ct.COLUMNAS_QTYS
         )
         .join(

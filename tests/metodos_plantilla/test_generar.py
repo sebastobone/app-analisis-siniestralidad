@@ -31,7 +31,7 @@ def test_forma_triangulo(
     rango_meses: tuple[date, date],
 ):
     mock_siniestros = utils.generar_mock_siniestros(rango_meses)
-    base_triangulos, _, _ = base_siniestros.generar_bases_siniestros(
+    base_triangulos, _ = base_siniestros.generar_bases_siniestros(
         mock_siniestros.lazy(), tipo_analisis, *rango_meses
     )
 

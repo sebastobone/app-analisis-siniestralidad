@@ -45,7 +45,7 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
         "apertura_reservas", "periodicidad_ocurrencia"
     )
 
-    base_tipicos_original = (
+    base_siniestros_original = (
         pl.read_parquet("data/processed/base_triangulos.parquet")
         .filter(pl.col("diagonal") == 1)
         .join(
@@ -54,7 +54,8 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
             how="inner",
         )
     )
-    base_atipicos_original = pl.read_parquet("data/processed/base_atipicos.parquet")
+    base_tipicos_original = base_siniestros_original.filter(pl.col("atipico") == 0)
+    base_atipicos_original = base_siniestros_original.filter(pl.col("atipico") == 1)
 
     base_tipicos_plantilla = utils.sheet_to_dataframe(wb_test, "Resumen")
     base_atipicos_plantilla = utils.sheet_to_dataframe(wb_test, "Atipicos")
@@ -141,7 +142,7 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
         "apertura_reservas", "periodicidad_ocurrencia"
     )
 
-    base_tipicos_original = (
+    base_siniestros_original = (
         pl.read_parquet("data/processed/base_triangulos.parquet")
         .join(
             periodicidades,
@@ -154,7 +155,12 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
             != pl.col("periodo_ocurrencia").max().over("apertura_reservas")
         )
         .select(
-            ["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"]
+            [
+                "apertura_reservas",
+                "atipico",
+                "periodicidad_ocurrencia",
+                "periodo_ocurrencia",
+            ]
             + ct.COLUMNAS_QTYS
         )
         .vstack(
@@ -170,7 +176,8 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
         )
     )
 
-    base_atipicos_original = pl.read_parquet("data/processed/base_atipicos.parquet")
+    base_tipicos_original = base_siniestros_original.filter(pl.col("atipico") == 0)
+    base_atipicos_original = base_siniestros_original.filter(pl.col("atipico") == 1)
 
     base_tipicos_plantilla = utils.sheet_to_dataframe(wb_test, "Resumen")
     base_atipicos_plantilla = utils.sheet_to_dataframe(wb_test, "Atipicos")

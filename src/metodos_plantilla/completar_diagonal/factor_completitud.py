@@ -15,7 +15,10 @@ def calcular_factores_completitud(
             aperturas.select(["apertura_reservas", "periodicidad_ocurrencia"]),
             on=["apertura_reservas", "periodicidad_ocurrencia"],
         )
-        .filter(pl.col("periodicidad_desarrollo") == "Mensual")
+        .filter(
+            (pl.col("periodicidad_desarrollo") == "Mensual") & (pl.col("atipico") == 0)
+        )
+        .drop("atipico")
         .collect()
     )
 

@@ -25,7 +25,6 @@ def preparar_plantilla(wb: xw.Book, p: Parametros) -> None:
         "base_ult_ocurr": pl.scan_parquet(
             "data/processed/base_ultima_ocurrencia.parquet"
         ),
-        "base_atipicos": pl.scan_parquet("data/processed/base_atipicos.parquet"),
         "primas": pl.scan_parquet("data/processed/primas.parquet"),
         "expuestos": pl.scan_parquet("data/processed/expuestos.parquet"),
     }

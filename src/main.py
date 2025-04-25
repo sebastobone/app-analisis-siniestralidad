@@ -1,5 +1,4 @@
 import polars as pl
-from teradatasql import OperationalError
 
 from src import utils
 from src.controles_informacion import generacion as ctrl
@@ -9,59 +8,14 @@ from src.logger_config import logger
 from src.models import Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
 from src.procesamiento import base_siniestros as bsin
-from src.procesamiento.autonomia import adds, siniestros_gen
+from src.procesamiento.autonomia import adds
 
 
 async def correr_query_siniestros(p: Parametros) -> None:
     if p.negocio == "autonomia":
-        try:
-            await adds.sap_sinis_ced(p.mes_corte)
-            await correr_query(
-                "data/queries/autonomia/siniestros.sql",
-                "data/raw/siniestros",
-                "parquet",
-                p,
-            )
-        except OperationalError as exc:
-            if "spool space" in str(exc):
-                logger.warning(
-                    utils.limpiar_espacios_log(
-                        """
-                        Error de spool corriendo el query de siniestros principal. 
-                        Se ejecutara el metodo alternativo.
-                        """
-                    )
-                )
-                await correr_query(
-                    "data/queries/catalogos/planes.sql",
-                    "data/catalogos/planes",
-                    "parquet",
-                    p,
-                )
-                await correr_query(
-                    "data/queries/catalogos/sucursales.sql",
-                    "data/catalogos/sucursales",
-                    "parquet",
-                    p,
-                )
-                await correr_query(
-                    "data/queries/autonomia/siniestros_cedidos.sql",
-                    "data/raw/siniestros_cedidos",
-                    "parquet",
-                    p,
-                )
-                await correr_query(
-                    "data/queries/autonomia/siniestros_brutos.sql",
-                    "data/raw/siniestros_brutos",
-                    "parquet",
-                    p,
-                )
-                await siniestros_gen.main(
-                    p.mes_inicio, p.mes_corte, p.aproximar_reaseguro
-                )
-            else:
-                raise
-    elif p.negocio == "demo":
+        await adds.sap_sinis_ced(p.mes_corte)
+
+    if p.negocio == "demo":
         utils.generar_mock_siniestros(
             (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
         ).write_parquet("data/raw/siniestros.parquet")

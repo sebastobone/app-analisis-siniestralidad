@@ -333,4 +333,6 @@ async def generar_informe_actuario_responsable(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
-    resultados.generar_informe_actuario_responsable(p.negocio, p.mes_corte)
+    resultados.generar_informe_actuario_responsable(
+        p.negocio, p.mes_corte, p.tipo_analisis
+    )

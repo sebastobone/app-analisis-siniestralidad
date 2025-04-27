@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from src import utils
 from src.models import Parametros
 
-from tests.conftest import assert_igual, vaciar_directorio
+from tests.conftest import assert_igual, vaciar_directorios_test
 
 
 def separar_meses_anteriores(
@@ -21,6 +21,8 @@ def separar_meses_anteriores(
 @pytest.mark.teradata
 @pytest.mark.asyncio
 async def test_info_autonomia(client: TestClient) -> None:
+    vaciar_directorios_test()
+
     data = {
         "negocio": "autonomia",
         "mes_inicio": "202401",
@@ -63,5 +65,4 @@ async def test_info_autonomia(client: TestClient) -> None:
         )
         assert_igual(siniestros_ultimo_mes, siniestros_cedidos_sap, col)
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
+    vaciar_directorios_test()

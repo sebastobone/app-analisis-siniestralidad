@@ -8,7 +8,12 @@ from src.logger_config import logger
 
 
 def concatenar_archivos_resultados() -> pl.DataFrame:
-    columnas_distintivas = ["apertura_reservas", "mes_corte", "atipico"]
+    columnas_distintivas = [
+        "apertura_reservas",
+        "mes_corte",
+        "atipico",
+        "tipo_analisis",
+    ]
 
     files = [file for file in os.listdir("output/resultados") if ".parquet" in file]
     sorted_files = sorted(

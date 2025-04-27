@@ -1,4 +1,5 @@
 import os
+from typing import Literal
 
 import polars as pl
 import xlwings as xw
@@ -62,7 +63,9 @@ def actualizar_wb_resultados() -> xw.Book:
     return wb
 
 
-def generar_informe_actuario_responsable(negocio: str, mes_corte: int) -> None:
+def generar_informe_actuario_responsable(
+    negocio: str, mes_corte: int, tipo_analisis: Literal["triangulos", "entremes"]
+) -> None:
     columnas_base = [
         "codigo_op",
         "codigo_ramo_op",
@@ -82,7 +85,12 @@ def generar_informe_actuario_responsable(negocio: str, mes_corte: int) -> None:
     ]
 
     resultados = (
-        concatenar_archivos_resultados().lazy().filter(pl.col("mes_corte") == mes_corte)
+        concatenar_archivos_resultados()
+        .lazy()
+        .filter(
+            (pl.col("mes_corte") == mes_corte)
+            & (pl.col("tipo_analisis") == tipo_analisis)
+        )
     )
 
     siniestros = (
@@ -220,3 +228,6 @@ def generar_informe_actuario_responsable(negocio: str, mes_corte: int) -> None:
     )
 
     base_ar.write_excel(f"output/informe_ar_{negocio}_{mes_corte}.xlsx", worksheet="AR")
+    logger.success(
+        f"Informe AR almacenado en output/informe_ar_{negocio}_{mes_corte}.xlsx."
+    )

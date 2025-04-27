@@ -30,14 +30,14 @@ def concatenar_archivos_resultados() -> pl.DataFrame:
             )
         )
 
-    try:
+    if dfs:
         df_resultados = (
             pl.DataFrame(pl.concat(dfs))
             .unique(subset=columnas_distintivas + ["periodo_ocurrencia"], keep="last")
             .sort(columnas_distintivas + ["periodo_ocurrencia"])
             .with_columns(pl.col("periodo_ocurrencia").cast(pl.Int32))
         )
-    except ValueError:
+    else:
         logger.warning("No se encontraron resultados anteriores.")
         df_resultados = pl.DataFrame()
 

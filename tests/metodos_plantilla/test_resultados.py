@@ -16,7 +16,7 @@ from tests.conftest import (
     agregar_meses_params,
     assert_diferente,
     assert_igual,
-    vaciar_directorio,
+    vaciar_directorios_test,
 )
 
 
@@ -25,7 +25,7 @@ from tests.conftest import (
 def test_actualizar_resultados(
     client: TestClient, client_2: TestClient, rango_meses: tuple[date, date]
 ):
-    vaciar_directorio("output/resultados")
+    vaciar_directorios_test()
 
     apertura = "01_001_A_D"
     atributo = "bruto"
@@ -145,7 +145,4 @@ def test_actualizar_resultados(
     wb_res.close()
     os.remove("output/resultados.xlsx")
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")
-    vaciar_directorio("data/db")
-    vaciar_directorio("output/resultados")
+    vaciar_directorios_test()

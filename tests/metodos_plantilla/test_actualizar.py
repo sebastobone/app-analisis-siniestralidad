@@ -3,10 +3,12 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 from src.metodos_plantilla import abrir, actualizar
-from tests.conftest import agregar_meses_params, vaciar_directorio
+from tests.conftest import agregar_meses_params, vaciar_directorios_test
 
 
 def test_actualizar_sin_generar(client: TestClient, rango_meses: tuple[date, date]):
+    vaciar_directorios_test()
+
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -28,13 +30,14 @@ def test_actualizar_sin_generar(client: TestClient, rango_meses: tuple[date, dat
             data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
         )
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")
+    vaciar_directorios_test()
 
 
 def test_actualizar_diferentes_periodicidades(
     client: TestClient, rango_meses: tuple[date, date]
 ):
+    vaciar_directorios_test()
+
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -61,11 +64,12 @@ def test_actualizar_diferentes_periodicidades(
             data={"apertura": "01_002_A_D", "atributo": "bruto", "plantilla": "plata"},
         )
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")
+    vaciar_directorios_test()
 
 
 def test_actualizar_severidad(client: TestClient, rango_meses: tuple[date, date]):
+    vaciar_directorios_test()
+
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -96,5 +100,4 @@ def test_actualizar_severidad(client: TestClient, rango_meses: tuple[date, date]
     apertura_en_severidad = actualizar.obtener_apertura_actual(wb, "severidad")
     assert apertura_en_frecuencia == apertura_en_severidad
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")
+    vaciar_directorios_test()

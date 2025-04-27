@@ -4,12 +4,14 @@ from datetime import date
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from tests.conftest import agregar_meses_params, vaciar_directorio
+from tests.conftest import agregar_meses_params, vaciar_directorios_test
 
 
 @pytest.mark.plantilla
 @pytest.mark.integration
 def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
+    vaciar_directorios_test()
+
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -55,7 +57,6 @@ def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
             for nombre_rango in rangos
         ]
 
-        vaciar_directorio("data/db")
         with pytest.raises(FileNotFoundError):
             _ = client.post(
                 "/traer-apertura",
@@ -80,6 +81,4 @@ def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
         )
         assert response.status_code == status.HTTP_200_OK
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")
-    vaciar_directorio("data/db")
+    vaciar_directorios_test()

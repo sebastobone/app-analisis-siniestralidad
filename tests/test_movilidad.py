@@ -7,7 +7,7 @@ from src import constantes as ct
 from src.controles_informacion.sap import consolidar_sap
 from src.models import Parametros
 
-from tests.conftest import assert_igual, vaciar_directorio
+from tests.conftest import assert_igual, vaciar_directorios_test
 
 
 @pytest.mark.asyncio
@@ -15,10 +15,7 @@ from tests.conftest import assert_igual, vaciar_directorio
 @pytest.mark.integration
 @pytest.mark.teradata
 async def test_info_movilidad(client: TestClient):
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/controles_informacion")
-    vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
-    vaciar_directorio("data/controles_informacion/post_cuadre_contable")
+    vaciar_directorios_test()
 
     params = {
         "negocio": "movilidad",
@@ -42,10 +39,7 @@ async def test_info_movilidad(client: TestClient):
     await validar_cuadre("siniestros", ct.COLUMNAS_SINIESTROS_CUADRE, p.mes_corte)
     await validar_cuadre("primas", ct.COLUMNAS_VALORES_TERADATA["primas"], p.mes_corte)
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/controles_informacion")
-    vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
-    vaciar_directorio("data/controles_informacion/post_cuadre_contable")
+    vaciar_directorios_test()
 
 
 async def validar_cuadre(

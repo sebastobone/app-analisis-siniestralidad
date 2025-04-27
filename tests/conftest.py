@@ -183,6 +183,18 @@ def vaciar_directorio(directorio_path: str) -> None:
             file.unlink()
 
 
+def vaciar_directorios_test() -> None:
+    vaciar_directorio("data/raw")
+    vaciar_directorio("data/processed")
+    vaciar_directorio("data/db")
+    vaciar_directorio("output/resultados")
+    vaciar_directorio("output")
+    vaciar_directorio("data/controles_informacion")
+    vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
+    vaciar_directorio("data/controles_informacion/post_cuadre_contable")
+    vaciar_directorio("data/controles_informacion/post_ajustes_fraude")
+
+
 def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, date]):
     params_form.update(
         {

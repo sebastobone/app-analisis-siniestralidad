@@ -6,7 +6,7 @@ from src import utils
 from src.controles_informacion.sap import consolidar_sap
 from src.models import Parametros
 
-from tests.conftest import assert_diferente, assert_igual, vaciar_directorio
+from tests.conftest import assert_diferente, assert_igual, vaciar_directorios_test
 
 
 @pytest.mark.asyncio
@@ -14,11 +14,7 @@ from tests.conftest import assert_diferente, assert_igual, vaciar_directorio
 @pytest.mark.integration
 @pytest.mark.teradata
 async def test_info_soat(client: TestClient):
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/controles_informacion")
-    vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
-    vaciar_directorio("data/controles_informacion/post_cuadre_contable")
-    vaciar_directorio("data/controles_informacion/post_ajustes_fraude")
+    vaciar_directorios_test()
 
     params = {
         "negocio": "soat",
@@ -92,8 +88,4 @@ async def test_info_soat(client: TestClient):
         "prima_bruta_devengada",
     )
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/controles_informacion")
-    vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
-    vaciar_directorio("data/controles_informacion/post_cuadre_contable")
-    vaciar_directorio("data/controles_informacion/post_ajustes_fraude")
+    vaciar_directorios_test()

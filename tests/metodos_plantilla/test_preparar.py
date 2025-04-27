@@ -9,12 +9,14 @@ from src import constantes as ct
 from src import utils
 from src.metodos_plantilla import abrir
 from src.models import Parametros
-from tests.conftest import agregar_meses_params, assert_igual, vaciar_directorio
+from tests.conftest import agregar_meses_params, assert_igual, vaciar_directorios_test
 
 
 @pytest.mark.plantilla
 @pytest.mark.integration
 def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date]):
+    vaciar_directorios_test()
+
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -68,8 +70,7 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
     for columna in ct.COLUMNAS_QTYS:
         assert_igual(base_atipicos_original, base_atipicos_plantilla, columna)
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")
+    vaciar_directorios_test()
 
 
 @pytest.mark.plantilla
@@ -77,7 +78,7 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
 def test_preparar_entremes_sin_resultados_anteriores(
     client: TestClient, rango_meses: tuple[date, date]
 ):
-    vaciar_directorio("output/resultados")
+    vaciar_directorios_test()
 
     params_form = {
         "negocio": "demo",
@@ -95,13 +96,14 @@ def test_preparar_entremes_sin_resultados_anteriores(
     with pytest.raises(ValueError):
         _ = client.post("/preparar-plantilla")
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")
+    vaciar_directorios_test()
 
 
 @pytest.mark.plantilla
 @pytest.mark.integration
 def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
+    vaciar_directorios_test()
+
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -190,7 +192,4 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     for columna in ct.COLUMNAS_QTYS:
         assert_igual(base_atipicos_original, base_atipicos_plantilla, columna)
 
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")
-    vaciar_directorio("data/db")
-    vaciar_directorio("output/resultados")
+    vaciar_directorios_test()

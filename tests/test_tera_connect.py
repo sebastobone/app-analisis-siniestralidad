@@ -29,7 +29,8 @@ def params() -> Parametros:
 @pytest.mark.unit
 def test_determinar_tipo_query():
     assert tera_connect.determinar_tipo_query("path/to/siniestros.sql") == "siniestros"
-    assert tera_connect.determinar_tipo_query("path/to/siniestros_bruto.sql") == "otro"
+    assert tera_connect.determinar_tipo_query("path/to/primas.sql") == "primas"
+    assert tera_connect.determinar_tipo_query("path/to/expuestos.sql") == "expuestos"
 
 
 @pytest.mark.unit
@@ -168,12 +169,12 @@ async def test_check_final_info(rango_meses: tuple[date, date]):
     df = utils.generar_mock_siniestros(rango_meses)
 
     with pytest.raises(ValueError):
-        await tera_connect.verificar_resultado_siniestros_primas_expuestos(
+        await tera_connect.verificar_resultado(
             "siniestros", df.drop("codigo_op"), "demo", mes_inicio_int, mes_corte_int
         )
 
     with pytest.raises(ValueError):
-        await tera_connect.verificar_resultado_siniestros_primas_expuestos(
+        await tera_connect.verificar_resultado(
             "siniestros",
             df.with_columns(pl.col("fecha_siniestro").cast(pl.String)),
             "demo",
@@ -187,7 +188,7 @@ async def test_check_final_info(rango_meses: tuple[date, date]):
     )
 
     with pytest.raises(ValueError):
-        await tera_connect.verificar_resultado_siniestros_primas_expuestos(
+        await tera_connect.verificar_resultado(
             "siniestros",
             df_fechas_por_fuera,
             "demo",
@@ -202,7 +203,7 @@ async def test_check_final_info(rango_meses: tuple[date, date]):
         ]
     )
     with pytest.raises(ValueError):
-        await tera_connect.verificar_resultado_siniestros_primas_expuestos(
+        await tera_connect.verificar_resultado(
             "siniestros",
             pl.concat([df, df_falt]),
             "demo",

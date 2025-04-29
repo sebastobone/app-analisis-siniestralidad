@@ -24,11 +24,10 @@ def concatenar_archivos_resultados() -> pl.DataFrame:
 
     dfs = []
     for file in sorted_files:
-        dfs.append(
-            pl.read_parquet(f"output/resultados/{file}").filter(
-                pl.col("plata_ultimate_bruto").sum().over(columnas_distintivas) != 0
-            )
+        df = pl.read_parquet(f"output/resultados/{file}").filter(
+            pl.col("plata_ultimate_bruto").sum().over(columnas_distintivas) != 0
         )
+        dfs.append(utils.generalizar_tipos_columnas_resultados(df))
 
     if dfs:
         df_resultados = (

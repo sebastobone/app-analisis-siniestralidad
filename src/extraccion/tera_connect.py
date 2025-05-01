@@ -30,7 +30,6 @@ async def correr_query(file_path: str, p: Parametros) -> None:
 
     await verificar_resultado(tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte)
 
-    df.write_csv(f"data/raw/{tipo_query}_teradata.csv", separator="\t")
     df = await eliminar_columnas_extra(df, p.negocio, tipo_query)
 
     if tipo_query == "siniestros":
@@ -170,8 +169,9 @@ def crear_particiones_fechas(
 
 async def guardar_resultado(df: pl.DataFrame, tipo_query: ct.LISTA_QUERIES) -> None:
     # En csv para poder visualizarlo facil, en caso de ser necesario
-    df.write_csv(f"data/raw/{tipo_query}.csv", separator="\t")
-    df.write_parquet(f"data/raw/{tipo_query}.parquet")
+    for sufijo in ["_teradata", ""]:
+        df.write_csv(f"data/raw/{tipo_query}{sufijo}.csv", separator="\t")
+        df.write_parquet(f"data/raw/{tipo_query}{sufijo}.parquet")
 
     logger.success(f"Datos almacenados en data/raw/{tipo_query}.csv.")
 

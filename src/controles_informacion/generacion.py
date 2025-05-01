@@ -12,24 +12,31 @@ from src.controles_informacion.cuadre_contable import realizar_cuadre_contable
 from src.logger_config import logger
 from src.models import Parametros
 
+ARCHIVOS_PERMANENTES = [
+    "siniestros.parquet",
+    "siniestros.csv",
+    "siniestros_teradata.parquet",
+    "siniestros_teradata.csv",
+    "primas.parquet",
+    "primas.csv",
+    "primas_teradata.parquet",
+    "primas_teradata.csv",
+    "expuestos.parquet",
+    "expuestos.csv",
+    "expuestos_teradata.parquet",
+    "expuestos_teradata.csv",
+]
+
 
 async def restablecer_salidas_queries(path_salidas_queries: str) -> None:
     logger.info("Restableciendo las salidas de los queries...")
     data_raw = Path(path_salidas_queries)
-    archivos_permanentes = {
-        "siniestros.parquet",
-        "siniestros.csv",
-        "primas.parquet",
-        "primas.csv",
-        "expuestos.parquet",
-        "expuestos.csv",
-    }
     archivos_removibles: list[Path] = []
 
     for file in data_raw.iterdir():
-        if "pre_cuadre" in file.name:
-            shutil.copyfile(file, data_raw / file.name.replace("_pre_cuadre", ""))
-        if file.name not in archivos_permanentes:
+        if "teradata" in file.name:
+            shutil.copyfile(file, data_raw / file.name.replace("_teradata", ""))
+        if file.name not in ARCHIVOS_PERMANENTES:
             archivos_removibles.append(file)
 
     for file in archivos_removibles:

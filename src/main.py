@@ -21,12 +21,7 @@ async def correr_query_siniestros(p: Parametros) -> None:
         ).write_parquet("data/raw/siniestros.parquet")
         logger.info("Datos ficticios de siniestros generados.")
     else:
-        await correr_query(
-            f"data/queries/{p.negocio}/siniestros.sql",
-            "data/raw/siniestros",
-            "parquet",
-            p,
-        )
+        await correr_query(f"data/queries/{p.negocio}/siniestros.sql", p)
 
 
 async def correr_query_primas(p: Parametros) -> None:
@@ -39,9 +34,7 @@ async def correr_query_primas(p: Parametros) -> None:
         ).write_parquet("data/raw/primas.parquet")
         logger.info("Datos ficticios de primas generados.")
     else:
-        await correr_query(
-            f"data/queries/{p.negocio}/primas.sql", "data/raw/primas", "parquet", p
-        )
+        await correr_query(f"data/queries/{p.negocio}/primas.sql", p)
 
 
 async def correr_query_expuestos(p: Parametros) -> None:
@@ -51,12 +44,7 @@ async def correr_query_expuestos(p: Parametros) -> None:
         ).write_parquet("data/raw/expuestos.parquet")
         logger.info("Datos ficticios de expuestos generados.")
     else:
-        await correr_query(
-            f"data/queries/{p.negocio}/expuestos.sql",
-            "data/raw/expuestos",
-            "parquet",
-            p,
-        )
+        await correr_query(f"data/queries/{p.negocio}/expuestos.sql", p)
 
 
 async def generar_controles(p: Parametros) -> None:

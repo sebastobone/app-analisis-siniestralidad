@@ -120,11 +120,38 @@ def sheet_to_dataframe(
         )
     )
 
-    cols_decimales = [col for col, dtype in df.schema.items() if dtype == pl.Decimal]
-    if cols_decimales:
-        df = df.with_columns(pl.col(cols_decimales).cast(pl.Float64))
+    return generalizar_tipos_columnas_resultados(df)
 
-    return df
+
+def generalizar_tipos_columnas_resultados(df: pl.DataFrame) -> pl.DataFrame:
+    tipos_numericos = [
+        pl.Int8,
+        pl.Int16,
+        pl.Int32,
+        pl.Int64,
+        pl.Float32,
+        pl.Float64,
+        pl.Decimal,
+    ]
+    cols_textuales = [
+        "apertura_reservas",
+        "codigo_op",
+        "codigo_ramo_op",
+        "periodicidad_ocurrencia",
+        "tipo_analisis",
+    ]
+    cols_numericas = set(
+        col
+        for col, dtype in df.schema.items()
+        if dtype in tipos_numericos and col not in cols_textuales
+    ) | {"periodo_ocurrencia", "atipico"}
+
+    cols_df = df.collect_schema().names()
+
+    return df.with_columns(
+        pl.col([col for col in cols_df if col in cols_textuales]).cast(pl.String),
+        pl.col([col for col in cols_df if col in cols_numericas]).cast(pl.Float64),
+    )
 
 
 def path_plantilla(wb: xw.Book) -> str:

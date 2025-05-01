@@ -1,7 +1,6 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
-from typing import Literal
 
 import pandas as pd
 import polars as pl
@@ -14,9 +13,7 @@ from src.logger_config import logger
 from src.models import Parametros
 
 
-async def correr_query(
-    file_path: str, save_path: str, save_format: str, p: Parametros
-) -> None:
+async def correr_query(file_path: str, p: Parametros) -> None:
     tipo_query = determinar_tipo_query(file_path)
     segmentaciones = await obtener_segmentaciones(
         f"data/segmentacion_{p.negocio}.xlsx", tipo_query
@@ -31,41 +28,31 @@ async def correr_query(
     df = await ejecutar_queries(queries.split(";"), particiones_fechas, segmentaciones)
     logger.debug(df)
 
-    if tipo_query != "otro":
-        await verificar_resultado_siniestros_primas_expuestos(
-            tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte
+    await verificar_resultado(tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte)
+
+    df = await eliminar_columnas_extra(df, p.negocio, tipo_query)
+
+    if tipo_query == "siniestros":
+        df = df.select(utils.crear_columna_apertura_reservas(p.negocio), pl.all())
+        aperturas_generadas = sorted(
+            df.get_column("apertura_reservas").unique().to_list()
         )
+        aperturas_esperadas = sorted(
+            utils.obtener_aperturas(p.negocio, "siniestros")
+            .get_column("apertura_reservas")
+            .unique()
+            .to_list()
+        )
+        await verificar_aperturas_faltantes(aperturas_generadas, aperturas_esperadas)
+        await verificar_aperturas_sobrantes(aperturas_generadas, aperturas_esperadas)
 
-        df.write_csv(f"data/raw/{tipo_query}_teradata.csv", separator="\t")
-        df = await eliminar_columnas_extra(df, p.negocio, tipo_query)
-
-        if tipo_query == "siniestros":
-            df = df.select(utils.crear_columna_apertura_reservas(p.negocio), pl.all())
-            aperturas_generadas = sorted(
-                df.get_column("apertura_reservas").unique().to_list()
-            )
-            aperturas_esperadas = sorted(
-                utils.obtener_aperturas(p.negocio, "siniestros")
-                .get_column("apertura_reservas")
-                .unique()
-                .to_list()
-            )
-            await verificar_aperturas_faltantes(
-                aperturas_generadas, aperturas_esperadas
-            )
-            await verificar_aperturas_sobrantes(
-                aperturas_generadas, aperturas_esperadas
-            )
-
-    await guardar_resultado(df, save_path, save_format, tipo_query)
+    await guardar_resultado(df, tipo_query)
 
 
 def determinar_tipo_query(
     file: str,
-) -> Literal["siniestros", "primas", "expuestos", "otro"]:
-    nombre_query = file.split("/")[-1]
-    cantidad = nombre_query.replace(".sql", "")
-    return cantidad if cantidad in ["siniestros", "primas", "expuestos"] else "otro"  # type: ignore
+) -> ct.LISTA_QUERIES:
+    return file.split("/")[-1].replace(".sql", "")  # type: ignore
 
 
 async def obtener_segmentaciones(
@@ -180,19 +167,13 @@ def crear_particiones_fechas(
     return list(zip(inicios_mes, fines_mes, strict=False))
 
 
-async def guardar_resultado(
-    df: pl.DataFrame, save_path: str, save_format: str, tipo_query: str
-) -> None:
-    # Para poder visualizarlo facil, en caso de ser necesario
-    if tipo_query != "otro" and save_format != "csv":
-        df.write_csv(f"{save_path}.csv", separator="\t")
+async def guardar_resultado(df: pl.DataFrame, tipo_query: ct.LISTA_QUERIES) -> None:
+    # En csv para poder visualizarlo facil, en caso de ser necesario
+    for sufijo in ["_teradata", ""]:
+        df.write_csv(f"data/raw/{tipo_query}{sufijo}.csv", separator="\t")
+        df.write_parquet(f"data/raw/{tipo_query}{sufijo}.parquet")
 
-    if save_format == "parquet":
-        df.write_parquet(f"{save_path}.parquet")
-    elif save_format in ("csv", "txt"):
-        df.write_csv(f"{save_path}.{save_format}", separator="\t")
-
-    logger.success(f"Datos almacenados en {save_path}.{save_format}.")
+    logger.success(f"Datos almacenados en data/raw/{tipo_query}.csv.")
 
 
 async def verificar_nombre_hojas_segmentacion(segm_sheets: list[str]) -> None:
@@ -289,8 +270,8 @@ async def verificar_fechas_dentro_de_rangos(
         )
 
 
-async def verificar_resultado_siniestros_primas_expuestos(
-    tipo_query: Literal["siniestros", "primas", "expuestos"],
+async def verificar_resultado(
+    tipo_query: ct.LISTA_QUERIES,
     df: pl.DataFrame,
     negocio: str,
     mes_inicio: int,
@@ -334,9 +315,7 @@ async def verificar_resultado_siniestros_primas_expuestos(
 
 
 async def eliminar_columnas_extra(
-    df: pl.DataFrame,
-    negocio: str,
-    tipo_query: Literal["siniestros", "primas", "expuestos"],
+    df: pl.DataFrame, negocio: str, tipo_query: ct.LISTA_QUERIES
 ) -> pl.DataFrame:
     columnas_necesarias = utils.columnas_minimas_salida_tera(negocio, tipo_query)
     columnas_valores = ct.COLUMNAS_VALORES_TERADATA[tipo_query]

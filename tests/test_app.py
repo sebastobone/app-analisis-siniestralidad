@@ -21,9 +21,7 @@ def test_ingresar_parametros(client: TestClient, test_session: Session):
         "tipo_analisis": "triangulos",
         "aproximar_reaseguro": "False",
         "nombre_plantilla": "wb_test",
-        "cuadre_contable_sinis": "False",
         "add_fraude_soat": "False",
-        "cuadre_contable_primas": "False",
     }
 
     # Dos veces para verificar que se sobreescribe
@@ -47,9 +45,7 @@ def test_ingresar_parametros_malos(client: TestClient):
         "tipo_analisis": "triangulos",
         "aproximar_reaseguro": "sit",
         "nombre_plantilla": "plantilla",
-        "cuadre_contable_sinis": "False",
         "add_fraude_soat": "False",
-        "cuadre_contable_primas": "False",
     }
 
     with pytest.raises(ValidationError):

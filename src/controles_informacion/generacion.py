@@ -7,8 +7,8 @@ import polars as pl
 
 from src import constantes as ct
 from src import utils
+from src.controles_informacion import cuadre_contable as cuadre
 from src.controles_informacion import sap
-from src.controles_informacion.cuadre_contable import realizar_cuadre_contable
 from src.logger_config import logger
 from src.models import Parametros
 
@@ -71,21 +71,15 @@ async def generar_controles(
         estado_cuadre="pre_cuadre_contable",
     )
 
-    if (file == "siniestros" and p.cuadre_contable_sinis) or (
-        file == "primas" and p.cuadre_contable_primas
-    ):
+    if file != "expuestos" and cuadre.debe_realizar_cuadre_contable(p.negocio, file):
         await asyncio.to_thread(
             df.write_csv, f"data/raw/{file}_pre_cuadre.csv", separator="\t"
         )
         await asyncio.to_thread(df.write_parquet, f"data/raw/{file}_pre_cuadre.parquet")
-        meses_a_cuadrar = (
-            pl.read_excel(
-                f"data/segmentacion_{p.negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
-            )
-            .filter(pl.col("incluir") == 1)
-            .drop("incluir")
+        meses_a_cuadrar = pl.read_excel(
+            f"data/segmentacion_{p.negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
         )
-        df = await realizar_cuadre_contable(
+        df = await cuadre.realizar_cuadre_contable(
             p.negocio, file, df, difs_sap_tera_pre_cuadre, meses_a_cuadrar
         )
         _ = await generar_controles_estado_cuadre(

@@ -2,6 +2,7 @@ import os
 import sys
 from datetime import date
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import polars as pl
@@ -11,6 +12,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 from src import utils
 from src.app import app, get_session
+from src.controles_informacion.sap import consolidar_sap
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
@@ -202,3 +204,61 @@ def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, d
             "mes_corte": str(utils.date_to_yyyymm(rango_meses[1])),
         }
     )
+
+
+async def obtener_sap_negocio(
+    negocio: str,
+    file: Literal["siniestros", "primas"],
+    columnas_cantidades: list[str],
+    mes_corte: int,
+) -> pl.DataFrame:
+    lista_ramos = (
+        pl.read_excel(
+            f"data/segmentacion_{negocio}.xlsx",
+            sheet_name=f"Aperturas_{file.capitalize()}",
+        )
+        .get_column("codigo_ramo_op")
+        .unique()
+        .to_list()
+    )
+    return (await consolidar_sap(negocio, columnas_cantidades, mes_corte)).filter(
+        pl.col("codigo_ramo_op").is_in(lista_ramos)
+    )
+
+
+async def validar_cuadre(
+    negocio: str,
+    file: Literal["siniestros", "primas"],
+    columnas_cantidades: list[str],
+    mes_corte: int,
+) -> None:
+    meses_cuadre = pl.read_excel(
+        f"data/segmentacion_{negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
+    ).with_columns(
+        [pl.col(f"cuadrar_{col}").cast(pl.Boolean) for col in columnas_cantidades]
+    )
+
+    base_post_cuadre = pl.read_parquet(f"data/raw/{file}.parquet").join(
+        meses_cuadre, on="fecha_registro"
+    )
+
+    sap = (
+        await obtener_sap_negocio(negocio, file, columnas_cantidades, mes_corte)
+    ).join(meses_cuadre, on="fecha_registro")
+
+    base_cuadrada = base_post_cuadre.with_columns(
+        [pl.col(col) * pl.col(f"cuadrar_{col}") for col in columnas_cantidades]
+    )
+    base_no_cuadrada = base_post_cuadre.with_columns(
+        [pl.col(col) * ~pl.col(f"cuadrar_{col}") for col in columnas_cantidades]
+    )
+    sap_cuadres = sap.with_columns(
+        [pl.col(col) * pl.col(f"cuadrar_{col}") for col in columnas_cantidades]
+    )
+    sap_no_cuadres = sap.with_columns(
+        [pl.col(col) * ~pl.col(f"cuadrar_{col}") for col in columnas_cantidades]
+    )
+
+    for col in columnas_cantidades:
+        assert_igual(base_cuadrada, sap_cuadres, col)
+        assert_diferente(base_no_cuadrada, sap_no_cuadres, col)

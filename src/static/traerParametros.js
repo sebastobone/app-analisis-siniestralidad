@@ -15,12 +15,8 @@ document
       document.getElementById("tipoAnalisis").value = parametros.tipo_analisis;
       document.getElementById("aproximarReaseguro").value =
         parametros.aproximar_reaseguro;
-      document.getElementById("cuadreContableSinis").value =
-        parametros.cuadre_contable_sinis;
       document.getElementById("addFraudeSoat").value =
         parametros.add_fraude_soat;
-      document.getElementById("cuadreContablePrimas").value =
-        parametros.cuadre_contable_primas;
       document.getElementById("nombrePlantilla").value =
         parametros.nombre_plantilla;
 

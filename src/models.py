@@ -12,9 +12,7 @@ class Parametros(SQLModel, table=True):
     tipo_analisis: Literal["triangulos", "entremes"] = Field(sa_type=String)
     aproximar_reaseguro: bool = False
     nombre_plantilla: str
-    cuadre_contable_sinis: bool = False
     add_fraude_soat: bool = False
-    cuadre_contable_primas: bool = False
     session_id: str | None = Field(index=True)
 
     @field_validator("nombre_plantilla", mode="after")

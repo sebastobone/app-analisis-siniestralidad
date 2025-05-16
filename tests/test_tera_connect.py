@@ -18,9 +18,7 @@ def params() -> Parametros:
         "tipo_analisis": "triangulos",
         "aproximar_reaseguro": "False",
         "nombre_plantilla": "wb_test",
-        "cuadre_contable_sinis": "False",
         "add_fraude_soat": "False",
-        "cuadre_contable_primas": "False",
     }
     params = Parametros(**params_form, session_id="test-session-id")
     return Parametros.model_validate(params)

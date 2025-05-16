@@ -5,6 +5,27 @@ from src import utils
 from src.logger_config import logger
 
 
+def debe_realizar_cuadre_contable(negocio: str, file: ct.LISTA_QUERIES_CUADRE) -> bool:
+    return (
+        pl.read_excel(
+            f"data/segmentacion_{negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
+        )
+        .drop("fecha_registro")
+        .sum()
+        .sum_horizontal()
+        .item()
+        > 0
+    )
+
+
+def columnas_cantidades_cuadre(file: ct.LISTA_QUERIES_CUADRE) -> list[str]:
+    return (
+        ct.COLUMNAS_SINIESTROS_CUADRE
+        if file == "siniestros"
+        else ct.COLUMNAS_VALORES_TERADATA["primas"]
+    )
+
+
 async def realizar_cuadre_contable(
     negocio: str,
     file: ct.LISTA_QUERIES_CUADRE,
@@ -12,17 +33,10 @@ async def realizar_cuadre_contable(
     dif_sap_vs_tera: pl.DataFrame,
     meses_a_cuadrar: pl.DataFrame,
 ) -> pl.DataFrame:
-    dif_sap_vs_tera = dif_sap_vs_tera.join(meses_a_cuadrar, on="fecha_registro")
-
-    if negocio == "soat":
-        dif_sap_vs_tera = dif_sap_vs_tera.with_columns(
-            diferencia_prima_bruta_devengada=0
-        )
-
     diferencias = (
         obtener_aperturas_para_asignar_diferencia(negocio, file)
         .pipe(calcular_pesos_aperturas, base, file, negocio)
-        .pipe(repartir_diferencias, dif_sap_vs_tera, file)
+        .pipe(repartir_diferencias, dif_sap_vs_tera, meses_a_cuadrar, file)
         .pipe(agregar_columnas_faltantes, file, negocio)
         .select(base.collect_schema().names())
     )
@@ -63,11 +77,7 @@ def calcular_pesos_aperturas(
     negocio: str,
 ) -> pl.DataFrame:
     columnas_aperturas = utils.obtener_nombres_aperturas(negocio, file)
-    columnas_cantidades = (
-        ct.COLUMNAS_SINIESTROS_CUADRE
-        if file == "siniestros"
-        else ct.COLUMNAS_VALORES_TERADATA["primas"]
-    )
+    columnas_cantidades = columnas_cantidades_cuadre(file)
     return (
         base.join(aperturas, on=columnas_aperturas)
         .group_by(columnas_aperturas)
@@ -83,23 +93,24 @@ def calcular_pesos_aperturas(
 
 
 def repartir_diferencias(
-    aperturas_diferencia: pl.DataFrame,
+    pesos_aperturas_diferencia: pl.DataFrame,
     dif_sap_vs_tera: pl.DataFrame,
+    meses_a_cuadrar: pl.DataFrame,
     file: ct.LISTA_QUERIES_CUADRE,
 ) -> pl.DataFrame:
-    columnas_cantidades = (
-        ct.COLUMNAS_SINIESTROS_CUADRE
-        if file == "siniestros"
-        else ct.COLUMNAS_VALORES_TERADATA["primas"]
-    )
+    columnas_cantidades = columnas_cantidades_cuadre(file)
     return (
         dif_sap_vs_tera.lazy()
         .drop(columnas_cantidades)
         .rename({f"diferencia_{col}": col for col in columnas_cantidades})
         .select(["codigo_op", "codigo_ramo_op", "fecha_registro"] + columnas_cantidades)
-        .join(aperturas_diferencia.lazy(), on=["codigo_op", "codigo_ramo_op"])
+        .join(pesos_aperturas_diferencia.lazy(), on=["codigo_op", "codigo_ramo_op"])
+        .join(meses_a_cuadrar.lazy(), on="fecha_registro")
         .with_columns(
-            [pl.col(col) * pl.col(f"peso_{col}") for col in columnas_cantidades]
+            [
+                pl.col(col) * pl.col(f"peso_{col}") * pl.col(f"cuadrar_{col}")
+                for col in columnas_cantidades
+            ]
         )
         .collect()
     )

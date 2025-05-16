@@ -46,7 +46,15 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
 
     dif_sap_vs_tera = await ctrl.comparar_sap_tera(df_tera, df_sap, mes_corte_int, qtys)
 
-    meses_a_cuadrar = pl.DataFrame({"fecha_registro": [mes_inicio, mes_corte]})
+    meses_a_cuadrar = pl.DataFrame(
+        {
+            "fecha_registro": [mes_inicio, mes_corte],
+            "cuadrar_pago_bruto": [1, 1],
+            "cuadrar_pago_retenido": [1, 1],
+            "cuadrar_aviso_bruto": [1, 1],
+            "cuadrar_aviso_retenido": [1, 1],
+        }
+    )
 
     with patch(
         "src.controles_informacion.cuadre_contable.obtener_aperturas_para_asignar_diferencia"

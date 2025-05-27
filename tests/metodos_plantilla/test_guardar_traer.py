@@ -4,6 +4,7 @@ from datetime import date
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from src.models import Parametros
 from tests.conftest import agregar_meses_params, vaciar_directorios_test
 
 
@@ -19,7 +20,8 @@ def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
     }
     agregar_meses_params(params_form, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form)
+    response = client.post("/ingresar-parametros", data=params_form).json()
+    p = Parametros.model_validate(response)
 
     _ = client.post("/correr-query-siniestros")
     _ = client.post("/correr-query-primas")
@@ -53,7 +55,7 @@ def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
         )
 
         archivos_guardados = [
-            f"{apertura}_{atributo}_{plantilla.capitalize()}_{nombre_rango}"
+            f"{p.nombre_plantilla}.xlsm_{apertura}_{atributo}_{plantilla.capitalize()}_{nombre_rango}"
             for nombre_rango in rangos
         ]
 

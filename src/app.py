@@ -22,7 +22,7 @@ from src.metodos_plantilla.guardar_traer import (
     traer_apertura,
     traer_guardar_todo,
 )
-from src.models import ModosPlantilla, Parametros
+from src.models import ModosPlantilla, Parametros, ReferenciasEntremes
 
 engine = create_engine(
     "sqlite:///data/database.db", connect_args={"check_same_thread": False}
@@ -212,6 +212,20 @@ async def generar_aperturas(
     return {"aperturas": aperturas}
 
 
+@app.get("/obtener-analisis-anteriores")
+@atrapar_excepciones
+async def obtener_analisis_anteriores(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+):
+    p = obtener_parametros_usuario(session, session_id)
+    resultados_mes_anterior = preparar.obtener_analisis_anteriores(p.mes_corte)
+    return {
+        "analisis_anteriores": resultados_mes_anterior.get_column("tipo_analisis")
+        .unique()
+        .to_list()
+    }
+
+
 @app.post("/abrir-plantilla")
 async def abrir_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
@@ -223,12 +237,14 @@ async def abrir_plantilla(
 @app.post("/preparar-plantilla")
 @atrapar_excepciones
 async def preparar_plantilla(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+    referencias_entremes: Annotated[ReferenciasEntremes, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
     main.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    preparar.preparar_plantilla(wb, p)
+    preparar.preparar_plantilla(wb, p, referencias_entremes)
 
 
 def obtener_plantilla(session: SessionDep, session_id: str | None):

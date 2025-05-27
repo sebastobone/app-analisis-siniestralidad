@@ -3,11 +3,12 @@ from datetime import date
 
 import polars as pl
 import pytest
+import xlwings as xw
 from fastapi import status
 from fastapi.testclient import TestClient
 from src import constantes as ct
 from src import utils
-from src.metodos_plantilla import abrir
+from src.metodos_plantilla import abrir, preparar
 from src.models import Parametros
 from tests.conftest import agregar_meses_params, assert_igual, vaciar_directorios_test
 
@@ -27,9 +28,7 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
     response = client.post("/ingresar-parametros", data=params_form).json()
     p = Parametros.model_validate(response)
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
@@ -89,12 +88,8 @@ def test_preparar_entremes_sin_resultados_anteriores(
 
     _ = client.post("/ingresar-parametros", data=params_form)
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
-
-    with pytest.raises(ValueError):
-        _ = client.post("/preparar-plantilla")
+    with pytest.raises(preparar.AnalisisAnterioresNoEncontradosError):
+        _ = client.get("/obtener-analisis-anteriores")
 
     vaciar_directorios_test()
 
@@ -110,14 +105,11 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
         "nombre_plantilla": "wb_test",
     }
     agregar_meses_params(params_form, rango_meses)
-    mes_corte_para_triangulo = 202412
-    params_form.update({"mes_corte": str(mes_corte_para_triangulo)})
+    params_form.update({"mes_corte": "202412"})
 
     _ = client.post("/ingresar-parametros", data=params_form)
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
     _ = client.post(
@@ -127,19 +119,62 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
 
     _ = client.post("/almacenar-analisis")
 
-    siguiente_mes = 202501
-    params_form.update({"tipo_analisis": "entremes", "mes_corte": str(siguiente_mes)})
-    response = client.post("/ingresar-parametros", data=params_form)
-    p = Parametros.model_validate_json(response.read())
+    params_form.update({"tipo_analisis": "entremes", "mes_corte": "202501"})
+    response = client.post("/ingresar-parametros", data=params_form).json()
+    p = Parametros.model_validate(response)
     wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
-    _ = client.post("/preparar-plantilla")
+    correr_queries(client)
 
+    _ = client.post(
+        "/preparar-plantilla",
+        data={
+            "referencia_actuarial": "triangulos",
+            "referencia_contable": "triangulos",
+        },
+    )
+
+    verificar_hojas_visibles(wb_test)
+    validar_cifras_entremes(wb_test)
+
+    _ = client.post("/almacenar-analisis")
+
+    for siguiente_mes in ["202502", "202503"]:
+        params_form.update({"tipo_analisis": "entremes", "mes_corte": siguiente_mes})
+        _ = client.post("/ingresar-parametros", data=params_form)
+        correr_queries(client)
+        _ = client.post("/preparar-plantilla")
+        _ = client.post("/almacenar-analisis")
+
+    params_form.update({"tipo_analisis": "triangulos", "mes_corte": "202503"})
+    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/preparar-plantilla")
+    _ = client.post("/guardar-todo")
+    _ = client.post("/almacenar-analisis")
+
+    params_form.update({"tipo_analisis": "entremes", "mes_corte": "202504"})
+    _ = client.post("/ingresar-parametros", data=params_form)
+
+    correr_queries(client)
+
+    _ = client.post(
+        "/preparar-plantilla",
+        data={"referencia_actuarial": "triangulos", "referencia_contable": "entremes"},
+    )
+
+    _ = client.post("/almacenar-analisis")
+
+    vaciar_directorios_test()
+
+
+def verificar_hojas_visibles(wb_test: xw.Book) -> None:
     assert wb_test.sheets["Entremes"].visible
     assert not wb_test.sheets["Frecuencia"].visible
     assert not wb_test.sheets["Severidad"].visible
     assert not wb_test.sheets["Plata"].visible
 
+
+def validar_cifras_entremes(wb_test: xw.Book) -> None:
     periodicidades = utils.obtener_aperturas("demo", "siniestros").select(
         "apertura_reservas", "periodicidad_ocurrencia"
     )
@@ -192,4 +227,8 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     for columna in ct.COLUMNAS_QTYS:
         assert_igual(base_atipicos_original, base_atipicos_plantilla, columna)
 
-    vaciar_directorios_test()
+
+def correr_queries(client: TestClient) -> None:
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")

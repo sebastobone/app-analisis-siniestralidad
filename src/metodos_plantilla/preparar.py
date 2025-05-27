@@ -11,6 +11,8 @@ from src.models import Parametros
 
 from .completar_diagonal import factor_completitud as compl
 
+COLUMNAS_BASE = ["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"]
+
 
 def preparar_plantilla(
     wb: xw.Book, p: Parametros, tipo_analisis_anterior: str | None = None
@@ -42,6 +44,12 @@ def preparar_plantilla(
         resultados_mes_anterior = obtener_resultados_mes_anterior(
             resultados_anteriores, p.mes_corte, tipo_analisis_anterior
         )
+        if (
+            resultados_mes_anterior.get_column("tipo_analisis").unique().item()
+            == "entremes"
+        ):
+            resultados_mes_anterior = agrupar_entremes_anterior(resultados_mes_anterior)
+
         comparar_aperturas_mes_anterior(resumen, resultados_mes_anterior)
         factores_completitud = compl.calcular_factores_completitud(
             aperturas.lazy(), p.mes_corte
@@ -95,6 +103,48 @@ def obtener_resultados_mes_anterior(
         )
 
     return resultados_mes_anterior
+
+
+def agrupar_entremes_anterior(entremes_anterior: pl.DataFrame) -> pl.DataFrame:
+    periodicidades_inverso = {v: k for k, v in ct.PERIODICIDADES.items()}
+    periodicidades_maximas = (
+        entremes_anterior.with_columns(
+            numero_meses_periodicididad=pl.col("periodicidad_ocurrencia")
+            .replace(ct.PERIODICIDADES)
+            .cast(pl.Int32),
+        )
+        .group_by("apertura_reservas")
+        .agg(
+            pl.max("numero_meses_periodicididad"),
+            pl.max("periodo_ocurrencia").alias("ocurrencia_maxima"),
+        )
+        .with_columns(
+            periodicidad_maxima=pl.col("numero_meses_periodicididad")
+            .cast(pl.String)
+            .replace(periodicidades_inverso)
+        )
+    )
+    print(periodicidades_maximas)
+    return (
+        entremes_anterior.join(periodicidades_maximas, on="apertura_reservas")
+        .with_columns(
+            agrupar=(pl.col("periodicidad_ocurrencia") == "Mensual")
+            & (
+                pl.col("mes_corte").mod(100).mod(pl.col("numero_meses_periodicididad"))
+                == 0
+            )
+        )
+        .with_columns(
+            periodicidad_ocurrencia=pl.when(pl.col("agrupar"))
+            .then(pl.col("periodicidad_maxima"))
+            .otherwise(pl.col("periodicidad_ocurrencia")),
+            periodo_ocurrencia=pl.when(pl.col("agrupar"))
+            .then(pl.col("ocurrencia_maxima"))
+            .otherwise(pl.col("periodo_ocurrencia")),
+        )
+        .group_by(COLUMNAS_BASE + ["atipico"])
+        .agg([pl.sum(col) for col in ct.COLUMNAS_ULTIMATE])
+    )
 
 
 def comparar_aperturas_mes_anterior(
@@ -178,34 +228,23 @@ def complementar_tabla_entremes(
     factores_completitud: pl.DataFrame,
     mes_corte: int,
 ) -> pl.DataFrame:
-    columnas_base = [
-        "apertura_reservas",
-        "periodicidad_ocurrencia",
-        "periodo_ocurrencia",
-    ]
-
     resultados_mes_anterior = (
         resultados_mes_anterior.filter(pl.col("atipico") == 0)
-        .select(columnas_base + ct.COLUMNAS_ULTIMATE)
+        .select(COLUMNAS_BASE + ct.COLUMNAS_ULTIMATE)
         .rename({col: f"{col}_anterior" for col in ct.COLUMNAS_ULTIMATE})
     )
 
     return (
         tabla_entremes.join(
-            resultados_mes_anterior, on=columnas_base, how="left", validate="1:1"
+            resultados_mes_anterior, on=COLUMNAS_BASE, how="left", validate="1:1"
         )
         .join(
             obtener_resultados_ultimo_triangulo(resultados_anteriores, mes_corte),
-            on=columnas_base,
+            on=COLUMNAS_BASE,
             how="left",
             validate="1:1",
         )
-        .join(
-            factores_completitud,
-            on=["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurrencia"],
-            how="left",
-            validate="1:1",
-        )
+        .join(factores_completitud, on=COLUMNAS_BASE, how="left", validate="1:1")
         .sort(["apertura_reservas", "periodo_ocurrencia"])
     )
 

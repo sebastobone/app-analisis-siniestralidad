@@ -32,7 +32,7 @@ def traer_parametros(
     ).items():
         try:
             range_values.formula = pl.read_parquet(
-                f"data/db/{apertura}_{atributo}_{hoja.name}_{range_name}.parquet"
+                f"data/db/{hoja.book.name}_{apertura}_{atributo}_{hoja.name}_{range_name}.parquet"
             ).rows()
         except FileNotFoundError as exc:
             raise FileNotFoundError(

@@ -86,5 +86,5 @@ def guardar_parametros(
         hoja, dimensiones_triangulo, "Ninguna"
     ).items():
         pl.DataFrame(valores_rango.formula).transpose().write_parquet(
-            f"data/db/{apertura}_{atributo}_{hoja.name}_{nombre_rango}.parquet"
+            f"data/db/{hoja.book.name}_{apertura}_{atributo}_{hoja.name}_{nombre_rango}.parquet"
         )

@@ -31,6 +31,11 @@ class ModosPlantilla(BaseModel):
     plantilla: Literal["frecuencia", "severidad", "plata", "completar_diagonal"]
 
 
+class ReferenciasEntremes(BaseModel):
+    referencia_actuarial: Literal["triangulos", "entremes"] = "entremes"
+    referencia_contable: Literal["triangulos", "entremes"] = "entremes"
+
+
 class Offset(BaseModel):
     y: int
     x: int

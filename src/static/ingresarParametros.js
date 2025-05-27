@@ -70,4 +70,34 @@ document
 
     const success = await enviarParametros(formData);
     if (success) await generarDropdownPlantillas(tipoAnalisis);
+    if (tipoAnalisis === "entremes") {
+      document.getElementById("referenciasEntremes").style.display = "block";
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/obtener-analisis-anteriores",
+      );
+      const data = await response.json();
+
+      const dropdownReferenciaActuarial = document.getElementById(
+        "referenciaActuarial",
+      );
+      dropdownReferenciaActuarial.innerHTML = "";
+      const dropdownReferenciaContable =
+        document.getElementById("referenciaContable");
+      dropdownReferenciaContable.innerHTML = "";
+
+      data.analisis_anteriores.forEach((analisis) => {
+        let option = document.createElement("option");
+        option.value = analisis;
+        option.text = analisis.charAt(0).toUpperCase() + analisis.slice(1);
+        dropdownReferenciaActuarial.appendChild(option);
+      });
+
+      data.analisis_anteriores.forEach((analisis) => {
+        let option = document.createElement("option");
+        option.value = analisis;
+        option.text = analisis.charAt(0).toUpperCase() + analisis.slice(1);
+        dropdownReferenciaContable.appendChild(option);
+      });
+    }
   });

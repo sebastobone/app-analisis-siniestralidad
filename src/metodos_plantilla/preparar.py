@@ -7,7 +7,7 @@ from src import constantes as ct
 from src import utils
 from src.logger_config import logger
 from src.metodos_plantilla import resultados, tablas_resumen
-from src.models import Parametros
+from src.models import Parametros, ReferenciasEntremes
 
 from .completar_diagonal import factor_completitud as compl
 
@@ -15,7 +15,7 @@ COLUMNAS_BASE = ["apertura_reservas", "periodicidad_ocurrencia", "periodo_ocurre
 
 
 def preparar_plantilla(
-    wb: xw.Book, p: Parametros, tipo_analisis_anterior: str | None = None
+    wb: xw.Book, p: Parametros, referencias_entremes: ReferenciasEntremes
 ) -> None:
     s = time.time()
 
@@ -42,14 +42,8 @@ def preparar_plantilla(
 
     if p.tipo_analisis == "entremes":
         resultados_mes_anterior = obtener_resultados_mes_anterior(
-            resultados_anteriores, p.mes_corte, tipo_analisis_anterior
+            resultados_anteriores, p.mes_corte, referencias_entremes
         )
-        if (
-            resultados_mes_anterior.get_column("tipo_analisis").unique().item()
-            == "entremes"
-        ):
-            resultados_mes_anterior = agrupar_entremes_anterior(resultados_mes_anterior)
-
         comparar_aperturas_mes_anterior(resumen, resultados_mes_anterior)
         factores_completitud = compl.calcular_factores_completitud(
             aperturas.lazy(), p.mes_corte
@@ -67,30 +61,10 @@ def preparar_plantilla(
     logger.info(f"Tiempo de preparacion: {round(time.time() - s, 2)} segundos.")
 
 
-def obtener_resultados_mes_anterior(
-    resultados_anteriores: pl.DataFrame,
-    mes_corte: int,
-    tipo_analisis_anterior: str | None = None,
-) -> pl.DataFrame:
-    if resultados_anteriores.shape[0] == 0:
-        raise ValueError(
-            utils.limpiar_espacios_log(
-                """
-                No se encontraron resultados anteriores.
-                Se necesitan para hacer el analisis de entremes.
-                """
-            )
-        )
-
-    mes_corte_anterior = utils.mes_anterior_corte(mes_corte)
-    resultados_mes_anterior = resultados_anteriores.filter(
-        pl.col("mes_corte") == mes_corte_anterior
-    )
-    if tipo_analisis_anterior:
-        resultados_mes_anterior = resultados_mes_anterior.filter(
-            pl.col("tipo_analisis") == tipo_analisis_anterior
-        )
-
+def verificar_existencia_analisis_anteriores(
+    resultados_mes_anterior: pl.DataFrame,
+) -> None:
+    mes_corte_anterior = resultados_mes_anterior.get_column("mes_corte").unique().item()
     if resultados_mes_anterior.shape[0] == 0:
         raise ValueError(
             utils.limpiar_espacios_log(
@@ -102,7 +76,45 @@ def obtener_resultados_mes_anterior(
             )
         )
 
-    return resultados_mes_anterior
+
+def obtener_resultados_mes_anterior(
+    resultados_anteriores: pl.DataFrame,
+    mes_corte: int,
+    referencias_entremes: ReferenciasEntremes,
+) -> pl.DataFrame:
+    mes_corte_anterior = utils.mes_anterior_corte(mes_corte)
+    resultados_mes_anterior = resultados_anteriores.filter(
+        pl.col("mes_corte") == mes_corte_anterior
+    )
+
+    resultado_actuarial = resultados_mes_anterior.filter(
+        pl.col("tipo_analisis") == referencias_entremes.referencia_actuarial
+    )
+    resultado_contable = resultados_mes_anterior.filter(
+        pl.col("tipo_analisis") == referencias_entremes.referencia_contable
+    )
+
+    if referencias_entremes.referencia_actuarial == "entremes":
+        resultado_actuarial = agrupar_entremes_anterior(resultado_actuarial)
+
+    if referencias_entremes.referencia_contable == "entremes":
+        resultado_contable = agrupar_entremes_anterior(resultado_contable)
+
+    return (
+        resultado_actuarial.drop(
+            [col for col in ct.COLUMNAS_ULTIMATE if "contable" in col]
+        )
+        .join(
+            resultado_contable.drop(
+                [col for col in ct.COLUMNAS_ULTIMATE if "contable" not in col]
+            ),
+            on=COLUMNAS_BASE + ["atipico"],
+            how="outer",
+            validate="1:1",
+            coalesce=True,
+        )
+        .select(COLUMNAS_BASE + ["atipico"] + ct.COLUMNAS_ULTIMATE)
+    )
 
 
 def agrupar_entremes_anterior(entremes_anterior: pl.DataFrame) -> pl.DataFrame:
@@ -133,6 +145,7 @@ def agrupar_entremes_anterior(entremes_anterior: pl.DataFrame) -> pl.DataFrame:
                 pl.col("mes_corte").mod(100).mod(pl.col("numero_meses_periodicididad"))
                 == 0
             )
+            & ~(pl.col("periodicidad_maxima") == "Mensual")
         )
         .with_columns(
             periodicidad_ocurrencia=pl.when(pl.col("agrupar"))
@@ -143,7 +156,11 @@ def agrupar_entremes_anterior(entremes_anterior: pl.DataFrame) -> pl.DataFrame:
             .otherwise(pl.col("periodo_ocurrencia")),
         )
         .group_by(COLUMNAS_BASE + ["atipico"])
-        .agg([pl.sum(col) for col in ct.COLUMNAS_ULTIMATE])
+        .agg(
+            [pl.mean(col) for col in ct.COLUMNAS_ULTIMATE[:3]]
+            + [pl.sum(col) for col in ct.COLUMNAS_ULTIMATE[3:]]
+        )
+        .sort(COLUMNAS_BASE + ["atipico"])
     )
 
 

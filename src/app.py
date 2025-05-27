@@ -4,6 +4,7 @@ from functools import wraps
 from typing import Annotated
 from uuid import uuid4
 
+import polars as pl
 from fastapi import Cookie, Depends, FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, Response
@@ -22,7 +23,7 @@ from src.metodos_plantilla.guardar_traer import (
     traer_apertura,
     traer_guardar_todo,
 )
-from src.models import ModosPlantilla, Parametros
+from src.models import ModosPlantilla, Parametros, ReferenciasEntremes
 
 engine = create_engine(
     "sqlite:///data/database.db", connect_args={"check_same_thread": False}
@@ -212,6 +213,25 @@ async def generar_aperturas(
     return {"aperturas": aperturas}
 
 
+@app.get("/obtener-analisis-anteriores")
+def obtener_analisis_anteriores(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+):
+    p = obtener_parametros_usuario(session, session_id)
+    resultados_anteriores = resultados.concatenar_archivos_resultados()
+    mes_corte_anterior = utils.mes_anterior_corte(p.mes_corte)
+    resultados_mes_anterior = resultados_anteriores.filter(
+        pl.col("mes_corte") == mes_corte_anterior
+    )
+    preparar.verificar_existencia_analisis_anteriores(resultados_mes_anterior)
+
+    return {
+        "analisis_anteriores": resultados_mes_anterior.get_column("tipo_analisis")
+        .unique()
+        .to_list()
+    }
+
+
 @app.post("/abrir-plantilla")
 async def abrir_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
@@ -223,23 +243,14 @@ async def abrir_plantilla(
 @app.post("/preparar-plantilla")
 @atrapar_excepciones
 async def preparar_plantilla(
+    referencias_entremes: Annotated[ReferenciasEntremes, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-    tipo_analisis_anterior: str | None = None,
 ):
     p = obtener_parametros_usuario(session, session_id)
-    if p.tipo_analisis == "entremes":
-        resultados_anteriores = resultados.concatenar_archivos_resultados()
-        resultados_mes_anterior = preparar.obtener_resultados_mes_anterior(
-            resultados_anteriores, p.mes_corte, tipo_analisis_anterior
-        )
-
-        if resultados_mes_anterior.get_column("tipo_analisis").unique().len() > 1:
-            return {"status": "multiples_resultados_anteriores"}
-
     main.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    preparar.preparar_plantilla(wb, p, tipo_analisis_anterior)
+    preparar.preparar_plantilla(wb, p, referencias_entremes)
 
 
 def obtener_plantilla(session: SessionDep, session_id: str | None):

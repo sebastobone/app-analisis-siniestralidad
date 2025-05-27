@@ -108,6 +108,20 @@
       </button>
     </div>
 
+    <div class="form-section" id="referenciasEntremes" style="display: none">
+      <h2>Referencias para entremes</h2>
+
+      <label>Referencia para ultimate actuarial:</label>
+      <select id="referenciaActuarial">
+        <option value="entremes">Entremes</option>
+      </select>
+
+      <label>Referencia para ultimate contable:</label>
+      <select id="referenciaContable">
+        <option value="entremes">Entremes</option>
+      </select>
+    </div>
+
     <div class="form-section">
       <h2>Plantilla</h2>
       <button class="apiButton" endpoint="abrir-plantilla">
@@ -157,17 +171,6 @@
       <button class="apiButton" endpoint="generar-informe-ar">
         Generar informe Actuario Responsable
       </button>
-    </div>
-
-    <div id="popup-overlay" style="display: none">
-      <div id="popup-window">
-        <p id="popup-message">
-          ¡Alerta! Se encontraron varios analisis para el mes anterior. Por
-          favor, seleccione uno de referencia para el nuevo entremes:
-        </p>
-        <button id="analisisAnteriorTriangulos">Triangulos</button>
-        <button id="analisisAnteriorEntremes">Entremes</button>
-      </div>
     </div>
 
     <script src="static/logViewer.js"></script>

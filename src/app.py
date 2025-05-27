@@ -223,12 +223,23 @@ async def abrir_plantilla(
 @app.post("/preparar-plantilla")
 @atrapar_excepciones
 async def preparar_plantilla(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> None:
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
+    tipo_analisis_anterior: str | None = None,
+):
     p = obtener_parametros_usuario(session, session_id)
+    if p.tipo_analisis == "entremes":
+        resultados_anteriores = resultados.concatenar_archivos_resultados()
+        resultados_mes_anterior = preparar.obtener_resultados_mes_anterior(
+            resultados_anteriores, p.mes_corte, tipo_analisis_anterior
+        )
+
+        if resultados_mes_anterior.get_column("tipo_analisis").unique().len() > 1:
+            return {"status": "multiples_resultados_anteriores"}
+
     main.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-    preparar.preparar_plantilla(wb, p)
+    preparar.preparar_plantilla(wb, p, tipo_analisis_anterior)
 
 
 def obtener_plantilla(session: SessionDep, session_id: str | None):

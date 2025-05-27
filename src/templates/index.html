@@ -113,9 +113,7 @@
       <button class="apiButton" endpoint="abrir-plantilla">
         Abrir plantilla
       </button>
-      <button class="apiButton" endpoint="preparar-plantilla">
-        Preparar plantilla
-      </button>
+      <button id="prepararPlantilla">Preparar plantilla</button>
 
       <button id="generarAperturas">Generar aperturas</button>
 
@@ -161,6 +159,17 @@
       </button>
     </div>
 
+    <div id="popup-overlay" style="display: none">
+      <div id="popup-window">
+        <p id="popup-message">
+          ¡Alerta! Se encontraron varios analisis para el mes anterior. Por
+          favor, seleccione uno de referencia para el nuevo entremes:
+        </p>
+        <button id="analisisAnteriorTriangulos">Triangulos</button>
+        <button id="analisisAnteriorEntremes">Entremes</button>
+      </div>
+    </div>
+
     <script src="static/logViewer.js"></script>
     <script type="module" src="static/ingresarParametros.js"></script>
     <script type="module" src="static/traerParametros.js"></script>
@@ -168,5 +177,6 @@
     <script src="static/dropdowns/generarAtributos.js"></script>
     <script type="module" src="static/apiButtons.js"></script>
     <script type="module" src="static/modosPlantilla.js"></script>
+    <script type="module" src="static/prepararPlantilla.js"></script>
   </body>
 </html>

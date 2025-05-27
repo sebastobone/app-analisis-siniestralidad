@@ -12,7 +12,9 @@ from src.models import Parametros
 from .completar_diagonal import factor_completitud as compl
 
 
-def preparar_plantilla(wb: xw.Book, p: Parametros) -> None:
+def preparar_plantilla(
+    wb: xw.Book, p: Parametros, tipo_analisis_anterior: str | None = None
+) -> None:
     s = time.time()
 
     aperturas = utils.obtener_aperturas(p.negocio, "siniestros")
@@ -37,23 +39,31 @@ def preparar_plantilla(wb: xw.Book, p: Parametros) -> None:
     generar_hojas_resumen(wb, resumen, resultados_anteriores, atipicos)
 
     if p.tipo_analisis == "entremes":
-        verificar_resultados_anteriores_para_entremes(
-            resumen, resultados_anteriores, p.mes_corte
+        resultados_mes_anterior = obtener_resultados_mes_anterior(
+            resultados_anteriores, p.mes_corte, tipo_analisis_anterior
         )
+        comparar_aperturas_mes_anterior(resumen, resultados_mes_anterior)
         factores_completitud = compl.calcular_factores_completitud(
             aperturas.lazy(), p.mes_corte
         )
-        generar_hoja_entremes(
-            wb, entremes, resultados_anteriores, factores_completitud, p.mes_corte
+        entremes = complementar_tabla_entremes(
+            entremes,
+            resultados_anteriores,
+            resultados_mes_anterior,
+            factores_completitud,
+            p.mes_corte,
         )
+        generar_hoja_entremes(wb, entremes)
 
     logger.success("Plantilla preparada.")
     logger.info(f"Tiempo de preparacion: {round(time.time() - s, 2)} segundos.")
 
 
-def verificar_resultados_anteriores_para_entremes(
-    diagonales: pl.DataFrame, resultados_anteriores: pl.DataFrame, mes_corte: int
-) -> None:
+def obtener_resultados_mes_anterior(
+    resultados_anteriores: pl.DataFrame,
+    mes_corte: int,
+    tipo_analisis_anterior: str | None = None,
+) -> pl.DataFrame:
     if resultados_anteriores.shape[0] == 0:
         raise ValueError(
             utils.limpiar_espacios_log(
@@ -68,6 +78,10 @@ def verificar_resultados_anteriores_para_entremes(
     resultados_mes_anterior = resultados_anteriores.filter(
         pl.col("mes_corte") == mes_corte_anterior
     )
+    if tipo_analisis_anterior:
+        resultados_mes_anterior = resultados_mes_anterior.filter(
+            pl.col("tipo_analisis") == tipo_analisis_anterior
+        )
 
     if resultados_mes_anterior.shape[0] == 0:
         raise ValueError(
@@ -80,6 +94,12 @@ def verificar_resultados_anteriores_para_entremes(
             )
         )
 
+    return resultados_mes_anterior
+
+
+def comparar_aperturas_mes_anterior(
+    diagonales: pl.DataFrame, resultados_mes_anterior: pl.DataFrame
+) -> None:
     aperturas_actuales = sorted(
         diagonales.get_column("apertura_reservas").unique().to_list()
     )
@@ -90,8 +110,8 @@ def verificar_resultados_anteriores_para_entremes(
         raise ValueError(
             utils.limpiar_espacios_log(
                 f"""
-                Las aperturas no coinciden con los analisis anteriores,
-                los cuales se necesitan para el analisis de entremes. Si realizo
+                Las aperturas no coinciden con el analisis anterior,
+                el cual se necesita para el analisis de entremes. Si realizo
                 un cambio a las aperturas con las que quiere hacer el analisis,
                 modifique los resultados anteriores y vuelva a intentar.
                 Aperturas actuales: {aperturas_actuales}.
@@ -151,13 +171,13 @@ def generar_hojas_resumen(
     wb.macro("FormatearTablaResumen")("Atipicos")
 
 
-def generar_hoja_entremes(
-    wb: xw.Book,
+def complementar_tabla_entremes(
     tabla_entremes: pl.DataFrame,
     resultados_anteriores: pl.DataFrame,
+    resultados_mes_anterior: pl.DataFrame,
     factores_completitud: pl.DataFrame,
     mes_corte: int,
-) -> None:
+) -> pl.DataFrame:
     columnas_base = [
         "apertura_reservas",
         "periodicidad_ocurrencia",
@@ -165,15 +185,12 @@ def generar_hoja_entremes(
     ]
 
     resultados_mes_anterior = (
-        resultados_anteriores.filter(
-            (pl.col("mes_corte") == utils.mes_anterior_corte(mes_corte))
-            & (pl.col("atipico") == 0)
-        )
+        resultados_mes_anterior.filter(pl.col("atipico") == 0)
         .select(columnas_base + ct.COLUMNAS_ULTIMATE)
         .rename({col: f"{col}_anterior" for col in ct.COLUMNAS_ULTIMATE})
     )
 
-    tabla_entremes = (
+    return (
         tabla_entremes.join(
             resultados_mes_anterior, on=columnas_base, how="left", validate="1:1"
         )
@@ -192,6 +209,11 @@ def generar_hoja_entremes(
         .sort(["apertura_reservas", "periodo_ocurrencia"])
     )
 
+
+def generar_hoja_entremes(
+    wb: xw.Book,
+    tabla_entremes: pl.DataFrame,
+) -> None:
     wb.sheets["Entremes"]["A1"].options(index=False).value = tabla_entremes.to_pandas()
     wb.macro("FormatearTablaResumen")("Entremes")
     wb.macro("PrepararEntremes")()
@@ -213,6 +235,7 @@ def obtener_resultados_ultimo_triangulo(
             & (pl.col("atipico") == 0)
             & (pl.col("mes_corte") < mes_corte)
         )
+        .filter(pl.col("mes_corte") == pl.col("mes_corte").max())
         .with_columns(
             velocidad_pago_bruto_triangulo=pl.col("pago_bruto")
             / pl.col("plata_ultimate_bruto"),

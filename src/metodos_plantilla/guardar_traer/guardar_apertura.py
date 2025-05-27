@@ -68,15 +68,16 @@ def guardar_factores_completitud(
     wb: xw.Book, apertura: str, atributo: str, num_ocurrencias: int
 ):
     for metodologia in ["pago", "incurrido"]:
-        wb.macro("GuardarVector")(
-            "Completar_diagonal",
-            "Entremes",
-            apertura,
-            atributo,
-            f"factor_completitud_{metodologia}",
-            f"factor_completitud_{metodologia}_{atributo}",
-            num_ocurrencias,
-        )
+        for cantidad in ["porcentaje_desarrollo", "factor_completitud"]:
+            wb.macro("GuardarVector")(
+                "Completar_diagonal",
+                "Entremes",
+                apertura,
+                atributo,
+                f"{cantidad}_{metodologia}",
+                f"{cantidad}_{metodologia}_{atributo}",
+                num_ocurrencias,
+            )
 
 
 def guardar_parametros(

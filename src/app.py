@@ -4,7 +4,6 @@ from functools import wraps
 from typing import Annotated
 from uuid import uuid4
 
-import polars as pl
 from fastapi import Cookie, Depends, FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, Response
@@ -214,17 +213,12 @@ async def generar_aperturas(
 
 
 @app.get("/obtener-analisis-anteriores")
+@atrapar_excepciones
 def obtener_analisis_anteriores(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ):
     p = obtener_parametros_usuario(session, session_id)
-    resultados_anteriores = resultados.concatenar_archivos_resultados()
-    mes_corte_anterior = utils.mes_anterior_corte(p.mes_corte)
-    resultados_mes_anterior = resultados_anteriores.filter(
-        pl.col("mes_corte") == mes_corte_anterior
-    )
-    preparar.verificar_existencia_analisis_anteriores(resultados_mes_anterior)
-
+    resultados_mes_anterior = preparar.obtener_analisis_anteriores(p.mes_corte)
     return {
         "analisis_anteriores": resultados_mes_anterior.get_column("tipo_analisis")
         .unique()
@@ -246,7 +240,7 @@ async def preparar_plantilla(
     referencias_entremes: Annotated[ReferenciasEntremes, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-):
+) -> None:
     p = obtener_parametros_usuario(session, session_id)
     main.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")

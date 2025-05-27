@@ -61,12 +61,23 @@ def preparar_plantilla(
     logger.info(f"Tiempo de preparacion: {round(time.time() - s, 2)} segundos.")
 
 
-def verificar_existencia_analisis_anteriores(
-    resultados_mes_anterior: pl.DataFrame,
-) -> None:
-    mes_corte_anterior = resultados_mes_anterior.get_column("mes_corte").unique().item()
-    if resultados_mes_anterior.shape[0] == 0:
-        raise ValueError(
+def obtener_analisis_anteriores(mes_corte: int) -> pl.DataFrame:
+    resultados_anteriores = resultados.concatenar_archivos_resultados()
+    if resultados_anteriores.is_empty():
+        raise AnalisisAnterioresNoEncontradosError(
+            utils.limpiar_espacios_log(
+                """
+                No se encontraron resultados anteriores. Se necesitan
+                para hacer el analisis de entremes.
+                """
+            )
+        )
+    mes_corte_anterior = utils.mes_anterior_corte(mes_corte)
+    resultados_mes_anterior = resultados_anteriores.filter(
+        pl.col("mes_corte") == mes_corte_anterior
+    )
+    if resultados_mes_anterior.is_empty():
+        raise AnalisisAnterioresNoEncontradosError(
             utils.limpiar_espacios_log(
                 f"""
                 No se encontraron resultados anteriores
@@ -75,6 +86,7 @@ def verificar_existencia_analisis_anteriores(
                 """
             )
         )
+    return resultados_mes_anterior
 
 
 def obtener_resultados_mes_anterior(
@@ -109,7 +121,7 @@ def obtener_resultados_mes_anterior(
                 [col for col in ct.COLUMNAS_ULTIMATE if "contable" not in col]
             ),
             on=COLUMNAS_BASE + ["atipico"],
-            how="outer",
+            how="full",
             validate="1:1",
             coalesce=True,
         )
@@ -325,4 +337,8 @@ def verificar_plantilla_preparada(wb: xw.Book):
 
 
 class PlantillaNoPreparadaError(Exception):
+    pass
+
+
+class AnalisisAnterioresNoEncontradosError(Exception):
     pass

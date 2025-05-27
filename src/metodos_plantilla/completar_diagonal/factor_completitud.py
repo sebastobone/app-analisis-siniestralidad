@@ -99,13 +99,16 @@ def calcular_factor_completitud(
             suffix="_ultimo_mes",
         )
         .with_columns(
+            (1 / pl.col(factor_seleccionado)).alias(
+                f"porcentaje_desarrollo_{cantidad}"
+            ),
             (
                 1
                 / (
                     pl.col(factor_seleccionado)
                     / pl.col(f"{factor_seleccionado}_ultimo_mes")
                 )
-            ).alias(f"factor_completitud_{cantidad}")
+            ).alias(f"factor_completitud_{cantidad}"),
         )
         .filter(
             pl.col("mes_del_periodo")
@@ -113,5 +116,11 @@ def calcular_factor_completitud(
                 utils.yyyymm_to_date(mes_corte), 1, meses_entre_triangulos
             )
         )
-        .select(["numero_periodo_ocurrencia", f"factor_completitud_{cantidad}"])
+        .select(
+            [
+                "numero_periodo_ocurrencia",
+                f"porcentaje_desarrollo_{cantidad}",
+                f"factor_completitud_{cantidad}",
+            ]
+        )
     )

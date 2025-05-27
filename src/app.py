@@ -214,7 +214,7 @@ async def generar_aperturas(
 
 @app.get("/obtener-analisis-anteriores")
 @atrapar_excepciones
-def obtener_analisis_anteriores(
+async def obtener_analisis_anteriores(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ):
     p = obtener_parametros_usuario(session, session_id)

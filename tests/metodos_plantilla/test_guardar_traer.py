@@ -4,13 +4,12 @@ from datetime import date
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from src.models import Parametros
-from tests.conftest import agregar_meses_params, vaciar_directorios_test
+from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
 
 
 @pytest.mark.plantilla
 @pytest.mark.integration
-def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
+def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
     params_form = {
@@ -20,13 +19,8 @@ def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
     }
     agregar_meses_params(params_form, rango_meses)
 
-    response = client.post("/ingresar-parametros", data=params_form).json()
-    p = Parametros.model_validate(response)
-
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
-
+    _ = client.post("/ingresar-parametros", data=params_form)
+    correr_queries(client)
     _ = client.post("/preparar-plantilla")
 
     rangos = [
@@ -45,42 +39,109 @@ def test_guardar_traer(client: TestClient, rango_meses: tuple[date, date]):
     apertura = "01_001_A_D"
     atributo = "bruto"
     for plantilla in ["frecuencia", "severidad", "plata"]:
+        guardar_traer_apertura(client, rangos, apertura, atributo, plantilla)
+
+    vaciar_directorios_test()
+
+
+@pytest.mark.plantilla
+@pytest.mark.integration
+def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, date]):
+    vaciar_directorios_test()
+
+    apertura = "01_001_A_D"
+    atributo = "bruto"
+    plantilla = "completar_diagonal"
+
+    rangos = [
+        "EXCLUSIONES",
+        "VENTANAS",
+        "TIPO_FACTORES_SELECCIONADOS",
+        "FACTORES_SELECCIONADOS",
+    ]
+
+    params_form = {
+        "negocio": "demo",
+        "tipo_analisis": "triangulos",
+        "nombre_plantilla": "wb_test",
+    }
+    agregar_meses_params(params_form, rango_meses)
+    params_form.update({"mes_corte": "202412"})
+
+    _ = client.post("/ingresar-parametros", data=params_form)
+    correr_queries(client)
+    _ = client.post("/preparar-plantilla")
+    guardar_traer_apertura(client, rangos, apertura, atributo, "plata")
+    _ = client.post("/almacenar-analisis")
+
+    params_form = {
+        "negocio": "demo",
+        "tipo_analisis": "entremes",
+        "nombre_plantilla": "wb_test",
+    }
+    agregar_meses_params(params_form, rango_meses)
+    params_form.update({"mes_corte": "202501"})
+
+    _ = client.post("/ingresar-parametros", data=params_form)
+    correr_queries(client)
+    _ = client.post(
+        "/preparar-plantilla",
+        data={
+            "referencia_actuarial": "triangulos",
+            "referencia_contable": "triangulos",
+        },
+    )
+
+    with pytest.raises(FileNotFoundError):
+        _ = client.post("/traer-entremes")
+
+    response = client.post("/guardar-entremes")
+    assert response.status_code == status.HTTP_200_OK
+
+    response = client.post("/traer-entremes")
+    assert response.status_code == status.HTTP_200_OK
+
+    guardar_traer_apertura(client, rangos, apertura, atributo, plantilla)
+    vaciar_directorios_test()
+
+
+def guardar_traer_apertura(
+    client: TestClient, rangos: list[str], apertura: str, atributo: str, plantilla: str
+) -> None:
+    _ = client.post(
+        "/generar-plantilla",
+        data={
+            "apertura": apertura,
+            "atributo": atributo,
+            "plantilla": plantilla,
+        },
+    )
+
+    archivos_guardados = [
+        f"wb_test.xlsm_{apertura}_{atributo}_{plantilla.capitalize()}_{nombre_rango}"
+        for nombre_rango in rangos
+    ]
+
+    with pytest.raises(FileNotFoundError):
         _ = client.post(
-            "/generar-plantilla",
+            "/traer-apertura",
             data={
-                "apertura": "01_001_A_D",
-                "atributo": "bruto",
+                "apertura": apertura,
+                "atributo": atributo,
                 "plantilla": plantilla,
             },
         )
 
-        archivos_guardados = [
-            f"{p.nombre_plantilla}.xlsm_{apertura}_{atributo}_{plantilla.capitalize()}_{nombre_rango}"
-            for nombre_rango in rangos
-        ]
+    response = client.post(
+        "/guardar-apertura",
+        data={"apertura": apertura, "atributo": atributo, "plantilla": plantilla},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    for archivo in archivos_guardados:
+        assert os.path.exists(f"data/db/{archivo}.parquet")
 
-        with pytest.raises(FileNotFoundError):
-            _ = client.post(
-                "/traer-apertura",
-                data={
-                    "apertura": apertura,
-                    "atributo": atributo,
-                    "plantilla": plantilla,
-                },
-            )
-
-        response = client.post(
-            "/guardar-apertura",
-            data={"apertura": apertura, "atributo": atributo, "plantilla": plantilla},
-        )
-        assert response.status_code == status.HTTP_200_OK
-        for archivo in archivos_guardados:
-            assert os.path.exists(f"data/db/{archivo}.parquet")
-
-        response = client.post(
-            "/traer-apertura",
-            data={"apertura": apertura, "atributo": atributo, "plantilla": plantilla},
-        )
-        assert response.status_code == status.HTTP_200_OK
-
-    vaciar_directorios_test()
+    response = client.post(
+        "/traer-apertura",
+        data={"apertura": apertura, "atributo": atributo, "plantilla": plantilla},
+    )
+    assert response.status_code == status.HTTP_200_OK

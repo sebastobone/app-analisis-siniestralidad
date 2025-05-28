@@ -10,7 +10,12 @@ from src import constantes as ct
 from src import utils
 from src.metodos_plantilla import abrir, preparar
 from src.models import Parametros
-from tests.conftest import agregar_meses_params, assert_igual, vaciar_directorios_test
+from tests.conftest import (
+    agregar_meses_params,
+    assert_igual,
+    correr_queries,
+    vaciar_directorios_test,
+)
 
 
 @pytest.mark.plantilla
@@ -134,7 +139,11 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
         },
     )
 
-    verificar_hojas_visibles(wb_test)
+    assert wb_test.sheets["Entremes"].visible
+    assert not wb_test.sheets["Frecuencia"].visible
+    assert not wb_test.sheets["Severidad"].visible
+    assert not wb_test.sheets["Plata"].visible
+
     validar_cifras_entremes(wb_test)
 
     _ = client.post("/almacenar-analisis")
@@ -165,13 +174,6 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     _ = client.post("/almacenar-analisis")
 
     vaciar_directorios_test()
-
-
-def verificar_hojas_visibles(wb_test: xw.Book) -> None:
-    assert wb_test.sheets["Entremes"].visible
-    assert not wb_test.sheets["Frecuencia"].visible
-    assert not wb_test.sheets["Severidad"].visible
-    assert not wb_test.sheets["Plata"].visible
 
 
 def validar_cifras_entremes(wb_test: xw.Book) -> None:
@@ -226,9 +228,3 @@ def validar_cifras_entremes(wb_test: xw.Book) -> None:
     assert base_atipicos_original.shape[0] == base_atipicos_plantilla.shape[0]
     for columna in ct.COLUMNAS_QTYS:
         assert_igual(base_atipicos_original, base_atipicos_plantilla, columna)
-
-
-def correr_queries(client: TestClient) -> None:
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")

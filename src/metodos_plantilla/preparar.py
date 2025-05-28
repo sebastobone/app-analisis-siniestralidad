@@ -148,7 +148,6 @@ def agrupar_entremes_anterior(entremes_anterior: pl.DataFrame) -> pl.DataFrame:
             .replace(periodicidades_inverso)
         )
     )
-    print(periodicidades_maximas)
     return (
         entremes_anterior.join(periodicidades_maximas, on="apertura_reservas")
         .with_columns(

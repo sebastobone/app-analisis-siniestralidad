@@ -67,7 +67,17 @@ def calcular_factores_completitud(
             ).fill_null(1)
 
         factores_completitud_aperturas.append(
-            base_factores_completitud.drop("numero_periodo_ocurrencia")
+            base_factores_completitud.with_columns(
+                # Para que el join despues no bote la ocurrencia mas reciente
+                periodicidad_ocurrencia=pl.when(
+                    pl.col("numero_periodo_ocurrencia") == 0
+                )
+                .then(pl.lit("Mensual"))
+                .otherwise(pl.col("periodicidad_ocurrencia")),
+                periodo_ocurrencia=pl.when(pl.col("numero_periodo_ocurrencia") == 0)
+                .then(pl.col("periodo_ocurrencia") - (meses_entre_triangulos - 1))
+                .otherwise(pl.col("periodo_ocurrencia")),
+            ).drop("numero_periodo_ocurrencia")
         )
 
     return pl.concat(factores_completitud_aperturas)

@@ -206,6 +206,12 @@ def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, d
     )
 
 
+def correr_queries(client: TestClient) -> None:
+    _ = client.post("/correr-query-siniestros")
+    _ = client.post("/correr-query-primas")
+    _ = client.post("/correr-query-expuestos")
+
+
 async def obtener_sap_negocio(
     negocio: str,
     file: Literal["siniestros", "primas"],

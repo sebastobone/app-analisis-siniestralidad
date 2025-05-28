@@ -30,7 +30,7 @@ def obtener_rangos_parametros(
 
 def obtener_rangos_parametros_comunes(
     hoja: xw.Sheet, num_ocurrencias: int, num_alturas: int
-):
+) -> dict[str, xw.Range]:
     return {
         "EXCLUSIONES": obtener_rango(
             hoja,

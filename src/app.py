@@ -18,6 +18,7 @@ from src.logger_config import log_queue, logger
 from src.metodos_plantilla import abrir, actualizar, generar, preparar, resultados
 from src.metodos_plantilla import almacenar_analisis as almacenar
 from src.metodos_plantilla.guardar_traer import (
+    entremes,
     guardar_apertura,
     traer_apertura,
     traer_guardar_todo,
@@ -283,7 +284,7 @@ async def guardar(
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
-    wb, p = obtener_plantilla(session, session_id)
+    wb, _ = obtener_plantilla(session, session_id)
     guardar_apertura.guardar_apertura(wb, modos)
 
 
@@ -303,6 +304,24 @@ async def traer(
     ):
         generar.generar_plantillas(wb, p, modos)
     traer_apertura.traer_apertura(wb, modos)
+
+
+@app.post("/guardar-entremes")
+@atrapar_excepciones
+async def guardar_entremes(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> None:
+    wb, _ = obtener_plantilla(session, session_id)
+    entremes.guardar_entremes(wb)
+
+
+@app.post("/traer-entremes")
+@atrapar_excepciones
+async def traer_entremes(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> None:
+    wb, _ = obtener_plantilla(session, session_id)
+    entremes.traer_entremes(wb)
 
 
 @app.post("/guardar-todo")

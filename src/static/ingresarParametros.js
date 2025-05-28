@@ -53,8 +53,6 @@ async function generarDropdownPlantillas(tipoAnalisis) {
 
 async function generarReferenciasEntremes() {
   try {
-    document.getElementById("referenciasEntremes").style.display = "block";
-
     const response = await fetch(
       "http://127.0.0.1:8000/obtener-analisis-anteriores",
     );
@@ -110,5 +108,12 @@ document
 
     const success = await enviarParametros(formData);
     if (success) await generarDropdownPlantillas(tipoAnalisis);
-    if (tipoAnalisis === "entremes") await generarReferenciasEntremes();
+    if (tipoAnalisis === "entremes") {
+      document.getElementById("referenciasEntremes").style.display = "block";
+      await generarReferenciasEntremes();
+      document.getElementById("botonesEntremes").style.display = "block";
+    } else {
+      document.getElementById("referenciasEntremes").style.display = "none";
+      document.getElementById("botonesEntremes").style.display = "none";
+    }
   });

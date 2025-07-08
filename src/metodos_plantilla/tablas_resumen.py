@@ -69,6 +69,13 @@ def generar_tablas_resumen(
         .collect()
     )
 
+    categorias_criterio = {
+        "metodologia": "",
+        "indicador": 0,
+        "indicador_chain_ladder": 0,
+        "comentarios": "",
+    }
+
     tabla_resumen = (
         diagonales.filter(pl.col("atipico") == 0)
         .drop("atipico")
@@ -83,6 +90,24 @@ def generar_tablas_resumen(
             plata_ultimate_contable_retenido=0,
             aviso_bruto=pl.col("incurrido_bruto") - pl.col("pago_bruto"),
             aviso_retenido=pl.col("incurrido_retenido") - pl.col("pago_retenido"),
+            ibnr_bruto=0,
+            ibnr_contable_bruto=0,
+            ibnr_retenido=0,
+            ibnr_contable_retenido=0,
+        )
+        .with_columns(
+            [
+                pl.lit(categorias_criterio[categoria]).alias(f"frecuencia_{categoria}")
+                for categoria in list(categorias_criterio.keys())
+            ]
+            + [
+                pl.lit(categorias_criterio[categoria]).alias(
+                    f"{cantidad}_{categoria}_{atributo}"
+                )
+                for cantidad in ["severidad", "plata"]
+                for atributo in ["bruto", "retenido"]
+                for categoria in list(categorias_criterio.keys())
+            ]
         )
         .sort(["apertura_reservas", "periodo_ocurrencia"])
         .collect()

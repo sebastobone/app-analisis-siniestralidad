@@ -19,7 +19,9 @@ def almacenar_analisis(
         atipico=1, mes_corte=mes_corte, tipo_analisis=pl.lit(tipo_analisis)
     )
     if df_resultados_atipicos.shape[0] != 0:
-        df_resultados = df_resultados.vstack(df_resultados_atipicos)
+        df_resultados = pl.concat(
+            [df_resultados, df_resultados_atipicos], how="diagonal_relaxed"
+        )
 
     ruta = f"output/resultados/{nombre_plantilla}_{mes_corte}_{tipo_analisis}.parquet"
     df_resultados.write_parquet(ruta)

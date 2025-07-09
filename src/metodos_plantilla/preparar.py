@@ -216,7 +216,8 @@ def mostrar_plantillas_relevantes(wb: xw.Book, tipo_analisis: str):
         wb.sheets["Entremes"].visible = True
         wb.sheets["Completar_diagonal"].visible = True
         wb.sheets["Indexaciones"].visible = False
-        for plantilla in ["frecuencia", "severidad", "plata"]:
+        wb.sheets["Frecuencia"].visible = True
+        for plantilla in ["severidad", "plata"]:
             wb.sheets[plantilla].visible = False
 
 

@@ -31,7 +31,7 @@ def concatenar_archivos_resultados() -> pl.DataFrame:
 
     if dfs:
         df_resultados = (
-            pl.DataFrame(pl.concat(dfs))
+            pl.DataFrame(pl.concat(dfs, how="diagonal_relaxed"))
             .unique(subset=columnas_distintivas + ["periodo_ocurrencia"], keep="last")
             .sort(columnas_distintivas + ["periodo_ocurrencia"])
             .with_columns(pl.col("periodo_ocurrencia").cast(pl.Int32))

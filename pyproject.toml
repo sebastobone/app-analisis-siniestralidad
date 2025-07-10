@@ -39,7 +39,6 @@ dev = [
     "sqlfluff>=3.3.1",
     "types-openpyxl>=3.1.5.20241225",
     "types-pyautogui>=0.9.3.20241230",
-    "types-tqdm>=4.67.0.20241221",
     "pytest-asyncio>=0.25.3",
     "mkdocs-include-markdown-plugin>=7.1.5",
 ]

@@ -32,7 +32,7 @@ def crear_hoja_segmentacion(
 
     wb.sheets[nombre_hoja].range("A1:A500").number_format = "@"
     wb.sheets[nombre_hoja].range("B1:B500").number_format = "@"
-    wb.sheets[nombre_hoja]["A1"].options(index=False).value = df.to_pandas()
+    wb.sheets[nombre_hoja]["A1"].value = df
 
     wb.save()
     wb.close()

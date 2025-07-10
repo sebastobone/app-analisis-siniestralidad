@@ -2,7 +2,6 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
-import pandas as pd
 import polars as pl
 import teradatasql as td
 
@@ -60,7 +59,7 @@ async def obtener_segmentaciones(
 ) -> list[pl.DataFrame]:
     hojas_segm = [
         str(hoja)
-        for hoja in pd.ExcelFile(path_archivo_segm).sheet_names
+        for hoja in list(pl.read_excel(path_archivo_segm, sheet_id=0).keys())
         if str(hoja).startswith("add")
     ]
 

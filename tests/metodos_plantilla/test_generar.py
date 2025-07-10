@@ -9,7 +9,7 @@ from src import constantes as ct
 from src import utils
 from src.metodos_plantilla import abrir, actualizar, generar, preparar
 from src.procesamiento import base_siniestros
-from tests.conftest import agregar_meses_params, vaciar_directorios_test
+from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
 
 
 @pytest.mark.integration
@@ -74,9 +74,7 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
     _ = client.post("/ingresar-parametros", data=params_form)
     wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     with pytest.raises(preparar.PlantillaNoPreparadaError):
         _ = client.post(
@@ -102,9 +100,7 @@ def test_generar_severidad(client: TestClient, rango_meses: tuple[date, date]):
     _ = client.post("/ingresar-parametros", data=params_form).json()
     wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
 

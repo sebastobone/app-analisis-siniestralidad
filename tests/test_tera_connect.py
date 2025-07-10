@@ -1,6 +1,5 @@
 from datetime import date, timedelta
 from typing import Literal
-from unittest.mock import MagicMock, patch
 
 import polars as pl
 import pytest
@@ -71,31 +70,18 @@ def test_crear_particiones_fechas(params: Parametros):
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-@pytest.mark.parametrize(
-    "tipo_query, hoja_segm",
-    [
-        ("siniestros", "add_s_Amparos"),
-        ("primas", "add_pe_Canales"),
-        ("expuestos", "add_pe_Canales"),
-    ],
-)
-@patch("src.extraccion.tera_connect.pd.ExcelFile")
-@patch("src.extraccion.tera_connect.pl.read_excel")
+@pytest.mark.parametrize("tipo_query", ["siniestros", "primas", "expuestos"])
 async def test_cargar_segmentaciones(
-    mock_read_excel: MagicMock,
-    mock_excel_file: MagicMock,
     tipo_query: Literal["siniestros", "primas", "expuestos"],
-    hoja_segm: str,
 ):
-    mock_excel_file.return_value.sheet_names = [hoja_segm]
+    df = pl.read_excel("data/segmentacion_demo.xlsx", sheet_id=0)
+    hojas_segm = [i for i in list(df.keys()) if str(i).startswith("add")]
 
-    mock_read_excel.return_value = pl.DataFrame({"col1": [1, 2, 3]})
+    result = await tera_connect.obtener_segmentaciones(
+        "data/segmentacion_demo.xlsx", tipo_query
+    )
 
-    result = await tera_connect.obtener_segmentaciones("test_file.xlsx", tipo_query)
-
-    assert len(result) == 1
-    mock_read_excel.assert_called_once_with("test_file.xlsx", sheet_name=hoja_segm)
-    mock_excel_file.assert_called_once_with("test_file.xlsx")
+    assert len(hojas_segm) == len(result)
 
 
 @pytest.mark.asyncio

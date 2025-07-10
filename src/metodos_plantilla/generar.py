@@ -1,7 +1,6 @@
 import time
 from math import ceil
 
-import pandas as pd
 import polars as pl
 import xlwings as xw
 
@@ -50,7 +49,7 @@ def generar_plantilla(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> None
         cantidades,
     )
 
-    hoja.cells(ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS).value = triangulo
+    hoja.cells(ct.FILA_INI_PLANTILLAS + 1, ct.COL_OCURRS_PLANTILLAS).value = triangulo
 
     num_ocurrencias = triangulo.shape[0]
     num_alturas = triangulo.shape[1] // len(cantidades)
@@ -86,7 +85,7 @@ def crear_triangulo_base_plantilla(
     atributo: str,
     aperturas: pl.DataFrame,
     cantidades: list[str],
-) -> pd.DataFrame:
+) -> pl.DataFrame:
     return (
         base_triangulos.filter(
             (pl.col("apertura_reservas") == apertura) & (pl.col("atipico") == 0)
@@ -117,10 +116,9 @@ def crear_triangulo_base_plantilla(
         )
         .filter((pl.col("atributo") == atributo) & pl.col("cantidad").is_in(cantidades))
         .collect()
-        .to_pandas()
         .pivot(
+            on=["cantidad", "index_desarrollo"],
             index="periodo_ocurrencia",
-            columns=["cantidad", "index_desarrollo"],
             values="valor",
         )
     )

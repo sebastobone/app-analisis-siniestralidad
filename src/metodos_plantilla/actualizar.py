@@ -44,7 +44,7 @@ def actualizar_plantilla(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> N
         cantidades,
     )
 
-    hoja.cells(ct.FILA_INI_PLANTILLAS, ct.COL_OCURRS_PLANTILLAS).value = triangulo
+    hoja.cells(ct.FILA_INI_PLANTILLAS + 1, ct.COL_OCURRS_PLANTILLAS).value = triangulo
     hoja.cells(1, 1).value = modos.apertura
     hoja.cells(2, 1).value = modos.atributo
 

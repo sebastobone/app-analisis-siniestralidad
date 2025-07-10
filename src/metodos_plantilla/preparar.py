@@ -216,7 +216,8 @@ def mostrar_plantillas_relevantes(wb: xw.Book, tipo_analisis: str):
         wb.sheets["Entremes"].visible = True
         wb.sheets["Completar_diagonal"].visible = True
         wb.sheets["Indexaciones"].visible = False
-        for plantilla in ["frecuencia", "severidad", "plata"]:
+        wb.sheets["Frecuencia"].visible = True
+        for plantilla in ["severidad", "plata"]:
             wb.sheets[plantilla].visible = False
 
 
@@ -230,19 +231,13 @@ def generar_hojas_resumen(
         wb.sheets[sheet].clear()
 
     if resultados_anteriores.shape[0] != 0:
-        wb.sheets["Historico"]["A1"].options(
-            index=False
-        ).value = resultados_anteriores.pipe(
+        wb.sheets["Historico"]["A1"].value = resultados_anteriores.pipe(
             utils.mantener_formato_columnas
-        ).to_pandas()
+        )
         wb.macro("FormatearTablaResumen")("Historico")
 
-    wb.sheets["Resumen"]["A1"].options(index=False).value = resumen.pipe(
-        utils.mantener_formato_columnas
-    ).to_pandas()
-    wb.sheets["Atipicos"]["A1"].options(index=False).value = atipicos.pipe(
-        utils.mantener_formato_columnas
-    ).to_pandas()
+    wb.sheets["Resumen"]["A1"].value = resumen.pipe(utils.mantener_formato_columnas)
+    wb.sheets["Atipicos"]["A1"].value = atipicos.pipe(utils.mantener_formato_columnas)
 
     wb.macro("FormatearTablaResumen")("Resumen")
     wb.macro("AgregarColumnasResumen")()
@@ -281,7 +276,7 @@ def generar_hoja_entremes(
     wb: xw.Book,
     tabla_entremes: pl.DataFrame,
 ) -> None:
-    wb.sheets["Entremes"]["A1"].options(index=False).value = tabla_entremes.to_pandas()
+    wb.sheets["Entremes"]["A1"].value = tabla_entremes
     wb.macro("FormatearTablaResumen")("Entremes")
     wb.macro("PrepararEntremes")()
     wb.macro("VincularUltimatesEntremes")()
@@ -328,8 +323,7 @@ def obtener_resultados_ultimo_triangulo(
 
 
 def verificar_plantilla_preparada(wb: xw.Book):
-    resumen = utils.sheet_to_dataframe(wb, "Resumen")
-    if resumen.is_empty():
+    if wb.sheets["Resumen"].cells(1, 1).value is None:
         raise PlantillaNoPreparadaError(
             "La plantilla no ha sido preparada. Preparela y vuelva a intentar."
         )

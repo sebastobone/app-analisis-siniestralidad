@@ -140,7 +140,7 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     )
 
     assert wb_test.sheets["Entremes"].visible
-    assert not wb_test.sheets["Frecuencia"].visible
+    assert wb_test.sheets["Frecuencia"].visible
     assert not wb_test.sheets["Severidad"].visible
     assert not wb_test.sheets["Plata"].visible
 

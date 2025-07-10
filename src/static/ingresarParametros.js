@@ -25,7 +25,7 @@ async function generarDropdownPlantillas(tipoAnalisis) {
     let listaPlantillas;
 
     if (tipoAnalisis === "entremes") {
-      listaPlantillas = ["completar_diagonal"];
+      listaPlantillas = ["completar_diagonal", "frecuencia"];
     } else {
       listaPlantillas = ["frecuencia", "severidad", "plata"];
     }

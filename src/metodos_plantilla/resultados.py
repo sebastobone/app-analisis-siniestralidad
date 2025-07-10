@@ -31,7 +31,7 @@ def concatenar_archivos_resultados() -> pl.DataFrame:
 
     if dfs:
         df_resultados = (
-            pl.DataFrame(pl.concat(dfs))
+            pl.DataFrame(pl.concat(dfs, how="diagonal_relaxed"))
             .unique(subset=columnas_distintivas + ["periodo_ocurrencia"], keep="last")
             .sort(columnas_distintivas + ["periodo_ocurrencia"])
             .with_columns(pl.col("periodo_ocurrencia").cast(pl.Int32))
@@ -53,10 +53,8 @@ def actualizar_wb_resultados() -> xw.Book:
         wb = xw.Book("output/resultados.xlsx")
 
     wb.sheets["Resultados"].clear_contents()
-    wb.sheets["Resultados"]["A1"].options(index=False).value = (
-        concatenar_archivos_resultados()
-        .pipe(utils.mantener_formato_columnas)
-        .to_pandas()
+    wb.sheets["Resultados"]["A1"].value = concatenar_archivos_resultados().pipe(
+        utils.mantener_formato_columnas
     )
 
     return wb

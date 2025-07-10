@@ -9,7 +9,7 @@ def obtener_rango_formulado_entremes(wb: xw.Book) -> xw.Range:
     columna_inicial = (
         tabla_entremes.collect_schema()
         .names()
-        .index("ultimate_bruto_completar_diagonal_pago")
+        .index("porcentaje_desarrollo_pago_bruto")
     )
     columna_final = tabla_entremes.shape[1]
     numero_filas = tabla_entremes.shape[0]

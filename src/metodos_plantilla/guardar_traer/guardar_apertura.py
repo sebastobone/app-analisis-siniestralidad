@@ -22,7 +22,7 @@ def guardar_apertura(wb: xw.Book, modos: ModosPlantilla) -> None:
     )
 
     if modos.plantilla != "completar_diagonal":
-        guardar_ultimate(
+        guardar_vectores_ultimate(
             wb,
             modos.plantilla,
             modos.apertura,
@@ -45,23 +45,38 @@ def guardar_apertura(wb: xw.Book, modos: ModosPlantilla) -> None:
     logger.info(f"Tiempo de guardado: {round(time.time() - s, 2)} segundos.")
 
 
-def guardar_ultimate(
+def guardar_vectores_ultimate(
     wb: xw.Book, plantilla: str, apertura: str, atributo: str, num_ocurrencias: int
 ):
-    nombre_columna_destino = (
-        f"{plantilla}_ultimate_{atributo}"
-        if plantilla != "frecuencia"
-        else f"{plantilla}_ultimate"
-    )
-    wb.macro("GuardarVector")(
-        plantilla.capitalize(),
-        "Resumen",
-        apertura,
-        atributo,
+    for categoria in [
         "ultimate",
-        nombre_columna_destino,
-        num_ocurrencias,
-    )
+        "metodologia",
+        "indicador",
+        "indicador_chain_ladder",
+        "comentarios",
+    ]:
+        if (
+            plantilla in ["frecuencia", "severidad"]
+            and categoria == "indicador_chain_ladder"
+        ):
+            columna_origen = "ultimate_chain_ladder"
+        else:
+            columna_origen = categoria
+
+        columna_destino = (
+            f"{plantilla}_{categoria}_{atributo}"
+            if plantilla != "frecuencia"
+            else f"{plantilla}_{categoria}"
+        )
+        wb.macro("GuardarVector")(
+            plantilla.capitalize(),
+            "Resumen",
+            apertura,
+            atributo,
+            columna_origen,
+            columna_destino,
+            num_ocurrencias,
+        )
 
 
 def guardar_factores_completitud(

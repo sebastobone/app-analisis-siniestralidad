@@ -584,6 +584,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../triangulos/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis de triángulos
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../resultados/" class="md-nav__link">
         
   
@@ -779,11 +801,11 @@
 <li><strong>Mes de corte</strong>: Mes de corte de la información.</li>
 <li><strong>Tipo de análisis</strong>: Puede ser triángulos o entremés.</li>
 <li><strong>Aproximar reaseguro</strong>: Solamente aplica para el negocio de <strong>autonomía</strong>, el cual tiene una estrategia de aproximación de reaseguro dada la indisponibilidad de esta información al momento del cierre. El resto de negocios deben dejar este parámetro en "No".</li>
-<li><strong>Cuadrar siniestros contra SAP</strong>: Define si se reasignarán las diferencias entre SAP y Teradata para los siniestros, de modo que las cifras de pago bruto, pago retenido, aviso bruto y aviso retenido sean exactamente las contables. La reasignación se hará en función de las aperturas definidas en el archivo <code>data/segmentacion.xlsx</code>, así que se generará un error si no hizo previamente esta definición.</li>
 <li><strong>Añadir fraude a siniestros</strong>: Solamente aplica para el negocio de <strong>SOAT</strong>, el resto de negocios deben dejar este parámetro en "No".</li>
-<li><strong>Cuadrar primas contra SAP</strong>: Mismo concepto que el cuadre de siniestros, pero en este caso, para las primas brutas y retenidas, tanto emitidas como devengadas. Requiere también configuración en <code>data/segmentacion.xlsx</code>.</li>
-<li><strong>Nombre de la plantilla</strong>: Nombre con el que se guardará la plantilla del análisis. Tenga en cuenta que dentro de un mismo proyecto puede usar varias plantillas, de modo que este parámetro debe llevar el nombre de la que quiere crear (o abrir, si ya está creada) para hacer la estimación. Todas las plantillas quedan guardadas en la carpeta <code>plantillas</code>.</li>
+<li><strong>Nombre de la plantilla</strong>: Nombre con el que se guardará la plantilla del análisis. Tenga en cuenta que dentro de un mismo proyecto puede usar varias plantillas, de modo que este parámetro debe llevar el nombre de la que quiere crear (o abrir, si ya está creada) para hacer la estimación. Todas las plantillas quedan guardadas en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>plantillas</code>.</li>
 </ul>
+<p>Una vez ingrese todos los parámetros, presione el botón <strong>"Guardar parametros"</strong>. Al presionar este botón, se genera la lista desplegable de plantillas en la sección <strong>"Plantilla"</strong> y la sección de <strong>"Referencias entremés"</strong>, en caso de que el tipo de análisis seleccionado sea entremés. Los parámetros ingresados serán almacenados en el archivo <code>data/database.db</code>.</p>
+<p>Si desea recuperar parámetros guardados para no tener que volverlos a ingresar uno por uno, presione el botón <strong>"Traer parametros"</strong>, y luego presione el botón <strong>"Guardar parametros"</strong>.</p>
 
 
 

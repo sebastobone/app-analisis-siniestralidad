@@ -633,6 +633,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../../uso/triangulos/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis de triángulos
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../uso/resultados/" class="md-nav__link">
         
   
@@ -850,7 +872,7 @@
 <h1 id="definicion-de-aperturas">Definición de aperturas</h1>
 <p>A la hora de realizar un análisis de siniestralidad, es necesario definir un nivel de desagregación del producto a analizar. A modo de ejemplo, para analizar la siniestralidad de un seguro de salud, una decisión viable sería analizar cada cobertura por separado: laboratorios clínicos, exámenes diagnósticos, procedimientos quirúrgicos, etc. La lógica de segmentación depende de las necesidades de cada negocio y el entendimiento particular del riesgo al que está expuesto.</p>
 <p>En las tablas de los modelos de datos de la compañía, se cuenta con información de los productos y coberturas tal cual como se encuentran consignados en los clausulados y las notas técnicas de los seguros, así como la lista completa de canales, ramos, regionales, sucursales, etc. Si se va a realizar un análisis a nivel de cobertura, puede que el interés no sea estudiar cada una de las coberturas del clausulado, sino que exista la posibilidad de realizar agrupaciones que simplifiquen el análisis o reúnan comportamientos similares del riesgo. Estas agrupaciones son denominadas <strong>aperturas</strong>.</p>
-<p>Las aperturas esperadas deben estar almacenadas en el archivo <code>data/segmentacion.xlsx</code>, en las hojas definidas como "Apertura_Siniestros", "Apertura_Primas", y "Apertura_Expuestos". Estas aperturas deben contener todas las aperturas que salen de los queries, pero no es necesario que las aperturas que salen de los queries contengan todas las aperturas que están en estas tablas. Por ejemplo, si en un rango de fechas en el que se va a hacer el análisis una de las aperturas no estaba a la venta, es posible que quede en la tabla pero no en la salida del query.</p>
+<p>Las aperturas esperadas deben estar almacenadas en el archivo <code>data/segmentacion_{negocio}.xlsx</code>, en las hojas definidas como "Apertura_Siniestros", "Apertura_Primas", y "Apertura_Expuestos". Estas aperturas deben contener todas las aperturas que salen de los queries, pero no es necesario que las aperturas que salen de los queries contengan todas las aperturas que están en estas tablas. Por ejemplo, si en un rango de fechas en el que se va a hacer el análisis una de las aperturas no estaba a la venta, es posible que quede en la tabla pero no en la salida del query.</p>
 <p>Adicionalmente, en la tabla "Apertura_Siniestros" se deben llenar dos columnas adicionales:</p>
 <ul>
 <li><strong>apertura_reservas</strong>: Representa la llave única que identifica cada apertura, se debe construir como el concatenado de las demás columnas.</li>

@@ -584,6 +584,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../triangulos/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis de triángulos
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../resultados/" class="md-nav__link">
         
   
@@ -773,7 +795,17 @@
 
 
 <h1 id="extraccion-de-informacion">Extracción de información</h1>
-<p>Los archivos generados a partir de los queries quedan almacenados en la carpeta <code>data/raw</code> en dos formatos: <code>.parquet</code> (el que utiliza la aplicación internamente) y <code>.csv</code> (para que el usuario pueda analizar el contenido, en caso de que se necesite).</p>
+<p>Al pulsar los botones de ejecución de consultas, la sección “Estado” mostrará en tiempo real el progreso de la operación. Los resultados se guardan en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/raw</code> en dos formatos:</p>
+<ul>
+<li><code>.parquet</code>: usado internamente por la aplicación.</li>
+<li><code>.csv</code>: para que el usuario pueda explorar los datos con herramientas externas si lo requiere.</li>
+</ul>
+<p>Para cada conjunto de datos (por ejemplo, siniestros), se crean dos archivos:</p>
+<ul>
+<li><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>siniestros.parquet</code> (o <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>siniestros.csv</code>): versión sujeta a modificaciones durante el proceso de cuadre contable.</li>
+<li><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>siniestros_teradata.parquet</code> (o <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>siniestros_teradata.csv</code>): copia inalterada de los datos crudos extraídos de Teradata, que sirve como referencia original.</li>
+</ul>
+<p>Este mismo esquema de nombres y formatos se aplica a todas las demás cantidades que procese la aplicación.</p>
 
 
 

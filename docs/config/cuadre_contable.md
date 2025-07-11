@@ -1,7 +1,10 @@
 # Cuadre contable
 
-Para los análisis de siniestralidad, las cifras utilizadas de pagos, aviso, y producción emitida y devengada deben ser consistentes con las cifras reportadas en los estados financieros. El umbral máximo de diferencias aceptadas corresponde al 5% de la cifra contable, pero está sujeto a variaciones dependiendo de las características de cada negocio.
+En los análisis de siniestralidad, las cifras de pagos, avisos y primas (emitidas y devengadas) deben ser coherentes con las reportadas en los estados financieros. Se permite una diferencia máxima del 5% respecto a la cifra contable, aunque este umbral puede ajustarse según las particularidades de cada negocio.
 
-Asimismo, cada negocio puede decidir adoptar una estrategia de repartición de diferencias contables, de forma que la cifra usada en el análisis sea exactamente la contable. Esta estrategia consiste en repartir la diferencia en una o varias de las aperturas definidas, las cuales se especifican en las hojas "Cuadre_Siniestros" y "Cuadre_Primas" del archivo `data/segmentacion.xlsx`.
+Cada negocio puede optar por una estrategia de cuadre contable para eliminar por completo las diferencias y garantizar que las cifras analizadas coincidan exactamente con las contables. Esta estrategia consiste en distribuir la diferencia contable entre una o varias aperturas específicas, definidas en las hojas **"Cuadre_Siniestros"** y **"Cuadre_Primas"** del archivo `data/segmentacion_{negocio}.xlsx`.
 
-Todos los análisis de consistencia de información se almacenan en dos carpetas: `data/controles_informacion/pre_cuadre_contable` (la información tal cual sale de Teradata) y `data/controles_informacion/post_cuadre_contable` (la información con las diferencias repartidas y la cifra contable conciliada). Si el negocio no realiza un cuadre contable, la segunda carpeta quedará vacía.
+El usuario tiene la flexibilidad de seleccionar qué meses y qué variables (por ejemplo: pagos, avisos, prima bruta, etc.) desea ajustar a la cifra contable. Esta configuración se realiza en las hojas **"Meses_cuadre_siniestros"** y **"Meses_cuadre_primas"**, donde las celdas correspondientes son binarias:
+
+- Valor **1**: la variable del mes seleccionado se ajustará a la cifra contable.
+- Valor **0**: no se aplicará ningún ajuste para esa variable en ese mes.

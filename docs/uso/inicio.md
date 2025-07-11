@@ -12,7 +12,7 @@ El comando anterior iniciará la aplicación en el [localhost](http://127.0.0.1:
 
 ### Estado
 
-En esta sección se le informará sobre el progreso de las operaciones que ejecute en la aplicación, así como de posibles errores que se generen y de notificaciones de interés.
+En esta sección se le informará sobre el progreso de las operaciones que ejecute en la aplicación, así como de posibles errores que se generen y notificaciones de interés.
 
 ### Parámetros
 
@@ -20,7 +20,7 @@ En esta sección ingresará los parámetros con los que se ejecutará el anális
 
 ### Extracción de información
 
-En esta sección se encuentran los botones para ejecutar los queries de siniestros, primas, y expuestos; de acuerdo a la configuración que especificó en el archivo `data/segmentacion.xlsx`. Si presiona los tres botones uno tras del otro, los queries se ejecutarán en paralelo.
+En esta sección se encuentran los botones para ejecutar los queries de siniestros, primas, y expuestos; de acuerdo a la configuración que especificó en el archivo `data/segmentacion_{negocio}.xlsx`. Si presiona los tres botones uno tras del otro, los queries se ejecutarán en paralelo.
 
 ### Controles de información
 
@@ -32,4 +32,4 @@ En esta sección se encuentran los comandos para interactuar con las plantillas 
 
 ### Resultados
 
-Los botones de esta sección permiten consolidar los resultados del análisis realizado en las plantillas y generar los informes releventas (ejemplo: Actuario Responsable).
+Los botones de esta sección permiten consolidar los resultados del análisis realizado en las plantillas y generar los informes relevantes (ejemplo: Actuario Responsable).

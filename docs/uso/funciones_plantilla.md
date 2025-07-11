@@ -9,7 +9,7 @@ Esta función crea una nueva plantilla con el nombre especificado, si aún no es
 Esta función cumple las siguientes funciones:
 
 - Crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada y elimina todos los contenidos.
-- Genera la hoja de Resumen con las periodicidades especificadas en la hoja "Apertura_Siniestros" del archivo `data/segmentacion.xlsx`.
+- Genera la hoja de Resumen con las periodicidades especificadas en la hoja "Apertura_Siniestros" del archivo `data/segmentacion_{negocio}.xlsx`.
 - Genera la hoja de Atípicos.
 - Genera la hoja de Histórico a partir de los archivos almacenados en la carpeta `output/resultados`.
 - Esconde las hojas no relevantes y muestra las relevantes. Por ejemplo, en un análisis de triángulos, esconde las hojas de Entremés y Completar_diagonal.

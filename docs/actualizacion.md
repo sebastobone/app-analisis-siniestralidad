@@ -1,5 +1,17 @@
 # Actualización de la aplicación
 
+## Versionamiento
+
+En [este link](https://github.com/sebastobone/app-analisis-siniestralidad/tags) puede encontrar la lista completa de versiones, junto con la lista completa de cambios por versión.
+
+Para verificar en qué versión se encuentra su aplicación, abra la carpeta en una terminal, copie lo siguiente y presione _enter_:
+
+```sh
+git tag
+```
+
+## Pasos para actualizar
+
 Para actualizar la aplicación a la versión más reciente, abra la carpeta en una terminal, copie lo siguiente y presione _enter_:
 
 ```sh

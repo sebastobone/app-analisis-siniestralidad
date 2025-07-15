@@ -495,6 +495,18 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Extracción de información
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -505,6 +517,52 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#verificacion-de-tablas-de-segmentacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verificación de tablas de segmentación
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verificaciones-sobre-consultas" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verificaciones sobre consultas
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#almacenamiento-de-consultas" class="md-nav__link">
+    <span class="md-ellipsis">
+      Almacenamiento de consultas
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -779,6 +837,27 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pruebas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pruebas de funcionamiento
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -799,6 +878,41 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#verificacion-de-tablas-de-segmentacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verificación de tablas de segmentación
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verificaciones-sobre-consultas" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verificaciones sobre consultas
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#almacenamiento-de-consultas" class="md-nav__link">
+    <span class="md-ellipsis">
+      Almacenamiento de consultas
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -817,7 +931,36 @@
 
 
 <h1 id="extraccion-de-informacion">Extracción de información</h1>
-<p>Al pulsar los botones de ejecución de consultas, la sección “Estado” mostrará en tiempo real el progreso de la operación. Los resultados se guardan en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/raw</code> en dos formatos:</p>
+<p>Las consultas que se ejecutan están almacenadas en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/queries/{negocio}</code>.</p>
+<h2 id="verificacion-de-tablas-de-segmentacion">Verificación de tablas de segmentación</h2>
+<p>Si las consultas utilizan <strong>tablas de segmentación</strong>, estas serán leídas desde el archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code>. El sistema realiza automáticamente las siguientes validaciones:</p>
+<ul>
+<li>Que las tablas estén correctamente nombradas, según el estándar descrito en <a href="https://sebastobone.github.io/app-analisis-siniestralidad/config/aperturas/">esta documentación</a>.</li>
+<li>Que haya el número adecuado de tablas requeridas por la consulta.</li>
+<li>Que cada tabla tenga el número correcto de columnas.</li>
+<li>Que las columnas cumplan con los tipos de datos definidos en la consulta.</li>
+<li>Que no existan registros duplicados (en caso de haberlos, se eliminarán y se mostrará una alerta).</li>
+<li>Que no haya valores nulos en las columnas.</li>
+</ul>
+<p>Si alguna validación falla, el sistema mostrará un mensaje de error. Deberá corregir la tabla correspondiente y volver a ejecutar la consulta.</p>
+<h2 id="verificaciones-sobre-consultas">Verificaciones sobre consultas</h2>
+<p>Las consultas deben utilizar los valores definidos en los parámetros <strong>"Mes de la primera ocurrencia"</strong> y <strong>"Mes de corte"</strong> para parametrizar los filtros de fechas.</p>
+<p>Al ejecutar una consulta, el estado del proceso se mostrará en tiempo real en la sección <strong>“Estado”</strong>. Una vez finalizada la ejecución, el sistema valida lo siguiente:</p>
+<ul>
+<li>Que el resultado contenga las <a href="https://sebastobone.github.io/app-analisis-siniestralidad/config/queries/">columnas mínimas requeridas</a>, según el tipo de consulta.</li>
+<li>Que las columnas de fechas estén en formato correcto.</li>
+<li>Que el rango de fechas obtenido coincida con los valores definidos en los parámetros mencionados. Si esta validación falla, deberá revisar la parametrización de fechas dentro de la consulta.</li>
+<li>Que las columnas de apertura no contengan valores vacíos ni valores -1.</li>
+<li><strong>Solo para consultas de siniestros</strong>: Que todas las aperturas generadas estén presentes en el archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code>. Si existen aperturas en ese archivo que no aparecen en el resultado de la consulta, se mostrará una alerta (no se generará un error).</li>
+</ul>
+<p>En caso de que alguna de estas verificaciones falle, el sistema lo notificará y no continuará con el procesamiento hasta que se corrija el error y se vuelva a ejecutar la consulta.</p>
+<p><strong>Nota:</strong> el sistema elimina automáticamente cualquier columna que no corresponda a:</p>
+<ul>
+<li>Una <strong>columna mínima requerida</strong>, o</li>
+<li>Una <strong>columna de apertura</strong> definida en el archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code>.</li>
+</ul>
+<h2 id="almacenamiento-de-consultas">Almacenamiento de consultas</h2>
+<p>Los resultados se guardan en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/raw</code> en dos formatos:</p>
 <ul>
 <li><code>.parquet</code>: usado internamente por la aplicación.</li>
 <li><code>.csv</code>: para que el usuario pueda explorar los datos con herramientas externas si lo requiere.</li>
@@ -827,7 +970,7 @@
 <li><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>siniestros.parquet</code> (o <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>siniestros.csv</code>): versión sujeta a modificaciones durante el proceso de cuadre contable.</li>
 <li><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>siniestros_teradata.parquet</code> (o <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>siniestros_teradata.csv</code>): copia inalterada de los datos crudos extraídos de Teradata, que sirve como referencia original.</li>
 </ul>
-<p>Este mismo esquema de nombres y formatos se aplica a todas las demás cantidades que procese la aplicación.</p>
+<p>Este mismo esquema de nombres y formatos se aplica a primas y expuestos.</p>
 
 
 

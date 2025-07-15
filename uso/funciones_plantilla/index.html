@@ -615,6 +615,54 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Preparar">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#procesamiento" class="md-nav__link">
+    <span class="md-ellipsis">
+      Procesamiento
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Procesamiento">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#siniestros" class="md-nav__link">
+    <span class="md-ellipsis">
+      Siniestros
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#primas-y-expuestos" class="md-nav__link">
+    <span class="md-ellipsis">
+      Primas y expuestos
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plantilla" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plantilla
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -897,6 +945,27 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pruebas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pruebas de funcionamiento
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -938,6 +1007,54 @@
       Preparar
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Preparar">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#procesamiento" class="md-nav__link">
+    <span class="md-ellipsis">
+      Procesamiento
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Procesamiento">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#siniestros" class="md-nav__link">
+    <span class="md-ellipsis">
+      Siniestros
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#primas-y-expuestos" class="md-nav__link">
+    <span class="md-ellipsis">
+      Primas y expuestos
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plantilla" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plantilla
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1031,53 +1148,66 @@
 
 <h1 id="funciones-de-la-plantilla">Funciones de la plantilla</h1>
 <h2 id="abrir">Abrir</h2>
-<p>Esta función crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada. A diferencia de la función <strong>"Preparar plantilla"</strong>, esta función no elimina los contenidos actuales de la plantilla.</p>
+<p>La función <strong>"Abrir"</strong> permite acceder a una plantilla con el nombre especificado:</p>
+<ul>
+<li>Si la plantilla <strong>no existe</strong>, el sistema la creará automáticamente.</li>
+<li>Si la plantilla <strong>ya existe</strong>, se abrirá tal como está, <strong>sin eliminar su contenido actual</strong>.</li>
+</ul>
+<p>A diferencia de la función <strong>"Preparar"</strong>, esta opción <strong>no borra ni reinicia</strong> la plantilla.</p>
 <h2 id="preparar">Preparar</h2>
-<p>Esta función cumple las siguientes funciones:</p>
+<p>Esta función tiene dos objetivos principales: preparar los datos para el procesamiento y generar la estructura de la plantilla.</p>
+<h3 id="procesamiento">Procesamiento</h3>
+<p>Lee los archivos ubicados en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/raw</code> y los transforma al formato requerido por la plantilla. Los resultados se guardan en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/processed</code>.</p>
+<h4 id="siniestros">Siniestros</h4>
 <ul>
-<li>Crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada y elimina todos los contenidos.</li>
-<li>Genera la hoja de <strong>Resumen</strong> con las periodicidades especificadas en la hoja <strong>"Apertura_Siniestros"</strong> del archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code>.</li>
-<li>Genera la hoja de <strong>Atípicos</strong>.</li>
-<li>Genera la hoja de <strong>Histórico</strong> a partir de los archivos almacenados en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>output/resultados</code>.</li>
-<li>Esconde las hojas no relevantes y muestra las relevantes. Por ejemplo, en un análisis de triángulos, esconde las hojas de <strong>Entremés</strong> y <strong>Completar_diagonal</strong>.</li>
+<li><strong>Triángulos</strong>: se generan bases de triángulos con ocurrencias en cuatro periodicidades (mensual, trimestral, semestral y anual).</li>
+<li><strong>Para entremés</strong>: se generan bases de triángulos con ocurrencias en tres periodicidades (trimestral, semestral, anual) y desarrollo mensual, junto con una base mensual para el periodo en curso.</li>
 </ul>
-<p><strong>¡Cuidado!</strong> Si utiliza esta función sobre una plantilla ya creada, sobrescribirá sus resultados (los tendría que recuperar desde el historial de versiones de OneDrive). Si simplemente desea abrir una plantilla que ya había preparado, utilice la función <strong>"Abrir plantilla"</strong>.</p>
+<h4 id="primas-y-expuestos">Primas y expuestos</h4>
+<p>Se crea una única base con las cuatro periodicidades posibles a partir de los datos mensuales. Para las periodicidades mayores a mensual, los datos se agregan así:</p>
+<ul>
+<li><strong>Primas:</strong> se agregan por suma.</li>
+<li><strong>Expuestos:</strong> se agregan por promedio.</li>
+</ul>
+<h3 id="plantilla">Plantilla</h3>
+<p>Esta parte de la función:</p>
+<ul>
+<li>Crea la plantilla con el nombre especificado si no existe; si ya existe, <strong>la abre y elimina todo su contenido</strong>.</li>
+<li>Genera las hojas <strong>Resumen</strong> y <strong>Atípicos</strong> a partir de los archivos <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/processed/base_triangulos.parquet</code> y <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/processed/base_ultima_ocurrencia.parquet</code>, filtrando según las periodicidades definidas en la hoja <strong>"Apertura_Siniestros"</strong> del archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code>.</li>
+<li>Genera la hoja <strong>Histórico</strong> a partir de los archivos de la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>output/resultados</code>.</li>
+<li>Oculta las hojas no relevantes según el tipo de análisis. Por ejemplo, en un análisis de triángulos se ocultan las hojas <strong>Entremés</strong> y <strong>Completar_diagonal</strong>.</li>
+</ul>
+<p><strong>Advertencia:</strong> si ejecuta esta función sobre una plantilla ya existente, se borrarán los resultados de la hoja <strong>Resumen</strong>, y tendrá que ejecutar la función <strong>"Traer y guardar"</strong> o remitirse al versionamiento de OneDrive para recuperar los resultados. Si solo desea abrir una plantilla existente sin modificar su contenido, utilice la función <strong>"Abrir"</strong>.</p>
 <h2 id="funciones-por-apertura">Funciones por apertura</h2>
-<p>Las siguientes funciones aplican únicamente para las hojas donde se desarrollan análisis de triángulos por apertura, es decir:</p>
-<ul>
-<li>Frecuencia</li>
-<li>Severidad</li>
-<li>Plata</li>
-<li>Completar_diagonal</li>
-</ul>
+<p>Estas funciones aplican exclusivamente a las hojas de análisis por apertura (Frecuencia, Severidad, Plata y Completar_diagonal).</p>
 <h3 id="generar">Generar</h3>
-<p>Esta función genera toda la estructura necesaria para el análisis de triángulos en la plantilla seleccionada, para la apertura y el atributo seleccionados.</p>
+<p>Crea toda la estructura necesaria para el análisis de triángulos correspondiente a la apertura y atributo seleccionados.</p>
 <h3 id="guardar">Guardar</h3>
-<p>Esta función almacena todos los parámetros ingresados en la plantilla seleccionada, para la apertura y el atributo seleccionados. Estos parámetros son:</p>
+<p>Almacena todos los parámetros definidos en la plantilla para la apertura y el atributo seleccionados. Esto incluye:</p>
 <ul>
-<li>Triángulos de exclusiones.</li>
+<li>Triángulo de exclusiones.</li>
 <li>Ventanas de factores de desarrollo.</li>
-<li>Tipo de factores seleccionados (promedio/mediana/promedio ponderado ventana/etc).</li>
+<li>Tipo de factor seleccionado (promedio, mediana, promedio ponderado, etc.).</li>
 <li>Vector de factores seleccionados.</li>
 </ul>
-<p>Adicionalmente, en el caso de las plantillas de triángulos (Frecuencia, Severidad, y Plata) se guardan también las siguientes cantidades:</p>
+<p>Además, en los casos de Frecuencia, Severidad y Plata, también se guardan:</p>
 <ul>
-<li>Metodología (pago o incurrido).</li>
-<li>Vector de ultimate (como fórmulas y valores).</li>
-<li>Metodología por ocurrencia (chain-ladder, bornhuetter-ferguson, indicador).</li>
-<li>Triángulo de factores de desarrollo completo (por si se decide modificar los factores de una o varias ocurrencias).</li>
-<li>Vector de indicador (sólo es relevante para metodologías de bornhuetter-ferguson e indicador).</li>
+<li>Tipo de metodología (pago o incurrido).</li>
+<li>Vector de ultimate (valores y fórmulas).</li>
+<li>Metodología por ocurrencia (Chain-Ladder, Bornhuetter-Ferguson o Indicador).</li>
+<li>Triángulo de factores de desarrollo (por si se decide modificar los factores de una o varias ocurrencias).</li>
+<li>Vector de indicador (relevante solo para metodologías Bornhuetter-Ferguson e Indicador).</li>
 <li>Columna de comentarios.</li>
 </ul>
-<p>Estas cantidades se almacenan en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/db</code> como una serie de archivos <code>.parquet</code>.</p>
+<p>Estos datos se almacenan en formato <code>.parquet</code> en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/db</code>.</p>
 <h3 id="traer">Traer</h3>
-<p>Esta función recupera los parámetros almacenados para la apertura y el atributo seleccionados en la plantilla seleccionada, leyendo los datos de la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/db</code>. Se puede entender como el inverso del modo <strong>"Guardar"</strong>.</p>
+<p>Carga en la plantilla los parámetros almacenados previamente para la apertura y el atributo seleccionados. Es el inverso de la función <strong>"Guardar"</strong>.</p>
 <h3 id="guardar-todo">Guardar todo</h3>
-<p>Esta función itera sobre todas las aperturas y atributos ejecutando el modo <strong>"Guardar"</strong>.</p>
+<p>Ejecuta la función <strong>"Guardar"</strong> para todas las aperturas y atributos de la plantilla.</p>
 <h3 id="traer-y-guardar-todo">Traer y guardar todo</h3>
-<p>Esta función itera sobre todas las aperturas y atributos ejecutando el modo <strong>"Traer"</strong> y, posteriormente, el modo <strong>"Guardar"</strong>. Es útil para situaciones donde se da un cambio en la información pero no en el criterio actuarial seleccionado, y se requiere actualizar rápidamente las cifras siguiendo el mismo criterio.</p>
+<p>Ejecuta <strong>"Traer"</strong> seguido de <strong>"Guardar"</strong> para todas las aperturas y atributos. Es útil cuando ha cambiado la información real pero se desea conservar el mismo criterio actuarial para actualizar las estimaciones rápidamente.</p>
 <h2 id="almacenar-analisis">Almacenar análisis</h2>
-<p>Esta función concatena la tabla de la hoja Resumen con la tabla de la hoja <strong>Atípicos</strong> y almacena el resultado en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>output/resultados</code>. Este archivo contiene la estimación de siniestralidad última desarrollada en la plantilla correspondiente.</p>
+<p>Concatena la información contenida en las hojas <strong>Resumen</strong> y <strong>Atípicos</strong>, y guarda el resultado en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>output/resultados</code>. El archivo generado representa la estimación final de siniestralidad última desarrollada en la plantilla.</p>
 
 
 

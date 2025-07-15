@@ -28,6 +28,7 @@ nav:
   - Diccionario: diccionario.md
   - Particularidades por negocio:
     - SOAT: particularidades/soat.md
+  - Pruebas de funcionamiento: pruebas.md
 
 theme:
   name: material

@@ -100,3 +100,7 @@ Por defecto, los ultimates de la hoja **Resumen** están vinculados dinámicamen
 
 - Para guardar los parámetros actuales, presione el botón **"Guardar formulas entremes"**.
 - Para recuperar dichos parámetros posteriormente, presione **"Traer formulas entremes"**.
+
+## Análisis adicionales
+
+Si desea realizar análisis adicionales sobre los resultados de la estimación, puede copiar la información desde la hoja **Resumen** o desde el archivo :material-file: `output/resultados.xlsx` a un nuevo archivo independiente, y guardarlo en la carpeta :material-folder: `plantillas`. Este archivo no será afectado por los procesos de la aplicación, por lo que puede modificarlo libremente sin riesgo de sobrescritura.

@@ -117,3 +117,7 @@ Para editar un análisis previamente guardado, siga estos pasos:
 2. Presione el botón **"Traer"** para cargar los datos almacenados.
 3. Realice las modificaciones necesarias.
 4. Una vez finalizadas, presione nuevamente el botón **"Guardar"** para actualizar el análisis.
+
+## Análisis adicionales
+
+Si desea realizar análisis adicionales sobre los resultados de la estimación, puede copiar la información desde la hoja **Resumen** o desde el archivo :material-file: `output/resultados.xlsx` a un nuevo archivo independiente, y guardarlo en la carpeta :material-folder: `plantillas`. Este archivo no será afectado por los procesos de la aplicación, por lo que puede modificarlo libremente sin riesgo de sobrescritura.

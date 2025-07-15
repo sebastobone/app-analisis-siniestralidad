@@ -664,6 +664,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../entremes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis de entremés
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../resultados/" class="md-nav__link">
         
   
@@ -898,20 +920,20 @@
 <p>Si no se aplica ningún proceso de cuadre contable, la carpeta <code>post_cuadre_contable</code> permanecerá vacía.</p>
 <h2 id="comparacion-entre-las-cifras-de-teradata-y-sap">Comparación entre las cifras de Teradata y SAP</h2>
 <p>Esta comparación solamente se realiza para primas y siniestros. Se realiza para cada periodo contable a nivel de ramo, pues esta es la apertura máxima que se puede lograr desde SAP. La diferencia se calcula en monto completo y en diferencia porcentual, tomando como referencia la cifra de SAP.</p>
-<p><img alt="Comparación entre Teradata y SAP." src="../assets/tera_vs_sap.png" /></p>
+<p><img alt="Comparación entre Teradata y SAP." src="../assets/controles/tera_vs_sap.png" /></p>
 <h2 id="consistencia-historica">Consistencia histórica</h2>
 <p>Esta validación consiste en comparar las cifras de la extracción actual contra la extracción del mes inmediatamente anterior, tanto para Teradata como para SAP. En el caso de Teradata, la comparación se hace al nivel de segmentación máximo (apertura + periodo de ocurrencia + periodo de movimiento), de forma que se pueda visualizar variaciones en la cifra total y cambios de ocurrencia o periodo de movimiento entre las diferentes extracciones.</p>
-<p><img alt="Validación de consistencia histórica." src="../assets/tera_vs_sap.png" /></p>
+<p><img alt="Validación de consistencia histórica." src="../assets/controles/tera_vs_sap.png" /></p>
 <h2 id="evidencias-de-extraccion">Evidencias de extracción</h2>
 <p>En la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>controles_informacion</code>, se almacenan dos evidencias:</p>
 <ul>
 <li>
 <p>El archivo de segmentación utilizado, con una hoja adicional donde se consigna la fecha y hora de fin del proceso de generación de controles.</p>
-<p><img alt="Hoja de Excel con fecha y hora." src="../assets/evidencia_fecha_hora.png" /></p>
+<p><img alt="Hoja de Excel con fecha y hora." src="../assets/controles/evidencia_fecha_hora.png" /></p>
 </li>
 <li>
 <p>Un pantallazo donde se muestra la fecha y hora de fin del proceso de generación de controles.</p>
-<p><img alt="Pantallazo con fecha y hora." src="../assets/pantallazo_reloj.png" /></p>
+<p><img alt="Pantallazo con fecha y hora." src="../assets/controles/pantallazo_reloj.png" /></p>
 </li>
 </ul>
 

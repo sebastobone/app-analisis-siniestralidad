@@ -594,6 +594,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../uso/entremes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis de entremés
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../uso/resultados/" class="md-nav__link">
         
   
@@ -654,6 +676,18 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Actualización
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -664,6 +698,43 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#versionamiento" class="md-nav__link">
+    <span class="md-ellipsis">
+      Versionamiento
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pasos-para-actualizar" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pasos para actualizar
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -775,6 +846,32 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#versionamiento" class="md-nav__link">
+    <span class="md-ellipsis">
+      Versionamiento
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pasos-para-actualizar" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pasos para actualizar
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -793,9 +890,15 @@
 
 
 <h1 id="actualizacion-de-la-aplicacion">Actualización de la aplicación</h1>
+<h2 id="versionamiento">Versionamiento</h2>
+<p>En <a href="https://github.com/sebastobone/app-analisis-siniestralidad/tags">este link</a> puede encontrar la lista completa de versiones, junto con la lista completa de cambios por versión.</p>
+<p>Para verificar en qué versión se encuentra su aplicación, abra la carpeta en una terminal, copie lo siguiente y presione <em>enter</em>:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>tag
+</span></code></pre></div>
+<h2 id="pasos-para-actualizar">Pasos para actualizar</h2>
 <p>Para actualizar la aplicación a la versión más reciente, abra la carpeta en una terminal, copie lo siguiente y presione <em>enter</em>:</p>
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>git<span class="w"> </span>pull
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>git<span class="w"> </span>pull
 </span></code></pre></div>
 <p>Si tiene una instancia de la aplicación abierta en la terminal, debe cerrarla y volver a ejecutar la aplicación para que los cambios tomen efecto.</p>
 <p>¡Eso es todo! Ahora la aplicación quedará actualizada. Tenga en cuenta que esto sobrescribe todos los archivos que se encuentren dentro del repositorio de GitHub, por lo que se recomienda guardar una copia de su archivo de segmentación y pegarlo nuevamente en la ruta después de que termine la actualización.</p>

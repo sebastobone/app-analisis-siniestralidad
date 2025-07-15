@@ -724,6 +724,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../entremes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Análisis de entremés
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../resultados/" class="md-nav__link">
         
   
@@ -1009,17 +1031,17 @@
 
 <h1 id="funciones-de-la-plantilla">Funciones de la plantilla</h1>
 <h2 id="abrir">Abrir</h2>
-<p>Esta función crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada. A diferencia de la función "Preparar plantilla", esta función no elimina los contenidos actuales de la plantilla.</p>
+<p>Esta función crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada. A diferencia de la función <strong>"Preparar plantilla"</strong>, esta función no elimina los contenidos actuales de la plantilla.</p>
 <h2 id="preparar">Preparar</h2>
 <p>Esta función cumple las siguientes funciones:</p>
 <ul>
 <li>Crea una nueva plantilla con el nombre especificado, si aún no está creada. De lo contrario, abre la que está actualmente creada y elimina todos los contenidos.</li>
-<li>Genera la hoja de Resumen con las periodicidades especificadas en la hoja "Apertura_Siniestros" del archivo <code>data/segmentacion_{negocio}.xlsx</code>.</li>
-<li>Genera la hoja de Atípicos.</li>
-<li>Genera la hoja de Histórico a partir de los archivos almacenados en la carpeta <code>output/resultados</code>.</li>
-<li>Esconde las hojas no relevantes y muestra las relevantes. Por ejemplo, en un análisis de triángulos, esconde las hojas de Entremés y Completar_diagonal.</li>
+<li>Genera la hoja de <strong>Resumen</strong> con las periodicidades especificadas en la hoja <strong>"Apertura_Siniestros"</strong> del archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code>.</li>
+<li>Genera la hoja de <strong>Atípicos</strong>.</li>
+<li>Genera la hoja de <strong>Histórico</strong> a partir de los archivos almacenados en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>output/resultados</code>.</li>
+<li>Esconde las hojas no relevantes y muestra las relevantes. Por ejemplo, en un análisis de triángulos, esconde las hojas de <strong>Entremés</strong> y <strong>Completar_diagonal</strong>.</li>
 </ul>
-<p>¡Cuidado! Si utiliza esta función sobre una plantilla ya creada, sobrescribirá sus resultados (los tendría que recuperar desde el historial de versiones de OneDrive). Si simplemente desea abrir una plantilla que ya había preparado, utilice la función "Abrir plantilla".</p>
+<p><strong>¡Cuidado!</strong> Si utiliza esta función sobre una plantilla ya creada, sobrescribirá sus resultados (los tendría que recuperar desde el historial de versiones de OneDrive). Si simplemente desea abrir una plantilla que ya había preparado, utilice la función <strong>"Abrir plantilla"</strong>.</p>
 <h2 id="funciones-por-apertura">Funciones por apertura</h2>
 <p>Las siguientes funciones aplican únicamente para las hojas donde se desarrollan análisis de triángulos por apertura, es decir:</p>
 <ul>
@@ -1047,15 +1069,15 @@
 <li>Vector de indicador (sólo es relevante para metodologías de bornhuetter-ferguson e indicador).</li>
 <li>Columna de comentarios.</li>
 </ul>
-<p>Estas cantidades se almacenan en la carpeta <code>data/db</code> como una serie de archivos <code>.parquet</code>.</p>
+<p>Estas cantidades se almacenan en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/db</code> como una serie de archivos <code>.parquet</code>.</p>
 <h3 id="traer">Traer</h3>
-<p>Esta función recupera los parámetros almacenados para la apertura y el atributo seleccionados en la plantilla seleccionada, leyendo los datos de la carpeta <code>data/db</code>. Se puede entender como el inverso del modo "Guardar".</p>
+<p>Esta función recupera los parámetros almacenados para la apertura y el atributo seleccionados en la plantilla seleccionada, leyendo los datos de la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/db</code>. Se puede entender como el inverso del modo <strong>"Guardar"</strong>.</p>
 <h3 id="guardar-todo">Guardar todo</h3>
-<p>Esta función itera sobre todas las aperturas y atributos ejecutando el modo "Guardar".</p>
+<p>Esta función itera sobre todas las aperturas y atributos ejecutando el modo <strong>"Guardar"</strong>.</p>
 <h3 id="traer-y-guardar-todo">Traer y guardar todo</h3>
-<p>Esta función itera sobre todas las aperturas y atributos ejecutando el modo "Traer" y, posteriormente, el modo "Guardar". Es útil para situaciones donde se da un cambio en la información pero no en el criterio actuarial seleccionado, y se requiere actualizar rápidamente las cifras siguiendo el mismo criterio.</p>
+<p>Esta función itera sobre todas las aperturas y atributos ejecutando el modo <strong>"Traer"</strong> y, posteriormente, el modo <strong>"Guardar"</strong>. Es útil para situaciones donde se da un cambio en la información pero no en el criterio actuarial seleccionado, y se requiere actualizar rápidamente las cifras siguiendo el mismo criterio.</p>
 <h2 id="almacenar-analisis">Almacenar análisis</h2>
-<p>Esta función concatena la tabla de la hoja Resumen con la tabla de la hoja Atípicos y almacena el resultado en la carpeta <code>output/resultados</code>. Este archivo contiene la estimación de siniestralidad última desarrollada en la plantilla correspondiente.</p>
+<p>Esta función concatena la tabla de la hoja Resumen con la tabla de la hoja <strong>Atípicos</strong> y almacena el resultado en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>output/resultados</code>. Este archivo contiene la estimación de siniestralidad última desarrollada en la plantilla correspondiente.</p>
 
 
 

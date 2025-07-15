@@ -14,13 +14,13 @@ Si no se aplica ningún proceso de cuadre contable, la carpeta `post_cuadre_cont
 
 Esta comparación solamente se realiza para primas y siniestros. Se realiza para cada periodo contable a nivel de ramo, pues esta es la apertura máxima que se puede lograr desde SAP. La diferencia se calcula en monto completo y en diferencia porcentual, tomando como referencia la cifra de SAP.
 
-![Comparación entre Teradata y SAP.](assets/tera_vs_sap.png)
+![Comparación entre Teradata y SAP.](assets/controles/tera_vs_sap.png)
 
 ## Consistencia histórica
 
 Esta validación consiste en comparar las cifras de la extracción actual contra la extracción del mes inmediatamente anterior, tanto para Teradata como para SAP. En el caso de Teradata, la comparación se hace al nivel de segmentación máximo (apertura + periodo de ocurrencia + periodo de movimiento), de forma que se pueda visualizar variaciones en la cifra total y cambios de ocurrencia o periodo de movimiento entre las diferentes extracciones.
 
-![Validación de consistencia histórica.](assets/tera_vs_sap.png)
+![Validación de consistencia histórica.](assets/controles/tera_vs_sap.png)
 
 ## Evidencias de extracción
 
@@ -28,8 +28,8 @@ En la carpeta :material-folder: `controles_informacion`, se almacenan dos eviden
 
 - El archivo de segmentación utilizado, con una hoja adicional donde se consigna la fecha y hora de fin del proceso de generación de controles.
 
-    ![Hoja de Excel con fecha y hora.](assets/evidencia_fecha_hora.png)
+    ![Hoja de Excel con fecha y hora.](assets/controles/evidencia_fecha_hora.png)
 
 - Un pantallazo donde se muestra la fecha y hora de fin del proceso de generación de controles.
 
-    ![Pantallazo con fecha y hora.](assets/pantallazo_reloj.png)
+    ![Pantallazo con fecha y hora.](assets/controles/pantallazo_reloj.png)

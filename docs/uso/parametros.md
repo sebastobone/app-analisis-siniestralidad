@@ -8,6 +8,6 @@
 - **Añadir fraude a siniestros**: Solamente aplica para el negocio de **SOAT**, el resto de negocios deben dejar este parámetro en "No".
 - **Nombre de la plantilla**: Nombre con el que se guardará la plantilla del análisis. Tenga en cuenta que dentro de un mismo proyecto puede usar varias plantillas, de modo que este parámetro debe llevar el nombre de la que quiere crear (o abrir, si ya está creada) para hacer la estimación. Todas las plantillas quedan guardadas en la carpeta :material-folder: `plantillas`.
 
-Una vez ingrese todos los parámetros, presione el botón **"Guardar parametros"**. Al presionar este botón, se genera la lista desplegable de plantillas en la sección **"Plantilla"** y la sección de **"Referencias entremés"**, en caso de que el tipo de análisis seleccionado sea entremés. Los parámetros ingresados serán almacenados en el archivo `data/database.db`.
+Una vez ingrese todos los parámetros, presione el botón **"Guardar parametros"**. Al presionar este botón, se genera la lista desplegable de plantillas en la sección **"Plantilla"** y la sección de **"Referencias entremés"**, en caso de que el tipo de análisis seleccionado sea entremés. Los parámetros ingresados serán almacenados en el archivo :material-file: `data/database.db`.
 
 Si desea recuperar parámetros guardados para no tener que volverlos a ingresar uno por uno, presione el botón **"Traer parametros"**, y luego presione el botón **"Guardar parametros"**.

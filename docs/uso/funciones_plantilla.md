@@ -74,11 +74,11 @@ Carga en la plantilla los parámetros almacenados previamente para la apertura y
 
 ### Guardar todo
 
-Ejecuta la función **"Guardar"** para todas las aperturas y atributos de la plantilla.
+Ejecuta la función **"Guardar"** para todas las aperturas en la plantilla y atributo seleccionados.
 
 ### Traer y guardar todo
 
-Ejecuta **"Traer"** seguido de **"Guardar"** para todas las aperturas y atributos. Es útil cuando ha cambiado la información real pero se desea conservar el mismo criterio actuarial para actualizar las estimaciones rápidamente.
+Ejecuta **"Traer"** seguido de **"Guardar"** para todas las aperturas en la plantilla y atributo seleccionados. Es útil cuando ha cambiado la información real pero se desea conservar el mismo criterio actuarial para actualizar las estimaciones rápidamente.
 
 ## Almacenar análisis
 

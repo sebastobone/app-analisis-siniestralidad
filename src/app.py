@@ -15,7 +15,14 @@ from sse_starlette.sse import EventSourceResponse
 from src import constantes as ct
 from src import main, utils
 from src.logger_config import log_queue, logger
-from src.metodos_plantilla import abrir, actualizar, generar, preparar, resultados
+from src.metodos_plantilla import (
+    abrir,
+    actualizar,
+    generar,
+    graficas,
+    preparar,
+    resultados,
+)
 from src.metodos_plantilla import almacenar_analisis as almacenar
 from src.metodos_plantilla.guardar_traer import (
     entremes,
@@ -354,6 +361,17 @@ async def almacenar_analisis(
     p = obtener_parametros_usuario(session, session_id)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte, p.tipo_analisis)
+
+
+@app.post("/ajustar-grafica-factores")
+@atrapar_excepciones
+async def ajustar_grafica_factores(
+    modos: Annotated[ModosPlantilla, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
+) -> None:
+    wb, _ = obtener_plantilla(session, session_id)
+    graficas.ajustar_grafica_factores(wb, modos)
 
 
 @app.post("/actualizar-wb-resultados")

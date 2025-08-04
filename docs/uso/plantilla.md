@@ -2,7 +2,7 @@
 
 ## Hojas comunes
 
-- **Resumen**: Contiene el total de las cifras de siniestros, primas, y expuestos por apertura y ocurrencia. Además, es donde se almacenan los resultados de siniestralidad última, frecuencia última, y severidad última. Contiene únicamente información de siniestros típicos.
+- **Resumen**: Contiene el total de las cifras de siniestros, primas, y expuestos por apertura y ocurrencia. Además, es el lugar donde se almacenan los resultados de siniestralidad última, frecuencia última, y severidad última; así como los comentarios, metodologías, y criterios asociados a las estimaciones. Contiene únicamente información de siniestros típicos.
 
 - **Atípicos**: Es el homólogo a la hoja resumen, pero contiene únicamente información de siniestros atípicos.
 

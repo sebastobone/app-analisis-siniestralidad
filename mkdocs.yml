@@ -20,12 +20,15 @@ nav:
     - Generación de controles: uso/controles.md
     - Descripción de la plantilla: uso/plantilla.md
     - Funciones de la plantilla: uso/funciones_plantilla.md
+    - Análisis de triángulos: uso/triangulos.md
+    - Análisis de entremés: uso/entremes.md
     - Consolidación de resultados: uso/resultados.md
     - Generación de informes: uso/informes.md
   - Actualización: actualizacion.md
   - Diccionario: diccionario.md
   - Particularidades por negocio:
     - SOAT: particularidades/soat.md
+  - Pruebas de funcionamiento: pruebas.md
 
 theme:
   name: material

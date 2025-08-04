@@ -6,7 +6,6 @@ Al instalar la aplicación, dentro de la carpeta principal encontrará una estru
 
 - :material-folder: `data/`
     - :material-folder: `afo/`: Almacena los archivos de Excel con conexión a SAP por medio del complemento Analysis for Office (AFO).
-    - :material-folder: `catalogos/`: Almacena resultado de queries auxiliares para el proceso del negocio de autonomía.
     - :material-folder: `controles_informacion/`: Almacena los controles de información y las evidencias correspondientes generadas.
         - :material-folder: `pre_cuadre_contable/`: Almacena los controles de la información tal cual como sale de Teradata.
         - :material-folder: `post_cuadre_contable/`: Almacena los controles de la información después de realizar el proceso del cuadre contable. Si se decide no hacerlo, esta carpeta quedará vacía.

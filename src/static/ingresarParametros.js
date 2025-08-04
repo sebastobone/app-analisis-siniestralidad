@@ -112,8 +112,10 @@ document
       document.getElementById("referenciasEntremes").style.display = "block";
       await generarReferenciasEntremes();
       document.getElementById("botonesEntremes").style.display = "block";
+      document.getElementById("botonesGraficaFactores").style.display = "none";
     } else {
       document.getElementById("referenciasEntremes").style.display = "none";
       document.getElementById("botonesEntremes").style.display = "none";
+      document.getElementById("botonesGraficaFactores").style.display = "block";
     }
   });

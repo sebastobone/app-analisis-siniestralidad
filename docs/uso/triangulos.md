@@ -34,6 +34,25 @@ La parte fundamental del método Chain-Ladder son los factores de desarrollo, lo
 
 La estrategia clave en el método Chain-Ladder consiste en seleccionar de forma adecuada los factores de desarrollo que se utilizarán  para proyectar los periodos faltantes del triángulo. Para cada altura del triángulo debe definirse un factor de desarrollo específico. Estos factores pueden calcularse utilizando distintos estadísticos, como el promedio, la mediana, el máximo o el mínimo, entre otros.
 
+#### Gráfica de factores
+
+La aplicación incluye una gráfica para visualizar el comportamiento y la tendencia de los factores de desarrollo en una altura específica.
+
+![Gráfica factores.](assets/triangulos/grafica_factores.png)
+
+- La **línea azul** muestra los factores de desarrollo observados para la altura seleccionada en cada periodo de ocurrencia.
+- Las **líneas rojas** indican los percentiles 20 y 80.
+- Las zonas sombreadas entre estas líneas representan rangos de percentiles: 20–40, 40–60 y 60–80.
+- La **línea verde** muestra el factor actualmente seleccionado por el usuario.
+
+Esta gráfica es dinámica: se actualiza automáticamente al modificar cualquiera de los siguientes parámetros:
+
+- Metodología (pago o incurrido)
+- Número de periodos a visualizar
+- Altura
+
+**Nota:** Si al cambiar los parámetros los ejes de la gráfica no se ajustan adecuadamente, utilice el botón **Ajustar límite gráfica factores** para recalibrarlos.
+
 ### Exclusiones
 
 En algunos casos, pueden presentarse factores atípicos debido a condiciones de negocio o fenómenos específicos que alteran su comportamiento respecto al resto de la altura. Para excluir estos valores del cálculo, se utiliza el triángulo de **“Exclusiones”**, donde el usuario debe marcar con un 0 aquellos factores que no deben ser considerados en el análisis. Los factores no excluidos deben dejarse con el valor por defecto (1).

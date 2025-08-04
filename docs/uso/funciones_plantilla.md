@@ -83,3 +83,7 @@ Ejecuta **"Traer"** seguido de **"Guardar"** para todas las aperturas en la plan
 ## Almacenar análisis
 
 Concatena la información contenida en las hojas **Resumen** y **Atípicos**, y guarda el resultado en la carpeta :material-folder: `output/resultados`. El archivo generado representa la estimación final de siniestralidad última desarrollada en la plantilla.
+
+## Ajustar límites para gráfica de factores
+
+Cuando se cambian los parámetros de periodos y altura para la gráfica de factores, los ejes pueden quedar desajustados respecto a los nuevos datos. Esta función permite ajustarlos.

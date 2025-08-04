@@ -100,7 +100,6 @@ CREATE MULTISET VOLATILE TABLE base_movimientos_bruto AS (
 ) ON COMMIT PRESERVE ROWS;
 
 
-
 CREATE MULTISET VOLATILE TABLE base_aviso_bruto_saldos AS (
     WITH saldos AS (
         SELECT
@@ -275,7 +274,6 @@ CREATE MULTISET VOLATILE TABLE base_aviso_bruto_saldos AS (
 ) ON COMMIT PRESERVE ROWS;
 
 
-
 CREATE MULTISET VOLATILE TABLE base_bruto AS (
     WITH consolidado AS (
         SELECT * FROM base_movimientos_bruto
@@ -301,7 +299,6 @@ CREATE MULTISET VOLATILE TABLE base_bruto AS (
     , cobertura_general_desc
     , cobertura_desc
 ) ON COMMIT PRESERVE ROWS;
-
 
 
 CREATE MULTISET VOLATILE TABLE base_cedido AS (
@@ -407,7 +404,6 @@ CREATE MULTISET VOLATILE TABLE base_cedido AS (
 ) ON COMMIT PRESERVE ROWS;
 
 
-
 CREATE MULTISET VOLATILE TABLE base_ced_y_bruto AS
 (
     SELECT
@@ -444,8 +440,8 @@ CREATE MULTISET VOLATILE TABLE base_ced_y_bruto AS
 ) ON COMMIT PRESERVE ROWS;
 
 
-
 CREATE MULTISET VOLATILE TABLE atipicos AS (
+
     SELECT
         atip.cobertura_desc
         , atip.cobertura_general_desc
@@ -456,6 +452,7 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
         SELECT
             esc.siniestro_id
             , sini.fecha_siniestro
+
             , CASE
                 WHEN esc.reserva_id = 18635 THEN 'PARCIALES'
                 WHEN esc.tipo_oper_siniestro_cd IN (131, 132) THEN 'TOTALES'
@@ -524,12 +521,14 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
             esc.ramo_id = 168
             AND pro.compania_id = 4
             AND esc.amparo_id IN (14489, 14277, 14122, 14771, 56397, 694)
+            AND EXTRACT(YEAR FROM esc.fecha_registro) * 100
+            + EXTRACT(MONTH FROM esc.fecha_registro)
+            <= CAST('{mes_corte}' AS INTEGER)
 
         GROUP BY 1, 2, 3, 4
         HAVING total >= 800000000
     ) AS atip
 ) WITH DATA PRIMARY INDEX (siniestro_id) ON COMMIT PRESERVE ROWS;
-
 
 
 CREATE MULTISET VOLATILE TABLE base_incurrido AS (
@@ -556,7 +555,6 @@ CREATE MULTISET VOLATILE TABLE base_incurrido AS (
     , fecha_registro
     , siniestro_id
 ) ON COMMIT PRESERVE ROWS;
-
 
 
 CREATE MULTISET VOLATILE TABLE conteo_pago_bruto AS (
@@ -590,7 +588,6 @@ CREATE MULTISET VOLATILE TABLE conteo_pago_bruto AS (
     , cobertura_general_desc
     , cobertura_desc
 ) ON COMMIT PRESERVE ROWS;
-
 
 
 CREATE MULTISET VOLATILE TABLE conteo_incurrido_bruto AS (
@@ -669,7 +666,6 @@ CREATE MULTISET VOLATILE TABLE sin_pagos_bruto AS (
 ) ON COMMIT PRESERVE ROWS;
 
 
-
 CREATE MULTISET VOLATILE TABLE conteo_desistido_bruto AS (
     SELECT
         fecha_siniestro
@@ -709,8 +705,6 @@ CREATE MULTISET VOLATILE TABLE conteo_desistido_bruto AS (
 ) ON COMMIT PRESERVE ROWS;
 
 
-
-
 CREATE MULTISET VOLATILE TABLE base_pagos_aviso AS (
     SELECT
         fecha_siniestro
@@ -731,7 +725,6 @@ CREATE MULTISET VOLATILE TABLE base_pagos_aviso AS (
     , cobertura_general_desc
     , cobertura_desc
 ) ON COMMIT PRESERVE ROWS;
-
 
 
 WITH fechas AS (

@@ -1094,20 +1094,24 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
-dev = [
+docs = [
     { name = "mkdocs" },
     { name = "mkdocs-include-markdown-plugin" },
     { name = "mkdocs-material" },
+]
+lint = [
     { name = "mypy" },
     { name = "pip-audit" },
     { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
     { name = "ruff" },
     { name = "sqlfluff" },
     { name = "types-openpyxl" },
     { name = "types-pyautogui" },
+]
+tests = [
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
 ]
 
 [package.metadata]
@@ -1130,20 +1134,24 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [
+docs = [
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-include-markdown-plugin", specifier = ">=7.1.6" },
     { name = "mkdocs-material", specifier = ">=9.6.16" },
+]
+lint = [
     { name = "mypy", specifier = ">=1.17.1" },
     { name = "pip-audit", specifier = ">=2.9.0" },
     { name = "pre-commit", specifier = ">=4.2.0" },
-    { name = "pytest", specifier = ">=8.4.1" },
-    { name = "pytest-asyncio", specifier = ">=1.1.0" },
-    { name = "pytest-cov", specifier = ">=6.2.1" },
     { name = "ruff", specifier = ">=0.12.7" },
     { name = "sqlfluff", specifier = ">=3.4.2" },
     { name = "types-openpyxl", specifier = ">=3.1.5.20250602" },
     { name = "types-pyautogui", specifier = ">=0.9.3.20241230" },
+]
+tests = [
+    { name = "pytest", specifier = ">=8.4.1" },
+    { name = "pytest-asyncio", specifier = ">=1.1.0" },
+    { name = "pytest-cov", specifier = ">=6.2.1" },
 ]
 
 [[package]]

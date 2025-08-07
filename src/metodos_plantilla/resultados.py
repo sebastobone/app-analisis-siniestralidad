@@ -166,7 +166,7 @@ def generar_informe_actuario_responsable(
             atributo=pl.when(pl.col("cantidad").str.contains("bruto"))
             .then(pl.lit("bruto"))
             .otherwise(pl.lit("retenido")),
-            cantidad=pl.col("cantidad").str.replace_many(["_bruto", "_retenido"], ""),
+            cantidad=pl.col("cantidad").str.replace_many(["_bruto", "_retenido"], [""]),
         )
         .collect()
         .pivot(on="cantidad", index=columnas_base + ["atributo"])
@@ -195,7 +195,7 @@ def generar_informe_actuario_responsable(
             atributo=pl.when(pl.col("cantidad").str.contains("bruta"))
             .then(pl.lit("bruto"))
             .otherwise(pl.lit("retenido")),
-            cantidad=pl.col("cantidad").str.replace_many(["_bruta", "_retenida"], ""),
+            cantidad=pl.col("cantidad").str.replace_many(["_bruta", "_retenida"], [""]),
         )
         .collect()
         .pivot(on="cantidad", index=columnas_base + ["atributo"])

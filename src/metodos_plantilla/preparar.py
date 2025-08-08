@@ -5,6 +5,7 @@ import xlwings as xw
 
 from src import constantes as ct
 from src import utils
+from src.controles_informacion import bases_plantilla as bpl
 from src.logger_config import logger
 from src.metodos_plantilla import resultados, tablas_resumen
 from src.models import Parametros, ReferenciasEntremes
@@ -58,6 +59,9 @@ def preparar_plantilla(
 
     logger.success("Plantilla preparada.")
     logger.info(f"Tiempo de preparacion: {round(time.time() - s, 2)} segundos.")
+
+    bpl.generar_evidencia_info_plantilla(p, resumen, atipicos)
+    logger.info("Evidencia SOX de consistencia de informacion generada.")
 
 
 def obtener_analisis_anteriores(mes_corte: int) -> pl.DataFrame:

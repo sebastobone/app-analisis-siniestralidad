@@ -5,6 +5,7 @@ import xlwings as xw
 
 from src import constantes as ct
 from src import utils
+from src.controles_informacion import bases_plantilla as bpl
 from src.logger_config import logger
 from src.metodos_plantilla import resultados, tablas_resumen
 from src.models import Parametros, ReferenciasEntremes
@@ -21,8 +22,7 @@ def preparar_plantilla(
 
     aperturas = utils.obtener_aperturas(p.negocio, "siniestros")
 
-    limpiar_plantillas(wb)
-    mostrar_plantillas_relevantes(wb, p.tipo_analisis)
+    mostrar_hojas_relevantes(wb, p.tipo_analisis)
 
     insumos = {
         "base_triangulos": pl.scan_parquet("data/processed/base_triangulos.parquet"),
@@ -59,6 +59,9 @@ def preparar_plantilla(
 
     logger.success("Plantilla preparada.")
     logger.info(f"Tiempo de preparacion: {round(time.time() - s, 2)} segundos.")
+
+    bpl.generar_evidencia_info_plantilla(p, resumen, atipicos)
+    logger.info("Evidencia SOX de consistencia de informacion generada.")
 
 
 def obtener_analisis_anteriores(mes_corte: int) -> pl.DataFrame:
@@ -199,26 +202,24 @@ def comparar_aperturas_mes_anterior(
         )
 
 
-def limpiar_plantillas(wb: xw.Book):
-    for hoja in ["Frecuencia", "Severidad", "Plata", "Entremes", "Completar_diagonal"]:
+def mostrar_hojas_relevantes(wb: xw.Book, tipo_analisis: str):
+    config = {
+        "triangulos": {
+            "visibles": ["Frecuencia", "Severidad", "Plata", "Indexaciones"],
+            "ocultas": ["Entremes", "Completar_diagonal"],
+        },
+        "entremes": {
+            "visibles": ["Entremes", "Completar_diagonal", "Frecuencia"],
+            "ocultas": ["Severidad", "Plata", "Indexaciones"],
+        },
+    }
+
+    for hoja in config[tipo_analisis]["visibles"]:
+        wb.sheets[hoja].visible = True
+
+    for hoja in config[tipo_analisis]["ocultas"]:
+        wb.sheets[hoja].visible = False
         wb.macro("LimpiarPlantilla")(hoja)
-
-
-def mostrar_plantillas_relevantes(wb: xw.Book, tipo_analisis: str):
-    if tipo_analisis == "triangulos":
-        wb.sheets["Entremes"].visible = False
-        wb.sheets["Completar_diagonal"].visible = False
-        wb.sheets["Indexaciones"].visible = True
-        for plantilla in ["frecuencia", "severidad", "plata"]:
-            wb.sheets[plantilla].visible = True
-
-    elif tipo_analisis == "entremes":
-        wb.sheets["Entremes"].visible = True
-        wb.sheets["Completar_diagonal"].visible = True
-        wb.sheets["Indexaciones"].visible = False
-        wb.sheets["Frecuencia"].visible = True
-        for plantilla in ["severidad", "plata"]:
-            wb.sheets[plantilla].visible = False
 
 
 def generar_hojas_resumen(

@@ -33,10 +33,10 @@ Se crea una única base con las cuatro periodicidades posibles a partir de los d
 
 Esta parte de la función:
 
-- Crea la plantilla con el nombre especificado si no existe; si ya existe, **la abre y elimina todo su contenido**.
-- Genera las hojas **Resumen** y **Atípicos** a partir de los archivos :material-file: `data/processed/base_triangulos.parquet` y :material-file: `data/processed/base_ultima_ocurrencia.parquet`, filtrando según las periodicidades definidas en la hoja **"Apertura_Siniestros"** del archivo :material-folder: `data/segmentacion_{negocio}.xlsx`.
+- Crea la plantilla con el nombre especificado si no existe; si ya existe, la abre y **elimina el contenido de las hojas Resumen, Atípicos, y Entremés**.
+- Genera las hojas **Resumen**, **Atípicos** y **Entremés** a partir de los archivos :material-file: `data/processed/base_triangulos.parquet` y :material-file: `data/processed/base_ultima_ocurrencia.parquet`. Estos insumos se filtran según las periodicidades definidas en la hoja **"Apertura_Siniestros"** del archivo :material-file: `data/segmentacion_{negocio}.xlsx`.
 - Genera la hoja **Histórico** a partir de los archivos de la carpeta :material-folder: `output/resultados`.
-- Oculta las hojas no relevantes según el tipo de análisis. Por ejemplo, en un análisis de triángulos se ocultan las hojas **Entremés** y **Completar_diagonal**.
+- Oculta y elimina el contenido las hojas no relevantes según el tipo de análisis. Por ejemplo, en un análisis de triángulos se ocultan y se elimina el contenido las hojas **Entremés** y **Completar_diagonal**.
 
 **Advertencia:** si ejecuta esta función sobre una plantilla ya existente, se borrarán los resultados de la hoja **Resumen**, y tendrá que ejecutar la función **"Traer y guardar"** o remitirse al versionamiento de OneDrive para recuperar los resultados. Si solo desea abrir una plantilla existente sin modificar su contenido, utilice la función **"Abrir"**.
 
@@ -72,13 +72,21 @@ Estos datos se almacenan en formato `.parquet` en la carpeta :material-folder: `
 
 Carga en la plantilla los parámetros almacenados previamente para la apertura y el atributo seleccionados. Es el inverso de la función **"Guardar"**.
 
+### Guardar fórmulas entremés
+
+Guarda todas las fórmulas de la hoja **Entremés** comenzando desde la columna **porcentaje_desarrollo_pago_bruto**. Los datos se almacenan en formato `.parquet` dentro de la carpeta :material-folder: `data/db`.
+
+### Traer fórmulas entremés
+
+Ejecuta **"Preparar"** para actualizar los datos de las hojas **Resumen**, **Atípicos**, y **Entremés**. Luego, se pegan las fórmulas previamente guardadas para la hoja **Entremés**, comenzando desde la columna **porcentaje_desarrollo_pago_bruto**.
+
 ### Guardar todo
 
 Ejecuta la función **"Guardar"** para todas las aperturas en la plantilla y atributo seleccionados.
 
 ### Traer y guardar todo
 
-Ejecuta **"Traer"** seguido de **"Guardar"** para todas las aperturas en la plantilla y atributo seleccionados. Es útil cuando ha cambiado la información real pero se desea conservar el mismo criterio actuarial para actualizar las estimaciones rápidamente.
+Ejecuta **"Preparar"** para actualizar los datos de las hojas **Resumen**, **Atípicos**, y **Entremés**. Luego, se ejecutan las funciones **"Traer"** y **"Guardar"** para todas las aperturas en la plantilla y atributo seleccionados. Esta funcionalidad es útil cuando se ha modificado la información real, pero se desea conservar el mismo criterio actuarial y actualizar las estimaciones rápidamente.
 
 ## Almacenar análisis
 

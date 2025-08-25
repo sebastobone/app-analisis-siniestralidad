@@ -23,19 +23,23 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "mkdocs-material>=9.6.16",
-    "mkdocs>=1.6.1",
+lint = [
     "mypy>=1.17.1",
-    "pip-audit>=2.9.0",
-    "pre-commit>=4.2.0",
-    "pytest>=8.4.1",
-    "pytest-cov>=6.2.1",
     "ruff>=0.12.7",
     "sqlfluff>=3.4.2",
+    "pip-audit>=2.9.0",
+    "pre-commit>=4.2.0",
     "types-openpyxl>=3.1.5.20250602",
-    "types-pyautogui>=0.9.3.20241230",
+    "types-pyautogui>=0.9.3.20241230",   
+]
+tests = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
     "pytest-asyncio>=1.1.0",
+]
+docs = [
+    "mkdocs-material>=9.6.16",
+    "mkdocs>=1.6.1",
     "mkdocs-include-markdown-plugin>=7.1.6",
 ]
 

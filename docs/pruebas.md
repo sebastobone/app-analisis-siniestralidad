@@ -33,7 +33,7 @@ Estas pruebas simulan un flujo completo de estimación para cada negocio, y vali
 Para ejecutar las pruebas, primero debe instalar las librerías de desarrollo. Abra una terminal en la carpeta del proyecto y ejecute:
 
 ```sh
-uv sync
+uv sync --all-groups
 ```
 
 Una vez instaladas las dependencias, puede correr todas las pruebas con el siguiente comando:

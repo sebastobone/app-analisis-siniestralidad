@@ -722,6 +722,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#guardar-formulas-entremes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Guardar fórmulas entremés
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#traer-formulas-entremes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Traer fórmulas entremés
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#guardar-todo" class="md-nav__link">
     <span class="md-ellipsis">
       Guardar todo
@@ -1134,6 +1152,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#guardar-formulas-entremes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Guardar fórmulas entremés
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#traer-formulas-entremes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Traer fórmulas entremés
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#guardar-todo" class="md-nav__link">
     <span class="md-ellipsis">
       Guardar todo
@@ -1219,10 +1255,10 @@
 <h3 id="plantilla">Plantilla</h3>
 <p>Esta parte de la función:</p>
 <ul>
-<li>Crea la plantilla con el nombre especificado si no existe; si ya existe, <strong>la abre y elimina todo su contenido</strong>.</li>
-<li>Genera las hojas <strong>Resumen</strong> y <strong>Atípicos</strong> a partir de los archivos <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/processed/base_triangulos.parquet</code> y <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/processed/base_ultima_ocurrencia.parquet</code>, filtrando según las periodicidades definidas en la hoja <strong>"Apertura_Siniestros"</strong> del archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code>.</li>
+<li>Crea la plantilla con el nombre especificado si no existe; si ya existe, la abre y <strong>elimina el contenido de las hojas Resumen, Atípicos, y Entremés</strong>.</li>
+<li>Genera las hojas <strong>Resumen</strong>, <strong>Atípicos</strong> y <strong>Entremés</strong> a partir de los archivos <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/processed/base_triangulos.parquet</code> y <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/processed/base_ultima_ocurrencia.parquet</code>. Estos insumos se filtran según las periodicidades definidas en la hoja <strong>"Apertura_Siniestros"</strong> del archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code>.</li>
 <li>Genera la hoja <strong>Histórico</strong> a partir de los archivos de la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>output/resultados</code>.</li>
-<li>Oculta las hojas no relevantes según el tipo de análisis. Por ejemplo, en un análisis de triángulos se ocultan las hojas <strong>Entremés</strong> y <strong>Completar_diagonal</strong>.</li>
+<li>Oculta y elimina el contenido las hojas no relevantes según el tipo de análisis. Por ejemplo, en un análisis de triángulos se ocultan y se elimina el contenido las hojas <strong>Entremés</strong> y <strong>Completar_diagonal</strong>.</li>
 </ul>
 <p><strong>Advertencia:</strong> si ejecuta esta función sobre una plantilla ya existente, se borrarán los resultados de la hoja <strong>Resumen</strong>, y tendrá que ejecutar la función <strong>"Traer y guardar"</strong> o remitirse al versionamiento de OneDrive para recuperar los resultados. Si solo desea abrir una plantilla existente sin modificar su contenido, utilice la función <strong>"Abrir"</strong>.</p>
 <h2 id="funciones-por-apertura">Funciones por apertura</h2>
@@ -1249,10 +1285,14 @@
 <p>Estos datos se almacenan en formato <code>.parquet</code> en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/db</code>.</p>
 <h3 id="traer">Traer</h3>
 <p>Carga en la plantilla los parámetros almacenados previamente para la apertura y el atributo seleccionados. Es el inverso de la función <strong>"Guardar"</strong>.</p>
+<h3 id="guardar-formulas-entremes">Guardar fórmulas entremés</h3>
+<p>Guarda todas las fórmulas de la hoja <strong>Entremés</strong> comenzando desde la columna <strong>porcentaje_desarrollo_pago_bruto</strong>. Los datos se almacenan en formato <code>.parquet</code> dentro de la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/db</code>.</p>
+<h3 id="traer-formulas-entremes">Traer fórmulas entremés</h3>
+<p>Ejecuta <strong>"Preparar"</strong> para actualizar los datos de las hojas <strong>Resumen</strong>, <strong>Atípicos</strong>, y <strong>Entremés</strong>. Luego, se pegan las fórmulas previamente guardadas para la hoja <strong>Entremés</strong>, comenzando desde la columna <strong>porcentaje_desarrollo_pago_bruto</strong>.</p>
 <h3 id="guardar-todo">Guardar todo</h3>
 <p>Ejecuta la función <strong>"Guardar"</strong> para todas las aperturas en la plantilla y atributo seleccionados.</p>
 <h3 id="traer-y-guardar-todo">Traer y guardar todo</h3>
-<p>Ejecuta <strong>"Traer"</strong> seguido de <strong>"Guardar"</strong> para todas las aperturas en la plantilla y atributo seleccionados. Es útil cuando ha cambiado la información real pero se desea conservar el mismo criterio actuarial para actualizar las estimaciones rápidamente.</p>
+<p>Ejecuta <strong>"Preparar"</strong> para actualizar los datos de las hojas <strong>Resumen</strong>, <strong>Atípicos</strong>, y <strong>Entremés</strong>. Luego, se ejecutan las funciones <strong>"Traer"</strong> y <strong>"Guardar"</strong> para todas las aperturas en la plantilla y atributo seleccionados. Esta funcionalidad es útil cuando se ha modificado la información real, pero se desea conservar el mismo criterio actuarial y actualizar las estimaciones rápidamente.</p>
 <h2 id="almacenar-analisis">Almacenar análisis</h2>
 <p>Concatena la información contenida en las hojas <strong>Resumen</strong> y <strong>Atípicos</strong>, y guarda el resultado en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>output/resultados</code>. El archivo generado representa la estimación final de siniestralidad última desarrollada en la plantilla.</p>
 <h2 id="ajustar-limites-para-grafica-de-factores">Ajustar límites para gráfica de factores</h2>

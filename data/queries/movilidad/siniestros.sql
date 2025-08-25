@@ -441,7 +441,6 @@ CREATE MULTISET VOLATILE TABLE base_ced_y_bruto AS
 
 
 CREATE MULTISET VOLATILE TABLE atipicos AS (
-
     SELECT
         atip.cobertura_desc
         , atip.cobertura_general_desc
@@ -526,7 +525,7 @@ CREATE MULTISET VOLATILE TABLE atipicos AS (
             <= CAST('{mes_corte}' AS INTEGER)
 
         GROUP BY 1, 2, 3, 4
-        HAVING total >= 800000000
+        HAVING total >= 1000000000
     ) AS atip
 ) WITH DATA PRIMARY INDEX (siniestro_id) ON COMMIT PRESERVE ROWS;
 

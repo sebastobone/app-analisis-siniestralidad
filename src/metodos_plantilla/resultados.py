@@ -91,6 +91,7 @@ def actualizar_wb_resultados() -> xw.Book:
         logger.info("Nuevo libro de resultados creado en output/resultados.xlsx.")
     else:
         wb = xw.Book("output/resultados.xlsx")
+        wb.activate(steal_focus=True)
 
     wb.sheets["Resultados"].clear_contents()
     wb.sheets["Resultados"]["A1"].value = concatenar_archivos_resultados().pipe(

@@ -11,21 +11,30 @@ from src import utils
 def preparar_base_siniestros(
     df: pl.LazyFrame, mes_inicio: date, mes_corte: date
 ) -> pl.LazyFrame:
-    df_sinis = df.with_columns(
-        pl.col("fecha_siniestro").clip(upper_bound=pl.col("fecha_registro"))
-    )
+    fecha_inicio = pl.date(mes_inicio.year, mes_inicio.month, 1)
+    fecha_corte = pl.date(mes_corte.year, mes_corte.month, 1).dt.month_end()
 
-    df_sinis = df_sinis.with_columns(
-        [
-            (pl.col(f"pago_{attr}") + pl.col(f"aviso_{attr}")).alias(
-                f"incurrido_{attr}"
-            )
-            for attr in ["bruto", "retenido"]
-        ],
-        conteo_incurrido=pl.col("conteo_incurrido") - pl.col("conteo_desistido"),
-    ).select(
-        ["apertura_reservas", "atipico", "fecha_siniestro", "fecha_registro"]
-        + ct.COLUMNAS_QTYS
+    df_sinis = (
+        df.with_columns(
+            pl.col("fecha_siniestro").clip(upper_bound=pl.col("fecha_registro"))
+        )
+        .filter(
+            pl.col("fecha_siniestro").is_between(fecha_inicio, fecha_corte)
+            & pl.col("fecha_registro").is_between(fecha_inicio, fecha_corte)
+        )
+        .with_columns(
+            [
+                (pl.col(f"pago_{attr}") + pl.col(f"aviso_{attr}")).alias(
+                    f"incurrido_{attr}"
+                )
+                for attr in ["bruto", "retenido"]
+            ],
+            conteo_incurrido=pl.col("conteo_incurrido") - pl.col("conteo_desistido"),
+        )
+        .select(
+            ["apertura_reservas", "atipico", "fecha_siniestro", "fecha_registro"]
+            + ct.COLUMNAS_QTYS
+        )
     )
 
     bases_fechas = []

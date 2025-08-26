@@ -358,8 +358,7 @@ async def traer_guardar_todo_end(
 async def almacenar_analisis(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
-    p = obtener_parametros_usuario(session, session_id)
-    wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+    wb, p = obtener_plantilla(session, session_id)
     almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte, p.tipo_analisis)
 
 

@@ -29,6 +29,7 @@ nav:
   - Particularidades por negocio:
     - SOAT: particularidades/soat.md
   - Pruebas de funcionamiento: pruebas.md
+  - Preguntas frecuentes: faq/faq.md
 
 theme:
   name: material

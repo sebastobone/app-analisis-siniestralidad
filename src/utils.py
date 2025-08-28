@@ -159,10 +159,16 @@ def mes_anterior_corte(mes_corte: int) -> int:
 def obtener_aperturas(
     negocio: str, cantidad: Literal["siniestros", "primas", "expuestos"]
 ) -> pl.DataFrame:
-    return pl.read_excel(
+    aperturas = pl.read_excel(
         f"data/segmentacion_{negocio}.xlsx",
         sheet_name=f"Aperturas_{cantidad.capitalize()}",
     )
+    if cantidad == "siniestros":
+        aperturas = aperturas.drop(
+            ["tipo_indexacion_severidad", "medida_indexacion_severidad"]
+        )
+
+    return aperturas
 
 
 def obtener_nombres_aperturas(
@@ -172,6 +178,33 @@ def obtener_nombres_aperturas(
     if cantidad == "siniestros":
         aperturas = aperturas.drop(["apertura_reservas", "periodicidad_ocurrencia"])
     return aperturas.collect_schema().names()
+
+
+def obtener_parametros_indexacion(
+    negocio: str, apertura: str
+) -> tuple[ct.TIPOS_INDEXACION, str]:
+    parametros_indexacion = (
+        pl.read_excel(
+            f"data/segmentacion_{negocio}.xlsx", sheet_name="Aperturas_Siniestros"
+        )
+        .select(
+            [
+                "apertura_reservas",
+                "tipo_indexacion_severidad",
+                "medida_indexacion_severidad",
+            ]
+        )
+        .filter(pl.col("apertura_reservas") == apertura)
+    )
+
+    tipo_indexacion = parametros_indexacion.get_column(
+        "tipo_indexacion_severidad"
+    ).item(0)
+    medida_indexacion = parametros_indexacion.get_column(
+        "medida_indexacion_severidad"
+    ).item(0)
+
+    return tipo_indexacion, medida_indexacion
 
 
 def generar_mock_siniestros(rango_meses: tuple[date, date]) -> pl.DataFrame:

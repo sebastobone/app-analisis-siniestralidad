@@ -38,16 +38,12 @@ async def traer_y_guardar_todas_las_aperturas(
         ):
             generar.generar_plantillas(wb, p, modos_actual)
         if traer:
-            traer_apertura(wb, modos_actual)
-        guardar_apertura(wb, modos_actual)
+            traer_apertura(wb, p, modos_actual)
+        guardar_apertura(wb, p, modos_actual)
 
         await asyncio.sleep(0)
 
-        logger.info(
-            utils.limpiar_espacios_log(
-                f"Apertura {num_apertura + 1} de {len(aperturas)} terminada."
-            )
-        )
+        logger.info(f"Apertura {num_apertura + 1} de {len(aperturas)} terminada.")
         num_apertura += 1
 
     if traer:

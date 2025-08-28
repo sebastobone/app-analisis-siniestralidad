@@ -88,6 +88,9 @@ FILA_INI_PARAMS = 4
 LISTA_QUERIES_CUADRE = Literal["siniestros", "primas"]
 LISTA_QUERIES = Literal["siniestros", "primas", "expuestos"]
 LISTA_PLANTILLAS = Literal["frecuencia", "severidad", "plata", "completar_diagonal"]
+TIPOS_INDEXACION = Literal[
+    "Ninguna", "Por fecha de ocurrencia", "Por fecha de movimiento"
+]
 
 
 COLORES_LOGS = {

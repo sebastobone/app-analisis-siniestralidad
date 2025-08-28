@@ -2,23 +2,29 @@ import time
 
 import polars as pl
 import xlwings as xw
+from src import constantes as ct
 from src import utils
 from src.logger_config import logger
-from src.models import ModosPlantilla, RangeDimension
+from src.models import ModosPlantilla, Parametros, RangeDimension
 
 from .rangos_parametros import obtener_rangos_parametros
 
 
-def guardar_apertura(wb: xw.Book, modos: ModosPlantilla) -> None:
+def guardar_apertura(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> None:
     s = time.time()
 
     hoja_plantilla = modos.plantilla.capitalize()
     dimensiones_triangulo = utils.obtener_dimensiones_triangulo(
         wb.sheets[hoja_plantilla]
     )
+    tipo_indexacion, _ = utils.obtener_parametros_indexacion(p.negocio, modos.apertura)
 
     guardar_parametros(
-        wb.sheets[hoja_plantilla], modos.apertura, modos.atributo, dimensiones_triangulo
+        wb.sheets[hoja_plantilla],
+        modos.apertura,
+        modos.atributo,
+        tipo_indexacion,
+        dimensiones_triangulo,
     )
 
     if modos.plantilla != "completar_diagonal":
@@ -96,10 +102,14 @@ def guardar_factores_completitud(
 
 
 def guardar_parametros(
-    hoja: xw.Sheet, apertura: str, atributo: str, dimensiones_triangulo: RangeDimension
+    hoja: xw.Sheet,
+    apertura: str,
+    atributo: str,
+    tipo_indexacion: ct.TIPOS_INDEXACION,
+    dimensiones_triangulo: RangeDimension,
 ) -> None:
     for nombre_rango, valores_rango in obtener_rangos_parametros(
-        hoja, dimensiones_triangulo, "Ninguna"
+        hoja, dimensiones_triangulo, tipo_indexacion
     ).items():
         pl.DataFrame(valores_rango.formula).transpose().write_parquet(
             f"data/db/{hoja.book.name}_{apertura}_{atributo}_{hoja.name}_{nombre_rango}.parquet"

@@ -1,5 +1,3 @@
-from typing import Literal
-
 import src.constantes as ct
 import xlwings as xw
 from src.models import Offset, RangeDimension
@@ -8,9 +6,7 @@ from src.models import Offset, RangeDimension
 def obtener_rangos_parametros(
     hoja: xw.Sheet,
     dimensiones_triangulo: RangeDimension,
-    metodo_indexacion: Literal[
-        "Ninguna", "Por fecha de ocurrencia", "Por fecha de pago"
-    ],
+    tipo_indexacion: ct.TIPOS_INDEXACION,
 ) -> dict[str, xw.Range]:
     num_ocurrencias = dimensiones_triangulo.height
     num_alturas = dimensiones_triangulo.width
@@ -22,7 +18,7 @@ def obtener_rangos_parametros(
             hoja, num_ocurrencias, num_alturas, rangos
         )
 
-        if hoja.name == "Severidad" and metodo_indexacion != "Ninguna":
+        if hoja.name == "Severidad" and tipo_indexacion != "Ninguna":
             agregar_rangos_unidad_indexacion(hoja, num_ocurrencias, num_alturas, rangos)
 
     return rangos
@@ -121,7 +117,7 @@ def agregar_rangos_unidad_indexacion(
         {
             "UNIDAD_INDEXACION": obtener_rango(
                 hoja,
-                "Unidad_Indexacion",
+                "Unidad Indexacion",
                 "F1:F10000",
                 Offset(y=ct.HEADER_TRIANGULOS, x=ct.COL_OCURRS_PLANTILLAS + 1),
                 RangeDimension(height=num_ocurrencias, width=num_alturas),

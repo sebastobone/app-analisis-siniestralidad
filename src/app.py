@@ -291,8 +291,8 @@ async def guardar(
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
-    wb, _ = obtener_plantilla(session, session_id)
-    guardar_apertura.guardar_apertura(wb, modos)
+    wb, p = obtener_plantilla(session, session_id)
+    guardar_apertura.guardar_apertura(wb, p, modos)
 
 
 @app.post("/traer-apertura")
@@ -310,7 +310,7 @@ async def traer(
         actualizar.PeriodicidadDiferenteError,
     ):
         generar.generar_plantillas(wb, p, modos)
-    traer_apertura.traer_apertura(wb, modos)
+    traer_apertura.traer_apertura(wb, p, modos)
 
 
 @app.post("/guardar-entremes")

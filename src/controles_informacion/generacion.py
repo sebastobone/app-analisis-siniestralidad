@@ -319,22 +319,19 @@ def agrupar_tera(
 
 async def ajustar_fraude(df: pl.DataFrame, mes_corte: int):
     fraude = (
-        pl.LazyFrame(
-            pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")
-        )
+        pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")
         .drop("tipo_ajuste")
         .filter(pl.col("fecha_registro") <= utils.yyyymm_to_date(mes_corte))
     )
 
     df = (
-        pl.concat([df.lazy(), fraude], how="vertical_relaxed")
+        pl.concat([df, fraude], how="vertical_relaxed")
         .group_by(
             df.collect_schema().names()[
                 : df.collect_schema().names().index("fecha_registro") + 1
             ]
         )
         .sum()
-        .collect()
     )
     df.write_csv("data/raw/siniestros.csv", separator="\t")
     df.write_parquet("data/raw/siniestros.parquet")
@@ -350,13 +347,8 @@ def generar_integridad_exactitud(
 
     apr_cols = [col for col in apr_cols if "fecha" not in col]
 
-    return (
-        df.select(apr_cols + qty_cols)
-        .with_columns(numero_registros=1)
-        .group_by(apr_cols)
-        .sum()
-        .sort(apr_cols)
-        .write_excel(
-            f"data/controles_informacion/{estado_cuadre}/{file}_integridad_exactitud_{mes_corte}.xlsx",
-        )
+    df.select(apr_cols + qty_cols).with_columns(numero_registros=1).group_by(
+        apr_cols
+    ).sum().sort(apr_cols).write_excel(
+        f"data/controles_informacion/{estado_cuadre}/{file}_integridad_exactitud_{mes_corte}.xlsx",
     )

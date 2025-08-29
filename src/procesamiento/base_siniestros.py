@@ -95,7 +95,7 @@ def construir_triangulos(
     development_grain: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
     mes_corte: date,
     tipo_analisis: Literal["triangulos", "entremes"],
-) -> pl.LazyFrame:
+) -> pl.DataFrame:
     return (
         df_tri.filter(
             pl.col("fecha_registro")
@@ -164,6 +164,7 @@ def construir_triangulos(
             ]
             + ct.COLUMNAS_QTYS
         )
+        .collect()
     )
 
 
@@ -171,7 +172,7 @@ def construir_base_ultima_ocurrencia(
     df_tri: pl.LazyFrame,
     origin_grain: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
     mes_corte: date,
-) -> pl.LazyFrame:
+) -> pl.DataFrame:
     return (
         df_tri.filter(
             (
@@ -206,6 +207,7 @@ def construir_base_ultima_ocurrencia(
                 "periodo_ocurrencia",
             ]
         )
+        .collect()
     )
 
 
@@ -233,7 +235,7 @@ def generar_bases_siniestros(
                     df_sinis, "Anual", "Anual", mes_corte, tipo_analisis
                 ),
             ]
-        ).collect()
+        )
         base_ult_ocurr = pl.DataFrame(
             schema=[
                 "apertura_reservas",
@@ -260,7 +262,7 @@ def generar_bases_siniestros(
                     df_sinis, "Anual", "Mensual", mes_corte, tipo_analisis
                 ),
             ]
-        ).collect()
+        )
         base_ult_ocurr = pl.concat(
             [
                 construir_base_ultima_ocurrencia(df_sinis, "Mensual", mes_corte),
@@ -268,6 +270,6 @@ def generar_bases_siniestros(
                 construir_base_ultima_ocurrencia(df_sinis, "Semestral", mes_corte),
                 construir_base_ultima_ocurrencia(df_sinis, "Anual", mes_corte),
             ]
-        ).collect()
+        )
 
     return base_triangulos, base_ult_ocurr

@@ -26,7 +26,7 @@ def generar_base_primas_expuestos(
         primas_asistencias = pl.read_excel(
             "data/segmentacion_movilidad.xlsx", sheet_name="Primas_asistencias_SAP"
         ).lazy()
-        df = pl.concat([df, primas_asistencias], how="vertical_relaxed")
+        df = pl.LazyFrame(pl.concat([df, primas_asistencias], how="vertical_relaxed"))
 
     df_group = (
         df.with_columns(fechas_pdn(pl.col("fecha_registro")))

@@ -24,13 +24,13 @@ dependencies = [
 
 [dependency-groups]
 lint = [
-    "mypy>=1.17.1",
     "ruff>=0.12.7",
     "sqlfluff>=3.4.2",
     "pip-audit>=2.9.0",
     "pre-commit>=4.2.0",
     "types-openpyxl>=3.1.5.20250602",
-    "types-pyautogui>=0.9.3.20241230",   
+    "types-pyautogui>=0.9.3.20241230",
+    "ty>=0.0.1a19",
 ]
 tests = [
     "pytest>=8.4.1",
@@ -43,30 +43,11 @@ docs = [
     "mkdocs-include-markdown-plugin>=7.1.6",
 ]
 
-[tool.mypy]
-files = ["src/**/*.py", "tests/**/*.py"]
-plugins = [ "pydantic.mypy" ]
-exclude = [".venv"]
-no_namespace_packages = true
-allow_redefinition = false
-check_untyped_defs = true
-disallow_any_explicit = false
-disallow_any_generics = true
-disallow_untyped_calls = true
-ignore_errors = false
-ignore_missing_imports = true
-ignore_missing_imports_per_module = true
-implicit_reexport = false
-local_partial_types = true
-strict_optional = true
-strict_equality = true
-no_implicit_optional = true
-warn_no_return = true
-warn_unused_ignores = true
-warn_redundant_casts = true
-warn_unused_configs = true
-warn_unreachable = true
-
+[tool.ty.src]
+include = [
+    "src",
+    "tests",
+]
 
 [tool.ruff]
 line-length = 88

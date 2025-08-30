@@ -21,7 +21,6 @@ async def test_info_soat(client: TestClient):
         "mes_corte": "202401",
         "tipo_analisis": "triangulos",
         "nombre_plantilla": "plantilla_test_soat",
-        "add_fraude_soat": "True",
     }
 
     response = client.post("/ingresar-parametros", data=params)

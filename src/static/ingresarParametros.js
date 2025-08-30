@@ -101,8 +101,6 @@ document
       mes_inicio: document.getElementById("mesInicio").value,
       mes_corte: document.getElementById("mesCorte").value,
       tipo_analisis: tipoAnalisis,
-      aproximar_reaseguro: document.getElementById("aproximarReaseguro").value,
-      add_fraude_soat: document.getElementById("addFraudeSoat").value,
       nombre_plantilla: document.getElementById("nombrePlantilla").value,
     });
 

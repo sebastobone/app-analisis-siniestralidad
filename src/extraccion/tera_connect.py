@@ -80,7 +80,6 @@ def reemplazar_parametros_queries(queries: str, p: Parametros) -> str:
         mes_corte=p.mes_corte,
         fecha_primera_ocurrencia=utils.yyyymm_to_date(p.mes_inicio),
         fecha_mes_corte=utils.yyyymm_to_date(p.mes_corte),
-        aproximar_reaseguro=1 if p.aproximar_reaseguro else 0,
     )
 
 

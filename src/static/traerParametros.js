@@ -13,10 +13,6 @@ document
       document.getElementById("mesInicio").value = parametros.mes_inicio;
       document.getElementById("mesCorte").value = parametros.mes_corte;
       document.getElementById("tipoAnalisis").value = parametros.tipo_analisis;
-      document.getElementById("aproximarReaseguro").value =
-        parametros.aproximar_reaseguro;
-      document.getElementById("addFraudeSoat").value =
-        parametros.add_fraude_soat;
       document.getElementById("nombrePlantilla").value =
         parametros.nombre_plantilla;
 

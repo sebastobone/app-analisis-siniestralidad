@@ -10,9 +10,7 @@ class Parametros(SQLModel, table=True):
     mes_inicio: int = Field(ge=199001, le=204001)
     mes_corte: int = Field(ge=199001, le=204001)
     tipo_analisis: Literal["triangulos", "entremes"] = Field(sa_type=String)
-    aproximar_reaseguro: bool = False
     nombre_plantilla: str
-    add_fraude_soat: bool = False
     session_id: str | None = Field(index=True)
 
     @field_validator("nombre_plantilla", mode="after")

@@ -15,9 +15,7 @@ def params() -> Parametros:
         "mes_inicio": "201001",
         "mes_corte": "203012",
         "tipo_analisis": "triangulos",
-        "aproximar_reaseguro": "False",
         "nombre_plantilla": "wb_test",
-        "add_fraude_soat": "False",
     }
     params = Parametros(**params_form, session_id="test-session-id")
     return Parametros.model_validate(params)
@@ -38,7 +36,6 @@ def test_reemplazar_parametros_queries(params: Parametros):
             , {mes_corte}
             , {fecha_primera_ocurrencia}
             , {fecha_mes_corte}
-            , {aproximar_reaseguro}
         FROM TABLE1
     """
 
@@ -48,7 +45,6 @@ def test_reemplazar_parametros_queries(params: Parametros):
             , {params.mes_corte}
             , {utils.yyyymm_to_date(params.mes_inicio)}
             , {utils.yyyymm_to_date(params.mes_corte)}
-            , {int(params.aproximar_reaseguro)}
         FROM TABLE1
     """  # noqa: S608
 

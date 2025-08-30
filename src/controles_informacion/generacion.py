@@ -90,7 +90,7 @@ async def generar_controles(
             estado_cuadre="post_cuadre_contable",
         )
 
-    if p.negocio == "soat" and file == "siniestros" and p.add_fraude_soat:
+    if p.negocio == "soat" and file == "siniestros":
         await asyncio.to_thread(
             df.write_csv,
             "data/raw/siniestros_post_cuadre.csv",

@@ -29,7 +29,6 @@ async def test_info_autonomia(client: TestClient) -> None:
         "mes_corte": "202412",
         "tipo_analisis": "triangulos",
         "nombre_plantilla": "plantilla_autonomia",
-        "aproximar_reaseguro": "True",
     }
 
     response = client.post("/ingresar-parametros", data=data).json()

@@ -9,9 +9,14 @@ from src.models import Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
 from src.procesamiento import base_siniestros as bsin
 from src.procesamiento.autonomia import adds
+from src.validation import aperturas
 
 
 async def correr_query_siniestros(p: Parametros) -> None:
+    aperturas.validar_aperturas(
+        pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
+    )
+
     if p.negocio == "autonomia":
         await adds.sap_sinis_ced(p.mes_corte)
 
@@ -25,6 +30,10 @@ async def correr_query_siniestros(p: Parametros) -> None:
 
 
 async def correr_query_primas(p: Parametros) -> None:
+    aperturas.validar_aperturas(
+        pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
+    )
+
     if p.negocio == "autonomia":
         await adds.sap_primas_ced(p.mes_corte)
 
@@ -38,6 +47,10 @@ async def correr_query_primas(p: Parametros) -> None:
 
 
 async def correr_query_expuestos(p: Parametros) -> None:
+    aperturas.validar_aperturas(
+        pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
+    )
+
     if p.negocio == "demo":
         utils.generar_mock_expuestos(
             (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))

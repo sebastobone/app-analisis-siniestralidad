@@ -30,7 +30,12 @@ from src.metodos_plantilla.guardar_traer import (
     traer_apertura,
     traer_guardar_todo,
 )
-from src.models import ModosPlantilla, Parametros, ReferenciasEntremes
+from src.models import (
+    CredencialesTeradata,
+    ModosPlantilla,
+    Parametros,
+    ReferenciasEntremes,
+)
 
 engine = create_engine(
     "sqlite:///data/database.db", connect_args={"check_same_thread": False}
@@ -170,28 +175,34 @@ async def traer_parametros(
 @app.post("/correr-query-siniestros")
 @atrapar_excepciones
 async def correr_query_siniestros(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+    credenciales: Annotated[CredencialesTeradata, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.correr_query_siniestros(params)
+    await main.correr_query_siniestros(params, credenciales)
 
 
 @app.post("/correr-query-primas")
 @atrapar_excepciones
 async def correr_query_primas(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+    credenciales: Annotated[CredencialesTeradata, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.correr_query_primas(params)
+    await main.correr_query_primas(params, credenciales)
 
 
 @app.post("/correr-query-expuestos")
 @atrapar_excepciones
 async def correr_query_expuestos(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+    credenciales: Annotated[CredencialesTeradata, Form()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.correr_query_expuestos(params)
+    await main.correr_query_expuestos(params, credenciales)
 
 
 @app.post("/generar-controles")

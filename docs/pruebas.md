@@ -1,4 +1,5 @@
 <!--markdownlint-disable MD007-->
+<!--markdownlint-disable MD046-->
 
 # Pruebas de funcionamiento
 
@@ -36,16 +37,34 @@ Para ejecutar las pruebas, primero debe instalar las librerías de desarrollo. A
 uv sync --all-groups
 ```
 
-Una vez instaladas las dependencias, puede correr todas las pruebas con el siguiente comando:
+Para hacer la extraccion de queries, se creará un archivo para almacenar sus credenciales de Teradata. Pegue lo siguiente en la terminal:
+
+=== "Windows"
+
+    ```powershell
+    Set-Content -Path ".\.env.private" -Value 'TERADATA_USER="___"' -NoNewLine
+    Add-Content -Path ".\.env.private" -Value "`nTERADATA_PASSWORD=""___"""
+    ```
+
+=== "MacOS"
+
+    ```sh
+    echo 'TERADATA_USER="___"' > .env.private
+    echo 'TERADATA_PASSWORD="___"' >> .env.private
+    ```
+
+El archivo :material-file: `.env.private` queda almacenado dentro de la carpeta principal. Para editarlo, ábralo en el bloc de notas.
+
+Para correr todas las pruebas, ejecute el siguiente comando:
 
 ```sh
-pytest
+uv run pytest
 ```
 
-### Pruebas rápidas
+### Pruebas sin conexión a Teradata
 
 Si desea ejecutar únicamente las pruebas que **no requieren extracción de información** (es decir, que no dependen de conexión a Teradata), utilice el siguiente comando:
 
 ```sh
-pytest -m "not teradata"
+uv run pytest -m "not teradata"
 ```

@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from src import utils
 from src.models import Parametros
 
-from tests.conftest import assert_igual, vaciar_directorios_test
+from tests.conftest import assert_igual, correr_queries, vaciar_directorios_test
 
 
 def separar_meses_anteriores(
@@ -34,9 +34,7 @@ async def test_info_autonomia(client: TestClient) -> None:
     response = client.post("/ingresar-parametros", data=data).json()
     p = Parametros.model_validate(response)
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     base_siniestros = pl.read_parquet("data/raw/siniestros.parquet").with_columns(
         pago_cedido=pl.col("pago_bruto") - pl.col("pago_retenido"),

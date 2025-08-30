@@ -7,7 +7,12 @@ from src import utils
 from src.metodos_plantilla import abrir
 from src.metodos_plantilla.resultados import concatenar_archivos_resultados
 from src.models import Parametros
-from tests.conftest import agregar_meses_params, assert_igual, vaciar_directorios_test
+from tests.conftest import (
+    agregar_meses_params,
+    assert_igual,
+    correr_queries,
+    vaciar_directorios_test,
+)
 
 
 @pytest.mark.plantilla
@@ -26,9 +31,7 @@ def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
     response = client.post("/ingresar-parametros", data=params_form).json()
     p = Parametros.model_validate(response)
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")

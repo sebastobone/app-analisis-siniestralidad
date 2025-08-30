@@ -42,3 +42,9 @@ class Offset(BaseModel):
 class RangeDimension(BaseModel):
     height: int
     width: int
+
+
+class CredencialesTeradata(BaseModel):
+    host: str = "teradata.suranet.com"
+    user: str
+    password: str

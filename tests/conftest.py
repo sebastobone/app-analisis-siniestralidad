@@ -14,7 +14,15 @@ from src import utils
 from src.app import app, get_session
 from src.controles_informacion.sap import consolidar_sap
 
+from tests.configuracion import configuracion
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
+
+CREDENCIALES_TERADATA = {
+    "host": configuracion.teradata_host,
+    "user": configuracion.teradata_user,
+    "password": configuracion.teradata_password,
+}
 
 
 @pytest.fixture
@@ -207,9 +215,9 @@ def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, d
 
 
 def correr_queries(client: TestClient) -> None:
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    _ = client.post("/correr-query-siniestros", data=CREDENCIALES_TERADATA)
+    _ = client.post("/correr-query-primas", data=CREDENCIALES_TERADATA)
+    _ = client.post("/correr-query-expuestos", data=CREDENCIALES_TERADATA)
 
 
 async def obtener_sap_negocio(

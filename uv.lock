@@ -1043,7 +1043,6 @@ dependencies = [
     { name = "pillow" },
     { name = "polars" },
     { name = "pyautogui" },
-    { name = "pydantic-settings" },
     { name = "pyscreeze" },
     { name = "sqlmodel" },
     { name = "sse-starlette" },
@@ -1068,6 +1067,7 @@ lint = [
     { name = "types-pyautogui" },
 ]
 tests = [
+    { name = "pydantic-settings" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -1083,7 +1083,6 @@ requires-dist = [
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "polars", specifier = ">=1.32.0" },
     { name = "pyautogui", specifier = ">=0.9.54" },
-    { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "pyscreeze", specifier = ">=1.0.1" },
     { name = "sqlmodel", specifier = ">=0.0.24" },
     { name = "sse-starlette", specifier = ">=2.2.1" },
@@ -1108,6 +1107,7 @@ lint = [
     { name = "types-pyautogui", specifier = ">=0.9.3.20241230" },
 ]
 tests = [
+    { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest-asyncio", specifier = ">=1.1.0" },
     { name = "pytest-cov", specifier = ">=6.2.1" },

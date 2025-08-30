@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from src import constantes as ct
 from src.models import Parametros
 
-from tests.conftest import vaciar_directorios_test, validar_cuadre
+from tests.conftest import correr_queries, vaciar_directorios_test, validar_cuadre
 
 
 @pytest.mark.asyncio
@@ -24,9 +24,7 @@ async def test_info_movilidad(client: TestClient):
     response = client.post("/ingresar-parametros", data=params)
     p = Parametros.model_validate_json(response.read())
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     _ = client.post("/generar-controles")
 

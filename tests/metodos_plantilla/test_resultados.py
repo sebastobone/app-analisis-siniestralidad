@@ -16,6 +16,7 @@ from tests.conftest import (
     agregar_meses_params,
     assert_diferente,
     assert_igual,
+    correr_queries,
     vaciar_directorios_test,
 )
 
@@ -48,9 +49,7 @@ def test_actualizar_resultados(
     response1 = client.post("/ingresar-parametros", data=params_form_usuario_1).json()
     response2 = client_2.post("/ingresar-parametros", data=params_form_usuario_2).json()
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     p1 = Parametros.model_validate(response1)
     p2 = Parametros.model_validate(response2)

@@ -78,13 +78,21 @@
     <div class="form-section">
       <h2>Extraccion de informacion</h2>
 
-      <button class="apiButton" endpoint="correr-query-siniestros">
+      <form id="credencialesTeradata">
+        <label for="user">Usuario Teradata:</label>
+        <input type="text" id="user" name="user" required />
+
+        <label for="password">Contrasena Teradata:</label>
+        <input type="password" id="password" name="password" required />
+      </form>
+
+      <button class="extraccion" endpoint="correr-query-siniestros">
         Correr query siniestros
       </button>
-      <button class="apiButton" endpoint="correr-query-primas">
+      <button class="extraccion" endpoint="correr-query-primas">
         Correr query primas
       </button>
-      <button class="apiButton" endpoint="correr-query-expuestos">
+      <button class="extraccion" endpoint="correr-query-expuestos">
         Correr query expuestos
       </button>
     </div>
@@ -215,6 +223,7 @@
     <script src="static/dropdowns/generarAperturas.js"></script>
     <script src="static/dropdowns/generarAtributos.js"></script>
     <script type="module" src="static/apiButtons.js"></script>
+    <script type="module" src="static/extraccion.js"></script>
     <script type="module" src="static/modosPlantilla.js"></script>
     <script type="module" src="static/prepararPlantilla.js"></script>
     <script type="module" src="static/traerGuardarTodo.js"></script>

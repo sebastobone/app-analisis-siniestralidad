@@ -7,12 +7,13 @@ import teradatasql as td
 
 from src import constantes as ct
 from src import utils
-from src.configuracion import configuracion
 from src.logger_config import logger
-from src.models import Parametros
+from src.models import CredencialesTeradata, Parametros
 
 
-async def correr_query(file_path: str, p: Parametros) -> None:
+async def correr_query(
+    file_path: str, p: Parametros, credenciales: CredencialesTeradata
+) -> None:
     tipo_query = determinar_tipo_query(file_path)
     segmentaciones = await obtener_segmentaciones(
         f"data/segmentacion_{p.negocio}.xlsx", tipo_query
@@ -24,7 +25,9 @@ async def correr_query(file_path: str, p: Parametros) -> None:
     await verificar_numero_segmentaciones(file_path, queries, segmentaciones)
 
     logger.info(f"Ejecutando query {file_path}...")
-    df = await ejecutar_queries(queries.split(";"), particiones_fechas, segmentaciones)
+    df = await ejecutar_queries(
+        queries.split(";"), particiones_fechas, segmentaciones, credenciales
+    )
     logger.debug(df)
 
     await verificar_resultado(tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte)
@@ -87,8 +90,9 @@ async def ejecutar_queries(
     queries: list[str],
     fechas_chunks: list[tuple[date, date]],
     segm: list[pl.DataFrame],
+    credenciales: CredencialesTeradata,
 ) -> pl.DataFrame:
-    con, cur = conectar_teradata()
+    con, cur = conectar_teradata(credenciales)
 
     loop = asyncio.get_running_loop()
     executor = ThreadPoolExecutor()
@@ -142,13 +146,10 @@ async def verificar_tabla_a_cargar(query: str, add: pl.DataFrame) -> pl.DataFram
     return add
 
 
-def conectar_teradata() -> tuple[td.TeradataConnection, td.TeradataCursor]:
-    creds = {
-        "host": configuracion.teradata_host,
-        "user": configuracion.teradata_user,
-        "password": configuracion.teradata_password,
-    }
-    con = td.connect(**creds)  # type: ignore
+def conectar_teradata(
+    credenciales: CredencialesTeradata,
+) -> tuple[td.TeradataConnection, td.TeradataCursor]:
+    con = td.connect(**credenciales.model_dump())  # type: ignore
     return con, con.cursor()  # type: ignore
 
 

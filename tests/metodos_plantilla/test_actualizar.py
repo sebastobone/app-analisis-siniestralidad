@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 from src.metodos_plantilla import abrir, actualizar
-from tests.conftest import agregar_meses_params, vaciar_directorios_test
+from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
 
 
 def test_actualizar_sin_generar(client: TestClient, rango_meses: tuple[date, date]):
@@ -18,9 +18,7 @@ def test_actualizar_sin_generar(client: TestClient, rango_meses: tuple[date, dat
 
     _ = client.post("/ingresar-parametros", data=params_form).json()
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
 
@@ -47,9 +45,7 @@ def test_actualizar_diferentes_periodicidades(
 
     _ = client.post("/ingresar-parametros", data=params_form).json()
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
 
@@ -80,9 +76,7 @@ def test_actualizar_severidad(client: TestClient, rango_meses: tuple[date, date]
     _ = client.post("/ingresar-parametros", data=params_form).json()
     wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
 

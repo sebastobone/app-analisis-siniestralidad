@@ -1,23 +1,9 @@
 import polars as pl
 
 from src import utils
-from src.controles_informacion import generacion as ctrl
-from src.controles_informacion.evidencias import generar_evidencias_parametros
 from src.models import Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
 from src.procesamiento import base_siniestros as bsin
-
-
-async def generar_controles(p: Parametros) -> None:
-    await ctrl.restablecer_salidas_queries("data/raw")
-
-    await ctrl.verificar_existencia_afos(p.negocio)
-
-    await ctrl.generar_controles("siniestros", p)
-    await ctrl.generar_controles("primas", p)
-    await ctrl.generar_controles("expuestos", p)
-
-    await generar_evidencias_parametros(p.negocio, p.mes_corte)
 
 
 def generar_bases_plantilla(p: Parametros) -> None:

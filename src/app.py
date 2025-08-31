@@ -13,7 +13,8 @@ from sqlmodel import Session, SQLModel, create_engine, select
 from sse_starlette.sse import EventSourceResponse
 
 from src import constantes as ct
-from src import main, utils
+from src import utils
+from src.controles_informacion import generacion
 from src.informacion import carga_manual, tera_connect
 from src.logger_config import log_queue, logger
 from src.metodos_plantilla import (
@@ -38,6 +39,7 @@ from src.models import (
     Parametros,
     ReferenciasEntremes,
 )
+from src.procesamiento import bases
 
 engine = create_engine(
     "sqlite:///data/database.db", connect_args={"check_same_thread": False}
@@ -230,7 +232,7 @@ async def generar_controles(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.generar_controles(params)
+    await generacion.generar_controles(params)
 
 
 @app.get("/generar-aperturas")
@@ -280,7 +282,7 @@ async def preparar_plantilla(
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
-    main.generar_bases_plantilla(p)
+    bases.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     preparar.preparar_plantilla(wb, p, referencias_entremes)
 

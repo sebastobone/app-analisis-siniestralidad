@@ -8,7 +8,7 @@ import polars as pl
 from src import constantes as ct
 from src import utils
 from src.controles_informacion import cuadre_contable as cuadre
-from src.controles_informacion import sap
+from src.controles_informacion import evidencias, sap
 from src.logger_config import logger
 from src.models import Parametros
 
@@ -26,6 +26,18 @@ ARCHIVOS_PERMANENTES = [
     "expuestos_teradata.parquet",
     "expuestos_teradata.csv",
 ]
+
+
+async def generar_controles(p: Parametros) -> None:
+    await restablecer_salidas_queries("data/raw")
+
+    await verificar_existencia_afos(p.negocio)
+
+    await generar_controles_cantidad("siniestros", p)
+    await generar_controles_cantidad("primas", p)
+    await generar_controles_cantidad("expuestos", p)
+
+    await evidencias.generar_evidencias_parametros(p.negocio, p.mes_corte)
 
 
 async def restablecer_salidas_queries(path_salidas_queries: str) -> None:
@@ -58,39 +70,43 @@ async def verificar_existencia_afos(negocio: str):
             )
 
 
-async def generar_controles(
-    file: Literal["siniestros", "primas", "expuestos"], p: Parametros
+async def generar_controles_cantidad(
+    cantidad: ct.LISTA_CANTIDADES, p: Parametros
 ) -> None:
-    df = await asyncio.to_thread(pl.read_parquet, f"data/raw/{file}.parquet")
+    df = await asyncio.to_thread(pl.read_parquet, f"data/raw/{cantidad}.parquet")
 
     difs_sap_tera_pre_cuadre = await generar_controles_estado_cuadre(
         df,
         p.negocio,
-        file,
+        cantidad,
         p.mes_corte,
         estado_cuadre="pre_cuadre_contable",
     )
 
-    if file != "expuestos" and cuadre.debe_realizar_cuadre_contable(p.negocio, file):
+    if cantidad != "expuestos" and cuadre.debe_realizar_cuadre_contable(
+        p.negocio, cantidad
+    ):
         await asyncio.to_thread(
-            df.write_csv, f"data/raw/{file}_pre_cuadre.csv", separator="\t"
+            df.write_csv, f"data/raw/{cantidad}_pre_cuadre.csv", separator="\t"
         )
-        await asyncio.to_thread(df.write_parquet, f"data/raw/{file}_pre_cuadre.parquet")
+        await asyncio.to_thread(
+            df.write_parquet, f"data/raw/{cantidad}_pre_cuadre.parquet"
+        )
         meses_a_cuadrar = pl.read_excel(
-            f"data/segmentacion_{p.negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
+            f"data/segmentacion_{p.negocio}.xlsx", sheet_name=f"Meses_cuadre_{cantidad}"
         )
         df = await cuadre.realizar_cuadre_contable(
-            p.negocio, file, df, difs_sap_tera_pre_cuadre, meses_a_cuadrar
+            p.negocio, cantidad, df, difs_sap_tera_pre_cuadre, meses_a_cuadrar
         )
         _ = await generar_controles_estado_cuadre(
             df,
             p.negocio,
-            file,
+            cantidad,
             p.mes_corte,
             estado_cuadre="post_cuadre_contable",
         )
 
-    if p.negocio == "soat" and file == "siniestros":
+    if p.negocio == "soat" and cantidad == "siniestros":
         await asyncio.to_thread(
             df.write_csv,
             "data/raw/siniestros_post_cuadre.csv",
@@ -103,7 +119,7 @@ async def generar_controles(
         _ = await generar_controles_estado_cuadre(
             df,
             p.negocio,
-            file,
+            cantidad,
             p.mes_corte,
             estado_cuadre="post_ajustes_fraude",
         )

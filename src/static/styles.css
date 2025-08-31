@@ -159,3 +159,13 @@ h2 {
 .toast.hide {
   opacity: 0;
 }
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+input[type="file"] {
+  display: block;
+  padding: 5px;
+  font-size: 14px;
+}

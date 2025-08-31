@@ -18,7 +18,7 @@ def fechas_pdn(col: pl.Expr) -> tuple[pl.Expr, pl.Expr, pl.Expr, pl.Expr]:
 def generar_base_primas_expuestos(
     df: pl.LazyFrame, qty: Literal["primas", "expuestos"], negocio: str
 ) -> pl.DataFrame:
-    qty_cols = ct.COLUMNAS_VALORES_TERADATA[qty]
+    qty_cols = list(ct.Valores().model_dump()[qty].keys())
 
     columnas_aperturas = utils.obtener_nombres_aperturas(negocio, qty)
 

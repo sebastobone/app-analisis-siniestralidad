@@ -17,7 +17,7 @@ from src.controles_informacion import sap
     [
         (
             ["prima_bruta", "prima_cedida"],
-            set(ct.COLUMNAS_VALORES_TERADATA["primas"]),
+            set(ct.Valores().model_dump()["primas"].keys()),
         ),
         (
             ["pago_retenido", "aviso_bruto"],

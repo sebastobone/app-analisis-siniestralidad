@@ -32,7 +32,7 @@ async def test_info_movilidad(client: TestClient):
         "movilidad", "siniestros", ct.COLUMNAS_SINIESTROS_CUADRE, p.mes_corte
     )
     await validar_cuadre(
-        "movilidad", "primas", ct.COLUMNAS_VALORES_TERADATA["primas"], p.mes_corte
+        "movilidad", "primas", ct.Valores().model_dump()["primas"].keys(), p.mes_corte
     )
 
     vaciar_directorios_test()

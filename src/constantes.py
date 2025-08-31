@@ -1,6 +1,7 @@
 from typing import Literal
 
 import polars as pl
+from pydantic import BaseModel
 
 PERIODICIDADES = {"Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12}
 
@@ -31,24 +32,60 @@ NOMBRE_MES = {
     )
 }
 
-COLUMNAS_VALORES_TERADATA = {
-    "siniestros": [
-        "conteo_pago",
-        "conteo_incurrido",
-        "conteo_desistido",
-        "pago_bruto",
-        "pago_retenido",
-        "aviso_bruto",
-        "aviso_retenido",
-    ],
-    "primas": [
-        "prima_bruta",
-        "prima_bruta_devengada",
-        "prima_retenida",
-        "prima_retenida_devengada",
-    ],
-    "expuestos": ["expuestos", "vigentes"],
-}
+
+class DescriptoresSiniestros(BaseModel):
+    codigo_op: type = pl.String
+    codigo_ramo_op: type = pl.String
+    atipico: type = pl.Int64
+    fecha_siniestro: type = pl.Date
+    fecha_registro: type = pl.Date
+
+
+class ValoresSiniestros(BaseModel):
+    conteo_pago: type = pl.Int64
+    conteo_incurrido: type = pl.Int64
+    conteo_desistido: type = pl.Int64
+    pago_bruto: type = pl.Float64
+    pago_retenido: type = pl.Float64
+    aviso_bruto: type = pl.Float64
+    aviso_retenido: type = pl.Float64
+
+
+class DescriptoresPrimas(BaseModel):
+    codigo_op: type = pl.String
+    codigo_ramo_op: type = pl.String
+    fecha_registro: type = pl.Date
+
+
+class ValoresPrimas(BaseModel):
+    prima_bruta: type = pl.Float64
+    prima_bruta_devengada: type = pl.Float64
+    prima_retenida: type = pl.Float64
+    prima_retenida_devengada: type = pl.Float64
+
+
+class DescriptoresExpuestos(BaseModel):
+    codigo_op: type = pl.String
+    codigo_ramo_op: type = pl.String
+    fecha_registro: type = pl.Date
+
+
+class ValoresExpuestos(BaseModel):
+    expuestos: type = pl.Float64
+    vigentes: type = pl.Float64
+
+
+class Descriptores(BaseModel):
+    siniestros: DescriptoresSiniestros = DescriptoresSiniestros()
+    primas: DescriptoresPrimas = DescriptoresPrimas()
+    expuestos: DescriptoresExpuestos = DescriptoresExpuestos()
+
+
+class Valores(BaseModel):
+    siniestros: ValoresSiniestros = ValoresSiniestros()
+    primas: ValoresPrimas = ValoresPrimas()
+    expuestos: ValoresExpuestos = ValoresExpuestos()
+
 
 COLUMNAS_QTYS = [
     "pago_bruto",
@@ -85,8 +122,8 @@ FILA_INI_PLANTILLAS = 2
 FILA_INI_PARAMS = 4
 
 
-LISTA_QUERIES_CUADRE = Literal["siniestros", "primas"]
-LISTA_QUERIES = Literal["siniestros", "primas", "expuestos"]
+LISTA_CANTIDADES_CUADRE = Literal["siniestros", "primas"]
+LISTA_CANTIDADES = Literal["siniestros", "primas", "expuestos"]
 LISTA_PLANTILLAS = Literal["frecuencia", "severidad", "plata", "completar_diagonal"]
 TIPOS_INDEXACION = Literal[
     "Ninguna", "Por fecha de ocurrencia", "Por fecha de movimiento"

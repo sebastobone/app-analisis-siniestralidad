@@ -1,20 +1,47 @@
+import io
+from datetime import date
+
 import polars as pl
 import pytest
-from src.validation import aperturas
+import xlsxwriter
+from fastapi.testclient import TestClient
+from tests.conftest import CONTENT_TYPES, ingresar_parametros
+
+
+def crear_excel(hojas: dict[str, pl.DataFrame]) -> io.BytesIO:
+    excel_buffer = io.BytesIO()
+
+    with xlsxwriter.Workbook(excel_buffer) as writer:
+        for hoja in list(hojas.keys()):
+            hojas[hoja].write_excel(writer, worksheet=hoja)
+
+    excel_buffer.seek(0)
+    return excel_buffer
 
 
 @pytest.mark.unit
-def test_hojas_faltantes():
+def test_hojas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
+    ingresar_parametros(client, rango_meses, "test")
     hojas = {
-        "Aperturas_Siniestros": pl.DataFrame(),
-        "Aperturas_Primas": pl.DataFrame(),
+        "Aperturas_Siniestros": pl.DataFrame({"a": 1}),
+        "Aperturas_Primas": pl.DataFrame({"b": 1}),
     }
     with pytest.raises(ValueError):
-        aperturas.validar_aperturas(hojas)
+        _ = client.post(
+            "/cargar-archivos",
+            files={
+                "segmentacion": (
+                    "segmentacion_test.xlsx",
+                    crear_excel(hojas),
+                    CONTENT_TYPES["xlsx"],
+                )
+            },
+        )
 
 
 @pytest.mark.unit
-def test_columnas_faltantes():
+def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
+    ingresar_parametros(client, rango_meses, "test")
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
@@ -33,13 +60,23 @@ def test_columnas_faltantes():
         ),
     }
     with pytest.raises(ValueError) as exc:
-        aperturas.validar_aperturas(hojas)
+        _ = client.post(
+            "/cargar-archivos",
+            files={
+                "segmentacion": (
+                    "segmentacion_test.xlsx",
+                    crear_excel(hojas),
+                    CONTENT_TYPES["xlsx"],
+                )
+            },
+        )
     assert "tipo_indexacion_severidad" in str(exc.value)
     assert "Aperturas_Siniestros" in str(exc.value)
 
 
 @pytest.mark.unit
-def test_aperturas_duplicadas():
+def test_aperturas_duplicadas(client: TestClient, rango_meses: tuple[date, date]):
+    ingresar_parametros(client, rango_meses, "test")
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
@@ -59,12 +96,22 @@ def test_aperturas_duplicadas():
         ),
     }
     with pytest.raises(ValueError) as exc:
-        aperturas.validar_aperturas(hojas)
-    assert "duplicados" in str(exc.value)
+        _ = client.post(
+            "/cargar-archivos",
+            files={
+                "segmentacion": (
+                    "segmentacion_test.xlsx",
+                    crear_excel(hojas),
+                    CONTENT_TYPES["xlsx"],
+                )
+            },
+        )
+    assert "aperturas duplicadas" in str(exc.value)
 
 
 @pytest.mark.unit
-def test_periodicidades_invalidas():
+def test_periodicidades_invalidas(client: TestClient, rango_meses: tuple[date, date]):
+    ingresar_parametros(client, rango_meses, "test")
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
@@ -84,13 +131,23 @@ def test_periodicidades_invalidas():
         ),
     }
     with pytest.raises(ValueError) as exc:
-        aperturas.validar_aperturas(hojas)
-    assert "invalidos" in str(exc.value)
+        _ = client.post(
+            "/cargar-archivos",
+            files={
+                "segmentacion": (
+                    "segmentacion_test.xlsx",
+                    crear_excel(hojas),
+                    CONTENT_TYPES["xlsx"],
+                )
+            },
+        )
+    assert "valores invalidos" in str(exc.value)
     assert "periodicidad_ocurrencia" in str(exc.value)
 
 
 @pytest.mark.unit
-def test_tipos_indexacion_invalidos():
+def test_tipos_indexacion_invalidos(client: TestClient, rango_meses: tuple[date, date]):
+    ingresar_parametros(client, rango_meses, "test")
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
@@ -110,13 +167,25 @@ def test_tipos_indexacion_invalidos():
         ),
     }
     with pytest.raises(ValueError) as exc:
-        aperturas.validar_aperturas(hojas)
-    assert "invalidos" in str(exc.value)
+        _ = client.post(
+            "/cargar-archivos",
+            files={
+                "segmentacion": (
+                    "segmentacion_test.xlsx",
+                    crear_excel(hojas),
+                    CONTENT_TYPES["xlsx"],
+                )
+            },
+        )
+    assert "valores invalidos" in str(exc.value)
     assert "tipo_indexacion_severidad" in str(exc.value)
 
 
 @pytest.mark.unit
-def test_medidas_indexacion_invalidas():
+def test_medidas_indexacion_invalidas(
+    client: TestClient, rango_meses: tuple[date, date]
+):
+    ingresar_parametros(client, rango_meses, "test")
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
@@ -136,13 +205,25 @@ def test_medidas_indexacion_invalidas():
         ),
     }
     with pytest.raises(ValueError) as exc:
-        aperturas.validar_aperturas(hojas)
+        _ = client.post(
+            "/cargar-archivos",
+            files={
+                "segmentacion": (
+                    "segmentacion_test.xlsx",
+                    crear_excel(hojas),
+                    CONTENT_TYPES["xlsx"],
+                )
+            },
+        )
     assert "medida_indexacion_severidad" in str(exc.value)
     assert "no puede ser" in str(exc.value)
 
 
 @pytest.mark.unit
-def test_variables_apertura_sobrantes():
+def test_variables_apertura_sobrantes(
+    client: TestClient, rango_meses: tuple[date, date]
+):
+    ingresar_parametros(client, rango_meses, "test")
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
@@ -162,14 +243,24 @@ def test_variables_apertura_sobrantes():
         ),
     }
     with pytest.raises(ValueError) as exc:
-        aperturas.validar_aperturas(hojas)
+        _ = client.post(
+            "/cargar-archivos",
+            files={
+                "segmentacion": (
+                    "segmentacion_test.xlsx",
+                    crear_excel(hojas),
+                    CONTENT_TYPES["xlsx"],
+                )
+            },
+        )
     assert "Sobrantes:" in str(exc.value)
     assert "apertura_1" in str(exc.value)
     assert "Aperturas_Primas" in str(exc.value)
 
 
 @pytest.mark.unit
-def test_cruces_nulos_aperturas():
+def test_cruces_nulos_aperturas(client: TestClient, rango_meses: tuple[date, date]):
+    ingresar_parametros(client, rango_meses, "test")
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
@@ -190,12 +281,30 @@ def test_cruces_nulos_aperturas():
         ),
     }
     with pytest.raises(ValueError) as exc:
-        aperturas.validar_aperturas(hojas)
+        _ = client.post(
+            "/cargar-archivos",
+            files={
+                "segmentacion": (
+                    "segmentacion_test.xlsx",
+                    crear_excel(hojas),
+                    CONTENT_TYPES["xlsx"],
+                )
+            },
+        )
     assert "no cruzan" in str(exc.value)
     assert "Aperturas_Primas" in str(exc.value)
 
 
 @pytest.mark.unit
-def test_archivo_correcto():
-    hojas = pl.read_excel("data/segmentacion_demo.xlsx", sheet_id=0)
-    aperturas.validar_aperturas(hojas)
+def test_archivo_correcto(client: TestClient, rango_meses: tuple[date, date]):
+    ingresar_parametros(client, rango_meses)
+    _ = client.post(
+        "/cargar-archivos",
+        files={
+            "segmentacion": (
+                "segmentacion_demo.xlsx",
+                open("data/segmentacion_demo.xlsx", "rb"),
+                CONTENT_TYPES["xlsx"],
+            )
+        },
+    )

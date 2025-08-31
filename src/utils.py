@@ -1,6 +1,7 @@
 import textwrap
 from datetime import date
 from math import ceil
+from pathlib import Path
 from typing import Literal, overload
 
 import numpy as np
@@ -8,6 +9,7 @@ import polars as pl
 import xlwings as xw
 
 from src import constantes as ct
+from src.logger_config import logger
 from src.models import RangeDimension
 
 
@@ -23,9 +25,11 @@ def lowercase_columns(df: pl.DataFrame | pl.LazyFrame) -> pl.DataFrame | pl.Lazy
     return df.rename({column: column.lower() for column in df.collect_schema().names()})
 
 
-def crear_columna_apertura_reservas(negocio: str) -> pl.Expr:
+def crear_columna_apertura_reservas(
+    negocio: str, cantidad: Literal["siniestros", "primas", "expuestos"]
+) -> pl.Expr:
     return pl.concat_str(
-        obtener_nombres_aperturas(negocio, "siniestros"),
+        obtener_nombres_aperturas(negocio, cantidad),
         separator="_",
     ).alias("apertura_reservas")
 
@@ -47,25 +51,6 @@ def date_to_yyyymm_pl(column: pl.Expr, grain: str = "Mensual") -> pl.Expr:
         + (column.dt.month() / pl.lit(ct.PERIODICIDADES[grain])).ceil()
         * pl.lit(ct.PERIODICIDADES[grain])
     ).cast(pl.Int32)
-
-
-def columnas_minimas_salida_tera(
-    negocio: str, tipo_query: Literal["siniestros", "primas", "expuestos"]
-) -> list[str]:
-    if tipo_query == "siniestros":
-        columnas_descriptoras_adicionales = [
-            "atipico",
-            "fecha_siniestro",
-            "fecha_registro",
-        ]
-    else:
-        columnas_descriptoras_adicionales = ["fecha_registro"]
-
-    return (
-        obtener_nombres_aperturas(negocio, tipo_query)
-        + columnas_descriptoras_adicionales
-        + ct.COLUMNAS_VALORES_TERADATA[tipo_query]
-    )
 
 
 def obtener_dimensiones_triangulo(sheet: xw.Sheet) -> RangeDimension:
@@ -236,7 +221,7 @@ def generar_mock_siniestros(rango_meses: tuple[date, date]) -> pl.DataFrame:
             "conteo_incurrido": np.random.randint(0, 110, size=num_rows),
             "conteo_desistido": np.random.randint(0, 10, size=num_rows),
         }
-    ).with_columns(crear_columna_apertura_reservas("demo"))
+    ).with_columns(crear_columna_apertura_reservas("demo", "siniestros"))
 
 
 def generar_mock_primas(rango_meses: tuple[date, date]) -> pl.DataFrame:
@@ -258,7 +243,7 @@ def generar_mock_primas(rango_meses: tuple[date, date]) -> pl.DataFrame:
             "prima_bruta_devengada": np.random.random(size=num_rows) * 1e10,
             "prima_retenida_devengada": np.random.random(size=num_rows) * 1e9,
         }
-    ).with_columns(crear_columna_apertura_reservas("demo"))
+    )
 
 
 def generar_mock_expuestos(rango_meses: tuple[date, date]) -> pl.DataFrame:
@@ -280,10 +265,8 @@ def generar_mock_expuestos(rango_meses: tuple[date, date]) -> pl.DataFrame:
                 "vigentes": np.random.random(size=num_rows) * 1e6,
             }
         )
-        .with_columns(crear_columna_apertura_reservas("demo"))
         .group_by(
             [
-                "apertura_reservas",
                 "codigo_op",
                 "codigo_ramo_op",
                 "apertura_1",
@@ -302,3 +285,57 @@ def mantener_formato_columnas(df: pl.DataFrame) -> pl.DataFrame:
             for column in ["codigo_op", "codigo_ramo_op"]
         ]
     )
+
+
+def validar_subconjunto(
+    subconjunto: list[str],
+    conjunto: list[str],
+    mensaje_error: str,
+    variables_mensaje: dict[str, str | list[str]] | None,
+    severidad: Literal["error", "alerta"],
+) -> None:
+    if not set(subconjunto).issubset(set(conjunto)):
+        faltantes = set(subconjunto) - set(conjunto)
+        if variables_mensaje:
+            log = mensaje_error.format(**variables_mensaje, faltantes=faltantes)
+        else:
+            log = mensaje_error.format(faltantes=faltantes)
+        if severidad == "error":
+            raise ValueError(limpiar_espacios_log(log))
+        else:
+            logger.warning(limpiar_espacios_log(log))
+
+
+def asignar_tipos_columnas(
+    df: pl.DataFrame,
+    cantidad: Literal["siniestros", "primas", "expuestos"],
+    mensaje_error: str,
+    variables_mensaje: dict[str, str | list[str]],
+) -> pl.DataFrame:
+    try:
+        df = df.cast(ct.Descriptores().model_dump()[cantidad]).cast(
+            ct.Valores().model_dump()[cantidad]
+        )
+    except pl.exceptions.InvalidOperationError as e:
+        raise ValueError(f"{mensaje_error.format(**variables_mensaje)} {str(e)}") from e
+    return df
+
+
+def agrupar_por_columnas_relevantes(
+    df: pl.DataFrame, negocio: str, cantidad: ct.LISTA_CANTIDADES
+) -> pl.DataFrame:
+    columnas_descriptoras = set(ct.Descriptores().model_dump()[cantidad].keys())
+    columnas_aperturas = set(obtener_nombres_aperturas(negocio, cantidad))
+    columnas_valores = ct.Valores().model_dump()[cantidad].keys()
+    return (
+        df.group_by(columnas_aperturas.union(columnas_descriptoras))
+        .agg([pl.sum(col) for col in columnas_valores])
+        .sort(columnas_aperturas.union(columnas_descriptoras))
+    )
+
+
+def vaciar_directorio(directorio_path: str) -> None:
+    directorio = Path(directorio_path)
+    for file in directorio.iterdir():
+        if file.is_file() and file.name != ".gitkeep":
+            file.unlink()

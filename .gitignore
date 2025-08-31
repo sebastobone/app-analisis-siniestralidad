@@ -192,6 +192,13 @@ data/processed/*
 data/raw/*
 !data/raw/.gitkeep
 
+data/carga_manual/siniestros/*
+!data/carga_manual/siniestros/.gitkeep
+data/carga_manual/primas/*
+!data/carga_manual/primas/.gitkeep
+data/carga_manual/expuestos/*
+!data/carga_manual/expuestos/.gitkeep
+
 !data/segmentacion.xlsx
 
 output/*

@@ -14,6 +14,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from src import constantes as ct
 from src import main, utils
+from src.informacion import carga_manual
 from src.logger_config import log_queue, logger
 from src.metodos_plantilla import (
     abrir,
@@ -31,6 +32,7 @@ from src.metodos_plantilla.guardar_traer import (
     traer_guardar_todo,
 )
 from src.models import (
+    ArchivosInput,
     CredencialesTeradata,
     ModosPlantilla,
     Parametros,
@@ -203,6 +205,23 @@ async def correr_query_expuestos(
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
     await main.correr_query_expuestos(params, credenciales)
+
+
+@app.post("/cargar-archivos")
+@atrapar_excepciones
+async def cargar_archivos(
+    archivos: Annotated[ArchivosInput, Depends()],
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
+) -> None:
+    p = obtener_parametros_usuario(session, session_id)
+    carga_manual.procesar_archivos(archivos, p.negocio)
+
+
+@app.post("/eliminar-archivos-cargados")
+@atrapar_excepciones
+async def eliminar_archivos_cargados() -> None:
+    carga_manual.eliminar_archivos()
 
 
 @app.post("/generar-controles")

@@ -3,19 +3,19 @@ import polars as pl
 from src import utils
 from src.controles_informacion import generacion as ctrl
 from src.controles_informacion.evidencias import generar_evidencias_parametros
-from src.extraccion.tera_connect import correr_query
+from src.informacion.tera_connect import correr_query
 from src.logger_config import logger
 from src.models import CredencialesTeradata, Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
 from src.procesamiento import base_siniestros as bsin
 from src.procesamiento.autonomia import adds
-from src.validation import aperturas
+from src.validation import segmentacion
 
 
 async def correr_query_siniestros(
     p: Parametros, credenciales: CredencialesTeradata
 ) -> None:
-    aperturas.validar_aperturas(
+    segmentacion.validar_archivo_segmentacion(
         pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
     )
 
@@ -34,7 +34,7 @@ async def correr_query_siniestros(
 async def correr_query_primas(
     p: Parametros, credenciales: CredencialesTeradata
 ) -> None:
-    aperturas.validar_aperturas(
+    segmentacion.validar_archivo_segmentacion(
         pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
     )
 
@@ -53,7 +53,7 @@ async def correr_query_primas(
 async def correr_query_expuestos(
     p: Parametros, credenciales: CredencialesTeradata
 ) -> None:
-    aperturas.validar_aperturas(
+    segmentacion.validar_archivo_segmentacion(
         pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
     )
 

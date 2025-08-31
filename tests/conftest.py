@@ -13,6 +13,7 @@ from sqlmodel.pool import StaticPool
 from src import utils
 from src.app import app, get_session
 from src.controles_informacion.sap import consolidar_sap
+from src.models import Parametros
 
 from tests.configuracion import configuracion
 
@@ -22,6 +23,13 @@ CREDENCIALES_TERADATA = {
     "host": configuracion.teradata_host,
     "user": configuracion.teradata_user,
     "password": configuracion.teradata_password,
+}
+
+CONTENT_TYPES = {
+    "csv": "text/csv",
+    "txt": "text/plain",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "parquet": "application/vnd.apache.parquet",
 }
 
 
@@ -62,7 +70,7 @@ def mock_siniestros(rango_meses: tuple[date, date]) -> pl.LazyFrame:
             "conteo_incurrido": np.random.randint(0, 110, size=num_rows),
             "conteo_desistido": np.random.randint(0, 10, size=num_rows),
         }
-    ).with_columns(utils.crear_columna_apertura_reservas("mock"))
+    ).with_columns(utils.crear_columna_apertura_reservas("mock", "siniestros"))
 
 
 @pytest.fixture
@@ -85,7 +93,7 @@ def mock_primas(rango_meses: tuple[date, date]) -> pl.LazyFrame:
             "prima_bruta_devengada": np.random.random(size=num_rows) * 1e8,
             "prima_retenida_devengada": np.random.random(size=num_rows) * 1e7,
         }
-    ).with_columns(utils.crear_columna_apertura_reservas("mock"))
+    )
 
 
 @pytest.fixture
@@ -108,7 +116,6 @@ def mock_expuestos(rango_meses: tuple[date, date]) -> pl.LazyFrame:
                 "vigentes": np.random.random(size=num_rows) * 1e6,
             }
         )
-        .with_columns(utils.crear_columna_apertura_reservas("mock"))
         .group_by(
             [
                 "apertura_reservas",
@@ -186,23 +193,23 @@ def assert_diferente(
     assert not abs(df1.get_column(col1).sum() - df2.get_column(col2).sum()) < 100
 
 
-def vaciar_directorio(directorio_path: str) -> None:
-    directorio = Path(directorio_path)
-    for file in directorio.iterdir():
-        if file.is_file() and file.name != ".gitkeep":
-            file.unlink()
-
-
 def vaciar_directorios_test() -> None:
-    vaciar_directorio("data/raw")
-    vaciar_directorio("data/processed")
-    vaciar_directorio("data/db")
-    vaciar_directorio("output/resultados")
-    vaciar_directorio("output")
-    vaciar_directorio("data/controles_informacion")
-    vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
-    vaciar_directorio("data/controles_informacion/post_cuadre_contable")
-    vaciar_directorio("data/controles_informacion/post_ajustes_fraude")
+    utils.vaciar_directorio("data/raw")
+    utils.vaciar_directorio("data/processed")
+    utils.vaciar_directorio("data/db")
+    utils.vaciar_directorio("output/resultados")
+    utils.vaciar_directorio("output")
+    utils.vaciar_directorio("data/controles_informacion")
+    utils.vaciar_directorio("data/controles_informacion/pre_cuadre_contable")
+    utils.vaciar_directorio("data/controles_informacion/post_cuadre_contable")
+    utils.vaciar_directorio("data/controles_informacion/post_ajustes_fraude")
+    utils.vaciar_directorio("data/carga_manual/siniestros")
+    utils.vaciar_directorio("data/carga_manual/primas")
+    utils.vaciar_directorio("data/carga_manual/expuestos")
+
+    archivo_segmentacion_manual = Path("data/segmentacion_test.xlsx")
+    if archivo_segmentacion_manual.exists():
+        archivo_segmentacion_manual.unlink()
 
 
 def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, date]):
@@ -276,3 +283,18 @@ async def validar_cuadre(
     for col in columnas_cantidades:
         assert_igual(base_cuadrada, sap_cuadres, col)
         assert_diferente(base_no_cuadrada, sap_no_cuadres, col)
+
+
+def ingresar_parametros(
+    client: TestClient, rango_meses: tuple[date, date], negocio: str = "demo"
+) -> Parametros:
+    params_form = {
+        "negocio": negocio,
+        "tipo_analisis": "triangulos",
+        "nombre_plantilla": "wb_test",
+    }
+    agregar_meses_params(params_form, rango_meses)
+
+    return Parametros.model_validate(
+        client.post("/ingresar-parametros", data=params_form).json()
+    )

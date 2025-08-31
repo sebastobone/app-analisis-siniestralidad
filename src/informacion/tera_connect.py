@@ -9,6 +9,19 @@ from src import constantes as ct
 from src import utils
 from src.logger_config import logger
 from src.models import CredencialesTeradata, Parametros
+from src.validation import cantidades
+
+MENSAJE_APERTURAS_FALTANTES = """
+    ¡Error! Las siguientes aperturas se encuentran en el archivo generado,
+    pero no estan definidas: {faltantes}. Agregue estas aperturas al archivo de
+    segmentacion.
+"""
+
+MENSAJE_APERTURAS_SOBRANTES = """
+    ¡Alerta! Las siguientes aperturas se definieron, pero no se encuentran
+    en el archivo generado. Puede optar por quitarlas del archivo de
+    segmentacion, o simplemente ignorarlas: {faltantes}
+"""
 
 
 async def correr_query(
@@ -30,30 +43,21 @@ async def correr_query(
     )
     logger.debug(df)
 
-    await verificar_resultado(tipo_query, df, p.negocio, p.mes_inicio, p.mes_corte)
+    cantidades.validar_archivo(p.negocio, df, tipo_query, tipo_query)
 
-    df = await eliminar_columnas_extra(df, p.negocio, tipo_query)
+    df = utils.agrupar_por_columnas_relevantes(df, p.negocio, tipo_query)
 
     if tipo_query == "siniestros":
-        df = df.select(utils.crear_columna_apertura_reservas(p.negocio), pl.all())
-        aperturas_generadas = sorted(
-            df.get_column("apertura_reservas").unique().to_list()
+        df = df.select(
+            utils.crear_columna_apertura_reservas(p.negocio, "siniestros"), pl.all()
         )
-        aperturas_esperadas = sorted(
-            utils.obtener_aperturas(p.negocio, "siniestros")
-            .get_column("apertura_reservas")
-            .unique()
-            .to_list()
-        )
-        await verificar_aperturas_faltantes(aperturas_generadas, aperturas_esperadas)
-        await verificar_aperturas_sobrantes(aperturas_generadas, aperturas_esperadas)
 
     await guardar_resultado(df, tipo_query)
 
 
 def determinar_tipo_query(
     file: str,
-) -> ct.LISTA_QUERIES:
+) -> ct.LISTA_CANTIDADES:
     return file.split("/")[-1].replace(".sql", "")  # type: ignore
 
 
@@ -166,7 +170,7 @@ def crear_particiones_fechas(
     return list(zip(inicios_mes, fines_mes, strict=False))
 
 
-async def guardar_resultado(df: pl.DataFrame, tipo_query: ct.LISTA_QUERIES) -> None:
+async def guardar_resultado(df: pl.DataFrame, tipo_query: ct.LISTA_CANTIDADES) -> None:
     # En csv para poder visualizarlo facil, en caso de ser necesario
     for sufijo in ["_teradata", ""]:
         df.write_csv(f"data/raw/{tipo_query}{sufijo}.csv", separator="\t")
@@ -247,117 +251,4 @@ async def verificar_valores_nulos(add: pl.DataFrame) -> None:
             Error -> tiene valores nulos en la siguiente tabla: {add}
             Corrija estos valores antes de ejecutar el proceso.
             """
-        )
-
-
-async def verificar_formato_fecha(col: pl.Series) -> None:
-    if col.dtype != pl.Date:
-        raise ValueError(f"La columna {col.name} debe estar en formato fecha.")
-
-
-async def verificar_fechas_dentro_de_rangos(
-    col: pl.Series, lim_inf: date, lim_sup: date
-) -> None:
-    if col.dt.min() < lim_inf or col.dt.max() > lim_sup:  # type: ignore
-        raise ValueError(
-            utils.limpiar_espacios_log(
-                f"""La columna {col.name} debe estar entre {lim_inf} y {lim_sup},
-                pero la informacion generada esta entre {col.dt.min()} y {col.dt.max()}.
-                Revise el query.
-                """
-            )
-        )
-
-
-async def verificar_resultado(
-    tipo_query: ct.LISTA_QUERIES,
-    df: pl.DataFrame,
-    negocio: str,
-    mes_inicio: int,
-    mes_corte: int,
-) -> None:
-    cols = df.collect_schema().names()
-
-    for column in utils.columnas_minimas_salida_tera(negocio, tipo_query):
-        if column not in cols:
-            raise ValueError(f"¡Falta la columna {column}!")
-
-    await verificar_formato_fecha(df.get_column("fecha_registro"))
-    await verificar_fechas_dentro_de_rangos(
-        df.get_column("fecha_registro"),
-        utils.yyyymm_to_date(mes_inicio),
-        utils.yyyymm_to_date(mes_corte),
-    )
-
-    if tipo_query == "siniestros":
-        await verificar_formato_fecha(df.get_column("fecha_siniestro"))
-        await verificar_fechas_dentro_de_rangos(
-            df.get_column("fecha_siniestro"),
-            utils.yyyymm_to_date(mes_inicio),
-            utils.yyyymm_to_date(mes_corte),
-        )
-
-    segmentaciones_faltantes = df.filter(
-        pl.any_horizontal(
-            [
-                (pl.col(col).is_null() | pl.col(col).eq("-1"))
-                for col in utils.obtener_nombres_aperturas(negocio, tipo_query)
-            ]
-        )
-    )
-    if not segmentaciones_faltantes.is_empty():
-        raise ValueError(
-            f"""
-            ¡Alerta! Revise las segmentaciones faltantes. {segmentaciones_faltantes}
-            """
-        )
-
-
-async def eliminar_columnas_extra(
-    df: pl.DataFrame, negocio: str, tipo_query: ct.LISTA_QUERIES
-) -> pl.DataFrame:
-    columnas_necesarias = utils.columnas_minimas_salida_tera(negocio, tipo_query)
-    columnas_valores = ct.COLUMNAS_VALORES_TERADATA[tipo_query]
-    columnas_descriptoras = [
-        col for col in columnas_necesarias if col not in columnas_valores
-    ]
-    return (
-        df.select(columnas_necesarias)
-        .group_by(columnas_descriptoras)
-        .agg([pl.sum(col) for col in columnas_valores])
-        .sort(columnas_descriptoras)
-    )
-
-
-async def verificar_aperturas_faltantes(
-    aperturas_generadas: list[str], aperturas_esperadas: list[str]
-) -> None:
-    faltantes = []
-    for apertura_generada in aperturas_generadas:
-        if apertura_generada not in aperturas_esperadas:
-            faltantes.append(apertura_generada)
-
-    if len(faltantes) > 0:
-        raise ValueError(
-            utils.limpiar_espacios_log(
-                f"""
-                ¡Error! Las siguientes aperturas se generaron, pero no se
-                esperaban: {faltantes}. Agregue estas aperturas al archivo de
-                segmentacion.
-                """
-            )
-        )
-
-
-async def verificar_aperturas_sobrantes(
-    aperturas_generadas: list[str], aperturas_esperadas: list[str]
-) -> None:
-    sobrantes = []
-    for apertura_esperada in aperturas_esperadas:
-        if apertura_esperada not in aperturas_generadas:
-            sobrantes.append(apertura_esperada)
-
-    if len(sobrantes) > 0:
-        logger.warning(
-            f"¡Alerta! No se generaron las siguientes aperturas: {sobrantes}"
         )

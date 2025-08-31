@@ -1,5 +1,6 @@
 from typing import Literal
 
+from fastapi import UploadFile
 from pydantic import BaseModel, field_validator
 from sqlmodel import Field, SQLModel, String
 
@@ -48,3 +49,17 @@ class CredencialesTeradata(BaseModel):
     host: str = "teradata.suranet.com"
     user: str
     password: str
+
+
+class ArchivosInput:
+    def __init__(
+        self,
+        segmentacion: UploadFile | None = None,
+        siniestros: list[UploadFile] | None = None,
+        primas: list[UploadFile] | None = None,
+        expuestos: list[UploadFile] | None = None,
+    ):
+        self.segmentacion = segmentacion
+        self.siniestros = siniestros
+        self.primas = primas
+        self.expuestos = expuestos

@@ -34,7 +34,7 @@ def validar_base_siniestros(
         .agg(
             [
                 pl.sum(qty_column)
-                for qty_column in ct.COLUMNAS_VALORES_TERADATA["siniestros"]
+                for qty_column in ct.Valores().model_dump()["siniestros"].keys()
             ]
         )
         .with_columns(
@@ -62,17 +62,17 @@ def validar_base_siniestros(
         .agg(
             [
                 pl.sum(qty_column)
-                for qty_column in ct.COLUMNAS_VALORES_TERADATA["siniestros"]
+                for qty_column in ct.Valores().model_dump()["siniestros"].keys()
             ]
         )
     )
 
     return base_plantilla.join(
-        original, on=aperturas, how="full", suffix="_teradata", coalesce=True
+        original, on=aperturas, how="full", suffix="_original", coalesce=True
     ).with_columns(
         [
-            (pl.col(col) - pl.col(f"{col}_teradata")).alias(f"diferencia_{col}")
-            for col in ct.COLUMNAS_VALORES_TERADATA["siniestros"]
+            (pl.col(col) - pl.col(f"{col}_original")).alias(f"diferencia_{col}")
+            for col in ct.Valores().model_dump()["siniestros"].keys()
         ]
     )
 
@@ -86,7 +86,7 @@ def validar_base_primas_expuestos(
     base_group = resumen.group_by(aperturas)
 
     if qty == "primas":
-        columnas_valores = ct.COLUMNAS_VALORES_TERADATA[qty]
+        columnas_valores = ct.Valores().model_dump()[qty].keys()
         original = original_group.agg(
             [pl.sum(columna_valor) for columna_valor in columnas_valores]
         )

@@ -66,7 +66,7 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
                 "apertura_1": ["A"],
                 "apertura_2": ["D"],
             }
-        ).with_columns(utils.crear_columna_apertura_reservas("demo"))
+        ).with_columns(utils.crear_columna_apertura_reservas("demo", "siniestros"))
 
         with patch("src.controles_informacion.cuadre_contable.guardar_archivos"):
             df_cuadre = await cuadre_contable.realizar_cuadre_contable(

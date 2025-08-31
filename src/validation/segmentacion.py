@@ -21,48 +21,14 @@ def _validar_hojas(hojas: dict[str, pl.DataFrame]) -> None:
         )
 
 
-def _validar_columnas(
-    columnas_encontradas: set[str],
-    columnas_necesarias: set[str],
-    nombre_hoja: str,
-    mensaje_error: str,
+def _validar_unicidad_aperturas(
+    df: pl.DataFrame,
+    nombre_hoja: Literal[
+        "Aperturas_Siniestros", "Aperturas_Primas", "Aperturas_Expuestos"
+    ],
 ) -> None:
-    if not columnas_necesarias.issubset(columnas_encontradas):
-        faltantes = columnas_necesarias - columnas_encontradas
-        raise ValueError(
-            utils.limpiar_espacios_log(
-                mensaje_error.format(nombre_hoja=nombre_hoja, faltantes=faltantes)
-            )
-        )
-
-
-def _validar_unicidad(df: pl.DataFrame, columna: str, nombre_hoja: str) -> None:
-    col = df.get_column(columna)
-    if col.len() != col.unique().len():
-        raise ValueError(
-            utils.limpiar_espacios_log(
-                f"""
-                La columna "{columna}" en la hoja "{nombre_hoja}"
-                contiene valores duplicados.
-                """
-            )
-        )
-
-
-def _validar_valores_permitidos(
-    df: pl.DataFrame, columna: str, permitidos: set[str], nombre_hoja: str
-) -> None:
-    valores = set(df.get_column(columna).unique().to_list())
-    if not valores.issubset(permitidos):
-        raise ValueError(
-            utils.limpiar_espacios_log(
-                f"""
-                La columna "{columna}" en la hoja "{nombre_hoja}"
-                contiene valores invalidos. Los valores permitidos son:
-                {", ".join(permitidos)}.
-                """
-            )
-        )
+    if df.height != df.unique().height:
+        raise ValueError(f'La hoja "{nombre_hoja}" contiene aperturas duplicadas.')
 
 
 def _validar_medidas_indexacion(df: pl.DataFrame) -> None:
@@ -109,9 +75,8 @@ def _validar_cruces_aperturas(
     cruce = aperturas_siniestros.join(
         aperturas_primas, on=aperturas_primas.collect_schema().names(), how="full"
     )
-    num_nulls = cruce.null_count().max_horizontal().max()
     nulos = cruce.filter(pl.any_horizontal(pl.all().is_null()))
-    if isinstance(num_nulls, int) and num_nulls > 0:
+    if not nulos.is_empty():
         raise ValueError(
             f"""
             No tiene las mismas aperturas en las hojas "Aperturas_Siniestros"
@@ -120,7 +85,7 @@ def _validar_cruces_aperturas(
         )
 
 
-def validar_aperturas(hojas: dict[str, pl.DataFrame]) -> None:
+def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
     _validar_hojas(hojas)
 
     mensaje_columnas_faltantes = """
@@ -128,39 +93,73 @@ def validar_aperturas(hojas: dict[str, pl.DataFrame]) -> None:
         del archivo de segmentacion: {faltantes}
     """
 
+    mensaje_valores_no_permitidos = """
+        La columna {columna} en la hoja {nombre_hoja} contiene valores invalidos.
+        Se encontro {faltantes}, pero los valores permitidos son {permitidos}.
+    """
+
     # Validar siniestros
-    columnas_necesarias_siniestros = {
+    columnas_necesarias_siniestros = [
         "apertura_reservas",
         "codigo_op",
         "codigo_ramo_op",
         "periodicidad_ocurrencia",
         "tipo_indexacion_severidad",
         "medida_indexacion_severidad",
-    }
-    columnas_encontradas_siniestros = set(
+    ]
+    columnas_encontradas_siniestros = (
         hojas["Aperturas_Siniestros"].collect_schema().names()
     )
 
-    _validar_columnas(
-        columnas_encontradas_siniestros,
+    utils.validar_subconjunto(
         columnas_necesarias_siniestros,
-        "Aperturas_Siniestros",
+        columnas_encontradas_siniestros,
         mensaje_columnas_faltantes,
+        {"nombre_hoja": "Aperturas_Siniestros"},
+        "error",
     )
-    _validar_unicidad(
-        hojas["Aperturas_Siniestros"], "apertura_reservas", "Aperturas_Siniestros"
-    )
-    _validar_valores_permitidos(
-        hojas["Aperturas_Siniestros"],
-        "periodicidad_ocurrencia",
-        set(ct.PERIODICIDADES.keys()),
+    _validar_unicidad_aperturas(
+        hojas["Aperturas_Siniestros"].drop(
+            [
+                "apertura_reservas",
+                "periodicidad_ocurrencia",
+                "tipo_indexacion_severidad",
+                "medida_indexacion_severidad",
+            ]
+        ),
         "Aperturas_Siniestros",
     )
-    _validar_valores_permitidos(
-        hojas["Aperturas_Siniestros"],
-        "tipo_indexacion_severidad",
-        {"Ninguna", "Por fecha de ocurrencia", "Por fecha de movimiento"},
-        "Aperturas_Siniestros",
+    utils.validar_subconjunto(
+        hojas["Aperturas_Siniestros"]
+        .get_column("periodicidad_ocurrencia")
+        .unique()
+        .to_list(),
+        list(ct.PERIODICIDADES.keys()),
+        mensaje_valores_no_permitidos,
+        {
+            "columna": "periodicidad_ocurrencia",
+            "nombre_hoja": "Aperturas_Siniestros",
+            "permitidos": list(ct.PERIODICIDADES.keys()),
+        },
+        "error",
+    )
+    utils.validar_subconjunto(
+        hojas["Aperturas_Siniestros"]
+        .get_column("tipo_indexacion_severidad")
+        .unique()
+        .to_list(),
+        ["Ninguna", "Por fecha de ocurrencia", "Por fecha de movimiento"],
+        mensaje_valores_no_permitidos,
+        {
+            "columna": "tipo_indexacion_severidad",
+            "nombre_hoja": "Aperturas_Siniestros",
+            "permitidos": [
+                "Ninguna",
+                "Por fecha de ocurrencia",
+                "Por fecha de movimiento",
+            ],
+        },
+        "error",
     )
     _validar_medidas_indexacion(hojas["Aperturas_Siniestros"])
 
@@ -172,20 +171,23 @@ def validar_aperturas(hojas: dict[str, pl.DataFrame]) -> None:
 
     # Validar primas y expuestos
     for nombre_hoja in ["Aperturas_Primas", "Aperturas_Expuestos"]:
-        columnas_encontradas = set(hojas[nombre_hoja].collect_schema().names())
+        columnas_encontradas = hojas[nombre_hoja].collect_schema().names()
 
-        _validar_columnas(
+        utils.validar_subconjunto(
+            ["codigo_op", "codigo_ramo_op"],
             columnas_encontradas,
-            {"codigo_op", "codigo_ramo_op"},
-            nombre_hoja,
             mensaje_columnas_faltantes,
+            {"nombre_hoja": nombre_hoja},
+            "error",
         )
-        _validar_columnas(
-            columnas_encontradas_siniestros,
+        utils.validar_subconjunto(
             columnas_encontradas,
-            nombre_hoja,
+            columnas_encontradas_siniestros,
             mensaje_variables_sobrantes,
+            {"nombre_hoja": nombre_hoja},
+            "error",
         )
+        _validar_unicidad_aperturas(hojas[nombre_hoja], nombre_hoja)
         _validar_cruces_aperturas(hojas, nombre_hoja)
 
     logger.info(

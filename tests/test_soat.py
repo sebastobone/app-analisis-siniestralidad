@@ -39,7 +39,7 @@ async def test_info_soat(client: TestClient):
         "soat", "siniestros", ct.COLUMNAS_SINIESTROS_CUADRE, p.mes_corte
     )
     await validar_cuadre(
-        "soat", "primas", ct.COLUMNAS_VALORES_TERADATA["primas"], p.mes_corte
+        "soat", "primas", ct.Valores().model_dump()["primas"].keys(), p.mes_corte
     )
 
     df_ajustes_fraude = (

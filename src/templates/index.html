@@ -98,6 +98,73 @@
     </div>
 
     <div class="form-section">
+      <h2>Carga manual de informacion</h2>
+
+      <div class="input-group">
+        <label for="archivoSegmentacion" class="custom-file-upload"
+          >Cargar archivo de segmentacion:</label
+        >
+        <input
+          type="file"
+          id="archivoSegmentacion"
+          name="archivoSegmentacion"
+          accept=".xlsx"
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="archivosSiniestros" class="custom-file-upload"
+          >Cargar archivos de siniestros:</label
+        >
+        <input
+          type="file"
+          id="archivosSiniestros"
+          name="archivosSiniestros"
+          accept=".csv, .parquet, .xlsx, .txt"
+          multiple
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="archivosPrimas" class="custom-file-upload"
+          >Cargar archivos de primas:</label
+        >
+        <input
+          type="file"
+          id="archivosPrimas"
+          name="archivosPrimas"
+          accept=".csv, .parquet, .xlsx, .txt"
+          multiple
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="archivosExpuestos" class="custom-file-upload"
+          >Cargar archivos de expuestos:</label
+        >
+        <input
+          type="file"
+          id="archivosExpuestos"
+          name="archivosExpuestos"
+          accept=".csv, .parquet, .xlsx, .txt"
+          multiple
+        />
+      </div>
+
+      <button class="cargaManual" endpoint="cargar-archivos">
+        Cargar archivos
+      </button>
+
+      <button
+        class="apiButton"
+        style="background-color: darkred"
+        endpoint="eliminar-archivos-cargados"
+      >
+        Eliminar archivos cargados
+      </button>
+    </div>
+
+    <div class="form-section">
       <h2>Controles de informacion</h2>
       <button class="apiButton" endpoint="generar-controles">
         Generar controles
@@ -224,6 +291,7 @@
     <script src="static/dropdowns/generarAtributos.js"></script>
     <script type="module" src="static/apiButtons.js"></script>
     <script type="module" src="static/extraccion.js"></script>
+    <script type="module" src="static/cargaManual.js"></script>
     <script type="module" src="static/modosPlantilla.js"></script>
     <script type="module" src="static/prepararPlantilla.js"></script>
     <script type="module" src="static/traerGuardarTodo.js"></script>

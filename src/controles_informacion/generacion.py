@@ -198,7 +198,7 @@ def definir_cantidades_control(
         group_cols = ["apertura_reservas", "fecha_siniestro", "fecha_registro"]
 
     elif file == "primas":
-        qtys = ct.COLUMNAS_VALORES_TERADATA["primas"]
+        qtys = ct.Valores().model_dump()["primas"].keys()
         group_cols = utils.obtener_aperturas(
             negocio, "primas"
         ).collect_schema().names() + ["fecha_registro"]

@@ -73,6 +73,25 @@ def validar_archivo(
     logger.info(f"Archivo {filename} validado exitosamente.")
 
 
+def organizar_archivo(
+    df: pl.DataFrame,
+    negocio: str,
+    cantidad: ct.LISTA_CANTIDADES,
+    mensaje_error: str,
+    variables_mensaje: dict[str, str | list[str]],
+) -> pl.DataFrame:
+    df = df.pipe(
+        utils.asignar_tipos_columnas, cantidad, mensaje_error, variables_mensaje
+    ).pipe(utils.agrupar_por_columnas_relevantes, negocio, cantidad)
+
+    if cantidad == "siniestros":
+        df = df.select(
+            utils.crear_columna_apertura_reservas(negocio, cantidad), pl.all()
+        )
+
+    return df
+
+
 def _validar_descriptores_no_nulos(
     df: pl.DataFrame, negocio: str, cantidad: ct.LISTA_CANTIDADES, filename: str
 ) -> None:

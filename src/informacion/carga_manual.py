@@ -60,12 +60,15 @@ def procesar_archivo_cantidad(
         filename, archivo_cantidad.file.read(), extension, cantidad
     )
     cantidades.validar_archivo(negocio, df, filename, cantidad)
-    df.pipe(
-        utils.asignar_tipos_columnas,
+    df = cantidades.organizar_archivo(
+        df,
+        negocio,
         cantidad,
         ERROR_TIPOS_DATOS,
-        {"cantidad": cantidad, "nombre_archivo": filename},
-    ).pipe(utils.agrupar_por_columnas_relevantes, negocio, cantidad).write_parquet(
+        {"nombre_archivo": filename, "cantidad": cantidad},
+    )
+
+    df.write_parquet(
         f"data/carga_manual/{cantidad}/{filename.replace(extension, 'parquet')}"
     )
 

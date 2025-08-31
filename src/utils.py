@@ -2,7 +2,7 @@ import textwrap
 from datetime import date
 from math import ceil
 from pathlib import Path
-from typing import Literal, overload
+from typing import Any, Literal, overload
 
 import numpy as np
 import polars as pl
@@ -339,3 +339,24 @@ def vaciar_directorio(directorio_path: str) -> None:
     for file in directorio.iterdir():
         if file.is_file() and file.name != ".gitkeep":
             file.unlink()
+
+
+def validar_unicidad(
+    df: pl.DataFrame,
+    mensaje: str,
+    variables_mensaje: dict[str, Any],
+    severidad: Literal["error", "alerta"],
+) -> None:
+    if df.height != df.unique().height:
+        if severidad == "error":
+            raise ValueError(mensaje.format(**variables_mensaje))
+        else:
+            logger.warning(mensaje.format(**variables_mensaje))
+
+
+def validar_no_nulos(
+    df: pl.DataFrame, mensaje: str, variables_mensaje: dict[str, Any]
+) -> None:
+    nulos = df.filter(pl.any_horizontal(pl.all().is_null()))
+    if not nulos.is_empty():
+        raise ValueError(mensaje.format(**variables_mensaje, nulos=nulos))

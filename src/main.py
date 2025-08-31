@@ -3,67 +3,9 @@ import polars as pl
 from src import utils
 from src.controles_informacion import generacion as ctrl
 from src.controles_informacion.evidencias import generar_evidencias_parametros
-from src.informacion.tera_connect import correr_query
-from src.logger_config import logger
-from src.models import CredencialesTeradata, Parametros
+from src.models import Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
 from src.procesamiento import base_siniestros as bsin
-from src.procesamiento.autonomia import adds
-from src.validation import segmentacion
-
-
-async def correr_query_siniestros(
-    p: Parametros, credenciales: CredencialesTeradata
-) -> None:
-    segmentacion.validar_archivo_segmentacion(
-        pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
-    )
-
-    if p.negocio == "autonomia":
-        await adds.sap_sinis_ced(p.mes_corte)
-
-    if p.negocio == "demo":
-        utils.generar_mock_siniestros(
-            (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
-        ).write_parquet("data/raw/siniestros.parquet")
-        logger.info("Datos ficticios de siniestros generados.")
-    else:
-        await correr_query(f"data/queries/{p.negocio}/siniestros.sql", p, credenciales)
-
-
-async def correr_query_primas(
-    p: Parametros, credenciales: CredencialesTeradata
-) -> None:
-    segmentacion.validar_archivo_segmentacion(
-        pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
-    )
-
-    if p.negocio == "autonomia":
-        await adds.sap_primas_ced(p.mes_corte)
-
-    if p.negocio == "demo":
-        utils.generar_mock_primas(
-            (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
-        ).write_parquet("data/raw/primas.parquet")
-        logger.info("Datos ficticios de primas generados.")
-    else:
-        await correr_query(f"data/queries/{p.negocio}/primas.sql", p, credenciales)
-
-
-async def correr_query_expuestos(
-    p: Parametros, credenciales: CredencialesTeradata
-) -> None:
-    segmentacion.validar_archivo_segmentacion(
-        pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
-    )
-
-    if p.negocio == "demo":
-        utils.generar_mock_expuestos(
-            (utils.yyyymm_to_date(p.mes_inicio), utils.yyyymm_to_date(p.mes_corte))
-        ).write_parquet("data/raw/expuestos.parquet")
-        logger.info("Datos ficticios de expuestos generados.")
-    else:
-        await correr_query(f"data/queries/{p.negocio}/expuestos.sql", p, credenciales)
 
 
 async def generar_controles(p: Parametros) -> None:

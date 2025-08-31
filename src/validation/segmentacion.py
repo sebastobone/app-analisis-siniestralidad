@@ -21,16 +21,6 @@ def _validar_hojas(hojas: dict[str, pl.DataFrame]) -> None:
         )
 
 
-def _validar_unicidad_aperturas(
-    df: pl.DataFrame,
-    nombre_hoja: Literal[
-        "Aperturas_Siniestros", "Aperturas_Primas", "Aperturas_Expuestos"
-    ],
-) -> None:
-    if df.height != df.unique().height:
-        raise ValueError(f'La hoja "{nombre_hoja}" contiene aperturas duplicadas.')
-
-
 def _validar_medidas_indexacion(df: pl.DataFrame) -> None:
     medidas_indexacion = (
         df.select(["tipo_indexacion_severidad", "medida_indexacion_severidad"])
@@ -70,19 +60,19 @@ def _validar_cruces_aperturas(
             "medida_indexacion_severidad",
         ]
     )
-    aperturas_primas = hojas["Aperturas_Primas"]
+    aperturas = hojas[nombre_hoja]
 
     cruce = aperturas_siniestros.join(
-        aperturas_primas, on=aperturas_primas.collect_schema().names(), how="full"
+        aperturas, on=aperturas.collect_schema().names(), how="full"
     )
-    nulos = cruce.filter(pl.any_horizontal(pl.all().is_null()))
-    if not nulos.is_empty():
-        raise ValueError(
-            f"""
-            No tiene las mismas aperturas en las hojas "Aperturas_Siniestros"
-            y "{nombre_hoja}". Revise los valores que no cruzan: {nulos}
-            """
-        )
+    utils.validar_no_nulos(
+        cruce,
+        """
+        No tiene las mismas aperturas en las hojas "Aperturas_Siniestros"
+        y {nombre_hoja}. Revise los valores que no cruzan: {nulos}
+        """,
+        {"nombre_hoja": nombre_hoja},
+    )
 
 
 def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
@@ -96,6 +86,10 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
     mensaje_valores_no_permitidos = """
         La columna {columna} en la hoja {nombre_hoja} contiene valores invalidos.
         Se encontro {faltantes}, pero los valores permitidos son {permitidos}.
+    """
+
+    mensaje_aperturas_duplicadas = """
+        La hoja {nombre_hoja} contiene aperturas duplicadas.
     """
 
     # Validar siniestros
@@ -118,7 +112,7 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
         {"nombre_hoja": "Aperturas_Siniestros"},
         "error",
     )
-    _validar_unicidad_aperturas(
+    utils.validar_unicidad(
         hojas["Aperturas_Siniestros"].drop(
             [
                 "apertura_reservas",
@@ -127,7 +121,9 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
                 "medida_indexacion_severidad",
             ]
         ),
-        "Aperturas_Siniestros",
+        mensaje_aperturas_duplicadas,
+        {"nombre_hoja": "Aperturas_Siniestros"},
+        "error",
     )
     utils.validar_subconjunto(
         hojas["Aperturas_Siniestros"]
@@ -187,7 +183,12 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
             {"nombre_hoja": nombre_hoja},
             "error",
         )
-        _validar_unicidad_aperturas(hojas[nombre_hoja], nombre_hoja)
+        utils.validar_unicidad(
+            hojas[nombre_hoja],
+            mensaje_aperturas_duplicadas,
+            {"nombre_hoja": nombre_hoja},
+            "error",
+        )
         _validar_cruces_aperturas(hojas, nombre_hoja)
 
     logger.info(

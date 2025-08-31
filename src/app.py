@@ -14,7 +14,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from src import constantes as ct
 from src import main, utils
-from src.informacion import carga_manual
+from src.informacion import carga_manual, tera_connect
 from src.logger_config import log_queue, logger
 from src.metodos_plantilla import (
     abrir,
@@ -182,7 +182,7 @@ async def correr_query_siniestros(
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.correr_query_siniestros(params, credenciales)
+    await tera_connect.correr_query(params, "siniestros", credenciales)
 
 
 @app.post("/correr-query-primas")
@@ -193,7 +193,7 @@ async def correr_query_primas(
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.correr_query_primas(params, credenciales)
+    await tera_connect.correr_query(params, "primas", credenciales)
 
 
 @app.post("/correr-query-expuestos")
@@ -204,7 +204,7 @@ async def correr_query_expuestos(
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
     params = obtener_parametros_usuario(session, session_id)
-    await main.correr_query_expuestos(params, credenciales)
+    await tera_connect.correr_query(params, "expuestos", credenciales)
 
 
 @app.post("/cargar-archivos")

@@ -5,7 +5,7 @@ import polars as pl
 import pytest
 import xlsxwriter
 from fastapi.testclient import TestClient
-from tests.conftest import CONTENT_TYPES, ingresar_parametros
+from tests.conftest import CONTENT_TYPES, ingresar_parametros, vaciar_directorios_test
 
 
 def crear_excel(hojas: dict[str, pl.DataFrame]) -> io.BytesIO:
@@ -297,14 +297,16 @@ def test_cruces_nulos_aperturas(client: TestClient, rango_meses: tuple[date, dat
 
 @pytest.mark.unit
 def test_archivo_correcto(client: TestClient, rango_meses: tuple[date, date]):
-    ingresar_parametros(client, rango_meses)
+    vaciar_directorios_test()
+    ingresar_parametros(client, rango_meses, "test")
     _ = client.post(
         "/cargar-archivos",
         files={
             "segmentacion": (
-                "segmentacion_demo.xlsx",
+                "segmentacion_test.xlsx",
                 open("data/segmentacion_demo.xlsx", "rb"),
                 CONTENT_TYPES["xlsx"],
             )
         },
     )
+    vaciar_directorios_test()

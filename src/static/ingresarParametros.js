@@ -94,6 +94,7 @@ document
   .addEventListener("click", async function (event) {
     event.preventDefault();
 
+    const negocio = document.getElementById("negocio").value;
     const tipoAnalisis = document.getElementById("tipoAnalisis").value;
 
     const formData = new URLSearchParams({
@@ -116,4 +117,20 @@ document
       document.getElementById("botonesEntremes").style.display = "none";
       document.getElementById("botonesGraficaFactores").style.display = "block";
     }
+
+    if (negocio === "demo") {
+      await fetch("http://127.0.0.1:8000/generar-mocks", {
+        method: "POST",
+      });
+      document.getElementById("extraccion").style.display = "none";
+      document.getElementById("cargaManual").style.display = "none";
+      document.getElementById("controles").style.display = "none";
+    } else {
+      document.getElementById("extraccion").style.display = "block";
+      document.getElementById("cargaManual").style.display = "block";
+      document.getElementById("controles").style.display = "block";
+    }
+
+    document.getElementById("seccionPlantilla").style.display = "block";
+    document.getElementById("resultados").style.display = "block";
   });

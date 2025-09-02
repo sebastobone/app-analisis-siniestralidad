@@ -4,12 +4,13 @@
     <title>Plantilla Seguimiento Reservas</title>
     <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}" />
   </head>
-  <nav>
-    <h1>Plantilla Seguimiento Reservas</h1>
-    <img src="static/logo_sura.png" alt="Logo-SURA" width="200" height="74" />
-  </nav>
 
   <body>
+    <nav>
+      <h1>Plantilla Seguimiento Reservas</h1>
+      <img src="static/logo_sura.png" alt="Logo-SURA" width="200" height="74" />
+    </nav>
+
     <div class="form-section">
       <a
         href="https://sebastobone.github.io/app-analisis-siniestralidad/"
@@ -75,7 +76,7 @@
       </form>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" id="extraccion" style="display: none">
       <h2>Extraccion de informacion</h2>
 
       <form id="credencialesTeradata">
@@ -97,8 +98,10 @@
       </button>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" id="cargaManual" style="display: none">
       <h2>Carga manual de informacion</h2>
+
+      <button id="descargarEjemplos">Descargar ejemplos</button>
 
       <div class="input-group">
         <label for="archivoSegmentacion" class="custom-file-upload"
@@ -164,7 +167,7 @@
       </button>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" id="controles" style="display: none">
       <h2>Controles de informacion</h2>
       <button class="apiButton" endpoint="generar-controles">
         Generar controles
@@ -185,7 +188,7 @@
       </select>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" id="seccionPlantilla" style="display: none">
       <h2>Plantilla</h2>
       <button class="apiButton" endpoint="abrir-plantilla">
         Abrir plantilla
@@ -274,7 +277,7 @@
       </div>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" id="resultados" style="display: none">
       <h2>Resultados</h2>
       <button class="apiButton" endpoint="actualizar-wb-resultados">
         Actualizar y abrir archivo resultados
@@ -291,6 +294,7 @@
     <script src="static/dropdowns/generarAtributos.js"></script>
     <script type="module" src="static/apiButtons.js"></script>
     <script type="module" src="static/extraccion.js"></script>
+    <script type="module" src="static/descargarEjemplos.js"></script>
     <script type="module" src="static/cargaManual.js"></script>
     <script type="module" src="static/modosPlantilla.js"></script>
     <script type="module" src="static/prepararPlantilla.js"></script>

@@ -5,44 +5,44 @@ document
   .addEventListener("click", async function (event) {
     event.preventDefault();
 
-    showToast("Preparando plantilla...");
+    try {
+      showToast("Preparando plantilla...");
 
-    const formDataPreparar = new URLSearchParams({
-      referencia_actuarial: document.getElementById("referenciaActuarial")
-        .value,
-      referencia_contable: document.getElementById("referenciaContable").value,
-    });
+      const formDataPreparar = new URLSearchParams({
+        referencia_actuarial: document.getElementById("referenciaActuarial")
+          .value,
+        referencia_contable:
+          document.getElementById("referenciaContable").value,
+      });
 
-    const responsePreparar = await fetch(
-      `http://127.0.0.1:8000/preparar-plantilla`,
-      {
+      const responsePreparar = await fetch(
+        `http://127.0.0.1:8000/preparar-plantilla`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: formDataPreparar.toString(),
+        },
+      );
+
+      if (!responsePreparar.ok) throw new Error("Error al preparar plantilla");
+
+      showToast("Trayendo formulas de la hoja Entremes...");
+
+      const response = await fetch(`http://127.0.0.1:8000/traer-entremes`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/json",
         },
-        body: formDataPreparar.toString(),
-      },
-    );
+      });
 
-    showToast(
-      responsePreparar.ok
-        ? "Plantilla preparada"
-        : "Error al preparar plantilla",
-      responsePreparar.ok ? "success" : "error",
-    );
+      if (!response.ok)
+        throw new Error("Error al traer formulas de la hoja Entremes");
 
-    showToast("Ejecutando...");
-
-    const response = await fetch(`http://127.0.0.1:8000/traer-entremes`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (response.ok) {
-      showToast("Ejecucion exitosa", "success");
-    } else {
-      showToast("Error en la ejecucion", "error");
+      const data = await response.json();
+      showToast(data.message, "success");
+    } catch (error) {
+      showToast(error.message, "error");
     }
   });

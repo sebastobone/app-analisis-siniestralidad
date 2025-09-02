@@ -4,13 +4,13 @@ document
   .getElementById("descargarEjemplos")
   .addEventListener("click", async () => {
     try {
-      showToast("Descargando...");
+      showToast("Descargando ejemplos...");
 
       const response = await fetch("http://127.0.0.1:8000/descargar-ejemplos", {
         method: "GET",
       });
 
-      if (!response.ok) throw new Error("Error al descargar los ejemplos.");
+      if (!response.ok) throw new Error("Error al descargar los ejemplos");
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -21,7 +21,7 @@ document
 
       a.remove();
       URL.revokeObjectURL(url);
-      showToast("Ejemplos descargados correctamente.", "success");
+      showToast("Ejemplos descargados correctamente", "success");
     } catch (error) {
       showToast(error.message, "error");
     }

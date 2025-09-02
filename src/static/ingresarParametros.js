@@ -44,8 +44,6 @@ async function generarDropdownPlantillas(tipoAnalisis) {
 
       dropdownPlantillas.appendChild(option);
     });
-
-    showToast("Lista desplegable de plantillas actualizada", "success");
   } catch (error) {
     showToast(error.message, "error");
   }
@@ -57,9 +55,8 @@ async function generarReferenciasEntremes() {
       "http://127.0.0.1:8000/obtener-analisis-anteriores",
     );
 
-    if (!response.ok)
-      throw new Error("Error al obtener resultados anteriores.");
-    showToast("Resultados anteriores obtenidos exitosamente.", "success");
+    if (!response.ok) throw new Error("Error al obtener resultados anteriores");
+    showToast("Resultados anteriores obtenidos exitosamente", "success");
 
     const data = await response.json();
 

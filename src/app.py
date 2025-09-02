@@ -182,9 +182,10 @@ async def correr_query_siniestros(
     credenciales: Annotated[CredencialesTeradata, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "siniestros", credenciales)
+    return {"message": "Query de siniestros ejecutado exitosamente"}
 
 
 @app.post("/correr-query-primas")
@@ -193,9 +194,10 @@ async def correr_query_primas(
     credenciales: Annotated[CredencialesTeradata, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "primas", credenciales)
+    return {"message": "Query de primas ejecutado exitosamente"}
 
 
 @app.post("/correr-query-expuestos")
@@ -204,9 +206,10 @@ async def correr_query_expuestos(
     credenciales: Annotated[CredencialesTeradata, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "expuestos", credenciales)
+    return {"message": "Query de expuestos ejecutado exitosamente"}
 
 
 @app.post("/generar-mocks")
@@ -239,24 +242,27 @@ async def cargar_archivos(
     archivos: Annotated[ArchivosInput, Depends()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     p = obtener_parametros_usuario(session, session_id)
     carga_manual.procesar_archivos(archivos, p.negocio, p.mes_inicio)
+    return {"message": "Archivos cargados exitosamente"}
 
 
 @app.post("/eliminar-archivos-cargados")
 @atrapar_excepciones
-async def eliminar_archivos_cargados() -> None:
+async def eliminar_archivos_cargados():
     carga_manual.eliminar_archivos()
+    return {"message": "Archivos eliminados exitosamente"}
 
 
 @app.post("/generar-controles")
 @atrapar_excepciones
 async def generar_controles(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> None:
+):
     params = obtener_parametros_usuario(session, session_id)
     await generacion.generar_controles(params)
+    return {"message": "Controles generados exitosamente"}
 
 
 @app.get("/generar-aperturas")
@@ -293,9 +299,10 @@ async def obtener_analisis_anteriores(
 @app.post("/abrir-plantilla")
 async def abrir_plantilla(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> None:
+):
     p = obtener_parametros_usuario(session, session_id)
     _ = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
+    return {"message": "Plantilla abierta exitosamente"}
 
 
 @app.post("/preparar-plantilla")
@@ -304,11 +311,12 @@ async def preparar_plantilla(
     referencias_entremes: Annotated[ReferenciasEntremes, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     p = obtener_parametros_usuario(session, session_id)
     bases.generar_bases_plantilla(p)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     preparar.preparar_plantilla(wb, p, referencias_entremes)
+    return {"message": "Plantilla preparada exitosamente"}
 
 
 def obtener_plantilla(session: SessionDep, session_id: str | None):
@@ -324,9 +332,10 @@ async def generar_plantilla(
     modos: Annotated[ModosPlantilla, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     wb, p = obtener_plantilla(session, session_id)
     generar.generar_plantillas(wb, p, modos)
+    return {"message": "Plantilla generada exitosamente"}
 
 
 @app.post("/actualizar-plantilla")
@@ -335,9 +344,10 @@ async def actualizar_plantilla(
     modos: Annotated[ModosPlantilla, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     wb, p = obtener_plantilla(session, session_id)
     actualizar.actualizar_plantillas(wb, p, modos)
+    return {"message": "Plantilla actualizada exitosamente"}
 
 
 @app.post("/guardar-apertura")
@@ -346,9 +356,10 @@ async def guardar(
     modos: Annotated[ModosPlantilla, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     wb, p = obtener_plantilla(session, session_id)
     guardar_apertura.guardar_apertura(wb, p, modos)
+    return {"message": f"Apertura {modos.apertura} guardada exitosamente"}
 
 
 @app.post("/traer-apertura")
@@ -367,24 +378,27 @@ async def traer(
     ):
         generar.generar_plantillas(wb, p, modos)
     traer_apertura.traer_apertura(wb, p, modos)
+    return {"message": f"Apertura {modos.apertura} traida exitosamente"}
 
 
 @app.post("/guardar-entremes")
 @atrapar_excepciones
 async def guardar_entremes(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> None:
+):
     wb, _ = obtener_plantilla(session, session_id)
     entremes.guardar_entremes(wb)
+    return {"message": "Formulas de la hoja Entremes guardadas exitosamente"}
 
 
 @app.post("/traer-entremes")
 @atrapar_excepciones
 async def traer_entremes(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> None:
+):
     wb, _ = obtener_plantilla(session, session_id)
     entremes.traer_entremes(wb)
+    return {"message": "Formulas de la hoja Entremes traidas exitosamente"}
 
 
 @app.post("/guardar-todo")
@@ -393,9 +407,10 @@ async def guardar_todo(
     modos: Annotated[ModosPlantilla, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     wb, p = obtener_plantilla(session, session_id)
     await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(wb, p, modos, False)
+    return {"message": "Todas las aperturas se guardaron exitosamente"}
 
 
 @app.post("/traer-guardar-todo")
@@ -404,18 +419,20 @@ async def traer_guardar_todo_end(
     modos: Annotated[ModosPlantilla, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     wb, p = obtener_plantilla(session, session_id)
     await traer_guardar_todo.traer_y_guardar_todas_las_aperturas(wb, p, modos, True)
+    return {"message": "Todas las aperturas se trajeron y guardaron exitosamente"}
 
 
 @app.post("/almacenar-analisis")
 @atrapar_excepciones
 async def almacenar_analisis(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> None:
+):
     wb, p = obtener_plantilla(session, session_id)
     almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte, p.tipo_analisis)
+    return {"message": "Analisis almacenado exitosamente"}
 
 
 @app.post("/ajustar-grafica-factores")
@@ -424,23 +441,26 @@ async def ajustar_grafica_factores(
     modos: Annotated[ModosPlantilla, Form()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> None:
+):
     wb, _ = obtener_plantilla(session, session_id)
     graficas.ajustar_grafica_factores(wb, modos)
+    return {"message": "Grafica de factores ajustada exitosamente"}
 
 
 @app.post("/actualizar-wb-resultados")
 @atrapar_excepciones
-async def actualizar_wb_resultados() -> None:
+async def actualizar_wb_resultados():
     _ = resultados.actualizar_wb_resultados()
+    return {"message": "Excel de resultados actualizado exitosamente"}
 
 
 @app.post("/generar-informe-ar")
 @atrapar_excepciones
 async def generar_informe_actuario_responsable(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> None:
+):
     p = obtener_parametros_usuario(session, session_id)
     resultados.generar_informe_actuario_responsable(
         p.negocio, p.mes_corte, p.tipo_analisis
     )
+    return {"message": "Informe de AR generado exitosamente"}

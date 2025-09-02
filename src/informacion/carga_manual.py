@@ -1,5 +1,6 @@
 import csv
 import io
+import zipfile
 
 import polars as pl
 import xlsxwriter
@@ -7,20 +8,13 @@ from fastapi import UploadFile
 
 from src import constantes as ct
 from src import utils
+from src.informacion.mocks import generar_mock
 from src.logger_config import logger
 from src.models import ArchivosInput
 from src.validation import cantidades, segmentacion
 
-ERROR_TIPOS_DATOS = """
-    Ocurrio un error al transformar los tipos de datos del archivo
-    {nombre_archivo} en la carga de {cantidad}:
-"""
 
-
-def procesar_archivos(
-    archivos: ArchivosInput,
-    negocio: str,
-) -> None:
+def procesar_archivos(archivos: ArchivosInput, negocio: str, mes_inicio: int) -> None:
     if archivos.segmentacion:
         procesar_archivo_segmentacion(archivos.segmentacion, negocio)
 
@@ -32,7 +26,7 @@ def procesar_archivos(
         if archivos_cantidad:
             validar_unicidad_nombres(archivos_cantidad, cantidad)
             for archivo in archivos_cantidad:
-                procesar_archivo_cantidad(archivo, negocio, cantidad)
+                procesar_archivo_cantidad(archivo, negocio, mes_inicio, cantidad)
 
 
 def procesar_archivo_segmentacion(
@@ -51,7 +45,10 @@ def procesar_archivo_segmentacion(
 
 
 def procesar_archivo_cantidad(
-    archivo_cantidad: UploadFile, negocio: str, cantidad: ct.LISTA_CANTIDADES
+    archivo_cantidad: UploadFile,
+    negocio: str,
+    mes_inicio: int,
+    cantidad: ct.LISTA_CANTIDADES,
 ) -> None:
     filename = str(archivo_cantidad.filename)
     extension = filename.split(".")[-1]
@@ -60,13 +57,7 @@ def procesar_archivo_cantidad(
         filename, archivo_cantidad.file.read(), extension, cantidad
     )
     cantidades.validar_archivo(negocio, df, filename, cantidad)
-    df = cantidades.organizar_archivo(
-        df,
-        negocio,
-        cantidad,
-        ERROR_TIPOS_DATOS,
-        {"nombre_archivo": filename, "cantidad": cantidad},
-    )
+    df = cantidades.organizar_archivo(df, negocio, mes_inicio, cantidad, filename)
 
     df.write_parquet(
         f"data/carga_manual/{cantidad}/{filename.replace(extension, 'parquet')}"
@@ -79,8 +70,8 @@ def leer_archivo_cantidad(
     filename: str, contenido: bytes, extension: str, cantidad: ct.LISTA_CANTIDADES
 ) -> pl.DataFrame:
     contenido_bytes = io.BytesIO(contenido)
-    tipo_datos_descriptores = ct.Descriptores().model_dump()[cantidad]
-    tipo_datos_valores = ct.Valores().model_dump()[cantidad]
+    tipo_datos_descriptores = ct.DESCRIPTORES[cantidad]
+    tipo_datos_valores = ct.VALORES[cantidad]
     tipo_datos = {**tipo_datos_descriptores, **tipo_datos_valores}
 
     if extension in ["csv", "txt"]:
@@ -163,3 +154,23 @@ def eliminar_archivos() -> None:
     utils.vaciar_directorio("data/carga_manual/expuestos")
 
     logger.info("Archivos de siniestros, primas, y expuestos cargados eliminados.")
+
+
+def descargar_ejemplos() -> io.BytesIO:
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        zip_file.write("data/segmentacion_demo.xlsx", arcname="segmentacion.xlsx")
+
+        for cantidad in ["siniestros", "primas", "expuestos"]:
+            df = generar_mock(202001, 202512, cantidad, num_rows=1000)
+
+            if cantidad == "siniestros":
+                df = df.drop("apertura_reservas")
+
+            excel_buffer = utils.crear_excel({cantidad: df})
+            zip_file.writestr(f"{cantidad}.xlsx", excel_buffer.getvalue())
+
+    zip_buffer.seek(0)
+
+    return zip_buffer

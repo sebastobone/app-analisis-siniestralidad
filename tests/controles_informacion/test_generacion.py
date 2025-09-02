@@ -9,6 +9,7 @@ from src import constantes as ct
 from src import utils
 from src.controles_informacion import generacion as gen
 from src.controles_informacion import sap
+from src.informacion.mocks import generar_mock
 
 
 @pytest.mark.unit
@@ -120,14 +121,14 @@ async def test_verificar_existencia_afos():
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_restablecer_archivos_queries():
-    dates = (date(2020, 1, 1), date(2024, 12, 1))
+    dates = (202001, 202412)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
 
-        siniestros = utils.generar_mock_siniestros(dates)
-        primas = utils.generar_mock_primas(dates)
-        expuestos = utils.generar_mock_expuestos(dates)
+        siniestros = generar_mock(*dates, "siniestros")
+        primas = generar_mock(*dates, "primas")
+        expuestos = generar_mock(*dates, "expuestos")
 
         await gen.restablecer_salidas_queries(tmp_dir)
 

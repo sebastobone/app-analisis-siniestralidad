@@ -87,6 +87,10 @@ class Valores(BaseModel):
     expuestos: ValoresExpuestos = ValoresExpuestos()
 
 
+VALORES = Valores().model_dump()
+DESCRIPTORES = Descriptores().model_dump()
+
+
 COLUMNAS_QTYS = [
     "pago_bruto",
     "pago_retenido",
@@ -148,3 +152,5 @@ AFOS_NECESARIOS = {
     "empresariales": ["Generales"],
     "demo": ["AFO_Inexistente"],
 }
+
+NUM_FILAS_DEMO = {"siniestros": 100000, "primas": 10000, "expuestos": 10000}

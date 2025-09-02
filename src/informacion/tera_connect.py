@@ -7,6 +7,7 @@ import teradatasql as td
 
 from src import constantes as ct
 from src import utils
+from src.informacion.mocks import generar_mock
 from src.logger_config import logger
 from src.models import CredencialesTeradata, Parametros
 from src.procesamiento.autonomia import adds as autonomia
@@ -41,7 +42,10 @@ async def correr_query(
         await _preparar_auxiliares_autonomia(p, cantidad)
 
     if p.negocio == "demo":
-        await _generar_mock(p, cantidad)
+        df = generar_mock(
+            p.mes_inicio, p.mes_corte, cantidad, ct.NUM_FILAS_DEMO[cantidad]
+        )
+        df.write_parquet(f"data/raw/{cantidad}.parquet")
         logger.info(f"Datos ficticios de {cantidad} generados.")
     else:
         segmentaciones = await _obtener_segmentaciones(p.negocio, cantidad)
@@ -61,7 +65,7 @@ async def correr_query(
 
         cantidades.validar_archivo(p.negocio, df, cantidad, cantidad)
         df = cantidades.organizar_archivo(
-            df, p.negocio, cantidad, ERROR_TIPOS_DATOS, {"nombre_archivo": cantidad}
+            df, p.negocio, p.mes_inicio, cantidad, cantidad
         )
 
         _guardar_resultados(df, cantidad)
@@ -75,19 +79,6 @@ async def _preparar_auxiliares_autonomia(
         await autonomia.sap_sinis_ced(p.mes_corte)
     elif cantidad == "primas":
         await autonomia.sap_primas_ced(p.mes_corte)
-
-
-async def _generar_mock(p: Parametros, cantidad: ct.LISTA_CANTIDADES) -> None:
-    fecha_inicio = utils.yyyymm_to_date(p.mes_inicio)
-    fecha_corte = utils.yyyymm_to_date(p.mes_corte)
-    ruta = f"data/raw/{cantidad}.parquet"
-
-    if cantidad == "siniestros":
-        utils.generar_mock_siniestros((fecha_inicio, fecha_corte)).write_parquet(ruta)
-    elif cantidad == "primas":
-        utils.generar_mock_primas((fecha_inicio, fecha_corte)).write_parquet(ruta)
-    elif cantidad == "expuestos":
-        utils.generar_mock_expuestos((fecha_inicio, fecha_corte)).write_parquet(ruta)
 
 
 async def _obtener_segmentaciones(

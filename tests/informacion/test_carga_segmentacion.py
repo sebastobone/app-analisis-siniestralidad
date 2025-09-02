@@ -1,22 +1,10 @@
-import io
 from datetime import date
 
 import polars as pl
 import pytest
-import xlsxwriter
 from fastapi.testclient import TestClient
+from src.utils import crear_excel
 from tests.conftest import CONTENT_TYPES, ingresar_parametros, vaciar_directorios_test
-
-
-def crear_excel(hojas: dict[str, pl.DataFrame]) -> io.BytesIO:
-    excel_buffer = io.BytesIO()
-
-    with xlsxwriter.Workbook(excel_buffer) as writer:
-        for hoja in list(hojas.keys()):
-            hojas[hoja].write_excel(writer, worksheet=hoja)
-
-    excel_buffer.seek(0)
-    return excel_buffer
 
 
 @pytest.mark.unit

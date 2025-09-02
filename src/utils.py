@@ -1,11 +1,12 @@
+import datetime as dt
+import io
 import textwrap
-from datetime import date
 from math import ceil
 from pathlib import Path
 from typing import Any, Literal, overload
 
-import numpy as np
 import polars as pl
+import xlsxwriter
 import xlwings as xw
 
 from src import constantes as ct
@@ -34,11 +35,11 @@ def crear_columna_apertura_reservas(
     ).alias("apertura_reservas")
 
 
-def yyyymm_to_date(mes_yyyymm: int) -> date:
-    return date(mes_yyyymm // 100, mes_yyyymm % 100, 1)
+def yyyymm_to_date(mes_yyyymm: int) -> dt.date:
+    return dt.date(mes_yyyymm // 100, mes_yyyymm % 100, 1)
 
 
-def date_to_yyyymm(mes_date: date, grain: str = "Mensual") -> int:
+def date_to_yyyymm(mes_date: dt.date, grain: str = "Mensual") -> int:
     return (
         mes_date.year * 100
         + ceil(mes_date.month / ct.PERIODICIDADES[grain]) * ct.PERIODICIDADES[grain]
@@ -78,7 +79,7 @@ def obtener_dimensiones_triangulo(sheet: xw.Sheet) -> RangeDimension:
     return RangeDimension(height=numero_ocurrencias, width=numero_alturas)
 
 
-def mes_del_periodo(mes_corte: date, num_ocurrencias: int, num_alturas: int) -> int:
+def mes_del_periodo(mes_corte: dt.date, num_ocurrencias: int, num_alturas: int) -> int:
     periodicidad = ceil(num_alturas / num_ocurrencias)
 
     if mes_corte.month <= periodicidad:
@@ -192,92 +193,6 @@ def obtener_parametros_indexacion(
     return tipo_indexacion, medida_indexacion
 
 
-def generar_mock_siniestros(rango_meses: tuple[date, date]) -> pl.DataFrame:
-    num_rows = 100000
-    return pl.DataFrame(
-        {
-            "codigo_op": np.random.choice(["01"], size=num_rows),
-            "codigo_ramo_op": np.random.choice(["001", "002"], size=num_rows),
-            "apertura_1": np.random.choice(["A", "B"], size=num_rows),
-            "apertura_2": np.random.choice(["D", "E"], size=num_rows),
-            "atipico": np.random.choice([0, 1], size=num_rows, p=[0.95, 0.05]),
-            "fecha_siniestro": np.random.choice(
-                pl.date_range(
-                    rango_meses[0], rango_meses[1], interval="1mo", eager=True
-                ),
-                size=num_rows,
-            ),
-            "fecha_registro": np.random.choice(
-                pl.date_range(
-                    rango_meses[0], rango_meses[1], interval="1mo", eager=True
-                ),
-                size=num_rows,
-            ),
-            "pago_bruto": np.random.random(size=num_rows) * 1e8,
-            "pago_retenido": np.random.random(size=num_rows) * 1e7,
-            "aviso_bruto": np.random.random(size=num_rows) * 1e7,
-            "aviso_retenido": np.random.random(size=num_rows) * 1e6,
-            "conteo_pago": np.random.randint(0, 100, size=num_rows),
-            "conteo_incurrido": np.random.randint(0, 110, size=num_rows),
-            "conteo_desistido": np.random.randint(0, 10, size=num_rows),
-        }
-    ).with_columns(crear_columna_apertura_reservas("demo", "siniestros"))
-
-
-def generar_mock_primas(rango_meses: tuple[date, date]) -> pl.DataFrame:
-    num_rows = 10000
-    return pl.DataFrame(
-        {
-            "codigo_op": np.random.choice(["01"], size=num_rows),
-            "codigo_ramo_op": np.random.choice(["001", "002"], size=num_rows),
-            "apertura_1": np.random.choice(["A", "B"], size=num_rows),
-            "apertura_2": np.random.choice(["D", "E"], size=num_rows),
-            "fecha_registro": np.random.choice(
-                pl.date_range(
-                    rango_meses[0], rango_meses[1], interval="1mo", eager=True
-                ),
-                size=num_rows,
-            ),
-            "prima_bruta": np.random.random(size=num_rows) * 1e10,
-            "prima_retenida": np.random.random(size=num_rows) * 1e9,
-            "prima_bruta_devengada": np.random.random(size=num_rows) * 1e10,
-            "prima_retenida_devengada": np.random.random(size=num_rows) * 1e9,
-        }
-    )
-
-
-def generar_mock_expuestos(rango_meses: tuple[date, date]) -> pl.DataFrame:
-    num_rows = 10000
-    return (
-        pl.DataFrame(
-            {
-                "codigo_op": np.random.choice(["01"], size=num_rows),
-                "codigo_ramo_op": np.random.choice(["001", "002"], size=num_rows),
-                "apertura_1": np.random.choice(["A", "B"], size=num_rows),
-                "apertura_2": np.random.choice(["D", "E"], size=num_rows),
-                "fecha_registro": np.random.choice(
-                    pl.date_range(
-                        rango_meses[0], rango_meses[1], interval="1mo", eager=True
-                    ),
-                    size=num_rows,
-                ),
-                "expuestos": np.random.random(size=num_rows) * 1e6,
-                "vigentes": np.random.random(size=num_rows) * 1e6,
-            }
-        )
-        .group_by(
-            [
-                "codigo_op",
-                "codigo_ramo_op",
-                "apertura_1",
-                "apertura_2",
-                "fecha_registro",
-            ]
-        )
-        .mean()
-    )
-
-
 def mantener_formato_columnas(df: pl.DataFrame) -> pl.DataFrame:
     return df.with_columns(
         [
@@ -306,34 +221,6 @@ def validar_subconjunto(
             logger.warning(limpiar_espacios_log(log))
 
 
-def asignar_tipos_columnas(
-    df: pl.DataFrame,
-    cantidad: Literal["siniestros", "primas", "expuestos"],
-    mensaje_error: str,
-    variables_mensaje: dict[str, str | list[str]],
-) -> pl.DataFrame:
-    try:
-        df = df.cast(ct.Descriptores().model_dump()[cantidad]).cast(
-            ct.Valores().model_dump()[cantidad]
-        )
-    except pl.exceptions.InvalidOperationError as e:
-        raise ValueError(f"{mensaje_error.format(**variables_mensaje)} {str(e)}") from e
-    return df
-
-
-def agrupar_por_columnas_relevantes(
-    df: pl.DataFrame, negocio: str, cantidad: ct.LISTA_CANTIDADES
-) -> pl.DataFrame:
-    columnas_descriptoras = set(ct.Descriptores().model_dump()[cantidad].keys())
-    columnas_aperturas = set(obtener_nombres_aperturas(negocio, cantidad))
-    columnas_valores = ct.Valores().model_dump()[cantidad].keys()
-    return (
-        df.group_by(columnas_aperturas.union(columnas_descriptoras))
-        .agg([pl.sum(col) for col in columnas_valores])
-        .sort(columnas_aperturas.union(columnas_descriptoras))
-    )
-
-
 def vaciar_directorio(directorio_path: str) -> None:
     directorio = Path(directorio_path)
     for file in directorio.iterdir():
@@ -360,3 +247,14 @@ def validar_no_nulos(
     nulos = df.filter(pl.any_horizontal(pl.all().is_null()))
     if not nulos.is_empty():
         raise ValueError(mensaje.format(**variables_mensaje, nulos=nulos))
+
+
+def crear_excel(hojas: dict[str, pl.DataFrame]) -> io.BytesIO:
+    excel_buffer = io.BytesIO()
+
+    with xlsxwriter.Workbook(excel_buffer) as writer:
+        for hoja in list(hojas.keys()):
+            hojas[hoja].write_excel(writer, worksheet=hoja)
+
+    excel_buffer.seek(0)
+    return excel_buffer

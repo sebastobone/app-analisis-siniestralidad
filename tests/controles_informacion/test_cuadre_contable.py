@@ -7,6 +7,7 @@ import pytest
 from src import utils
 from src.controles_informacion import cuadre_contable, sap
 from src.controles_informacion import generacion as ctrl
+from src.informacion.mocks import generar_mock
 from tests.conftest import assert_diferente, assert_igual
 from tests.controles_informacion.test_generacion import mock_hoja_afo
 
@@ -15,6 +16,7 @@ from tests.controles_informacion.test_generacion import mock_hoja_afo
 @pytest.mark.parametrize("qty", ["pago_bruto", "aviso_bruto"])
 async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) -> None:
     mes_inicio, mes_corte = rango_meses
+    mes_inicio_int = utils.date_to_yyyymm(mes_inicio)
     mes_corte_int = utils.date_to_yyyymm(mes_corte)
 
     with patch("src.controles_informacion.sap.pl.read_excel") as mock_read_excel:
@@ -33,7 +35,7 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
             .filter((pl.col("codigo_ramo_op") == "001") & (pl.col("codigo_op") == "01"))
         )
 
-    mock_siniestros = utils.generar_mock_siniestros(rango_meses)
+    mock_siniestros = generar_mock(mes_inicio_int, mes_corte_int, "siniestros")
 
     mock_soat = mock_siniestros.filter(
         (pl.col("codigo_ramo_op") == "001") & (pl.col("codigo_op") == "01")
@@ -45,6 +47,8 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
     )
 
     dif_sap_vs_tera = await ctrl.comparar_sap_tera(df_tera, df_sap, mes_corte_int, qtys)
+
+    print(dif_sap_vs_tera)
 
     meses_a_cuadrar = pl.DataFrame(
         {

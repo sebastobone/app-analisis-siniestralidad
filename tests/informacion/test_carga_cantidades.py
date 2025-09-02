@@ -5,6 +5,7 @@ from typing import Literal
 
 import polars as pl
 import pytest
+from fastapi import status
 from fastapi.testclient import TestClient
 from tests.conftest import (
     CONTENT_TYPES,
@@ -333,3 +334,9 @@ def test_eliminar_archivos(client: TestClient):
         assert not path.exists()
 
     vaciar_directorios_test()
+
+
+@pytest.mark.unit
+def test_descargar_ejemplos(client: TestClient):
+    response = client.get("/descargar-ejemplos")
+    assert response.status_code == status.HTTP_200_OK

@@ -4,6 +4,7 @@ from typing import Literal
 import polars as pl
 import pytest
 from src import utils
+from src.informacion.mocks import generar_mock
 from src.procesamiento import base_siniestros as base
 
 from tests.conftest import assert_igual
@@ -75,7 +76,10 @@ def test_analisis_triangulos(
     periodicidad_ocurrencia: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
     rango_meses: tuple[date, date],
 ):
-    mock_siniestros = utils.generar_mock_siniestros(rango_meses)
+    mes_inicio_int = utils.date_to_yyyymm(rango_meses[0])
+    mes_corte_int = utils.date_to_yyyymm(rango_meses[1])
+
+    mock_siniestros = generar_mock(mes_inicio_int, mes_corte_int, "siniestros")
     base_triangulos, _ = base.generar_bases_siniestros(
         mock_siniestros.lazy(), "triangulos", *rango_meses
     )
@@ -115,7 +119,10 @@ def test_analisis_entremes(
     periodicidad_ocurrencia: Literal["Trimestral", "Semestral", "Anual"],
     rango_meses: tuple[date, date],
 ):
-    mock_siniestros = utils.generar_mock_siniestros(rango_meses)
+    mes_inicio_int = utils.date_to_yyyymm(rango_meses[0])
+    mes_corte_int = utils.date_to_yyyymm(rango_meses[1])
+
+    mock_siniestros = generar_mock(mes_inicio_int, mes_corte_int, "siniestros")
     base_triangulos, base_ult_ocurr = base.generar_bases_siniestros(
         mock_siniestros.lazy(), "entremes", *rango_meses
     )

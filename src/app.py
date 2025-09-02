@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from fastapi import Cookie, Depends, FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, SQLModel, create_engine, select
@@ -15,7 +15,7 @@ from sse_starlette.sse import EventSourceResponse
 from src import constantes as ct
 from src import utils
 from src.controles_informacion import generacion
-from src.informacion import carga_manual, tera_connect
+from src.informacion import carga_manual, mocks, tera_connect
 from src.logger_config import log_queue, logger
 from src.metodos_plantilla import (
     abrir,
@@ -209,6 +209,30 @@ async def correr_query_expuestos(
     await tera_connect.correr_query(params, "expuestos", credenciales)
 
 
+@app.post("/generar-mocks")
+@atrapar_excepciones
+async def generar_mocks(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> None:
+    p = obtener_parametros_usuario(session, session_id)
+    for cantidad in ["siniestros", "primas", "expuestos"]:
+        df = mocks.generar_mock(
+            p.mes_inicio, p.mes_corte, cantidad, ct.NUM_FILAS_DEMO[cantidad]
+        )
+        mocks.guardar_mock(df, cantidad)
+
+
+@app.get("/descargar-ejemplos")
+@atrapar_excepciones
+async def descargar_ejemplos() -> StreamingResponse:
+    zip_buffer = carga_manual.descargar_ejemplos()
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/x-zip-compressed",
+        headers={"Content-Disposition": "attachment; filename=ejemplos.zip"},
+    )
+
+
 @app.post("/cargar-archivos")
 @atrapar_excepciones
 async def cargar_archivos(
@@ -217,7 +241,7 @@ async def cargar_archivos(
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
-    carga_manual.procesar_archivos(archivos, p.negocio)
+    carga_manual.procesar_archivos(archivos, p.negocio, p.mes_inicio)
 
 
 @app.post("/eliminar-archivos-cargados")

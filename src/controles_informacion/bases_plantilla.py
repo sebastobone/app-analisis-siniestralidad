@@ -31,12 +31,7 @@ def validar_base_siniestros(
     original = (
         pl.read_parquet("data/raw/siniestros.parquet")
         .group_by(aperturas)
-        .agg(
-            [
-                pl.sum(qty_column)
-                for qty_column in ct.Valores().model_dump()["siniestros"].keys()
-            ]
-        )
+        .agg([pl.sum(qty_column) for qty_column in ct.VALORES["siniestros"].keys()])
         .with_columns(
             conteo_incurrido=pl.col("conteo_incurrido") - pl.col("conteo_desistido")
         )
@@ -59,12 +54,7 @@ def validar_base_siniestros(
             ]
         )
         .group_by(aperturas)
-        .agg(
-            [
-                pl.sum(qty_column)
-                for qty_column in ct.Valores().model_dump()["siniestros"].keys()
-            ]
-        )
+        .agg([pl.sum(qty_column) for qty_column in ct.VALORES["siniestros"].keys()])
     )
 
     return base_plantilla.join(
@@ -72,7 +62,7 @@ def validar_base_siniestros(
     ).with_columns(
         [
             (pl.col(col) - pl.col(f"{col}_original")).alias(f"diferencia_{col}")
-            for col in ct.Valores().model_dump()["siniestros"].keys()
+            for col in ct.VALORES["siniestros"].keys()
         ]
     )
 
@@ -86,7 +76,7 @@ def validar_base_primas_expuestos(
     base_group = resumen.group_by(aperturas)
 
     if qty == "primas":
-        columnas_valores = ct.Valores().model_dump()[qty].keys()
+        columnas_valores = ct.VALORES[qty].keys()
         original = original_group.agg(
             [pl.sum(columna_valor) for columna_valor in columnas_valores]
         )

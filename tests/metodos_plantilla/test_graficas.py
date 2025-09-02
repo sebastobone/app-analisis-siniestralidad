@@ -7,7 +7,6 @@ from tests.conftest import agregar_meses_params, correr_queries, vaciar_director
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_actualizar_grafica_factores(
     client: TestClient, rango_meses: tuple[date, date]
 ):

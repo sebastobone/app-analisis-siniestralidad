@@ -13,6 +13,7 @@ from tests.controles_informacion.test_generacion import mock_hoja_afo
 
 
 @pytest.mark.asyncio
+@pytest.mark.fast
 @pytest.mark.parametrize("qty", ["pago_bruto", "aviso_bruto"])
 async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) -> None:
     mes_inicio, mes_corte = rango_meses

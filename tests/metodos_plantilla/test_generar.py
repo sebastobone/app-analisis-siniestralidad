@@ -13,7 +13,7 @@ from src.procesamiento import base_siniestros
 from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
 
 
-@pytest.mark.integration
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "tipo_analisis, periodicidad_ocurrencia",
     [
@@ -64,7 +64,7 @@ def test_forma_triangulo(
     vaciar_directorios_test()
 
 
-@pytest.mark.integration
+@pytest.mark.plantilla
 def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
@@ -91,6 +91,7 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
     os.remove(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
 
+@pytest.mark.plantilla
 def test_generar_severidad(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 

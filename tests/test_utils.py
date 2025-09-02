@@ -5,7 +5,7 @@ import pytest
 from src import utils
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "mes_corte, num_ocurrencias, num_alturas, resultado_esperado",
     [
@@ -42,7 +42,7 @@ def test_mes_del_periodo(
     )
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_generalizar_tipos_columnas_resultados():
     df = pl.DataFrame(
         {

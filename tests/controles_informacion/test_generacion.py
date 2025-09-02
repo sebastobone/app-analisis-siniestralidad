@@ -12,7 +12,7 @@ from src.controles_informacion import sap
 from src.informacion.mocks import generar_mock
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "qtys, expected",
     [
@@ -61,7 +61,7 @@ def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize("cia", ["Vida", "Generales"])
 @pytest.mark.parametrize(
     "qty",
@@ -94,7 +94,7 @@ async def test_transformar_hoja_afo(cia: str, qty: str, rango_meses: tuple[date,
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "qtys, mes_corte, expected_columns",
     [
@@ -112,14 +112,14 @@ async def test_consolidar_sap(qtys, mes_corte, expected_columns):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.fast
 async def test_verificar_existencia_afos():
     with pytest.raises(FileNotFoundError):
         await gen.verificar_existencia_afos("demo")
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.fast
 async def test_restablecer_archivos_queries():
     dates = (202001, 202412)
 

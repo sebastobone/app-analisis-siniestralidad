@@ -16,7 +16,6 @@ from tests.conftest import (
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 

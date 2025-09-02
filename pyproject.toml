@@ -126,13 +126,11 @@ extended_capitalisation_policy = "upper"
 [tool.pytest.ini_options]
 markers = [
     "plantilla: tests que requieren abrir una plantilla (deselect with '-m \"not plantilla\"')",
-    "unit: tests que evaluan partes individuales del proyecto",
-    "integration: tests que evaluan la integracion de varias partes individuales del proyecto",
-    "end_to_end: tests que evaluan el proyecto de principio a fin",
     "soat: tests para evaluar el proceso real de soat",
     "autonomia: tests para evaluar el proceso real de autonomia",
     "movilidad: tests para evaluar el proceso real de movilidad",
     "teradata: tests que requieren conectarse a Teradata",
+    "fast: tests rapidos",
 ]
 
 [tool.coverage.run]

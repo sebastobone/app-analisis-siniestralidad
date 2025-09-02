@@ -22,7 +22,6 @@ from tests.conftest import (
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
@@ -81,7 +80,6 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_preparar_entremes_sin_resultados_anteriores(
     client: TestClient, rango_meses: tuple[date, date]
 ):
@@ -103,7 +101,6 @@ def test_preparar_entremes_sin_resultados_anteriores(
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 

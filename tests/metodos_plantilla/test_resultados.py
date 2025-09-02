@@ -22,7 +22,6 @@ from tests.conftest import (
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_actualizar_resultados(
     client: TestClient, client_2: TestClient, rango_meses: tuple[date, date]
 ):

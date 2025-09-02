@@ -8,7 +8,6 @@ from tests.conftest import agregar_meses_params, correr_queries, vaciar_director
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
@@ -45,7 +44,6 @@ def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, d
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
@@ -105,6 +103,7 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
     vaciar_directorios_test()
 
 
+@pytest.mark.plantilla
 def guardar_traer_apertura(
     client: TestClient, rangos: list[str], apertura: str, atributo: str, plantilla: str
 ) -> None:

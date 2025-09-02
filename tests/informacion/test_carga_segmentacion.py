@@ -7,7 +7,7 @@ from src.utils import crear_excel
 from tests.conftest import CONTENT_TYPES, ingresar_parametros, vaciar_directorios_test
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_hojas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
     ingresar_parametros(client, rango_meses, "test")
     hojas = {
@@ -27,7 +27,7 @@ def test_hojas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
         )
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
     ingresar_parametros(client, rango_meses, "test")
     hojas = {
@@ -62,7 +62,7 @@ def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
     assert "Aperturas_Siniestros" in str(exc.value)
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_aperturas_duplicadas(client: TestClient, rango_meses: tuple[date, date]):
     ingresar_parametros(client, rango_meses, "test")
     hojas = {
@@ -97,7 +97,7 @@ def test_aperturas_duplicadas(client: TestClient, rango_meses: tuple[date, date]
     assert "aperturas duplicadas" in str(exc.value)
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_periodicidades_invalidas(client: TestClient, rango_meses: tuple[date, date]):
     ingresar_parametros(client, rango_meses, "test")
     hojas = {
@@ -133,7 +133,7 @@ def test_periodicidades_invalidas(client: TestClient, rango_meses: tuple[date, d
     assert "periodicidad_ocurrencia" in str(exc.value)
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_tipos_indexacion_invalidos(client: TestClient, rango_meses: tuple[date, date]):
     ingresar_parametros(client, rango_meses, "test")
     hojas = {
@@ -169,7 +169,7 @@ def test_tipos_indexacion_invalidos(client: TestClient, rango_meses: tuple[date,
     assert "tipo_indexacion_severidad" in str(exc.value)
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_medidas_indexacion_invalidas(
     client: TestClient, rango_meses: tuple[date, date]
 ):
@@ -207,7 +207,7 @@ def test_medidas_indexacion_invalidas(
     assert "no puede ser" in str(exc.value)
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_variables_apertura_sobrantes(
     client: TestClient, rango_meses: tuple[date, date]
 ):
@@ -246,7 +246,7 @@ def test_variables_apertura_sobrantes(
     assert "Aperturas_Primas" in str(exc.value)
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_cruces_nulos_aperturas(client: TestClient, rango_meses: tuple[date, date]):
     ingresar_parametros(client, rango_meses, "test")
     hojas = {
@@ -283,7 +283,7 @@ def test_cruces_nulos_aperturas(client: TestClient, rango_meses: tuple[date, dat
     assert "Aperturas_Primas" in str(exc.value)
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_archivo_correcto(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
     ingresar_parametros(client, rango_meses, "test")

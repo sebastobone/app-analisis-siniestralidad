@@ -25,7 +25,7 @@ def filtrar_fechas(
     )
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "mes_corte, origin_grain, expected",
     [
@@ -46,7 +46,7 @@ def test_mes_ult_ocurr_triangulos(
     assert base.mes_ult_ocurr_triangulos(mes_corte, origin_grain) == expected
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "mes_corte, origin_grain, expected",
     [
@@ -67,7 +67,7 @@ def test_mes_prim_ocurr_periodo_act(
     assert base.mes_prim_ocurr_periodo_act(mes_corte, origin_grain) == expected
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "periodicidad_ocurrencia",
     ["Mensual", "Trimestral", "Semestral", "Anual"],
@@ -110,7 +110,7 @@ def test_analisis_triangulos(
     assert_igual(plata_procesada, plata_original, "pago_bruto")
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "periodicidad_ocurrencia",
     ["Trimestral", "Semestral", "Anual"],

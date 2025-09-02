@@ -36,6 +36,7 @@ MEDIDAS = pl.DataFrame(
 )
 
 
+@pytest.mark.plantilla
 def test_indexacion_ocurrencia(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
@@ -87,6 +88,7 @@ def test_indexacion_ocurrencia(client: TestClient, rango_meses: tuple[date, date
     vaciar_directorios_test()
 
 
+@pytest.mark.plantilla
 def test_indexacion_movimiento(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
@@ -148,6 +150,7 @@ def test_indexacion_movimiento(client: TestClient, rango_meses: tuple[date, date
     vaciar_directorios_test()
 
 
+@pytest.mark.plantilla
 def test_actualizar_indexacion_diferente(
     client: TestClient, rango_meses: tuple[date, date]
 ):

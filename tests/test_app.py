@@ -6,13 +6,13 @@ from sqlmodel import Session, select
 from src.models import Parametros
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_generar_base(client: TestClient):
     response = client.get("/")
     assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_ingresar_parametros(client: TestClient, test_session: Session):
     params_form = {
         "negocio": "autonomia",
@@ -34,7 +34,7 @@ def test_ingresar_parametros(client: TestClient, test_session: Session):
     assert params_in_db[0].mes_inicio == int(params_form["mes_inicio"])
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_ingresar_parametros_malos(client: TestClient):
     params_form = {
         "negocio": "autonomia",

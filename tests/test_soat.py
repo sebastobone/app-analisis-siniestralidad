@@ -10,7 +10,6 @@ from tests.conftest import correr_queries, vaciar_directorios_test, validar_cuad
 
 @pytest.mark.asyncio
 @pytest.mark.soat
-@pytest.mark.integration
 @pytest.mark.teradata
 async def test_info_soat(client: TestClient):
     vaciar_directorios_test()

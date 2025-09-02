@@ -8,7 +8,6 @@ from tests.conftest import correr_queries, vaciar_directorios_test, validar_cuad
 
 @pytest.mark.asyncio
 @pytest.mark.movilidad
-@pytest.mark.integration
 @pytest.mark.teradata
 async def test_info_movilidad(client: TestClient):
     vaciar_directorios_test()

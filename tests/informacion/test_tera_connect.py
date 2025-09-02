@@ -22,7 +22,7 @@ def params() -> Parametros:
     return Parametros.model_validate(params)
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_reemplazar_parametros_queries(params: Parametros):
     mock_query = """
         SELECT
@@ -47,7 +47,7 @@ def test_reemplazar_parametros_queries(params: Parametros):
     assert test == correct_result
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_crear_particiones_fechas(params: Parametros):
     test = tera_connect._crear_particiones_fechas(params.mes_inicio, params.mes_corte)
 
@@ -59,7 +59,7 @@ def test_crear_particiones_fechas(params: Parametros):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize("cantidad", ["siniestros", "primas", "expuestos"])
 async def test_cargar_segmentaciones(cantidad: ct.LISTA_CANTIDADES):
     df = pl.read_excel("data/segmentacion_demo.xlsx", sheet_id=0)
@@ -71,7 +71,7 @@ async def test_cargar_segmentaciones(cantidad: ct.LISTA_CANTIDADES):
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.fast
 async def test_nombres_adds():
     with pytest.raises(ValueError):
         await adds.validar_nombre_hojas_segmentacion(["add_d_Siniestros"])
@@ -83,7 +83,7 @@ async def test_nombres_adds():
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.fast
 async def test_suficiencia_adds():
     queries = [
         "INSERT INTO POLIZAS VALUES (?, ?)",
@@ -98,7 +98,7 @@ async def test_suficiencia_adds():
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.fast
 async def test_numero_columnas_add():
     mock_query = "INSERT INTO table VALUES (?, ?)"
     mock_add_malo = pl.DataFrame({"datos": [1, 1, 2]})

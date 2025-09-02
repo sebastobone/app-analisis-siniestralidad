@@ -71,7 +71,7 @@ def validar_carga(filename: str) -> None:
     assert df_cargado.get_column("prima_bruta").dtype.is_numeric()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize("separador", [";", ",", "\t", "|"])
 def test_cargar_multiples(
     client: TestClient,
@@ -122,7 +122,7 @@ def test_cargar_multiples(
     vaciar_directorios_test()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_excel_varias_hojas(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test")
@@ -149,7 +149,7 @@ def test_excel_varias_hojas(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test")
@@ -176,7 +176,7 @@ def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test")
@@ -203,7 +203,7 @@ def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_aperturas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test")
@@ -230,7 +230,7 @@ def test_aperturas_faltantes(client: TestClient, rango_meses: tuple[date, date])
     vaciar_directorios_test()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "columna_mod",
     [
@@ -287,7 +287,7 @@ def test_tipos_datos_malos(
     vaciar_directorios_test()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_agrupar_columnas_relevantes(
     client: TestClient, rango_meses: tuple[date, date]
 ):
@@ -317,7 +317,7 @@ def test_agrupar_columnas_relevantes(
     vaciar_directorios_test()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_eliminar_archivos(client: TestClient):
     vaciar_directorios_test()
 
@@ -336,7 +336,7 @@ def test_eliminar_archivos(client: TestClient):
     vaciar_directorios_test()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_descargar_ejemplos(client: TestClient):
     response = client.get("/descargar-ejemplos")
     assert response.status_code == status.HTTP_200_OK

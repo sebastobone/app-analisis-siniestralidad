@@ -16,7 +16,6 @@ def separar_meses_anteriores(
     return df_ant, df_ult
 
 
-@pytest.mark.integration
 @pytest.mark.autonomia
 @pytest.mark.teradata
 @pytest.mark.asyncio

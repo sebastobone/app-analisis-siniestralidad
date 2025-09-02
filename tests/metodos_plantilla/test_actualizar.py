@@ -6,6 +6,7 @@ from src.metodos_plantilla import abrir, actualizar
 from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
 
 
+@pytest.mark.plantilla
 def test_actualizar_sin_generar(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 
@@ -31,6 +32,7 @@ def test_actualizar_sin_generar(client: TestClient, rango_meses: tuple[date, dat
     vaciar_directorios_test()
 
 
+@pytest.mark.plantilla
 def test_actualizar_diferentes_periodicidades(
     client: TestClient, rango_meses: tuple[date, date]
 ):
@@ -63,6 +65,7 @@ def test_actualizar_diferentes_periodicidades(
     vaciar_directorios_test()
 
 
+@pytest.mark.plantilla
 def test_actualizar_severidad(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
 

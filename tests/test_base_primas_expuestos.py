@@ -9,7 +9,7 @@ from src.procesamiento import base_primas_expuestos as base
 from tests.conftest import assert_igual
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "periodicidad_ocurrencia", ["Mensual", "Trimestral", "Mensual", "Anual"]
 )
@@ -26,7 +26,7 @@ def test_generar_base_primas(
     assert_igual(data_procesada, data_original, "prima_bruta")
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_generar_base_expuestos(rango_meses: tuple[date, date]):
     mes_inicio_int = utils.date_to_yyyymm(rango_meses[0])
     mes_corte_int = utils.date_to_yyyymm(rango_meses[1])

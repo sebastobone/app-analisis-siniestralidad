@@ -152,7 +152,7 @@ def obtener_aperturas(
     if cantidad == "siniestros":
         aperturas = aperturas.drop(
             ["tipo_indexacion_severidad", "medida_indexacion_severidad"]
-        )
+        ).select(crear_columna_apertura_reservas(negocio, cantidad), pl.all())
 
     return aperturas
 
@@ -160,9 +160,18 @@ def obtener_aperturas(
 def obtener_nombres_aperturas(
     negocio: str, cantidad: Literal["siniestros", "primas", "expuestos"]
 ) -> list[str]:
-    aperturas = obtener_aperturas(negocio, cantidad)
+    aperturas = pl.read_excel(
+        f"data/segmentacion_{negocio}.xlsx",
+        sheet_name=f"Aperturas_{cantidad.capitalize()}",
+    )
     if cantidad == "siniestros":
-        aperturas = aperturas.drop(["apertura_reservas", "periodicidad_ocurrencia"])
+        aperturas = aperturas.drop(
+            [
+                "periodicidad_ocurrencia",
+                "tipo_indexacion_severidad",
+                "medida_indexacion_severidad",
+            ]
+        )
     return aperturas.collect_schema().names()
 
 
@@ -173,6 +182,7 @@ def obtener_parametros_indexacion(
         pl.read_excel(
             f"data/segmentacion_{negocio}.xlsx", sheet_name="Aperturas_Siniestros"
         )
+        .with_columns(crear_columna_apertura_reservas(negocio, "siniestros"))
         .select(
             [
                 "apertura_reservas",

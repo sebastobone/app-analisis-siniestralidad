@@ -54,7 +54,6 @@ def _validar_cruces_aperturas(
 ) -> None:
     aperturas_siniestros = hojas["Aperturas_Siniestros"].drop(
         [
-            "apertura_reservas",
             "periodicidad_ocurrencia",
             "tipo_indexacion_severidad",
             "medida_indexacion_severidad",
@@ -94,7 +93,6 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
 
     # Validar siniestros
     columnas_necesarias_siniestros = [
-        "apertura_reservas",
         "codigo_op",
         "codigo_ramo_op",
         "periodicidad_ocurrencia",
@@ -115,7 +113,6 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
     utils.validar_unicidad(
         hojas["Aperturas_Siniestros"].drop(
             [
-                "apertura_reservas",
                 "periodicidad_ocurrencia",
                 "tipo_indexacion_severidad",
                 "medida_indexacion_severidad",

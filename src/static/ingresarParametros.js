@@ -1,4 +1,5 @@
 import { showToast } from "./toast.js";
+import { generarDropdownPlantillas } from "./dropdowns/generarPlantillas.js";
 
 async function enviarParametros(formData) {
   try {
@@ -13,40 +14,39 @@ async function enviarParametros(formData) {
     if (!response.ok) throw new Error("Error al ingresar los parametros");
 
     showToast("Parametros ingresados correctamente", "success");
-    return true;
   } catch (error) {
     showToast(error.message, "error");
-    return false;
+    throw error;
   }
 }
 
-async function generarDropdownPlantillas(tipoAnalisis) {
-  try {
-    let listaPlantillas;
-
-    if (tipoAnalisis === "entremes") {
-      listaPlantillas = ["completar_diagonal", "frecuencia"];
-    } else {
-      listaPlantillas = ["frecuencia", "severidad", "plata"];
-    }
-
-    const dropdownPlantillas = document.getElementById("plantilla");
-    dropdownPlantillas.innerHTML = "";
-
-    listaPlantillas.forEach((plantilla) => {
-      let option = document.createElement("option");
-      option.value = plantilla;
-      option.text = plantilla.charAt(0).toUpperCase() + plantilla.slice(1);
-
-      if (plantilla === "plata") {
-        option.selected = true;
-      }
-
-      dropdownPlantillas.appendChild(option);
-    });
-  } catch (error) {
-    showToast(error.message, "error");
+async function mostrarFuncionalidades(tipoAnalisis, negocio) {
+  if (tipoAnalisis === "entremes") {
+    await generarReferenciasEntremes();
+    document.getElementById("referenciasEntremes").style.display = "block";
+    document.getElementById("botonesEntremes").style.display = "block";
+    document.getElementById("botonesGraficaFactores").style.display = "none";
+  } else {
+    document.getElementById("referenciasEntremes").style.display = "none";
+    document.getElementById("botonesEntremes").style.display = "none";
+    document.getElementById("botonesGraficaFactores").style.display = "block";
   }
+
+  if (negocio === "demo") {
+    await fetch("http://127.0.0.1:8000/generar-mocks", {
+      method: "POST",
+    });
+    document.getElementById("extraccion").style.display = "none";
+    document.getElementById("cargaManual").style.display = "none";
+    document.getElementById("controles").style.display = "none";
+  } else {
+    document.getElementById("extraccion").style.display = "block";
+    document.getElementById("cargaManual").style.display = "block";
+    document.getElementById("controles").style.display = "block";
+  }
+
+  document.getElementById("seccionPlantilla").style.display = "block";
+  document.getElementById("resultados").style.display = "block";
 }
 
 async function generarReferenciasEntremes() {
@@ -83,6 +83,7 @@ async function generarReferenciasEntremes() {
     });
   } catch (error) {
     showToast(error.message, "error");
+    throw error;
   }
 }
 
@@ -102,32 +103,7 @@ document
       nombre_plantilla: document.getElementById("nombrePlantilla").value,
     });
 
-    const success = await enviarParametros(formData);
-    if (success) await generarDropdownPlantillas(tipoAnalisis);
-    if (tipoAnalisis === "entremes") {
-      document.getElementById("referenciasEntremes").style.display = "block";
-      await generarReferenciasEntremes();
-      document.getElementById("botonesEntremes").style.display = "block";
-      document.getElementById("botonesGraficaFactores").style.display = "none";
-    } else {
-      document.getElementById("referenciasEntremes").style.display = "none";
-      document.getElementById("botonesEntremes").style.display = "none";
-      document.getElementById("botonesGraficaFactores").style.display = "block";
-    }
-
-    if (negocio === "demo") {
-      await fetch("http://127.0.0.1:8000/generar-mocks", {
-        method: "POST",
-      });
-      document.getElementById("extraccion").style.display = "none";
-      document.getElementById("cargaManual").style.display = "none";
-      document.getElementById("controles").style.display = "none";
-    } else {
-      document.getElementById("extraccion").style.display = "block";
-      document.getElementById("cargaManual").style.display = "block";
-      document.getElementById("controles").style.display = "block";
-    }
-
-    document.getElementById("seccionPlantilla").style.display = "block";
-    document.getElementById("resultados").style.display = "block";
+    await enviarParametros(formData);
+    await generarDropdownPlantillas(tipoAnalisis);
+    await mostrarFuncionalidades(tipoAnalisis, negocio);
   });

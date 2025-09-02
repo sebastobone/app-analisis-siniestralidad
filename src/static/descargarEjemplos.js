@@ -24,5 +24,6 @@ document
       showToast("Ejemplos descargados correctamente", "success");
     } catch (error) {
       showToast(error.message, "error");
+      throw error;
     }
   });

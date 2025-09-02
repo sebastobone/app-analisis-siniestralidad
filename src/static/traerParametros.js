@@ -20,5 +20,6 @@ document
       showToast("Parametros traidos correctamente", "success");
     } catch (error) {
       showToast(error.message, "error");
+      throw error;
     }
   });

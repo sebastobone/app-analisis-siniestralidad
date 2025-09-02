@@ -26,6 +26,7 @@ document.querySelectorAll(".extraccion").forEach((button) => {
       showToast(data.message, "success");
     } catch (error) {
       showToast(error.message, "error");
+      throw error;
     }
   });
 });

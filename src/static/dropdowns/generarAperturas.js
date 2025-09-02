@@ -25,5 +25,6 @@ document
       showToast("Aperturas generadas exitosamente", "success");
     } catch (error) {
       showToast(error.message, "error");
+      throw error;
     }
   });

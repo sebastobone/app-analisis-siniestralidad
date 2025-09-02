@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   dropdownPlantillas.addEventListener("change", function () {
+    const atributoSeleccionado = dropdownAtributos.value;
     const plantillaSeleccionada = dropdownPlantillas.value;
 
     dropdownAtributos.innerHTML = "";
@@ -20,5 +21,9 @@ document.addEventListener("DOMContentLoaded", function () {
       option.textContent = atributo.charAt(0).toUpperCase() + atributo.slice(1);
       dropdownAtributos.appendChild(option);
     });
+
+    if (opciones[plantillaSeleccionada].includes(atributoSeleccionado)) {
+      dropdownAtributos.value = atributoSeleccionado;
+    }
   });
 });

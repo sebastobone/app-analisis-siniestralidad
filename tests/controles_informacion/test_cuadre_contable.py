@@ -49,11 +49,17 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
 
     dif_sap_vs_tera = await ctrl.comparar_sap_tera(df_tera, df_sap, mes_corte_int, qtys)
 
-    print(dif_sap_vs_tera)
+    meses_prueba = (
+        mock_soat.group_by("fecha_registro")
+        .agg(pl.sum("pago_bruto"))
+        .sort("pago_bruto", descending=True)
+        .get_column("fecha_registro")
+        .to_list()[:2]
+    )
 
     meses_a_cuadrar = pl.DataFrame(
         {
-            "fecha_registro": [mes_inicio, mes_corte],
+            "fecha_registro": [meses_prueba[0], meses_prueba[1]],
             "cuadrar_pago_bruto": [1, 1],
             "cuadrar_pago_retenido": [1, 1],
             "cuadrar_aviso_bruto": [1, 1],
@@ -79,17 +85,17 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
             )
 
     cifra_sap_meses_a_cuadrar = df_sap.filter(
-        pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
+        pl.col("fecha_registro").is_in([meses_prueba[0], meses_prueba[1]])
     )
     cifra_final_meses_a_cuadrar = df_cuadre.filter(
-        pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
+        pl.col("fecha_registro").is_in([meses_prueba[0], meses_prueba[1]])
     )
 
     cifra_sap_meses_sin_cuadre = df_sap.filter(
-        ~pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
+        ~pl.col("fecha_registro").is_in([meses_prueba[0], meses_prueba[1]])
     )
     cifra_final_meses_sin_cuadre = df_cuadre.filter(
-        ~pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
+        ~pl.col("fecha_registro").is_in([meses_prueba[0], meses_prueba[1]])
     )
 
     assert_igual(cifra_sap_meses_a_cuadrar, cifra_final_meses_a_cuadrar, qty)

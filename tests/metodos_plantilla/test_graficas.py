@@ -19,7 +19,7 @@ def test_actualizar_grafica_factores(
     }
     agregar_meses_params(params_form, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", params=params_form)
 
     correr_queries(client)
 

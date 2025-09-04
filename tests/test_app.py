@@ -23,8 +23,8 @@ def test_ingresar_parametros(client: TestClient, test_session: Session):
     }
 
     # Dos veces para verificar que se sobreescribe
-    response = client.post("/ingresar-parametros", data=params_form)
-    response = client.post("/ingresar-parametros", data=params_form)
+    response = client.post("/ingresar-parametros", params=params_form)
+    response = client.post("/ingresar-parametros", params=params_form)
 
     assert response.status_code == status.HTTP_200_OK
 
@@ -45,4 +45,4 @@ def test_ingresar_parametros_malos(client: TestClient):
     }
 
     with pytest.raises(ValidationError):
-        client.post("/ingresar-parametros", data=params_form)
+        client.post("/ingresar-parametros", params=params_form)

@@ -1,29 +1,62 @@
 import { showToast } from "./toast.js";
 
-document
-  .getElementById("descargarEjemplos")
-  .addEventListener("click", async () => {
+/**
+ * @param {string} botonId
+ * @param {string} url
+ * @param {string} nombreDescarga
+ * @param {string} mensajeInicio
+ * @param {string} mensajeExito
+ * @param {string} mensajeError
+ */
+function descargarEjemplos(
+  botonId,
+  url,
+  nombreDescarga,
+  mensajeInicio,
+  mensajeExito,
+  mensajeError,
+) {
+  const button = document.getElementById(botonId);
+
+  button.addEventListener("click", async () => {
     try {
-      showToast("Descargando ejemplos...");
+      showToast(mensajeInicio);
 
-      const response = await fetch("http://127.0.0.1:8000/descargar-ejemplos", {
-        method: "GET",
-      });
-
-      if (!response.ok) throw new Error("Error al descargar los ejemplos");
+      const response = await fetch(url, { method: "GET" });
+      if (!response.ok) throw new Error(errorMessage);
 
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "ejemplos.zip";
-      a.click();
+      const downloadUrl = URL.createObjectURL(blob);
 
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = nombreDescarga;
+      a.click();
       a.remove();
-      URL.revokeObjectURL(url);
-      showToast("Ejemplos descargados correctamente", "success");
+
+      URL.revokeObjectURL(downloadUrl);
+      showToast(mensajeExito, "success");
     } catch (error) {
-      showToast(error.message, "error");
-      throw error;
+      showToast(mensajeError, "error");
+      console.error(error);
     }
   });
+}
+
+descargarEjemplos(
+  "descargarEjemploSegmentacion",
+  "http://127.0.0.1:8000/descargar-ejemplo-segmentacion",
+  "segmentacion.xlsx",
+  "Descargando ejemplo de segmentación...",
+  "Ejemplo descargado correctamente",
+  "Error al descargar el ejemplo",
+);
+
+descargarEjemplos(
+  "descargarEjemplosCantidades",
+  "http://127.0.0.1:8000/descargar-ejemplos-cantidades",
+  "ejemplos.zip",
+  "Descargando ejemplos...",
+  "Ejemplos descargados correctamente",
+  "Error al descargar los ejemplos",
+);

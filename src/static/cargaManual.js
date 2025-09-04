@@ -8,14 +8,9 @@ document.querySelectorAll(".cargaManual").forEach((button) => {
       showToast("Cargando archivos...");
 
       const formData = new FormData();
-      var segmentacion = document.getElementById("archivoSegmentacion").files;
       var siniestros = document.getElementById("archivosSiniestros").files;
       var primas = document.getElementById("archivosSiniestros").files;
       var expuestos = document.getElementById("archivosSiniestros").files;
-
-      if (segmentacion.length > 0) {
-        formData.append("segmentacion", segmentacion[0]);
-      }
 
       if (siniestros.length > 0) {
         for (let i = 0; i < siniestros.length; i++) {

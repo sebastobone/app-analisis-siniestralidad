@@ -47,7 +47,7 @@ def test_indexacion_ocurrencia(client: TestClient, rango_meses: tuple[date, date
     }
     agregar_meses_params(params_form, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form).json()
+    _ = client.post("/ingresar-parametros", params=params_form).json()
     wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
     correr_queries(client)
@@ -99,7 +99,7 @@ def test_indexacion_movimiento(client: TestClient, rango_meses: tuple[date, date
     }
     agregar_meses_params(params_form, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form).json()
+    _ = client.post("/ingresar-parametros", params=params_form).json()
     wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
     correr_queries(client)
@@ -163,7 +163,7 @@ def test_actualizar_indexacion_diferente(
     }
     agregar_meses_params(params_form, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form).json()
+    _ = client.post("/ingresar-parametros", params=params_form).json()
     wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
     correr_queries(client)

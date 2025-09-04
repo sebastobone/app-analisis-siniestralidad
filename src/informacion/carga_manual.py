@@ -10,14 +10,13 @@ from src import constantes as ct
 from src import utils
 from src.informacion.mocks import generar_mock
 from src.logger_config import logger
-from src.models import ArchivosInput
+from src.models import ArchivosCantidades
 from src.validation import cantidades, segmentacion
 
 
-def procesar_archivos(archivos: ArchivosInput, negocio: str, mes_inicio: int) -> None:
-    if archivos.segmentacion:
-        procesar_archivo_segmentacion(archivos.segmentacion, negocio)
-
+def procesar_archivos_cantidades(
+    archivos: ArchivosCantidades, negocio: str, mes_inicio: int
+) -> None:
     for cantidad, archivos_cantidad in {
         "siniestros": archivos.siniestros,
         "primas": archivos.primas,
@@ -156,12 +155,10 @@ def eliminar_archivos() -> None:
     logger.info("Archivos de siniestros, primas, y expuestos cargados eliminados.")
 
 
-def descargar_ejemplos() -> io.BytesIO:
+def descargar_ejemplos_cantidades() -> io.BytesIO:
     zip_buffer = io.BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        zip_file.write("data/segmentacion_demo.xlsx", arcname="segmentacion.xlsx")
-
         for cantidad in ["siniestros", "primas", "expuestos"]:
             df = generar_mock(202001, 202512, cantidad, num_rows=1000)
 
@@ -174,3 +171,10 @@ def descargar_ejemplos() -> io.BytesIO:
     zip_buffer.seek(0)
 
     return zip_buffer
+
+
+def descargar_ejemplo_segmentacion() -> io.BytesIO:
+    with open("data/segmentacion_demo.xlsx", "rb") as file:
+        buffer = io.BytesIO(file.read())
+    buffer.seek(0)
+    return buffer

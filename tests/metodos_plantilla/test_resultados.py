@@ -45,8 +45,10 @@ def test_actualizar_resultados(
     agregar_meses_params(params_form_usuario_1, rango_meses)
     agregar_meses_params(params_form_usuario_2, rango_meses)
 
-    response1 = client.post("/ingresar-parametros", data=params_form_usuario_1).json()
-    response2 = client_2.post("/ingresar-parametros", data=params_form_usuario_2).json()
+    response1 = client.post("/ingresar-parametros", params=params_form_usuario_1).json()
+    response2 = client_2.post(
+        "/ingresar-parametros", params=params_form_usuario_2
+    ).json()
 
     correr_queries(client)
 

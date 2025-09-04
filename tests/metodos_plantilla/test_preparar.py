@@ -32,7 +32,7 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
     }
     agregar_meses_params(params_form, rango_meses)
 
-    response = client.post("/ingresar-parametros", data=params_form).json()
+    response = client.post("/ingresar-parametros", params=params_form).json()
     p = Parametros.model_validate(response)
 
     correr_queries(client)
@@ -92,7 +92,7 @@ def test_preparar_entremes_sin_resultados_anteriores(
     }
     agregar_meses_params(params_form, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", params=params_form)
 
     with pytest.raises(preparar.AnalisisAnterioresNoEncontradosError):
         _ = client.get("/obtener-analisis-anteriores")
@@ -112,7 +112,7 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     agregar_meses_params(params_form, rango_meses)
     params_form.update({"mes_corte": "202412"})
 
-    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", params=params_form)
 
     correr_queries(client)
 
@@ -125,7 +125,7 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     _ = client.post("/almacenar-analisis")
 
     params_form.update({"tipo_analisis": "entremes", "mes_corte": "202501"})
-    response = client.post("/ingresar-parametros", data=params_form).json()
+    response = client.post("/ingresar-parametros", params=params_form).json()
     p = Parametros.model_validate(response)
     wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
@@ -151,19 +151,19 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
 
     for siguiente_mes in ["202502", "202503"]:
         params_form.update({"tipo_analisis": "entremes", "mes_corte": siguiente_mes})
-        _ = client.post("/ingresar-parametros", data=params_form)
+        _ = client.post("/ingresar-parametros", params=params_form)
         correr_queries(client)
         _ = client.post("/preparar-plantilla")
         _ = client.post("/almacenar-analisis")
 
     params_form.update({"tipo_analisis": "triangulos", "mes_corte": "202503"})
-    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", params=params_form)
     _ = client.post("/preparar-plantilla")
     _ = client.post("/guardar-todo")
     _ = client.post("/almacenar-analisis")
 
     params_form.update({"tipo_analisis": "entremes", "mes_corte": "202504"})
-    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", params=params_form)
 
     correr_queries(client)
 

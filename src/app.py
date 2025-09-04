@@ -1,10 +1,11 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from functools import wraps
+from pathlib import Path
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import Cookie, Depends, FastAPI, Form, Request
+from fastapi import Cookie, Depends, FastAPI, Form, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -33,7 +34,7 @@ from src.metodos_plantilla.guardar_traer import (
     traer_guardar_todo,
 )
 from src.models import (
-    ArchivosInput,
+    ArchivosCantidades,
     CredencialesTeradata,
     ModosPlantilla,
     Parametros,
@@ -145,27 +146,47 @@ def eliminar_parametros_anteriores(
 @app.post("/ingresar-parametros")
 @atrapar_excepciones
 async def ingresar_parametros(
-    params: Annotated[Parametros, Form()],
     response: Response,
     session: SessionDep,
+    parametros: Annotated[Parametros, Query()],
+    archivo_segmentacion: UploadFile | None = None,
     session_id: Annotated[str | None, Cookie()] = None,
 ) -> Parametros:
     if not session_id:
         session_id = str(uuid4())
         response.set_cookie(key="session_id", value=session_id)
 
-    parametros = Parametros.model_validate(params)
-    parametros.session_id = session_id
+    p = Parametros.model_validate(parametros)
+    p.session_id = session_id
 
     eliminar_parametros_anteriores(session, session_id)
 
-    session.add(parametros)
+    session.add(p)
     session.commit()
-    session.refresh(parametros)
+    session.refresh(p)
 
-    logger.info(f"Parametros ingresados: {parametros.model_dump()}")
+    logger.info(f"Parametros ingresados: {p.model_dump()}")
 
-    return parametros
+    if archivo_segmentacion:
+        carga_manual.procesar_archivo_segmentacion(archivo_segmentacion, p.negocio)
+
+    if not Path(f"data/segmentacion_{p.negocio}.xlsx").exists():
+        raise FileNotFoundError(
+            f"No se encontro archivo de segmentacion para el negocio {p.negocio}"
+        )
+
+    return p
+
+
+@app.get("/descargar-ejemplo-segmentacion")
+@atrapar_excepciones
+async def descargar_ejemplo_segmentacion() -> StreamingResponse:
+    buffer = carga_manual.descargar_ejemplo_segmentacion()
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=segmentacion.xlsx"},
+    )
 
 
 @app.get("/traer-parametros")
@@ -225,10 +246,10 @@ async def generar_mocks(
         mocks.guardar_mock(df, cantidad)
 
 
-@app.get("/descargar-ejemplos")
+@app.get("/descargar-ejemplos-cantidades")
 @atrapar_excepciones
-async def descargar_ejemplos() -> StreamingResponse:
-    zip_buffer = carga_manual.descargar_ejemplos()
+async def descargar_ejemplos_cantidades() -> StreamingResponse:
+    zip_buffer = carga_manual.descargar_ejemplos_cantidades()
     return StreamingResponse(
         zip_buffer,
         media_type="application/x-zip-compressed",
@@ -239,12 +260,12 @@ async def descargar_ejemplos() -> StreamingResponse:
 @app.post("/cargar-archivos")
 @atrapar_excepciones
 async def cargar_archivos(
-    archivos: Annotated[ArchivosInput, Depends()],
+    archivos: Annotated[ArchivosCantidades, Depends()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     p = obtener_parametros_usuario(session, session_id)
-    carga_manual.procesar_archivos(archivos, p.negocio, p.mes_inicio)
+    carga_manual.procesar_archivos_cantidades(archivos, p.negocio, p.mes_inicio)
     return {"message": "Archivos cargados exitosamente"}
 
 
@@ -277,8 +298,6 @@ async def generar_aperturas(
         .unique()
         .to_list()
     )
-    logger.success("Aperturas generadas.")
-
     return {"aperturas": aperturas}
 
 

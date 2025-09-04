@@ -14,20 +14,30 @@ from tests.conftest import (
 )
 from tests.informacion.test_carga_segmentacion import crear_excel
 
-ARCHIVO_SEGMENTACION = {
-    "Aperturas_Siniestros": pl.DataFrame(
-        {
-            "apertura_reservas": ["01_001"],
-            "codigo_op": ["01"],
-            "codigo_ramo_op": ["001"],
-            "periodicidad_ocurrencia": ["Mensual"],
-            "tipo_indexacion_severidad": ["Ninguna"],
-            "medida_indexacion_severidad": ["Ninguna"],
-        }
-    ),
-    "Aperturas_Primas": pl.DataFrame({"codigo_op": ["01"], "codigo_ramo_op": ["001"]}),
-    "Aperturas_Expuestos": pl.DataFrame(
-        {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+CARGA_SEGMENTACION = {
+    "archivo_segmentacion": (
+        "segmentacion_test.xlsx",
+        crear_excel(
+            {
+                "Aperturas_Siniestros": pl.DataFrame(
+                    {
+                        "apertura_reservas": ["01_001"],
+                        "codigo_op": ["01"],
+                        "codigo_ramo_op": ["001"],
+                        "periodicidad_ocurrencia": ["Mensual"],
+                        "tipo_indexacion_severidad": ["Ninguna"],
+                        "medida_indexacion_severidad": ["Ninguna"],
+                    }
+                ),
+                "Aperturas_Primas": pl.DataFrame(
+                    {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+                ),
+                "Aperturas_Expuestos": pl.DataFrame(
+                    {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+                ),
+            }
+        ),
+        CONTENT_TYPES["xlsx"],
     ),
 }
 
@@ -79,7 +89,7 @@ def test_cargar_multiples(
     separador: Literal[";", ",", "\t", "|"],
 ):
     vaciar_directorios_test()
-    _ = ingresar_parametros(client, rango_meses, "test")
+    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     df = PRIMAS_BASICO
     hojas = {"Primas": PRIMAS_BASICO}
@@ -87,14 +97,6 @@ def test_cargar_multiples(
     _ = client.post(
         "/cargar-archivos",
         files=[
-            (
-                "segmentacion",
-                (
-                    "segmentacion_test.xlsx",
-                    crear_excel(ARCHIVO_SEGMENTACION),
-                    CONTENT_TYPES["xlsx"],
-                ),
-            ),
             (
                 "primas",
                 ("primas_csv.csv", crear_csv(df, separador), CONTENT_TYPES["csv"]),
@@ -125,7 +127,7 @@ def test_cargar_multiples(
 @pytest.mark.fast
 def test_excel_varias_hojas(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
-    _ = ingresar_parametros(client, rango_meses, "test")
+    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     hojas = {"Primas": PRIMAS_BASICO, "Hoja_extra": pl.DataFrame({"codigo_op": ["01"]})}
 
@@ -133,14 +135,6 @@ def test_excel_varias_hojas(client: TestClient, rango_meses: tuple[date, date]):
         _ = client.post(
             "/cargar-archivos",
             files=[
-                (
-                    "segmentacion",
-                    (
-                        "segmentacion_test.xlsx",
-                        crear_excel(ARCHIVO_SEGMENTACION),
-                        CONTENT_TYPES["xlsx"],
-                    ),
-                ),
                 ("primas", ("primas.xlsx", crear_excel(hojas), CONTENT_TYPES["xlsx"])),
             ],
         )
@@ -152,7 +146,7 @@ def test_excel_varias_hojas(client: TestClient, rango_meses: tuple[date, date]):
 @pytest.mark.fast
 def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
-    _ = ingresar_parametros(client, rango_meses, "test")
+    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     df = PRIMAS_BASICO.drop("codigo_op")
 
@@ -160,14 +154,6 @@ def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
         _ = client.post(
             "/cargar-archivos",
             files=[
-                (
-                    "segmentacion",
-                    (
-                        "segmentacion_test.xlsx",
-                        crear_excel(ARCHIVO_SEGMENTACION),
-                        CONTENT_TYPES["xlsx"],
-                    ),
-                ),
                 ("primas", ("primas.csv", crear_csv(df), CONTENT_TYPES["csv"])),
             ],
         )
@@ -179,7 +165,7 @@ def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
 @pytest.mark.fast
 def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
-    _ = ingresar_parametros(client, rango_meses, "test")
+    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     df = PRIMAS_BASICO.vstack(PRIMAS_BASICO.with_columns(codigo_op=pl.lit(None)))
 
@@ -187,14 +173,6 @@ def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
         _ = client.post(
             "/cargar-archivos",
             files=[
-                (
-                    "segmentacion",
-                    (
-                        "segmentacion_test.xlsx",
-                        crear_excel(ARCHIVO_SEGMENTACION),
-                        CONTENT_TYPES["xlsx"],
-                    ),
-                ),
                 ("primas", ("primas.csv", crear_csv(df), CONTENT_TYPES["csv"])),
             ],
         )
@@ -206,7 +184,7 @@ def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
 @pytest.mark.fast
 def test_aperturas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
     vaciar_directorios_test()
-    _ = ingresar_parametros(client, rango_meses, "test")
+    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     df = PRIMAS_BASICO.vstack(PRIMAS_BASICO.with_columns(codigo_op=pl.lit("02")))
 
@@ -214,14 +192,6 @@ def test_aperturas_faltantes(client: TestClient, rango_meses: tuple[date, date])
         _ = client.post(
             "/cargar-archivos",
             files=[
-                (
-                    "segmentacion",
-                    (
-                        "segmentacion_test.xlsx",
-                        crear_excel(ARCHIVO_SEGMENTACION),
-                        CONTENT_TYPES["xlsx"],
-                    ),
-                ),
                 ("primas", ("primas.csv", crear_csv(df), CONTENT_TYPES["csv"])),
             ],
         )
@@ -243,7 +213,7 @@ def test_tipos_datos_malos(
     client: TestClient, rango_meses: tuple[date, date], columna_mod: pl.Expr
 ):
     vaciar_directorios_test()
-    _ = ingresar_parametros(client, rango_meses, "test")
+    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     # En csv, txt, xlsx se validan los tipos de datos al leer el archivo
     df = PRIMAS_BASICO.with_columns(columna_mod)
@@ -251,14 +221,6 @@ def test_tipos_datos_malos(
         _ = client.post(
             "/cargar-archivos",
             files=[
-                (
-                    "segmentacion",
-                    (
-                        "segmentacion_test.xlsx",
-                        crear_excel(ARCHIVO_SEGMENTACION),
-                        CONTENT_TYPES["xlsx"],
-                    ),
-                ),
                 ("siniestros", ("siniestros.csv", crear_csv(df), CONTENT_TYPES["csv"])),
             ],
         )
@@ -292,21 +254,13 @@ def test_agrupar_columnas_relevantes(
     client: TestClient, rango_meses: tuple[date, date]
 ):
     vaciar_directorios_test()
-    _ = ingresar_parametros(client, rango_meses, "test")
+    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     df = PRIMAS_BASICO.with_columns(descuento=pl.lit("Si"))
 
     _ = client.post(
         "/cargar-archivos",
         files=[
-            (
-                "segmentacion",
-                (
-                    "segmentacion_test.xlsx",
-                    crear_excel(ARCHIVO_SEGMENTACION),
-                    CONTENT_TYPES["xlsx"],
-                ),
-            ),
             ("primas", ("primas.csv", crear_csv(df), CONTENT_TYPES["csv"])),
         ],
     )
@@ -338,5 +292,5 @@ def test_eliminar_archivos(client: TestClient):
 
 @pytest.mark.fast
 def test_descargar_ejemplos(client: TestClient):
-    response = client.get("/descargar-ejemplos")
+    response = client.get("/descargar-ejemplos-cantidades")
     assert response.status_code == status.HTTP_200_OK

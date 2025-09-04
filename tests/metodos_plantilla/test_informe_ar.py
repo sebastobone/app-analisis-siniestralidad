@@ -27,7 +27,7 @@ def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
 
     agregar_meses_params(params_form, rango_meses)
 
-    response = client.post("/ingresar-parametros", data=params_form).json()
+    response = client.post("/ingresar-parametros", params=params_form).json()
     p = Parametros.model_validate(response)
 
     correr_queries(client)

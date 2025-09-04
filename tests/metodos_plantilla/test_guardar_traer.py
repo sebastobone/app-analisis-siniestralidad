@@ -18,7 +18,7 @@ def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, d
     }
     agregar_meses_params(params_form, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", params=params_form)
     correr_queries(client)
     _ = client.post("/preparar-plantilla")
 
@@ -66,7 +66,7 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
     agregar_meses_params(params_form, rango_meses)
     params_form.update({"mes_corte": "202412"})
 
-    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", params=params_form)
     correr_queries(client)
     _ = client.post("/preparar-plantilla")
     guardar_traer_apertura(client, rangos, apertura, atributo, "plata")
@@ -80,7 +80,7 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
     agregar_meses_params(params_form, rango_meses)
     params_form.update({"mes_corte": "202501"})
 
-    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", params=params_form)
     correr_queries(client)
     _ = client.post(
         "/preparar-plantilla",

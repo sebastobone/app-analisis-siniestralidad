@@ -1,5 +1,7 @@
+import io
 import os
 import sys
+from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
 from typing import Literal
@@ -183,7 +185,10 @@ async def validar_cuadre(
 
 
 def ingresar_parametros(
-    client: TestClient, rango_meses: tuple[date, date], negocio: str = "demo"
+    client: TestClient,
+    rango_meses: tuple[date, date],
+    negocio: str = "demo",
+    files: Mapping[str, tuple[str, io.BytesIO | io.BufferedReader, str]] | None = None,
 ) -> Parametros:
     params_form = {
         "negocio": negocio,
@@ -193,5 +198,5 @@ def ingresar_parametros(
     agregar_meses_params(params_form, rango_meses)
 
     return Parametros.model_validate(
-        client.post("/ingresar-parametros", data=params_form).json()
+        client.post("/ingresar-parametros", params=params_form, files=files).json()
     )

@@ -51,15 +51,13 @@ class CredencialesTeradata(BaseModel):
     password: str
 
 
-class ArchivosInput:
+class ArchivosCantidades:
     def __init__(
         self,
-        segmentacion: UploadFile | None = None,
         siniestros: list[UploadFile] | None = None,
         primas: list[UploadFile] | None = None,
         expuestos: list[UploadFile] | None = None,
     ):
-        self.segmentacion = segmentacion
         self.siniestros = siniestros
         self.primas = primas
         self.expuestos = expuestos

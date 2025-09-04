@@ -1,23 +1,17 @@
 import { showToast } from "./toast.js";
 import { generarDropdownPlantillas } from "./dropdowns/generarPlantillas.js";
+import { generarDropdownAperturas } from "./dropdowns/generarAperturas.js";
 
-async function enviarParametros(formData) {
-  try {
-    const response = await fetch("http://127.0.0.1:8000/ingresar-parametros", {
+async function enviarParametros(queryParams, formData) {
+  const response = await fetch(
+    "http://127.0.0.1:8000/ingresar-parametros?" + queryParams,
+    {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: formData.toString(),
-    });
-
-    if (!response.ok) throw new Error("Error al ingresar los parametros");
-
-    showToast("Parametros ingresados correctamente", "success");
-  } catch (error) {
-    showToast(error.message, "error");
-    throw error;
-  }
+      body: formData,
+    },
+  );
+  if (!response.ok) throw new Error("Error al ingresar los parametros");
+  showToast("Parametros ingresados correctamente", "success");
 }
 
 async function mostrarFuncionalidades(tipoAnalisis, negocio) {
@@ -50,41 +44,36 @@ async function mostrarFuncionalidades(tipoAnalisis, negocio) {
 }
 
 async function generarReferenciasEntremes() {
-  try {
-    const response = await fetch(
-      "http://127.0.0.1:8000/obtener-analisis-anteriores",
-    );
+  const response = await fetch(
+    "http://127.0.0.1:8000/obtener-analisis-anteriores",
+  );
 
-    if (!response.ok) throw new Error("Error al obtener resultados anteriores");
-    showToast("Resultados anteriores obtenidos exitosamente", "success");
+  if (!response.ok) throw new Error("Error al obtener resultados anteriores");
+  showToast("Resultados anteriores obtenidos exitosamente", "success");
 
-    const data = await response.json();
+  const data = await response.json();
 
-    const dropdownReferenciaActuarial = document.getElementById(
-      "referenciaActuarial",
-    );
-    dropdownReferenciaActuarial.innerHTML = "";
-    const dropdownReferenciaContable =
-      document.getElementById("referenciaContable");
-    dropdownReferenciaContable.innerHTML = "";
+  const dropdownReferenciaActuarial = document.getElementById(
+    "referenciaActuarial",
+  );
+  dropdownReferenciaActuarial.innerHTML = "";
+  const dropdownReferenciaContable =
+    document.getElementById("referenciaContable");
+  dropdownReferenciaContable.innerHTML = "";
 
-    data.analisis_anteriores.forEach((analisis) => {
-      let option = document.createElement("option");
-      option.value = analisis;
-      option.text = analisis.charAt(0).toUpperCase() + analisis.slice(1);
-      dropdownReferenciaActuarial.appendChild(option);
-    });
+  data.analisis_anteriores.forEach((analisis) => {
+    let option = document.createElement("option");
+    option.value = analisis;
+    option.text = analisis.charAt(0).toUpperCase() + analisis.slice(1);
+    dropdownReferenciaActuarial.appendChild(option);
+  });
 
-    data.analisis_anteriores.forEach((analisis) => {
-      let option = document.createElement("option");
-      option.value = analisis;
-      option.text = analisis.charAt(0).toUpperCase() + analisis.slice(1);
-      dropdownReferenciaContable.appendChild(option);
-    });
-  } catch (error) {
-    showToast(error.message, "error");
-    throw error;
-  }
+  data.analisis_anteriores.forEach((analisis) => {
+    let option = document.createElement("option");
+    option.value = analisis;
+    option.text = analisis.charAt(0).toUpperCase() + analisis.slice(1);
+    dropdownReferenciaContable.appendChild(option);
+  });
 }
 
 document
@@ -92,18 +81,29 @@ document
   .addEventListener("click", async function (event) {
     event.preventDefault();
 
-    const negocio = document.getElementById("negocio").value;
-    const tipoAnalisis = document.getElementById("tipoAnalisis").value;
+    try {
+      var negocio = document.getElementById("negocio").value;
+      var tipoAnalisis = document.getElementById("tipo_analisis").value;
 
-    const formData = new URLSearchParams({
-      negocio: document.getElementById("negocio").value,
-      mes_inicio: document.getElementById("mesInicio").value,
-      mes_corte: document.getElementById("mesCorte").value,
-      tipo_analisis: tipoAnalisis,
-      nombre_plantilla: document.getElementById("nombrePlantilla").value,
-    });
+      var parametrosForm = document.getElementById("parametrosForm");
+      var queryParams = new URLSearchParams(
+        new FormData(parametrosForm),
+      ).toString();
 
-    await enviarParametros(formData);
-    await generarDropdownPlantillas(tipoAnalisis);
-    await mostrarFuncionalidades(tipoAnalisis, negocio);
+      var formData = new FormData();
+      var archivoSegmentacion = document.getElementById(
+        "archivoSegmentacion",
+      ).files;
+      if (archivoSegmentacion.length > 0) {
+        formData.append("archivo_segmentacion", archivoSegmentacion[0]);
+      }
+
+      await enviarParametros(queryParams, formData);
+      await generarDropdownAperturas(tipoAnalisis);
+      await generarDropdownPlantillas(tipoAnalisis);
+      await mostrarFuncionalidades(tipoAnalisis, negocio);
+    } catch (error) {
+      showToast(error.message, "error");
+      throw error;
+    }
   });

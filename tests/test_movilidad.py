@@ -20,7 +20,7 @@ async def test_info_movilidad(client: TestClient):
         "nombre_plantilla": "plantilla_test_movilidad",
     }
 
-    response = client.post("/ingresar-parametros", data=params)
+    response = client.post("/ingresar-parametros", params=params)
     p = Parametros.model_validate_json(response.read())
 
     correr_queries(client)

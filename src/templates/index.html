@@ -26,7 +26,7 @@
 
     <div class="form-section">
       <h2>Parametros</h2>
-      <form id="ingresarParametros">
+      <form id="parametrosForm">
         <label for="negocio">Negocio:</label>
         <select id="negocio" name="negocio">
           <option value="arl">ARL</option>
@@ -38,42 +38,61 @@
           <option value="demo">Demo</option>
         </select>
 
-        <label for="mesInicio">Mes de la primera ocurrencia:</label>
+        <label for="mes_inicio">Mes de la primera ocurrencia:</label>
         <input
           type="text"
-          id="mesInicio"
-          name="mesInicio"
+          id="mes_inicio"
+          name="mes_inicio"
           placeholder="AAAAMM"
           required
         />
 
-        <label for="mesCorte">Mes de corte:</label>
+        <label for="mes_corte">Mes de corte:</label>
         <input
           type="text"
-          id="mesCorte"
-          name="mesCorte"
+          id="mes_corte"
+          name="mes_corte"
           placeholder="AAAAMM"
           required
         />
 
-        <label for="tipoAnalisis">Tipo de analisis:</label>
-        <select id="tipoAnalisis" name="tipoAnalisis">
+        <label for="tipo_analisis">Tipo de analisis:</label>
+        <select id="tipo_analisis" name="tipo_analisis">
           <option value="triangulos">Triangulos</option>
           <option value="entremes">Entremes</option>
         </select>
 
-        <label for="nombrePlantilla">Nombre de la plantilla:</label>
+        <label for="nombre_plantilla">Nombre de la plantilla:</label>
         <input
           type="text"
-          id="nombrePlantilla"
-          name="nombrePlantilla"
+          id="nombre_plantilla"
+          name="nombre_plantilla"
           placeholder="Plantilla_Reservas"
           required
         />
-
-        <button id="guardarParametros">Guardar parametros</button>
-        <button id="traerParametros">Traer parametros</button>
       </form>
+
+      <div class="input-group">
+        <label for="archivoSegmentacion" class="custom-file-upload"
+          >Cargar archivo de segmentacion:</label
+        >
+        <input
+          type="file"
+          id="archivoSegmentacion"
+          name="archivoSegmentacion"
+          accept=".xlsx"
+        />
+
+        <button
+          style="background-color: gray"
+          id="descargarEjemploSegmentacion"
+        >
+          Descargar ejemplo
+        </button>
+      </div>
+
+      <button id="guardarParametros">Guardar parametros</button>
+      <button id="traerParametros">Traer parametros</button>
     </div>
 
     <div class="form-section" id="extraccion" style="display: none">
@@ -101,19 +120,7 @@
     <div class="form-section" id="cargaManual" style="display: none">
       <h2>Carga manual de informacion</h2>
 
-      <button id="descargarEjemplos">Descargar ejemplos</button>
-
-      <div class="input-group">
-        <label for="archivoSegmentacion" class="custom-file-upload"
-          >Cargar archivo de segmentacion:</label
-        >
-        <input
-          type="file"
-          id="archivoSegmentacion"
-          name="archivoSegmentacion"
-          accept=".xlsx"
-        />
-      </div>
+      <button id="descargarEjemplosCantidades">Descargar ejemplos</button>
 
       <div class="input-group">
         <label for="archivosSiniestros" class="custom-file-upload"
@@ -194,8 +201,6 @@
         Abrir plantilla
       </button>
       <button id="prepararPlantilla">Preparar plantilla</button>
-
-      <button id="generarAperturas">Generar aperturas</button>
 
       <form id="modosPlantilla">
         <label for="apertura">Apertura:</label>

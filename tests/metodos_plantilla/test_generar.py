@@ -10,7 +10,11 @@ from src import utils
 from src.informacion.mocks import generar_mock
 from src.metodos_plantilla import abrir, actualizar, generar, preparar
 from src.procesamiento import base_siniestros
-from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
+from tests.conftest import (
+    agregar_meses_params,
+    correr_queries,
+    vaciar_directorios_test,
+)
 
 
 @pytest.mark.fast
@@ -75,7 +79,7 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
     }
     agregar_meses_params(params_form, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form)
+    _ = client.post("/ingresar-parametros", params=params_form)
     wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
     correr_queries(client)
@@ -102,7 +106,7 @@ def test_generar_severidad(client: TestClient, rango_meses: tuple[date, date]):
     }
     agregar_meses_params(params_form, rango_meses)
 
-    _ = client.post("/ingresar-parametros", data=params_form).json()
+    _ = client.post("/ingresar-parametros", params=params_form).json()
     wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
     correr_queries(client)

@@ -30,7 +30,7 @@ async def test_info_autonomia(client: TestClient) -> None:
         "nombre_plantilla": "plantilla_autonomia",
     }
 
-    response = client.post("/ingresar-parametros", data=data).json()
+    response = client.post("/ingresar-parametros", params=data).json()
     p = Parametros.model_validate(response)
 
     correr_queries(client)

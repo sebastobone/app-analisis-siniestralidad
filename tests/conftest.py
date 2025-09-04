@@ -13,8 +13,9 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 from src import utils
-from src.app import app, get_session
+from src.app import app
 from src.controles_informacion.sap import consolidar_sap
+from src.dependencias import get_session
 from src.models import Parametros
 
 from tests.configuracion import configuracion

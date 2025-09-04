@@ -1,0 +1,119 @@
+from pathlib import Path
+from typing import Annotated
+from uuid import uuid4
+
+from fastapi import APIRouter, Cookie, Query, UploadFile
+from fastapi.responses import Response, StreamingResponse
+from sqlmodel import select
+
+from src import utils
+from src.dependencias import SessionDep, atrapar_excepciones
+from src.informacion import carga_manual
+from src.logger_config import logger
+from src.metodos_plantilla import preparar
+from src.models import Parametros
+
+router = APIRouter()
+
+
+def obtener_parametros_usuario(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> Parametros:
+    return session.exec(
+        select(Parametros).where(Parametros.session_id == session_id)
+    ).all()[0]
+
+
+def eliminar_parametros_anteriores(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> None:
+    try:
+        existing_data = obtener_parametros_usuario(session, session_id)
+        if existing_data:
+            session.delete(existing_data)
+            session.commit()
+    except IndexError:
+        pass
+
+
+@router.post("/ingresar-parametros")
+@atrapar_excepciones
+async def ingresar_parametros(
+    response: Response,
+    session: SessionDep,
+    parametros: Annotated[Parametros, Query()],
+    archivo_segmentacion: UploadFile | None = None,
+    session_id: Annotated[str | None, Cookie()] = None,
+) -> Parametros:
+    if not session_id:
+        session_id = str(uuid4())
+        response.set_cookie(key="session_id", value=session_id)
+
+    p = Parametros.model_validate(parametros)
+    p.session_id = session_id
+
+    eliminar_parametros_anteriores(session, session_id)
+
+    session.add(p)
+    session.commit()
+    session.refresh(p)
+
+    logger.info(f"Parametros ingresados: {p.model_dump()}")
+
+    if archivo_segmentacion:
+        carga_manual.procesar_archivo_segmentacion(archivo_segmentacion, p.negocio)
+
+    if not Path(f"data/segmentacion_{p.negocio}.xlsx").exists():
+        raise FileNotFoundError(
+            f"No se encontro archivo de segmentacion para el negocio {p.negocio}"
+        )
+
+    return p
+
+
+@router.get("/descargar-ejemplo-segmentacion")
+@atrapar_excepciones
+async def descargar_ejemplo_segmentacion() -> StreamingResponse:
+    buffer = carga_manual.descargar_ejemplo_segmentacion()
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=segmentacion.xlsx"},
+    )
+
+
+@router.get("/traer-parametros")
+@atrapar_excepciones
+async def traer_parametros(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+) -> Parametros:
+    return obtener_parametros_usuario(session, session_id)
+
+
+@router.get("/obtener-analisis-anteriores")
+@atrapar_excepciones
+async def obtener_analisis_anteriores(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+):
+    p = obtener_parametros_usuario(session, session_id)
+    resultados_mes_anterior = preparar.obtener_analisis_anteriores(p.mes_corte)
+    return {
+        "analisis_anteriores": resultados_mes_anterior.get_column("tipo_analisis")
+        .unique()
+        .to_list()
+    }
+
+
+@router.get("/generar-aperturas")
+@atrapar_excepciones
+async def generar_aperturas(
+    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
+):
+    params = obtener_parametros_usuario(session, session_id)
+    aperturas = sorted(
+        utils.obtener_aperturas(params.negocio, "siniestros")
+        .get_column("apertura_reservas")
+        .unique()
+        .to_list()
+    )
+    return {"aperturas": aperturas}

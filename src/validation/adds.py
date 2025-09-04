@@ -1,11 +1,11 @@
 import polars as pl
 
-from src import utils
+from src.validation import validaciones as valid
 
 
 async def validar_tabla_a_cargar(query: str, add: pl.DataFrame) -> pl.DataFrame:
     await validar_numero_columnas_segmentacion(query, add)
-    utils.validar_unicidad(
+    valid.validar_unicidad(
         add,
         """
         Alerta -> tiene registros duplicados en la siguiente tabla: {add}
@@ -15,7 +15,7 @@ async def validar_tabla_a_cargar(query: str, add: pl.DataFrame) -> pl.DataFrame:
         {"add": add},
         "alerta",
     )
-    utils.validar_no_nulos(
+    valid.validar_no_nulos(
         add,
         """
         Error -> tiene valores nulos en la siguiente tabla: {add}

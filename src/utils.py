@@ -1,16 +1,13 @@
 import datetime as dt
-import io
 import textwrap
 from math import ceil
 from pathlib import Path
-from typing import Any, Literal, overload
+from typing import overload
 
 import polars as pl
-import xlsxwriter
 import xlwings as xw
 
 from src import constantes as ct
-from src.logger_config import logger
 from src.models import RangeDimension
 
 
@@ -122,18 +119,8 @@ def generalizar_tipos_columnas_resultados(df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def path_plantilla(wb: xw.Book) -> str:
-    return wb.fullname.replace(wb.name, "")
-
-
 def limpiar_espacios_log(log: str) -> str:
     return textwrap.dedent(log).replace("\n", " ").replace("\t", " ")
-
-
-def mes_anterior_corte(mes_corte: int) -> int:
-    return (
-        mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
-    )
 
 
 def obtener_aperturas(negocio: str, cantidad: ct.CANTIDADES) -> pl.DataFrame:
@@ -202,59 +189,8 @@ def mantener_formato_columnas(df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def validar_subconjunto(
-    subconjunto: list[str],
-    conjunto: list[str],
-    mensaje_error: str,
-    variables_mensaje: dict[str, str | list[str]] | None,
-    severidad: Literal["error", "alerta"],
-) -> None:
-    if not set(subconjunto).issubset(set(conjunto)):
-        faltantes = set(subconjunto) - set(conjunto)
-        if variables_mensaje:
-            log = mensaje_error.format(**variables_mensaje, faltantes=faltantes)
-        else:
-            log = mensaje_error.format(faltantes=faltantes)
-        if severidad == "error":
-            raise ValueError(limpiar_espacios_log(log))
-        else:
-            logger.warning(limpiar_espacios_log(log))
-
-
 def vaciar_directorio(directorio_path: str) -> None:
     directorio = Path(directorio_path)
     for file in directorio.iterdir():
         if file.is_file() and file.name != ".gitkeep":
             file.unlink()
-
-
-def validar_unicidad(
-    df: pl.DataFrame,
-    mensaje: str,
-    variables_mensaje: dict[str, Any],
-    severidad: Literal["error", "alerta"],
-) -> None:
-    if df.height != df.unique().height:
-        if severidad == "error":
-            raise ValueError(mensaje.format(**variables_mensaje))
-        else:
-            logger.warning(mensaje.format(**variables_mensaje))
-
-
-def validar_no_nulos(
-    df: pl.DataFrame, mensaje: str, variables_mensaje: dict[str, Any]
-) -> None:
-    nulos = df.filter(pl.any_horizontal(pl.all().is_null()))
-    if not nulos.is_empty():
-        raise ValueError(mensaje.format(**variables_mensaje, nulos=nulos))
-
-
-def crear_excel(hojas: dict[str, pl.DataFrame]) -> io.BytesIO:
-    excel_buffer = io.BytesIO()
-
-    with xlsxwriter.Workbook(excel_buffer) as writer:
-        for hoja in list(hojas.keys()):
-            hojas[hoja].write_excel(writer, worksheet=hoja)
-
-    excel_buffer.seek(0)
-    return excel_buffer

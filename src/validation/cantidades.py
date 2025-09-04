@@ -5,6 +5,7 @@ import polars as pl
 from src import constantes as ct
 from src import utils
 from src.logger_config import logger
+from src.validation import validaciones as valid
 
 MENSAJE_COLUMNAS_FALTANTES = """
     En el archivo {nombre_archivo} faltan las siguientes columnas: {faltantes}
@@ -26,14 +27,14 @@ MENSAJE_APERTURAS_SOBRANTES = """
 def validar_archivo(
     negocio: str, df: pl.DataFrame, filename: str, cantidad: ct.CANTIDADES
 ) -> None:
-    utils.validar_subconjunto(
+    valid.validar_subconjunto(
         list(ct.DESCRIPTORES[cantidad].keys()) + list(ct.VALORES[cantidad].keys()),
         df.collect_schema().names(),
         MENSAJE_COLUMNAS_FALTANTES,
         {"nombre_archivo": filename},
         "error",
     )
-    utils.validar_subconjunto(
+    valid.validar_subconjunto(
         utils.obtener_nombres_aperturas(negocio, cantidad),
         df.collect_schema().names(),
         MENSAJE_COLUMNAS_FALTANTES,
@@ -56,14 +57,14 @@ def validar_archivo(
         .to_list()
     )
 
-    utils.validar_subconjunto(
+    valid.validar_subconjunto(
         aperturas_encontradas,
         aperturas_definidas,
         MENSAJE_APERTURAS_FALTANTES,
         {"nombre_archivo": filename},
         "error",
     )
-    utils.validar_subconjunto(
+    valid.validar_subconjunto(
         aperturas_definidas,
         aperturas_encontradas,
         MENSAJE_APERTURAS_SOBRANTES,

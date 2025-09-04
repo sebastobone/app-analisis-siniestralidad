@@ -167,12 +167,23 @@ def descargar_ejemplos_cantidades() -> io.BytesIO:
             if cantidad == "siniestros":
                 df = df.drop("apertura_reservas")
 
-            excel_buffer = utils.crear_excel({cantidad: df})
+            excel_buffer = crear_excel({cantidad: df})
             zip_file.writestr(f"{cantidad}.xlsx", excel_buffer.getvalue())
 
     zip_buffer.seek(0)
 
     return zip_buffer
+
+
+def crear_excel(hojas: dict[str, pl.DataFrame]) -> io.BytesIO:
+    excel_buffer = io.BytesIO()
+
+    with xlsxwriter.Workbook(excel_buffer) as writer:
+        for hoja in list(hojas.keys()):
+            hojas[hoja].write_excel(writer, worksheet=hoja)
+
+    excel_buffer.seek(0)
+    return excel_buffer
 
 
 def descargar_ejemplo_segmentacion() -> io.BytesIO:

@@ -3,7 +3,7 @@ from datetime import date
 import polars as pl
 import pytest
 from fastapi.testclient import TestClient
-from src.utils import crear_excel
+from src.informacion.carga_manual import crear_excel
 from tests.conftest import CONTENT_TYPES, ingresar_parametros, vaciar_directorios_test
 
 

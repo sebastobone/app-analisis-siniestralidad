@@ -5,6 +5,7 @@ import polars as pl
 from src import constantes as ct
 from src import utils
 from src.logger_config import logger
+from src.validation import validaciones as valid
 
 
 def _validar_hojas(hojas: dict[str, pl.DataFrame]) -> None:
@@ -64,7 +65,7 @@ def _validar_cruces_aperturas(
     cruce = aperturas_siniestros.join(
         aperturas, on=aperturas.collect_schema().names(), how="full"
     )
-    utils.validar_no_nulos(
+    valid.validar_no_nulos(
         cruce,
         """
         No tiene las mismas aperturas en las hojas "Aperturas_Siniestros"
@@ -103,14 +104,14 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
         hojas["Aperturas_Siniestros"].collect_schema().names()
     )
 
-    utils.validar_subconjunto(
+    valid.validar_subconjunto(
         columnas_necesarias_siniestros,
         columnas_encontradas_siniestros,
         mensaje_columnas_faltantes,
         {"nombre_hoja": "Aperturas_Siniestros"},
         "error",
     )
-    utils.validar_unicidad(
+    valid.validar_unicidad(
         hojas["Aperturas_Siniestros"].drop(
             [
                 "periodicidad_ocurrencia",
@@ -122,7 +123,7 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
         {"nombre_hoja": "Aperturas_Siniestros"},
         "error",
     )
-    utils.validar_subconjunto(
+    valid.validar_subconjunto(
         hojas["Aperturas_Siniestros"]
         .get_column("periodicidad_ocurrencia")
         .unique()
@@ -136,7 +137,7 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
         },
         "error",
     )
-    utils.validar_subconjunto(
+    valid.validar_subconjunto(
         hojas["Aperturas_Siniestros"]
         .get_column("tipo_indexacion_severidad")
         .unique()
@@ -166,21 +167,21 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
     for nombre_hoja in ["Aperturas_Primas", "Aperturas_Expuestos"]:
         columnas_encontradas = hojas[nombre_hoja].collect_schema().names()
 
-        utils.validar_subconjunto(
+        valid.validar_subconjunto(
             ["codigo_op", "codigo_ramo_op"],
             columnas_encontradas,
             mensaje_columnas_faltantes,
             {"nombre_hoja": nombre_hoja},
             "error",
         )
-        utils.validar_subconjunto(
+        valid.validar_subconjunto(
             columnas_encontradas,
             columnas_encontradas_siniestros,
             mensaje_variables_sobrantes,
             {"nombre_hoja": nombre_hoja},
             "error",
         )
-        utils.validar_unicidad(
+        valid.validar_unicidad(
             hojas[nombre_hoja],
             mensaje_aperturas_duplicadas,
             {"nombre_hoja": nombre_hoja},

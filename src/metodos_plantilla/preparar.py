@@ -77,7 +77,7 @@ def obtener_analisis_anteriores(mes_corte: int) -> pl.DataFrame:
                 """
             )
         )
-    mes_corte_anterior = utils.mes_anterior_corte(mes_corte)
+    mes_corte_anterior = mes_anterior_corte(mes_corte)
     resultados_mes_anterior = resultados_anteriores.filter(
         pl.col("mes_corte") == mes_corte_anterior
     )
@@ -99,7 +99,7 @@ def obtener_resultados_mes_anterior(
     mes_corte: int,
     referencias_entremes: ReferenciasEntremes,
 ) -> pl.DataFrame:
-    mes_corte_anterior = utils.mes_anterior_corte(mes_corte)
+    mes_corte_anterior = mes_anterior_corte(mes_corte)
     resultados_mes_anterior = resultados_anteriores.filter(
         pl.col("mes_corte") == mes_corte_anterior
     )
@@ -330,6 +330,12 @@ def verificar_plantilla_preparada(wb: xw.Book):
         raise PlantillaNoPreparadaError(
             "La plantilla no ha sido preparada. Preparela y vuelva a intentar."
         )
+
+
+def mes_anterior_corte(mes_corte: int) -> int:
+    return (
+        mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
+    )
 
 
 class PlantillaNoPreparadaError(Exception):

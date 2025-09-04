@@ -7,12 +7,12 @@ import polars as pl
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from src.informacion.carga_manual import crear_excel
 from tests.conftest import (
     CONTENT_TYPES,
     ingresar_parametros,
     vaciar_directorios_test,
 )
-from tests.informacion.test_carga_segmentacion import crear_excel
 
 CARGA_SEGMENTACION = {
     "archivo_segmentacion": (

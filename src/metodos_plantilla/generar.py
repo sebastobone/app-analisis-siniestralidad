@@ -58,9 +58,7 @@ def generar_plantilla(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> None
 
     num_ocurrencias = triangulo.shape[0]
     num_alturas = triangulo.shape[1] // len(cantidades)
-    mes_del_periodo = utils.mes_del_periodo(
-        utils.yyyymm_to_date(p.mes_corte), num_ocurrencias, num_alturas
-    )
+    mes_del_periodo = utils.mes_del_periodo(p.mes_corte, num_ocurrencias, num_alturas)
     periodicidad_apertura = (
         aperturas.filter(pl.col("apertura_reservas") == modos.apertura)
         .get_column("periodicidad_ocurrencia")

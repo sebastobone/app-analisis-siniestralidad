@@ -2,7 +2,6 @@ import polars as pl
 import pytest
 from fastapi.testclient import TestClient
 from src import constantes as ct
-from src import utils
 from src.models import Parametros
 
 from tests.conftest import correr_queries, vaciar_directorios_test, validar_cuadre
@@ -29,8 +28,6 @@ async def test_info_soat(client: TestClient):
 
     _ = client.post("/generar-controles")
 
-    mes_corte_dt = utils.yyyymm_to_date(p.mes_corte)
-
     df_sinis_post_cuadre = pl.read_parquet("data/raw/siniestros_post_cuadre.parquet")
     df_sinis_post_ajustes = pl.read_parquet("data/raw/siniestros.parquet")
 
@@ -44,7 +41,7 @@ async def test_info_soat(client: TestClient):
     df_ajustes_fraude = (
         pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")
         .drop("tipo_ajuste")
-        .filter(pl.col("fecha_registro") <= mes_corte_dt)
+        .filter(pl.col("fecha_registro") <= p.mes_corte)
     )
 
     for col in ct.COLUMNAS_SINIESTROS_CUADRE:

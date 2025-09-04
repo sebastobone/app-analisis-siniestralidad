@@ -16,17 +16,13 @@ from tests.controles_informacion.test_generacion import mock_hoja_afo
 @pytest.mark.fast
 @pytest.mark.parametrize("qty", ["pago_bruto", "aviso_bruto"])
 async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) -> None:
-    mes_inicio, mes_corte = rango_meses
-    mes_inicio_int = utils.date_to_yyyymm(mes_inicio)
-    mes_corte_int = utils.date_to_yyyymm(mes_corte)
-
     with patch("src.controles_informacion.sap.pl.read_excel") as mock_read_excel:
-        mock_read_excel.return_value = mock_hoja_afo(mes_corte_int, "pago_bruto")
+        mock_read_excel.return_value = mock_hoja_afo(rango_meses[1], "pago_bruto")
 
         df_sap = (
             (
                 await sap.consolidar_sap(
-                    "soat", ["pago_bruto", "pago_retenido"], mes_corte_int
+                    "soat", ["pago_bruto", "pago_retenido"], rango_meses[1]
                 )
             )
             .with_columns(
@@ -36,7 +32,7 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
             .filter((pl.col("codigo_ramo_op") == "001") & (pl.col("codigo_op") == "01"))
         )
 
-    mock_siniestros = generar_mock(mes_inicio_int, mes_corte_int, "siniestros")
+    mock_siniestros = generar_mock(rango_meses, "siniestros")
 
     mock_soat = mock_siniestros.filter(
         (pl.col("codigo_ramo_op") == "001") & (pl.col("codigo_op") == "01")
@@ -47,7 +43,9 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
         mock_soat, ["codigo_op", "codigo_ramo_op", "fecha_registro"], qtys
     )
 
-    dif_sap_vs_tera = await ctrl.comparar_sap_tera(df_tera, df_sap, mes_corte_int, qtys)
+    dif_sap_vs_tera = await ctrl.comparar_sap_tera(
+        df_tera, df_sap, rango_meses[1], qtys
+    )
 
     meses_prueba = (
         mock_soat.group_by("fecha_registro")

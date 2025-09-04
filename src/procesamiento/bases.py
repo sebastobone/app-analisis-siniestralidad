@@ -1,6 +1,5 @@
 import polars as pl
 
-from src import utils
 from src.models import Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
 from src.procesamiento import base_siniestros as bsin
@@ -10,8 +9,8 @@ def generar_bases_plantilla(p: Parametros) -> None:
     base_triangulos, base_ult_ocurr = bsin.generar_bases_siniestros(
         pl.scan_parquet("data/raw/siniestros.parquet"),
         p.tipo_analisis,
-        utils.yyyymm_to_date(p.mes_inicio),
-        utils.yyyymm_to_date(p.mes_corte),
+        p.mes_inicio,
+        p.mes_corte,
     )
 
     base_triangulos.write_parquet("data/processed/base_triangulos.parquet")

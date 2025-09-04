@@ -1,3 +1,5 @@
+from datetime import date
+
 import polars as pl
 import pytest
 from fastapi.testclient import TestClient
@@ -8,11 +10,10 @@ from tests.conftest import assert_igual, correr_queries, vaciar_directorios_test
 
 
 def separar_meses_anteriores(
-    df: pl.DataFrame, mes_corte: int
+    df: pl.DataFrame, mes_corte: date
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
-    mes_corte_dt = utils.yyyymm_to_date(mes_corte)
-    df_ant = df.filter(pl.col("fecha_registro").dt.month_start() < mes_corte_dt)
-    df_ult = df.filter(pl.col("fecha_registro").dt.month_start() == mes_corte_dt)
+    df_ant = df.filter(pl.col("fecha_registro").dt.month_start() < mes_corte)
+    df_ult = df.filter(pl.col("fecha_registro").dt.month_start() == mes_corte)
     return df_ant, df_ult
 
 

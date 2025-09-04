@@ -42,7 +42,9 @@ def preparar_plantilla(
 
     if p.tipo_analisis == "entremes":
         resultados_mes_anterior = obtener_resultados_mes_anterior(
-            resultados_anteriores, p.mes_corte, referencias_entremes
+            resultados_anteriores,
+            utils.date_to_yyyymm(p.mes_corte),
+            referencias_entremes,
         )
         comparar_aperturas_mes_anterior(resumen, resultados_mes_anterior)
         factores_completitud = compl.calcular_factores_completitud(
@@ -53,7 +55,7 @@ def preparar_plantilla(
             resultados_anteriores,
             resultados_mes_anterior,
             factores_completitud,
-            p.mes_corte,
+            utils.date_to_yyyymm(p.mes_corte),
         )
         generar_hoja_entremes(wb, entremes)
 

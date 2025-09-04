@@ -3,7 +3,6 @@ from datetime import timedelta
 import polars as pl
 import pytest
 from src import constantes as ct
-from src import utils
 from src.informacion import tera_connect
 from src.models import Parametros
 from src.validation import adds
@@ -37,8 +36,8 @@ def test_reemplazar_parametros_queries(params: Parametros):
         SELECT
             {params.mes_inicio}
             , {params.mes_corte}
-            , {utils.yyyymm_to_date(params.mes_inicio)}
-            , {utils.yyyymm_to_date(params.mes_corte)}
+            , {params.mes_inicio}
+            , {params.mes_corte}
         FROM TABLE1
     """  # noqa: S608
 
@@ -51,11 +50,10 @@ def test_reemplazar_parametros_queries(params: Parametros):
 def test_crear_particiones_fechas(params: Parametros):
     test = tera_connect._crear_particiones_fechas(params.mes_inicio, params.mes_corte)
 
-    mes_inicio_date = utils.yyyymm_to_date(params.mes_inicio)
-    mes_inicio_next = mes_inicio_date.replace(day=28) + timedelta(days=4)
+    mes_inicio_next = params.mes_inicio.replace(day=28) + timedelta(days=4)
     mes_inicio_last_day = mes_inicio_next - timedelta(days=mes_inicio_next.day)
 
-    assert test[0] == (utils.yyyymm_to_date(params.mes_inicio), mes_inicio_last_day)
+    assert test[0] == (params.mes_inicio, mes_inicio_last_day)
 
 
 @pytest.mark.asyncio

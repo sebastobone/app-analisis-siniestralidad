@@ -1,3 +1,5 @@
+from datetime import date
+
 import polars as pl
 
 from src import constantes as ct
@@ -92,14 +94,14 @@ def _validar_descriptores_no_nulos(
 def organizar_archivo(
     df: pl.DataFrame,
     negocio: str,
-    mes_inicio: int,
+    rango_meses: tuple[date, date],
     cantidad: ct.CANTIDADES,
     nombre_archivo: str,
 ) -> pl.DataFrame:
     df = (
         df.pipe(asignar_tipos_columnas, cantidad, nombre_archivo)
         .pipe(mensualizar, cantidad)
-        .pipe(colapsar_primera_ocurrencia, cantidad, mes_inicio)
+        .pipe(colapsar_primera_ocurrencia, cantidad, rango_meses[0])
         .pipe(agrupar_por_columnas_relevantes, negocio, cantidad)
     )
 
@@ -139,7 +141,7 @@ def mensualizar(df: pl.DataFrame, cantidad: ct.CANTIDADES) -> pl.DataFrame:
 
 
 def colapsar_primera_ocurrencia(
-    df: pl.DataFrame, cantidad: ct.CANTIDADES, mes_inicio: int
+    df: pl.DataFrame, cantidad: ct.CANTIDADES, mes_inicio: date
 ) -> pl.DataFrame:
     """
     Para que las diagonales del triangulo se puedan comparar
@@ -149,12 +151,8 @@ def colapsar_primera_ocurrencia(
     columnas_fechas = columnas_descriptoras.intersection(
         {"fecha_siniestro", "fecha_registro"}
     )
-    fecha_inicio = utils.yyyymm_to_date(mes_inicio)
     return df.with_columns(
-        [
-            pl.col(col).clip(lower_bound=fecha_inicio).alias(col)
-            for col in columnas_fechas
-        ]
+        [pl.col(col).clip(lower_bound=mes_inicio).alias(col) for col in columnas_fechas]
     )
 
 

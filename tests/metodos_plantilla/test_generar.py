@@ -6,7 +6,6 @@ import polars as pl
 import pytest
 from fastapi.testclient import TestClient
 from src import constantes as ct
-from src import utils
 from src.informacion.mocks import generar_mock
 from src.metodos_plantilla import abrir, actualizar, generar, preparar
 from src.procesamiento import base_siniestros
@@ -37,10 +36,7 @@ def test_forma_triangulo(
 ):
     vaciar_directorios_test()
 
-    mes_inicio_int = utils.date_to_yyyymm(rango_meses[0])
-    mes_corte_int = utils.date_to_yyyymm(rango_meses[1])
-
-    mock_siniestros = generar_mock(mes_inicio_int, mes_corte_int, "siniestros")
+    mock_siniestros = generar_mock(rango_meses, "siniestros")
     base_triangulos, _ = base_siniestros.generar_bases_siniestros(
         mock_siniestros.lazy(), tipo_analisis, *rango_meses
     )

@@ -33,10 +33,6 @@ def crear_columna_apertura_reservas(negocio: str, cantidad: ct.CANTIDADES) -> pl
     ).alias("apertura_reservas")
 
 
-def yyyymm_to_date(mes_yyyymm: int) -> dt.date:
-    return dt.date(mes_yyyymm // 100, mes_yyyymm % 100, 1)
-
-
 def date_to_yyyymm(mes_date: dt.date, grain: str = "Mensual") -> int:
     return (
         mes_date.year * 100

@@ -1,15 +1,15 @@
 import os
+from datetime import date
 
 import polars as pl
 import xlwings as xw
 
-from src import utils
 from src.controles_informacion.sap import consolidar_sap
 
 
-async def cantidades_sap(hojas_afo: list[str], mes_corte: int) -> pl.DataFrame:
+async def cantidades_sap(hojas_afo: list[str], mes_corte: date) -> pl.DataFrame:
     return (await consolidar_sap("autonomia", hojas_afo, mes_corte)).filter(
-        (pl.col("fecha_registro") == utils.yyyymm_to_date(mes_corte))
+        (pl.col("fecha_registro") == mes_corte)
         & (
             pl.col("codigo_ramo_op").is_in(
                 ["025", "069", "081", "083", "084", "086", "095", "096", "181", "AAV"]
@@ -38,12 +38,12 @@ def crear_hoja_segmentacion(
     wb.close()
 
 
-async def sap_sinis_ced(mes_corte: int) -> None:
+async def sap_sinis_ced(mes_corte: date) -> None:
     df_sinis = await cantidades_sap(["pago_cedido", "aviso_cedido"], mes_corte)
     crear_hoja_segmentacion(df_sinis, "add_s_SAP_Sinis_Ced", "add_s_Inc_Ced_Atipicos")
 
 
-async def sap_primas_ced(mes_corte: int) -> None:
+async def sap_primas_ced(mes_corte: date) -> None:
     df_primas = (
         await cantidades_sap(
             [

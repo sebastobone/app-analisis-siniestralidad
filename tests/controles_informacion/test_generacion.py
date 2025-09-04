@@ -6,7 +6,6 @@ import numpy as np
 import polars as pl
 import pytest
 from src import constantes as ct
-from src import utils
 from src.controles_informacion import generacion as gen
 from src.controles_informacion import sap
 from src.informacion.mocks import generar_mock
@@ -31,16 +30,13 @@ def test_definir_hojas_afo(qtys: list[str], expected: set[str]):
     assert sap.definir_hojas_afo(qtys) == expected
 
 
-def fechas_sap(mes_corte: int) -> list[date]:
+def fechas_sap(mes_corte: date) -> list[date]:
     return pl.date_range(
-        utils.yyyymm_to_date(201001),
-        utils.yyyymm_to_date(mes_corte),
-        interval="1mo",
-        eager=True,
+        date(2010, 1, 1), mes_corte, interval="1mo", eager=True
     ).to_list()
 
 
-def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
+def mock_hoja_afo(mes_corte: date, qty: str) -> pl.DataFrame:
     fechas = fechas_sap(mes_corte)
     num_rows = len(fechas)
 
@@ -77,20 +73,19 @@ def mock_hoja_afo(mes_corte: int, qty: str) -> pl.DataFrame:
     ],
 )
 async def test_transformar_hoja_afo(cia: str, qty: str, rango_meses: tuple[date, date]):
-    mes_corte_int = utils.date_to_yyyymm(rango_meses[1])
-    df_original = mock_hoja_afo(mes_corte_int, qty)
+    df_original = mock_hoja_afo(rango_meses[1], qty)
     sum_original = sum(
         [df_original.get_column(column).sum() for column in ["001", "002", "003"]]
     ) * sap.signo_sap(qty)
 
-    df_processed = await sap.transformar_hoja_afo(df_original, cia, qty, mes_corte_int)
+    df_processed = await sap.transformar_hoja_afo(df_original, cia, qty, rango_meses[1])
     sum_processed = df_processed.get_column(qty).sum()
 
     assert abs(sum_original - sum_processed) < 100
 
     hoja_afo_incompleta = df_original.slice(0, df_original.shape[0] - 1)
     with pytest.raises(ValueError):
-        await sap.transformar_hoja_afo(hoja_afo_incompleta, cia, qty, mes_corte_int)
+        await sap.transformar_hoja_afo(hoja_afo_incompleta, cia, qty, rango_meses[1])
 
 
 @pytest.mark.asyncio
@@ -98,11 +93,17 @@ async def test_transformar_hoja_afo(cia: str, qty: str, rango_meses: tuple[date,
 @pytest.mark.parametrize(
     "qtys, mes_corte, expected_columns",
     [
-        (["prima_bruta", "prima_cedida"], 202201, ["prima_bruta", "prima_cedida"]),
-        (["pago_retenido"], 202201, ["pago_retenido"]),
+        (
+            ["prima_bruta", "prima_cedida"],
+            date(2022, 1, 1),
+            ["prima_bruta", "prima_cedida"],
+        ),
+        (["pago_retenido"], date(2022, 1, 1), ["pago_retenido"]),
     ],
 )
-async def test_consolidar_sap(qtys, mes_corte, expected_columns):
+async def test_consolidar_sap(
+    qtys: list[str], mes_corte: date, expected_columns: list[str]
+):
     result = await sap.consolidar_sap("autonomia", qtys, mes_corte)
     assert (
         result.collect_schema().names()
@@ -121,14 +122,14 @@ async def test_verificar_existencia_afos():
 @pytest.mark.asyncio
 @pytest.mark.fast
 async def test_restablecer_archivos_queries():
-    dates = (202001, 202412)
+    dates = (date(2020, 1, 1), date(2024, 12, 31))
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
 
-        siniestros = generar_mock(*dates, "siniestros")
-        primas = generar_mock(*dates, "primas")
-        expuestos = generar_mock(*dates, "expuestos")
+        siniestros = generar_mock(dates, "siniestros")
+        primas = generar_mock(dates, "primas")
+        expuestos = generar_mock(dates, "expuestos")
 
         await gen.restablecer_salidas_queries(tmp_dir)
 

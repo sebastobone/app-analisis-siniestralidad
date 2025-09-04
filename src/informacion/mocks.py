@@ -5,7 +5,6 @@ import numpy as np
 import polars as pl
 
 from src import constantes as ct
-from src import utils
 from src.logger_config import logger
 from src.validation import cantidades
 
@@ -16,22 +15,20 @@ def guardar_mock(df: pl.DataFrame, cantidad: ct.CANTIDADES) -> None:
 
 
 def generar_mock(
-    mes_inicio: int,
-    mes_corte: int,
+    rango_meses: tuple[dt.date, dt.date],
     cantidad: ct.CANTIDADES,
     num_rows: int = 100000,
 ) -> pl.DataFrame:
-    fecha_inicio = utils.yyyymm_to_date(mes_inicio)
-    fecha_corte = utils.yyyymm_to_date(mes_corte)
-
     if cantidad == "siniestros":
-        df = generar_mock_siniestros((fecha_inicio, fecha_corte), num_rows)
+        df = generar_mock_siniestros(rango_meses, num_rows)
     elif cantidad == "primas":
-        df = generar_mock_primas((fecha_inicio, fecha_corte), num_rows)
+        df = generar_mock_primas(rango_meses, num_rows)
     elif cantidad == "expuestos":
-        df = generar_mock_expuestos((fecha_inicio, fecha_corte), num_rows)
+        df = generar_mock_expuestos(rango_meses, num_rows)
 
-    return df.pipe(cantidades.organizar_archivo, "demo", mes_inicio, cantidad, cantidad)
+    return df.pipe(
+        cantidades.organizar_archivo, "demo", rango_meses, cantidad, cantidad
+    )
 
 
 def generar_mock_siniestros(

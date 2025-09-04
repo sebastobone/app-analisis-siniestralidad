@@ -1,15 +1,16 @@
+from datetime import date
 from typing import Literal
 
 from fastapi import UploadFile
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_serializer, field_validator
 from sqlmodel import Field, SQLModel, String
 
 
 class Parametros(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     negocio: str
-    mes_inicio: int = Field(ge=199001, le=204001)
-    mes_corte: int = Field(ge=199001, le=204001)
+    mes_inicio: date
+    mes_corte: date
     tipo_analisis: Literal["triangulos", "entremes"] = Field(sa_type=String)
     nombre_plantilla: str
     session_id: str | None = Field(index=True)
@@ -22,6 +23,36 @@ class Parametros(SQLModel, table=True):
                 f"El nombre '{nombre}' no esta permitido, intente con otro."
             )
         return nombre
+
+    @field_validator("mes_inicio", "mes_corte", mode="before")
+    @classmethod
+    def convertir_meses_inicio(cls, valor: str) -> date:
+        # Todo lo que se manda por query parameters llega como string
+        try:
+            valor_int = int(valor)
+        except ValueError as exc:
+            raise ValueError(
+                "Las fechas deben estar en formato YYYYMM (ej. 202002)"
+            ) from exc
+
+        anno, mes = validar_input_meses(valor_int)
+        return date(anno, mes, 1)
+
+    @field_serializer("mes_inicio", "mes_corte")
+    def fechas_a_entero(self, valor: date) -> int:
+        return valor.year * 100 + valor.month
+
+
+def validar_input_meses(valor: int) -> tuple[int, int]:
+    if valor > 999999 or valor < 100000:
+        raise ValueError("Las fechas deben estar en formato YYYYMM (ej. 202002)")
+    anno = valor // 100
+    mes = valor % 100
+    if anno < 1990 or anno > 2040:
+        raise ValueError("El ano debe estar comprendido entre 1990 y 2040.")
+    if mes < 1 or mes > 12:
+        raise ValueError("El mes debe estar comprendido entre 1 y 12.")
+    return anno, mes
 
 
 class ModosPlantilla(BaseModel):

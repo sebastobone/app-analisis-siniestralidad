@@ -1,6 +1,7 @@
 import csv
 import io
 import zipfile
+from datetime import date
 
 import polars as pl
 import xlsxwriter
@@ -10,13 +11,11 @@ from src import constantes as ct
 from src import utils
 from src.informacion.mocks import generar_mock
 from src.logger_config import logger
-from src.models import ArchivosCantidades
+from src.models import ArchivosCantidades, Parametros
 from src.validation import cantidades, segmentacion
 
 
-def procesar_archivos_cantidades(
-    archivos: ArchivosCantidades, negocio: str, mes_inicio: int
-) -> None:
+def procesar_archivos_cantidades(archivos: ArchivosCantidades, p: Parametros) -> None:
     for cantidad, archivos_cantidad in {
         "siniestros": archivos.siniestros,
         "primas": archivos.primas,
@@ -25,7 +24,7 @@ def procesar_archivos_cantidades(
         if archivos_cantidad:
             validar_unicidad_nombres(archivos_cantidad, cantidad)
             for archivo in archivos_cantidad:
-                procesar_archivo_cantidad(archivo, negocio, mes_inicio, cantidad)
+                procesar_archivo_cantidad(archivo, p, cantidad)
 
 
 def procesar_archivo_segmentacion(
@@ -44,10 +43,7 @@ def procesar_archivo_segmentacion(
 
 
 def procesar_archivo_cantidad(
-    archivo_cantidad: UploadFile,
-    negocio: str,
-    mes_inicio: int,
-    cantidad: ct.CANTIDADES,
+    archivo_cantidad: UploadFile, p: Parametros, cantidad: ct.CANTIDADES
 ) -> None:
     filename = str(archivo_cantidad.filename)
     extension = filename.split(".")[-1]
@@ -55,8 +51,12 @@ def procesar_archivo_cantidad(
     df = leer_archivo_cantidad(
         filename, archivo_cantidad.file.read(), extension, cantidad
     )
-    cantidades.validar_archivo(negocio, df, filename, cantidad)
-    df = cantidades.organizar_archivo(df, negocio, mes_inicio, cantidad, filename)
+    cantidades.validar_archivo(p.negocio, df, filename, cantidad)
+    df = cantidades.organizar_archivo(
+        df, p.negocio, (p.mes_inicio, p.mes_corte), cantidad, filename
+    )
+
+    print(df)
 
     df.write_parquet(
         f"data/carga_manual/{cantidad}/{filename.replace(extension, 'parquet')}"
@@ -160,7 +160,9 @@ def descargar_ejemplos_cantidades() -> io.BytesIO:
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for cantidad in ct.LISTA_CANTIDADES:
-            df = generar_mock(202001, 202512, cantidad, num_rows=1000)
+            df = generar_mock(
+                (date(2020, 1, 1), date(2025, 12, 31)), cantidad, num_rows=1000
+            )
 
             if cantidad == "siniestros":
                 df = df.drop("apertura_reservas")

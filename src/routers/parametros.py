@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Cookie, Query, UploadFile
@@ -52,6 +52,9 @@ async def ingresar_parametros(
     p = Parametros.model_validate(parametros)
     p.session_id = session_id
 
+    if p.mes_corte < p.mes_inicio:
+        raise ValueError("El mes de corte debe ser posterior al mes de inicio.")
+
     eliminar_parametros_anteriores(session, session_id)
 
     session.add(p)
@@ -86,8 +89,8 @@ async def descargar_ejemplo_segmentacion() -> StreamingResponse:
 @atrapar_excepciones
 async def traer_parametros(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> Parametros:
-    return obtener_parametros_usuario(session, session_id)
+) -> dict[str, Any]:
+    return obtener_parametros_usuario(session, session_id).model_dump()
 
 
 @router.get("/obtener-analisis-anteriores")
@@ -96,7 +99,9 @@ async def obtener_analisis_anteriores(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ):
     p = obtener_parametros_usuario(session, session_id)
-    resultados_mes_anterior = preparar.obtener_analisis_anteriores(p.mes_corte)
+    resultados_mes_anterior = preparar.obtener_analisis_anteriores(
+        utils.date_to_yyyymm(p.mes_corte)
+    )
     return {
         "analisis_anteriores": resultados_mes_anterior.get_column("tipo_analisis")
         .unique()

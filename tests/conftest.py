@@ -131,7 +131,7 @@ async def obtener_sap_negocio(
     negocio: str,
     file: ct.CANTIDADES_CUADRE,
     columnas_cantidades: list[str],
-    mes_corte: int,
+    mes_corte: date,
 ) -> pl.DataFrame:
     lista_ramos = (
         pl.read_excel(
@@ -151,7 +151,7 @@ async def validar_cuadre(
     negocio: str,
     file: ct.CANTIDADES_CUADRE,
     columnas_cantidades: list[str],
-    mes_corte: int,
+    mes_corte: date,
 ) -> None:
     meses_cuadre = pl.read_excel(
         f"data/segmentacion_{negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"

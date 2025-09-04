@@ -1,5 +1,6 @@
 import asyncio
 import shutil
+from datetime import date
 from pathlib import Path
 from typing import Literal
 
@@ -37,7 +38,9 @@ async def generar_controles(p: Parametros) -> None:
     await generar_controles_cantidad("primas", p)
     await generar_controles_cantidad("expuestos", p)
 
-    await evidencias.generar_evidencias_parametros(p.negocio, p.mes_corte)
+    await evidencias.generar_evidencias_parametros(
+        p.negocio, utils.date_to_yyyymm(p.mes_corte)
+    )
 
 
 async def restablecer_salidas_queries(path_salidas_queries: str) -> None:
@@ -127,7 +130,7 @@ async def generar_controles_estado_cuadre(
     df: pl.DataFrame,
     negocio: str,
     file: ct.CANTIDADES,
-    mes_corte: int,
+    mes_corte: date,
     estado_cuadre: Literal[
         "pre_cuadre_contable", "post_cuadre_contable", "post_ajustes_fraude"
     ],
@@ -141,10 +144,12 @@ async def generar_controles_estado_cuadre(
         )
     )
 
+    mes_corte_int = utils.date_to_yyyymm(mes_corte)
+
     qtys, group_cols = definir_cantidades_control(negocio, file)
     await asyncio.to_thread(
         agrupar_tera(df, group_cols, qtys).write_excel,
-        f"data/controles_informacion/{estado_cuadre}/{file}_tera_{mes_corte}.xlsx",
+        f"data/controles_informacion/{estado_cuadre}/{file}_tera_{mes_corte_int}.xlsx",
     )
     await asyncio.to_thread(
         generar_consistencia_historica,
@@ -162,12 +167,12 @@ async def generar_controles_estado_cuadre(
     )
 
     if file in ("siniestros", "primas"):
-        df_sap = (await sap.consolidar_sap(negocio, qtys, int(mes_corte))).filter(
+        df_sap = (await sap.consolidar_sap(negocio, qtys, mes_corte)).filter(
             pl.col("codigo_ramo_op").is_in(df.get_column("codigo_ramo_op").unique())
         )
         await asyncio.to_thread(
             df_sap.write_excel,
-            f"data/controles_informacion/{estado_cuadre}/{file}_sap_{mes_corte}.xlsx",
+            f"data/controles_informacion/{estado_cuadre}/{file}_sap_{mes_corte_int}.xlsx",
         )
         await asyncio.to_thread(
             generar_consistencia_historica,
@@ -178,17 +183,17 @@ async def generar_controles_estado_cuadre(
             fuente="sap",
         )
 
-        difs_sap_tera = await comparar_sap_tera(df_tera, df_sap, int(mes_corte), qtys)
+        difs_sap_tera = await comparar_sap_tera(df_tera, df_sap, mes_corte, qtys)
         await asyncio.to_thread(
             difs_sap_tera.write_excel,
-            f"data/controles_informacion/{estado_cuadre}/{file}_sap_vs_tera_{mes_corte}.xlsx",
+            f"data/controles_informacion/{estado_cuadre}/{file}_sap_vs_tera_{mes_corte_int}.xlsx",
         )
 
     elif file == "expuestos":
         difs_sap_tera = pl.DataFrame()
 
     await asyncio.to_thread(
-        generar_integridad_exactitud, df, estado_cuadre, file, mes_corte, qtys
+        generar_integridad_exactitud, df, estado_cuadre, file, mes_corte_int, qtys
     )
 
     logger.success(
@@ -229,7 +234,7 @@ def definir_cantidades_control(
 async def comparar_sap_tera(
     df_tera: pl.DataFrame,
     df_sap: pl.DataFrame,
-    mes_corte: int,
+    mes_corte: date,
     qtys: list[str],
 ) -> pl.DataFrame:
     base_comp = (
@@ -254,9 +259,7 @@ async def comparar_sap_tera(
         )
 
         comp_mes = (
-            base_comp.filter(
-                pl.col("fecha_registro") == utils.yyyymm_to_date(mes_corte)
-            )
+            base_comp.filter(pl.col("fecha_registro") == mes_corte)
             .filter(pl.col(f"dif%_{qty}").abs() > 0.05)
             .collect()
         )
@@ -331,11 +334,11 @@ def agrupar_tera(
     return df.select(group_cols + qtys).group_by(group_cols).sum().sort(group_cols)
 
 
-async def ajustar_fraude(df: pl.DataFrame, mes_corte: int):
+async def ajustar_fraude(df: pl.DataFrame, mes_corte: date) -> pl.DataFrame:
     fraude = (
         pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")
         .drop("tipo_ajuste")
-        .filter(pl.col("fecha_registro") <= utils.yyyymm_to_date(mes_corte))
+        .filter(pl.col("fecha_registro") <= mes_corte)
     )
 
     df = (

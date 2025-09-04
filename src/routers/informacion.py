@@ -56,7 +56,7 @@ async def generar_mocks(
     p = obtener_parametros_usuario(session, session_id)
     for cantidad in ct.LISTA_CANTIDADES:
         df = mocks.generar_mock(
-            p.mes_inicio, p.mes_corte, cantidad, ct.NUM_FILAS_DEMO[cantidad]
+            (p.mes_inicio, p.mes_corte), cantidad, ct.NUM_FILAS_DEMO[cantidad]
         )
         mocks.guardar_mock(df, cantidad)
 
@@ -80,7 +80,7 @@ async def cargar_archivos(
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     p = obtener_parametros_usuario(session, session_id)
-    carga_manual.procesar_archivos_cantidades(archivos, p.negocio, p.mes_inicio)
+    carga_manual.procesar_archivos_cantidades(archivos, p)
     return {"message": "Archivos cargados exitosamente"}
 
 

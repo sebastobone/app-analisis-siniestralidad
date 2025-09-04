@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Form
 
+from src import utils
 from src.dependencias import SessionDep, atrapar_excepciones
 from src.metodos_plantilla import (
     abrir,
@@ -160,7 +161,9 @@ async def almacenar_analisis(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ):
     wb, p = obtener_plantilla(session, session_id)
-    almacenar.almacenar_analisis(wb, p.nombre_plantilla, p.mes_corte, p.tipo_analisis)
+    almacenar.almacenar_analisis(
+        wb, p.nombre_plantilla, utils.date_to_yyyymm(p.mes_corte), p.tipo_analisis
+    )
     return {"message": "Analisis almacenado exitosamente"}
 
 
@@ -190,6 +193,6 @@ async def generar_informe_actuario_responsable(
 ):
     p = obtener_parametros_usuario(session, session_id)
     resultados.generar_informe_actuario_responsable(
-        p.negocio, p.mes_corte, p.tipo_analisis
+        p.negocio, utils.date_to_yyyymm(p.mes_corte), p.tipo_analisis
     )
     return {"message": "Informe de AR generado exitosamente"}

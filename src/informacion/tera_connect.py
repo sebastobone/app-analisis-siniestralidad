@@ -43,7 +43,7 @@ async def correr_query(
 
     if p.negocio == "demo":
         df = generar_mock(
-            p.mes_inicio, p.mes_corte, cantidad, ct.NUM_FILAS_DEMO[cantidad]
+            (p.mes_inicio, p.mes_corte), cantidad, ct.NUM_FILAS_DEMO[cantidad]
         )
         df.write_parquet(f"data/raw/{cantidad}.parquet")
         logger.info(f"Datos ficticios de {cantidad} generados.")
@@ -65,7 +65,7 @@ async def correr_query(
 
         cantidades.validar_archivo(p.negocio, df, cantidad, cantidad)
         df = cantidades.organizar_archivo(
-            df, p.negocio, p.mes_inicio, cantidad, cantidad
+            df, p.negocio, (p.mes_inicio, p.mes_corte), cantidad, cantidad
         )
 
         _guardar_resultados(df, cantidad)
@@ -107,8 +107,8 @@ def _reemplazar_parametros_queries(queries: str, p: Parametros) -> str:
     return queries.format(
         mes_primera_ocurrencia=p.mes_inicio,
         mes_corte=p.mes_corte,
-        fecha_primera_ocurrencia=utils.yyyymm_to_date(p.mes_inicio),
-        fecha_mes_corte=utils.yyyymm_to_date(p.mes_corte),
+        fecha_primera_ocurrencia=p.mes_inicio,
+        fecha_mes_corte=p.mes_corte,
     )
 
 
@@ -177,14 +177,9 @@ def _conectar_teradata(
 
 
 def _crear_particiones_fechas(
-    mes_inicio: int, mes_corte: int
+    mes_inicio: date, mes_corte: date
 ) -> list[tuple[date, date]]:
-    inicios_mes = pl.date_range(
-        utils.yyyymm_to_date(mes_inicio),
-        utils.yyyymm_to_date(mes_corte),
-        interval="1mo",
-        eager=True,
-    )
+    inicios_mes = pl.date_range(mes_inicio, mes_corte, interval="1mo", eager=True)
     fines_mes = inicios_mes.dt.month_end()
     return list(zip(inicios_mes, fines_mes, strict=False))
 

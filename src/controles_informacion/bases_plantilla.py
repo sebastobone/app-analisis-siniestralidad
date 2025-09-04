@@ -15,8 +15,12 @@ def generar_evidencia_info_plantilla(
     primas = validar_base_primas_expuestos(p.negocio, resumen, "primas")
     expuestos = validar_base_primas_expuestos(p.negocio, resumen, "expuestos")
 
+    mes_corte_int = utils.date_to_yyyymm(p.mes_corte)
+
     carpeta = "data/controles_informacion/"
-    wb_name = f"{p.mes_corte}_{p.tipo_analisis}_consistencia_informacion_plantilla.xlsx"
+    wb_name = (
+        f"{mes_corte_int}_{p.tipo_analisis}_consistencia_informacion_plantilla.xlsx"
+    )
     with xlsxwriter.Workbook(carpeta + wb_name) as wb:
         siniestros.write_excel(wb, "Siniestros")
         primas.write_excel(wb, "Primas")

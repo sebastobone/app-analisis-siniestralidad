@@ -61,7 +61,7 @@ def test_crear_particiones_fechas(params: Parametros):
 @pytest.mark.asyncio
 @pytest.mark.fast
 @pytest.mark.parametrize("cantidad", ["siniestros", "primas", "expuestos"])
-async def test_cargar_segmentaciones(cantidad: ct.LISTA_CANTIDADES):
+async def test_cargar_segmentaciones(cantidad: ct.CANTIDADES):
     df = pl.read_excel("data/segmentacion_demo.xlsx", sheet_id=0)
     hojas_segm = [i for i in list(df.keys()) if str(i).startswith("add")]
 

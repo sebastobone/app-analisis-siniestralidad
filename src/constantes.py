@@ -126,9 +126,10 @@ FILA_INI_PLANTILLAS = 2
 FILA_INI_PARAMS = 4
 
 
-LISTA_CANTIDADES_CUADRE = Literal["siniestros", "primas"]
-LISTA_CANTIDADES = Literal["siniestros", "primas", "expuestos"]
-LISTA_PLANTILLAS = Literal["frecuencia", "severidad", "plata", "completar_diagonal"]
+CANTIDADES_CUADRE = Literal["siniestros", "primas"]
+CANTIDADES = Literal["siniestros", "primas", "expuestos"]
+LISTA_CANTIDADES: list[CANTIDADES] = ["siniestros", "primas", "expuestos"]
+PLANTILLAS = Literal["frecuencia", "severidad", "plata", "completar_diagonal"]
 TIPOS_INDEXACION = Literal[
     "Ninguna", "Por fecha de ocurrencia", "Por fecha de movimiento"
 ]

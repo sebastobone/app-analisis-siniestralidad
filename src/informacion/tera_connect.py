@@ -32,7 +32,7 @@ ERROR_TIPOS_DATOS = """
 
 
 async def correr_query(
-    p: Parametros, cantidad: ct.LISTA_CANTIDADES, credenciales: CredencialesTeradata
+    p: Parametros, cantidad: ct.CANTIDADES, credenciales: CredencialesTeradata
 ) -> None:
     segmentacion.validar_archivo_segmentacion(
         pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
@@ -73,7 +73,7 @@ async def correr_query(
 
 
 async def _preparar_auxiliares_autonomia(
-    p: Parametros, cantidad: ct.LISTA_CANTIDADES
+    p: Parametros, cantidad: ct.CANTIDADES
 ) -> None:
     if cantidad == "siniestros":
         await autonomia.sap_sinis_ced(p.mes_corte)
@@ -82,7 +82,7 @@ async def _preparar_auxiliares_autonomia(
 
 
 async def _obtener_segmentaciones(
-    negocio: str, cantidad: ct.LISTA_CANTIDADES
+    negocio: str, cantidad: ct.CANTIDADES
 ) -> list[pl.DataFrame]:
     hojas_segm = [
         str(hoja)
@@ -189,7 +189,7 @@ def _crear_particiones_fechas(
     return list(zip(inicios_mes, fines_mes, strict=False))
 
 
-def _guardar_resultados(df: pl.DataFrame, cantidad: ct.LISTA_CANTIDADES) -> None:
+def _guardar_resultados(df: pl.DataFrame, cantidad: ct.CANTIDADES) -> None:
     # En csv para poder visualizarlo facil, en caso de ser necesario
     for sufijo in ["_teradata", ""]:
         df.write_csv(f"data/raw/{cantidad}{sufijo}.csv", separator="\t")

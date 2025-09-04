@@ -47,7 +47,7 @@ def procesar_archivo_cantidad(
     archivo_cantidad: UploadFile,
     negocio: str,
     mes_inicio: int,
-    cantidad: ct.LISTA_CANTIDADES,
+    cantidad: ct.CANTIDADES,
 ) -> None:
     filename = str(archivo_cantidad.filename)
     extension = filename.split(".")[-1]
@@ -66,7 +66,7 @@ def procesar_archivo_cantidad(
 
 
 def leer_archivo_cantidad(
-    filename: str, contenido: bytes, extension: str, cantidad: ct.LISTA_CANTIDADES
+    filename: str, contenido: bytes, extension: str, cantidad: ct.CANTIDADES
 ) -> pl.DataFrame:
     contenido_bytes = io.BytesIO(contenido)
     tipo_datos_descriptores = ct.DESCRIPTORES[cantidad]
@@ -94,7 +94,7 @@ def leer_archivo_cantidad(
 
 
 def lanzar_error_tipo_datos(
-    e: Exception, filename: str, cantidad: ct.LISTA_CANTIDADES
+    e: Exception, filename: str, cantidad: ct.CANTIDADES
 ) -> ValueError:
     raise ValueError(
         utils.limpiar_espacios_log(
@@ -107,7 +107,7 @@ def lanzar_error_tipo_datos(
 
 
 def validar_unicidad_nombres(
-    archivos: list[UploadFile], cantidad: ct.LISTA_CANTIDADES
+    archivos: list[UploadFile], cantidad: ct.CANTIDADES
 ) -> None:
     nombres_archivos = []
     duplicados = []
@@ -159,7 +159,7 @@ def descargar_ejemplos_cantidades() -> io.BytesIO:
     zip_buffer = io.BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for cantidad in ["siniestros", "primas", "expuestos"]:
+        for cantidad in ct.LISTA_CANTIDADES:
             df = generar_mock(202001, 202512, cantidad, num_rows=1000)
 
             if cantidad == "siniestros":

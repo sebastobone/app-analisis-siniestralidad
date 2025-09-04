@@ -26,9 +26,7 @@ def lowercase_columns(df: pl.DataFrame | pl.LazyFrame) -> pl.DataFrame | pl.Lazy
     return df.rename({column: column.lower() for column in df.collect_schema().names()})
 
 
-def crear_columna_apertura_reservas(
-    negocio: str, cantidad: Literal["siniestros", "primas", "expuestos"]
-) -> pl.Expr:
+def crear_columna_apertura_reservas(negocio: str, cantidad: ct.CANTIDADES) -> pl.Expr:
     return pl.concat_str(
         obtener_nombres_aperturas(negocio, cantidad),
         separator="_",
@@ -142,9 +140,7 @@ def mes_anterior_corte(mes_corte: int) -> int:
     )
 
 
-def obtener_aperturas(
-    negocio: str, cantidad: Literal["siniestros", "primas", "expuestos"]
-) -> pl.DataFrame:
+def obtener_aperturas(negocio: str, cantidad: ct.CANTIDADES) -> pl.DataFrame:
     aperturas = pl.read_excel(
         f"data/segmentacion_{negocio}.xlsx",
         sheet_name=f"Aperturas_{cantidad.capitalize()}",
@@ -157,9 +153,7 @@ def obtener_aperturas(
     return aperturas
 
 
-def obtener_nombres_aperturas(
-    negocio: str, cantidad: Literal["siniestros", "primas", "expuestos"]
-) -> list[str]:
+def obtener_nombres_aperturas(negocio: str, cantidad: ct.CANTIDADES) -> list[str]:
     aperturas = pl.read_excel(
         f"data/segmentacion_{negocio}.xlsx",
         sheet_name=f"Aperturas_{cantidad.capitalize()}",

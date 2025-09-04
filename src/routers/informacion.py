@@ -54,7 +54,7 @@ async def generar_mocks(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> None:
     p = obtener_parametros_usuario(session, session_id)
-    for cantidad in ["siniestros", "primas", "expuestos"]:
+    for cantidad in ct.LISTA_CANTIDADES:
         df = mocks.generar_mock(
             p.mes_inicio, p.mes_corte, cantidad, ct.NUM_FILAS_DEMO[cantidad]
         )

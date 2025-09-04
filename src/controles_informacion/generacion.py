@@ -70,9 +70,7 @@ async def verificar_existencia_afos(negocio: str):
             )
 
 
-async def generar_controles_cantidad(
-    cantidad: ct.LISTA_CANTIDADES, p: Parametros
-) -> None:
+async def generar_controles_cantidad(cantidad: ct.CANTIDADES, p: Parametros) -> None:
     df = await asyncio.to_thread(pl.read_parquet, f"data/raw/{cantidad}.parquet")
 
     difs_sap_tera_pre_cuadre = await generar_controles_estado_cuadre(
@@ -128,7 +126,7 @@ async def generar_controles_cantidad(
 async def generar_controles_estado_cuadre(
     df: pl.DataFrame,
     negocio: str,
-    file: Literal["siniestros", "primas", "expuestos"],
+    file: ct.CANTIDADES,
     mes_corte: int,
     estado_cuadre: Literal[
         "pre_cuadre_contable", "post_cuadre_contable", "post_ajustes_fraude"

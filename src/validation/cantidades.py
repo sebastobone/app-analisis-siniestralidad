@@ -22,7 +22,7 @@ MENSAJE_APERTURAS_SOBRANTES = """
 
 
 def validar_archivo(
-    negocio: str, df: pl.DataFrame, filename: str, cantidad: ct.LISTA_CANTIDADES
+    negocio: str, df: pl.DataFrame, filename: str, cantidad: ct.CANTIDADES
 ) -> None:
     utils.validar_subconjunto(
         list(ct.DESCRIPTORES[cantidad].keys()) + list(ct.VALORES[cantidad].keys()),
@@ -73,7 +73,7 @@ def validar_archivo(
 
 
 def _validar_descriptores_no_nulos(
-    df: pl.DataFrame, negocio: str, cantidad: ct.LISTA_CANTIDADES, filename: str
+    df: pl.DataFrame, negocio: str, cantidad: ct.CANTIDADES, filename: str
 ) -> None:
     columnas_descriptoras = set(ct.VALORES[cantidad].keys())
     columnas_aperturas = set(utils.obtener_nombres_aperturas(negocio, cantidad))
@@ -93,7 +93,7 @@ def organizar_archivo(
     df: pl.DataFrame,
     negocio: str,
     mes_inicio: int,
-    cantidad: ct.LISTA_CANTIDADES,
+    cantidad: ct.CANTIDADES,
     nombre_archivo: str,
 ) -> pl.DataFrame:
     df = (
@@ -113,7 +113,7 @@ def organizar_archivo(
 
 def asignar_tipos_columnas(
     df: pl.DataFrame,
-    cantidad: ct.LISTA_CANTIDADES,
+    cantidad: ct.CANTIDADES,
     nombre_archivo: str,
 ) -> pl.DataFrame:
     mensaje_error = f"""
@@ -127,7 +127,7 @@ def asignar_tipos_columnas(
     return df
 
 
-def mensualizar(df: pl.DataFrame, cantidad: ct.LISTA_CANTIDADES) -> pl.DataFrame:
+def mensualizar(df: pl.DataFrame, cantidad: ct.CANTIDADES) -> pl.DataFrame:
     columnas_descriptoras = set(ct.DESCRIPTORES[cantidad].keys())
     columnas_fechas = columnas_descriptoras.intersection(
         {"fecha_siniestro", "fecha_registro"}
@@ -139,7 +139,7 @@ def mensualizar(df: pl.DataFrame, cantidad: ct.LISTA_CANTIDADES) -> pl.DataFrame
 
 
 def colapsar_primera_ocurrencia(
-    df: pl.DataFrame, cantidad: ct.LISTA_CANTIDADES, mes_inicio: int
+    df: pl.DataFrame, cantidad: ct.CANTIDADES, mes_inicio: int
 ) -> pl.DataFrame:
     """
     Para que las diagonales del triangulo se puedan comparar
@@ -159,7 +159,7 @@ def colapsar_primera_ocurrencia(
 
 
 def agrupar_por_columnas_relevantes(
-    df: pl.DataFrame, negocio: str, cantidad: ct.LISTA_CANTIDADES
+    df: pl.DataFrame, negocio: str, cantidad: ct.CANTIDADES
 ) -> pl.DataFrame:
     columnas_descriptoras = list(ct.DESCRIPTORES[cantidad].keys())
     columnas_aperturas = utils.obtener_nombres_aperturas(negocio, cantidad)

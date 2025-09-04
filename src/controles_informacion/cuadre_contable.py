@@ -5,9 +5,7 @@ from src import utils
 from src.logger_config import logger
 
 
-def debe_realizar_cuadre_contable(
-    negocio: str, file: ct.LISTA_CANTIDADES_CUADRE
-) -> bool:
+def debe_realizar_cuadre_contable(negocio: str, file: ct.CANTIDADES_CUADRE) -> bool:
     return (
         pl.read_excel(
             f"data/segmentacion_{negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
@@ -20,7 +18,7 @@ def debe_realizar_cuadre_contable(
     )
 
 
-def columnas_cantidades_cuadre(file: ct.LISTA_CANTIDADES_CUADRE) -> list[str]:
+def columnas_cantidades_cuadre(file: ct.CANTIDADES_CUADRE) -> list[str]:
     return (
         ct.COLUMNAS_SINIESTROS_CUADRE
         if file == "siniestros"
@@ -30,7 +28,7 @@ def columnas_cantidades_cuadre(file: ct.LISTA_CANTIDADES_CUADRE) -> list[str]:
 
 async def realizar_cuadre_contable(
     negocio: str,
-    file: ct.LISTA_CANTIDADES_CUADRE,
+    file: ct.CANTIDADES_CUADRE,
     base: pl.DataFrame,
     dif_sap_vs_tera: pl.DataFrame,
     meses_a_cuadrar: pl.DataFrame,
@@ -52,7 +50,7 @@ async def realizar_cuadre_contable(
 
 
 def obtener_aperturas_para_asignar_diferencia(
-    negocio: str, file: ct.LISTA_CANTIDADES_CUADRE
+    negocio: str, file: ct.CANTIDADES_CUADRE
 ) -> pl.DataFrame:
     try:
         aperturas = pl.read_excel(
@@ -75,7 +73,7 @@ def obtener_aperturas_para_asignar_diferencia(
 def calcular_pesos_aperturas(
     aperturas: pl.DataFrame,
     base: pl.DataFrame,
-    file: ct.LISTA_CANTIDADES_CUADRE,
+    file: ct.CANTIDADES_CUADRE,
     negocio: str,
 ) -> pl.DataFrame:
     columnas_aperturas = utils.obtener_nombres_aperturas(negocio, file)
@@ -98,7 +96,7 @@ def repartir_diferencias(
     pesos_aperturas_diferencia: pl.DataFrame,
     dif_sap_vs_tera: pl.DataFrame,
     meses_a_cuadrar: pl.DataFrame,
-    file: ct.LISTA_CANTIDADES_CUADRE,
+    file: ct.CANTIDADES_CUADRE,
 ) -> pl.DataFrame:
     columnas_cantidades = columnas_cantidades_cuadre(file)
     return (
@@ -119,7 +117,7 @@ def repartir_diferencias(
 
 
 def agregar_columnas_faltantes(
-    diferencias: pl.DataFrame, file: ct.LISTA_CANTIDADES_CUADRE, negocio: str
+    diferencias: pl.DataFrame, file: ct.CANTIDADES_CUADRE, negocio: str
 ) -> pl.DataFrame:
     if file == "siniestros":
         diferencias = diferencias.with_columns(
@@ -143,8 +141,6 @@ def agregar_diferencias(df: pl.DataFrame, diferencias: pl.DataFrame) -> pl.DataF
     )
 
 
-async def guardar_archivos(
-    file: ct.LISTA_CANTIDADES_CUADRE, df_cuadre: pl.DataFrame
-) -> None:
+async def guardar_archivos(file: ct.CANTIDADES_CUADRE, df_cuadre: pl.DataFrame) -> None:
     df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
     df_cuadre.write_parquet(f"data/raw/{file}.parquet")

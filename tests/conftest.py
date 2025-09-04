@@ -4,7 +4,6 @@ import sys
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
-from typing import Literal
 
 import numpy as np
 import polars as pl
@@ -12,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
+from src import constantes as ct
 from src import utils
 from src.app import app
 from src.controles_informacion.sap import consolidar_sap
@@ -129,7 +129,7 @@ def correr_queries(client: TestClient) -> None:
 
 async def obtener_sap_negocio(
     negocio: str,
-    file: Literal["siniestros", "primas"],
+    file: ct.CANTIDADES_CUADRE,
     columnas_cantidades: list[str],
     mes_corte: int,
 ) -> pl.DataFrame:
@@ -149,7 +149,7 @@ async def obtener_sap_negocio(
 
 async def validar_cuadre(
     negocio: str,
-    file: Literal["siniestros", "primas"],
+    file: ct.CANTIDADES_CUADRE,
     columnas_cantidades: list[str],
     mes_corte: int,
 ) -> None:

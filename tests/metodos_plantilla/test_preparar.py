@@ -9,6 +9,9 @@ from fastapi.testclient import TestClient
 from src import constantes as ct
 from src import utils
 from src.metodos_plantilla import abrir, preparar
+from src.metodos_plantilla.guardar_traer.rangos_parametros import (
+    obtener_indice_en_rango,
+)
 from src.models import Parametros
 from tests.conftest import (
     agregar_meses_params,
@@ -144,6 +147,7 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     assert not wb_test.sheets["Severidad"].visible
     assert not wb_test.sheets["Plata"].visible
 
+    validar_formulas_no_textuales(client, wb_test)
     validar_cifras_entremes(wb_test)
 
     _ = client.post("/almacenar-analisis")
@@ -174,6 +178,24 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     _ = client.post("/almacenar-analisis")
 
     vaciar_directorios_test()
+
+
+def validar_formulas_no_textuales(client: TestClient, wb_test: xw.Book) -> None:
+    """
+    Validamos que no se peguen formulas en texto al preparar otra vez la plantilla.
+    """
+    _ = client.post(
+        "/preparar-plantilla",
+        data={
+            "referencia_actuarial": "triangulos",
+            "referencia_contable": "triangulos",
+        },
+    )
+
+    col_bf = obtener_indice_en_rango(
+        "pct_sue_bornhuetter_ferguson_bruto", wb_test.sheets["Entremes"].range("1:1")
+    )
+    assert isinstance(wb_test.sheets["Entremes"].cells(2, col_bf).value, float)
 
 
 def validar_cifras_entremes(wb_test: xw.Book) -> None:

@@ -119,15 +119,6 @@ def vaciar_directorios_test() -> None:
         archivo_segmentacion_manual.unlink()
 
 
-def agregar_meses_params(params_form: dict[str, str], rango_meses: tuple[date, date]):
-    params_form.update(
-        {
-            "mes_inicio": str(utils.date_to_yyyymm(rango_meses[0])),
-            "mes_corte": str(utils.date_to_yyyymm(rango_meses[1])),
-        }
-    )
-
-
 def correr_queries(client: TestClient) -> None:
     _ = client.post("/correr-query-siniestros", data=CREDENCIALES_TERADATA)
     _ = client.post("/correr-query-primas", data=CREDENCIALES_TERADATA)
@@ -194,16 +185,20 @@ async def validar_cuadre(
 
 def ingresar_parametros(
     client: TestClient,
-    rango_meses: tuple[date, date],
-    negocio: str = "demo",
+    p: Parametros,
     files: Mapping[str, tuple[str, io.BytesIO | io.BufferedReader, str]] | None = None,
 ) -> Parametros:
     params_form = {
-        "negocio": negocio,
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
+        "negocio": p.negocio,
+        "tipo_analisis": p.tipo_analisis,
+        "nombre_plantilla": p.nombre_plantilla,
     }
-    agregar_meses_params(params_form, rango_meses)
+    params_form.update(
+        {
+            "mes_inicio": str(utils.date_to_yyyymm(p.mes_inicio)),
+            "mes_corte": str(utils.date_to_yyyymm(p.mes_corte)),
+        }
+    )
 
     return Parametros.model_validate(
         client.post("/ingresar-parametros", params=params_form, files=files).json()

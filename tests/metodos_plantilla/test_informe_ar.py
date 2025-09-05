@@ -7,21 +7,21 @@ from src import utils
 from src.metodos_plantilla import abrir
 from src.metodos_plantilla.resultados import concatenar_archivos_resultados
 from src.models import Parametros
-from tests.conftest import agregar_meses_params, assert_igual, correr_queries
+from tests.conftest import assert_igual, correr_queries, ingresar_parametros
 
 
 @pytest.mark.plantilla
 def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-
-    agregar_meses_params(params_form, rango_meses)
-
-    response = client.post("/ingresar-parametros", params=params_form).json()
-    p = Parametros.model_validate(response)
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
 
     correr_queries(client)
 

@@ -10,15 +10,8 @@ from fastapi.testclient import TestClient
 from src import constantes as ct
 from src.informacion.carga_manual import crear_excel
 from src.informacion.mocks import generar_mock
+from src.models import Parametros
 from tests.conftest import CONTENT_TYPES, assert_igual, ingresar_parametros
-
-CARGA_SEGMENTACION = {
-    "archivo_segmentacion": (
-        "segmentacion_test.xlsx",
-        crear_excel(pl.read_excel("data/segmentacion_demo.xlsx", sheet_id=0)),
-        CONTENT_TYPES["xlsx"],
-    ),
-}
 
 SINIESTROS_BASICO = pl.DataFrame(
     {
@@ -38,6 +31,27 @@ SINIESTROS_BASICO = pl.DataFrame(
         "conteo_desistido": [1],
     }
 )
+
+
+@pytest.fixture(autouse=True)
+def params(client: TestClient, rango_meses: tuple[date, date]) -> Parametros:
+    return ingresar_parametros(
+        client,
+        Parametros(
+            negocio="test",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+        {
+            "archivo_segmentacion": (
+                "segmentacion_test.xlsx",
+                open("data/segmentacion_demo.xlsx", "rb"),
+                CONTENT_TYPES["xlsx"],
+            ),
+        },
+    )
 
 
 def crear_csv(df: pl.DataFrame, separador: str = ",") -> io.BytesIO:
@@ -90,8 +104,6 @@ def test_cargar_multiples(
     rango_meses: tuple[date, date],
     separador: Literal[";", ",", "\t", "|"],
 ):
-    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
-
     df = generar_mock(rango_meses, "siniestros", 1000)
     hojas = {"Siniestros": df}
 
@@ -128,9 +140,7 @@ def test_cargar_multiples(
 
 
 @pytest.mark.fast
-def test_excel_varias_hojas(client: TestClient, rango_meses: tuple[date, date]):
-    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
-
+def test_excel_varias_hojas(client: TestClient):
     hojas = {
         "Siniestros": SINIESTROS_BASICO,
         "Hoja_extra": pl.DataFrame({"codigo_op": ["01"]}),
@@ -149,9 +159,7 @@ def test_excel_varias_hojas(client: TestClient, rango_meses: tuple[date, date]):
 
 
 @pytest.mark.fast
-def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
-    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
-
+def test_columnas_faltantes(client: TestClient):
     df = SINIESTROS_BASICO.drop("codigo_op")
 
     with pytest.raises(ValueError, match="faltan las siguientes columnas"):
@@ -164,9 +172,7 @@ def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
 
 
 @pytest.mark.fast
-def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
-    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
-
+def test_valores_nulos(client: TestClient):
     df = SINIESTROS_BASICO.vstack(
         SINIESTROS_BASICO.with_columns(codigo_op=pl.lit(None))
     )
@@ -181,9 +187,7 @@ def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
 
 
 @pytest.mark.fast
-def test_aperturas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
-    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
-
+def test_aperturas_faltantes(client: TestClient):
     df = SINIESTROS_BASICO.vstack(
         SINIESTROS_BASICO.with_columns(codigo_op=pl.lit("02"))
     )
@@ -206,11 +210,7 @@ def test_aperturas_faltantes(client: TestClient, rango_meses: tuple[date, date])
         pl.lit("abc").alias("pago_bruto"),
     ],
 )
-def test_tipos_datos_malos(
-    client: TestClient, rango_meses: tuple[date, date], columna_mod: pl.Expr
-):
-    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
-
+def test_tipos_datos_malos(client: TestClient, columna_mod: pl.Expr):
     # En csv, txt, xlsx se validan los tipos de datos al leer el archivo
     df = SINIESTROS_BASICO.with_columns(columna_mod)
     with pytest.raises(ValueError, match="error al leer el archivo"):
@@ -243,8 +243,6 @@ def test_tipos_datos_malos(
 def test_agrupar_columnas_relevantes(
     client: TestClient, rango_meses: tuple[date, date]
 ):
-    _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
-
     df = generar_mock(rango_meses, "siniestros", 1000).with_columns(pj=pl.lit("Si"))
 
     _ = client.post(

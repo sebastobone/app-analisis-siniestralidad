@@ -4,6 +4,7 @@ import polars as pl
 import pytest
 from fastapi.testclient import TestClient
 from src.informacion.carga_manual import crear_excel
+from src.models import Parametros
 from tests.conftest import CONTENT_TYPES, ingresar_parametros
 
 
@@ -16,9 +17,14 @@ def validar_excepciones(
     with pytest.raises(ValueError) as exc:
         ingresar_parametros(
             client,
-            rango_meses,
-            "test",
-            files={
+            Parametros(
+                negocio="test",
+                mes_inicio=rango_meses[0],
+                mes_corte=rango_meses[1],
+                tipo_analisis="triangulos",
+                nombre_plantilla="wb_test",
+            ),
+            {
                 "archivo_segmentacion": (
                     "segmentacion_test.xlsx",
                     crear_excel(hojas),
@@ -243,9 +249,14 @@ def test_cruces_nulos_aperturas(client: TestClient, rango_meses: tuple[date, dat
 def test_archivo_correcto(client: TestClient, rango_meses: tuple[date, date]):
     ingresar_parametros(
         client,
-        rango_meses,
-        "test",
-        files={
+        Parametros(
+            negocio="test",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+        {
             "archivo_segmentacion": (
                 "segmentacion_test.xlsx",
                 open("data/segmentacion_demo.xlsx", "rb"),

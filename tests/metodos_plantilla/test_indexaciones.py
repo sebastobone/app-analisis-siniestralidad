@@ -6,7 +6,8 @@ import pytest
 from fastapi.testclient import TestClient
 from src import utils
 from src.metodos_plantilla import abrir, actualizar
-from tests.conftest import agregar_meses_params, correr_queries
+from src.models import Parametros
+from tests.conftest import correr_queries, ingresar_parametros
 
 ERROR_MEDIDA_NO_ENCONTRADA = utils.limpiar_espacios_log(
     """
@@ -36,17 +37,23 @@ MEDIDAS = pl.DataFrame(
 )
 
 
-@pytest.mark.plantilla
-def test_indexacion_ocurrencia(client: TestClient, rango_meses: tuple[date, date]):
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
+@pytest.fixture(autouse=True)
+def params(client: TestClient, rango_meses: tuple[date, date]) -> Parametros:
+    return ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
 
-    _ = client.post("/ingresar-parametros", params=params_form).json()
-    wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
+
+@pytest.mark.plantilla
+def test_indexacion_ocurrencia(client: TestClient, params: Parametros):
+    wb = abrir.abrir_plantilla(f"plantillas/{params.nombre_plantilla}.xlsm")
 
     correr_queries(client)
 
@@ -85,16 +92,8 @@ def test_indexacion_ocurrencia(client: TestClient, rango_meses: tuple[date, date
 
 
 @pytest.mark.plantilla
-def test_indexacion_movimiento(client: TestClient, rango_meses: tuple[date, date]):
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-
-    _ = client.post("/ingresar-parametros", params=params_form).json()
-    wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
+def test_indexacion_movimiento(client: TestClient, params: Parametros):
+    wb = abrir.abrir_plantilla(f"plantillas/{params.nombre_plantilla}.xlsm")
 
     correr_queries(client)
 
@@ -143,18 +142,8 @@ def test_indexacion_movimiento(client: TestClient, rango_meses: tuple[date, date
 
 
 @pytest.mark.plantilla
-def test_actualizar_indexacion_diferente(
-    client: TestClient, rango_meses: tuple[date, date]
-):
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-
-    _ = client.post("/ingresar-parametros", params=params_form).json()
-    wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
+def test_actualizar_indexacion_diferente(client: TestClient, params: Parametros):
+    wb = abrir.abrir_plantilla(f"plantillas/{params.nombre_plantilla}.xlsm")
 
     correr_queries(client)
 

@@ -1,5 +1,5 @@
-import os
 from datetime import date
+from pathlib import Path
 from typing import Literal
 
 import polars as pl
@@ -8,8 +8,23 @@ from fastapi.testclient import TestClient
 from src import constantes as ct
 from src.informacion.mocks import generar_mock
 from src.metodos_plantilla import abrir, actualizar, generar, preparar
+from src.models import Parametros
 from src.procesamiento import base_siniestros
-from tests.conftest import agregar_meses_params, correr_queries
+from tests.conftest import correr_queries, ingresar_parametros
+
+
+@pytest.fixture(autouse=True)
+def params(client: TestClient, rango_meses: tuple[date, date]) -> Parametros:
+    return ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
 
 
 @pytest.mark.fast
@@ -58,15 +73,17 @@ def test_forma_triangulo(
 
 @pytest.mark.plantilla
 def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, date]):
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test_no_prep",
-    }
-    agregar_meses_params(params_form, rango_meses)
-
-    _ = client.post("/ingresar-parametros", params=params_form)
-    wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test_no_prep",
+        ),
+    )
+    wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     correr_queries(client)
 
@@ -77,20 +94,12 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
         )
 
     wb.close()
-    os.remove(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
+    Path(f"plantillas/{p.nombre_plantilla}.xlsm").unlink()
 
 
 @pytest.mark.plantilla
-def test_generar_severidad(client: TestClient, rango_meses: tuple[date, date]):
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-
-    _ = client.post("/ingresar-parametros", params=params_form).json()
-    wb = abrir.abrir_plantilla(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
+def test_generar_severidad(client: TestClient, params: Parametros):
+    wb = abrir.abrir_plantilla(f"plantillas/{params.nombre_plantilla}.xlsm")
 
     correr_queries(client)
 

@@ -3,21 +3,24 @@ from datetime import date
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from tests.conftest import agregar_meses_params, correr_queries
+from src.models import Parametros
+from tests.conftest import correr_queries, ingresar_parametros
 
 
 @pytest.mark.plantilla
 def test_actualizar_grafica_factores(
     client: TestClient, rango_meses: tuple[date, date]
 ):
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-
-    _ = client.post("/ingresar-parametros", params=params_form)
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
 
     correr_queries(client)
 

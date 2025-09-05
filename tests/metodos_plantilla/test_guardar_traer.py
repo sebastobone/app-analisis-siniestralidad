@@ -4,19 +4,22 @@ from datetime import date
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from tests.conftest import agregar_meses_params, correr_queries
+from src.models import Parametros
+from tests.conftest import correr_queries, ingresar_parametros
 
 
 @pytest.mark.plantilla
 def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, date]):
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-
-    _ = client.post("/ingresar-parametros", params=params_form)
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
     correr_queries(client)
     _ = client.post("/preparar-plantilla")
 
@@ -52,29 +55,31 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
         "FACTORES_SELECCIONADOS",
     ]
 
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-    params_form.update({"mes_corte": "202412"})
-
-    _ = client.post("/ingresar-parametros", params=params_form)
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=date(2024, 12, 1),
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
     correr_queries(client)
     _ = client.post("/preparar-plantilla")
     guardar_traer_apertura(client, rangos, apertura, atributo, "plata")
     _ = client.post("/almacenar-analisis")
 
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "entremes",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-    params_form.update({"mes_corte": "202501"})
-
-    _ = client.post("/ingresar-parametros", params=params_form)
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=date(2025, 1, 1),
+            tipo_analisis="entremes",
+            nombre_plantilla="wb_test",
+        ),
+    )
     correr_queries(client)
     _ = client.post(
         "/preparar-plantilla",
@@ -96,7 +101,6 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
     guardar_traer_apertura(client, rangos, apertura, atributo, plantilla)
 
 
-@pytest.mark.plantilla
 def guardar_traer_apertura(
     client: TestClient, rangos: list[str], apertura: str, atributo: str, plantilla: str
 ) -> None:

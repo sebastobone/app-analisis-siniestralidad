@@ -20,7 +20,7 @@ MENSAJE_APERTURAS_FALTANTES = """
 MENSAJE_APERTURAS_SOBRANTES = """
     ¡Alerta! Las siguientes aperturas se definieron, pero no se encuentran
     en el archivo {nombre_archivo}. Puede optar por quitarlas del archivo de
-    segmentacion, o simplemente ignorarlas: {sobrantes}
+    segmentacion, o simplemente ignorarlas: {faltantes}
 """
 
 
@@ -103,6 +103,7 @@ def organizar_archivo(
         df.pipe(asignar_tipos_columnas, cantidad, nombre_archivo)
         .pipe(mensualizar, cantidad)
         .pipe(colapsar_primera_ocurrencia, cantidad, rango_meses[0])
+        .pipe(filtrar_fechas, cantidad, rango_meses)
         .pipe(agrupar_por_columnas_relevantes, negocio, cantidad)
     )
 
@@ -155,6 +156,18 @@ def colapsar_primera_ocurrencia(
     return df.with_columns(
         [pl.col(col).clip(lower_bound=mes_inicio).alias(col) for col in columnas_fechas]
     )
+
+
+def filtrar_fechas(
+    df: pl.DataFrame, cantidad: ct.CANTIDADES, rango_meses: tuple[date, date]
+) -> pl.DataFrame:
+    columnas_descriptoras = set(ct.DESCRIPTORES[cantidad].keys())
+    columnas_fechas = columnas_descriptoras.intersection(
+        {"fecha_siniestro", "fecha_registro"}
+    )
+    for col in columnas_fechas:
+        df = df.filter(pl.col(col).is_between(*rango_meses))
+    return df
 
 
 def agrupar_por_columnas_relevantes(

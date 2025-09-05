@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from src import utils
 from src.metodos_plantilla import abrir, actualizar
-from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
+from tests.conftest import agregar_meses_params, correr_queries
 
 ERROR_MEDIDA_NO_ENCONTRADA = utils.limpiar_espacios_log(
     """
@@ -38,8 +38,6 @@ MEDIDAS = pl.DataFrame(
 
 @pytest.mark.plantilla
 def test_indexacion_ocurrencia(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -85,13 +83,9 @@ def test_indexacion_ocurrencia(client: TestClient, rango_meses: tuple[date, date
         data={"apertura": "01_002_A_D", "atributo": "bruto", "plantilla": "severidad"},
     )
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.plantilla
 def test_indexacion_movimiento(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -147,15 +141,11 @@ def test_indexacion_movimiento(client: TestClient, rango_meses: tuple[date, date
         data={"apertura": "01_002_A_E", "atributo": "bruto", "plantilla": "severidad"},
     )
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.plantilla
 def test_actualizar_indexacion_diferente(
     client: TestClient, rango_meses: tuple[date, date]
 ):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -196,5 +186,3 @@ def test_actualizar_indexacion_diferente(
                 "plantilla": "severidad",
             },
         )
-
-    vaciar_directorios_test()

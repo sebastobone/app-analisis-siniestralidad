@@ -13,18 +13,11 @@ from src.metodos_plantilla.guardar_traer.rangos_parametros import (
     obtener_indice_en_rango,
 )
 from src.models import Parametros
-from tests.conftest import (
-    agregar_meses_params,
-    assert_igual,
-    correr_queries,
-    vaciar_directorios_test,
-)
+from tests.conftest import agregar_meses_params, assert_igual, correr_queries
 
 
 @pytest.mark.plantilla
 def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -76,15 +69,11 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
     for columna in ct.COLUMNAS_QTYS:
         assert_igual(base_atipicos_original, base_atipicos_plantilla, columna)
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.plantilla
 def test_preparar_entremes_sin_resultados_anteriores(
     client: TestClient, rango_meses: tuple[date, date]
 ):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "entremes",
@@ -97,13 +86,9 @@ def test_preparar_entremes_sin_resultados_anteriores(
     with pytest.raises(preparar.AnalisisAnterioresNoEncontradosError):
         _ = client.get("/obtener-analisis-anteriores")
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.plantilla
 def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -173,8 +158,6 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     )
 
     _ = client.post("/almacenar-analisis")
-
-    vaciar_directorios_test()
 
 
 def validar_formulas_no_textuales(client: TestClient, wb_test: xw.Book) -> None:

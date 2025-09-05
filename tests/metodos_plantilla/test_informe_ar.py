@@ -7,18 +7,11 @@ from src import utils
 from src.metodos_plantilla import abrir
 from src.metodos_plantilla.resultados import concatenar_archivos_resultados
 from src.models import Parametros
-from tests.conftest import (
-    agregar_meses_params,
-    assert_igual,
-    correr_queries,
-    vaciar_directorios_test,
-)
+from tests.conftest import agregar_meses_params, assert_igual, correr_queries
 
 
 @pytest.mark.plantilla
 def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -79,5 +72,3 @@ def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
                 )
 
     wb.close()
-
-    vaciar_directorios_test()

@@ -3,15 +3,13 @@ from datetime import date
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
+from tests.conftest import agregar_meses_params, correr_queries
 
 
 @pytest.mark.plantilla
 def test_actualizar_grafica_factores(
     client: TestClient, rango_meses: tuple[date, date]
 ):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -34,5 +32,3 @@ def test_actualizar_grafica_factores(
     )
 
     assert response.status_code == status.HTTP_200_OK
-
-    vaciar_directorios_test()

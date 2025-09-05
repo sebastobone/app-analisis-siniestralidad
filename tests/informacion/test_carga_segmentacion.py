@@ -4,7 +4,7 @@ import polars as pl
 import pytest
 from fastapi.testclient import TestClient
 from src.informacion.carga_manual import crear_excel
-from tests.conftest import CONTENT_TYPES, ingresar_parametros, vaciar_directorios_test
+from tests.conftest import CONTENT_TYPES, ingresar_parametros
 
 
 def validar_excepciones(
@@ -241,7 +241,6 @@ def test_cruces_nulos_aperturas(client: TestClient, rango_meses: tuple[date, dat
 
 @pytest.mark.fast
 def test_archivo_correcto(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
     ingresar_parametros(
         client,
         rango_meses,
@@ -254,4 +253,3 @@ def test_archivo_correcto(client: TestClient, rango_meses: tuple[date, date]):
             )
         },
     )
-    vaciar_directorios_test()

@@ -4,15 +4,13 @@ from fastapi.testclient import TestClient
 from src import constantes as ct
 from src.models import Parametros
 
-from tests.conftest import correr_queries, vaciar_directorios_test, validar_cuadre
+from tests.conftest import correr_queries, validar_cuadre
 
 
 @pytest.mark.asyncio
 @pytest.mark.soat
 @pytest.mark.teradata
 async def test_info_soat(client: TestClient):
-    vaciar_directorios_test()
-
     params = {
         "negocio": "soat",
         "mes_inicio": "201901",
@@ -53,5 +51,3 @@ async def test_info_soat(client: TestClient):
             )
             < 100
         )
-
-    vaciar_directorios_test()

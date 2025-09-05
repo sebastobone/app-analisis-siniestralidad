@@ -10,12 +10,7 @@ from fastapi.testclient import TestClient
 from src import constantes as ct
 from src.informacion.carga_manual import crear_excel
 from src.informacion.mocks import generar_mock
-from tests.conftest import (
-    CONTENT_TYPES,
-    assert_igual,
-    ingresar_parametros,
-    vaciar_directorios_test,
-)
+from tests.conftest import CONTENT_TYPES, assert_igual, ingresar_parametros
 
 CARGA_SEGMENTACION = {
     "archivo_segmentacion": (
@@ -95,7 +90,6 @@ def test_cargar_multiples(
     rango_meses: tuple[date, date],
     separador: Literal[";", ",", "\t", "|"],
 ):
-    vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     df = generar_mock(rango_meses, "siniestros", 1000)
@@ -132,12 +126,9 @@ def test_cargar_multiples(
     validar_carga("siniestros_xlsx.xlsx", rango_meses, df)
     validar_carga("siniestros_parquet.parquet", rango_meses, df)
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.fast
 def test_excel_varias_hojas(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     hojas = {
@@ -170,12 +161,10 @@ def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
                 ("siniestros", ("siniestros.csv", crear_csv(df), CONTENT_TYPES["csv"])),
             ],
         )
-    vaciar_directorios_test()
 
 
 @pytest.mark.fast
 def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     df = SINIESTROS_BASICO.vstack(
@@ -189,12 +178,10 @@ def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
                 ("siniestros", ("siniestros.csv", crear_csv(df), CONTENT_TYPES["csv"])),
             ],
         )
-    vaciar_directorios_test()
 
 
 @pytest.mark.fast
 def test_aperturas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     df = SINIESTROS_BASICO.vstack(
@@ -209,8 +196,6 @@ def test_aperturas_faltantes(client: TestClient, rango_meses: tuple[date, date])
             ],
         )
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.fast
 @pytest.mark.parametrize(
@@ -224,7 +209,6 @@ def test_aperturas_faltantes(client: TestClient, rango_meses: tuple[date, date])
 def test_tipos_datos_malos(
     client: TestClient, rango_meses: tuple[date, date], columna_mod: pl.Expr
 ):
-    vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     # En csv, txt, xlsx se validan los tipos de datos al leer el archivo
@@ -254,14 +238,11 @@ def test_tipos_datos_malos(
             ],
         )
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.fast
 def test_agrupar_columnas_relevantes(
     client: TestClient, rango_meses: tuple[date, date]
 ):
-    vaciar_directorios_test()
     _ = ingresar_parametros(client, rango_meses, "test", CARGA_SEGMENTACION)
 
     df = generar_mock(rango_meses, "siniestros", 1000).with_columns(pj=pl.lit("Si"))
@@ -276,12 +257,9 @@ def test_agrupar_columnas_relevantes(
     df_cargado = pl.read_parquet("data/carga_manual/siniestros/siniestros.parquet")
     assert "pj" not in df_cargado.collect_schema().names()
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.fast
 def test_eliminar_archivos(client: TestClient):
-    vaciar_directorios_test()
     df = pl.DataFrame({"codigo_op": ["01"], "fecha_registro": ["2024-01-01"]})
     paths: list[Path] = []
     for cantidad in ct.LISTA_CANTIDADES:
@@ -293,8 +271,6 @@ def test_eliminar_archivos(client: TestClient):
 
     for path in paths:
         assert not path.exists()
-
-    vaciar_directorios_test()
 
 
 @pytest.mark.fast

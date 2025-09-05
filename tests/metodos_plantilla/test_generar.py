@@ -9,11 +9,7 @@ from src import constantes as ct
 from src.informacion.mocks import generar_mock
 from src.metodos_plantilla import abrir, actualizar, generar, preparar
 from src.procesamiento import base_siniestros
-from tests.conftest import (
-    agregar_meses_params,
-    correr_queries,
-    vaciar_directorios_test,
-)
+from tests.conftest import agregar_meses_params, correr_queries
 
 
 @pytest.mark.fast
@@ -34,8 +30,6 @@ def test_forma_triangulo(
     periodicidad_ocurrencia: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
     rango_meses: tuple[date, date],
 ):
-    vaciar_directorios_test()
-
     mock_siniestros = generar_mock(rango_meses, "siniestros")
     base_triangulos, _ = base_siniestros.generar_bases_siniestros(
         mock_siniestros.lazy(), tipo_analisis, *rango_meses
@@ -61,13 +55,9 @@ def test_forma_triangulo(
             df.shape[0] * ct.PERIODICIDADES[periodicidad_ocurrencia] >= df.shape[1] // 2
         )
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.plantilla
 def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -86,15 +76,12 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
             data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
         )
 
-    vaciar_directorios_test()
     wb.close()
     os.remove(f"plantillas/{params_form['nombre_plantilla']}.xlsm")
 
 
 @pytest.mark.plantilla
 def test_generar_severidad(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -117,5 +104,3 @@ def test_generar_severidad(client: TestClient, rango_meses: tuple[date, date]):
     apertura_en_frecuencia = actualizar.obtener_apertura_actual(wb, "frecuencia")
     apertura_en_severidad = actualizar.obtener_apertura_actual(wb, "severidad")
     assert apertura_en_frecuencia == apertura_en_severidad
-
-    vaciar_directorios_test()

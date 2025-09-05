@@ -4,13 +4,11 @@ from datetime import date
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
+from tests.conftest import agregar_meses_params, correr_queries
 
 
 @pytest.mark.plantilla
 def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
     params_form = {
         "negocio": "demo",
         "tipo_analisis": "triangulos",
@@ -40,13 +38,9 @@ def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, d
     for plantilla in ["frecuencia", "severidad", "plata"]:
         guardar_traer_apertura(client, rangos, apertura, atributo, plantilla)
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.plantilla
 def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
     apertura = "01_001_A_D"
     atributo = "bruto"
     plantilla = "completar_diagonal"
@@ -100,7 +94,6 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
     assert response.status_code == status.HTTP_200_OK
 
     guardar_traer_apertura(client, rangos, apertura, atributo, plantilla)
-    vaciar_directorios_test()
 
 
 @pytest.mark.plantilla

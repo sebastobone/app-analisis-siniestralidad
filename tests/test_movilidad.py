@@ -3,15 +3,13 @@ from fastapi.testclient import TestClient
 from src import constantes as ct
 from src.models import Parametros
 
-from tests.conftest import correr_queries, vaciar_directorios_test, validar_cuadre
+from tests.conftest import correr_queries, validar_cuadre
 
 
 @pytest.mark.asyncio
 @pytest.mark.movilidad
 @pytest.mark.teradata
 async def test_info_movilidad(client: TestClient):
-    vaciar_directorios_test()
-
     params = {
         "negocio": "movilidad",
         "mes_inicio": "201401",
@@ -33,5 +31,3 @@ async def test_info_movilidad(client: TestClient):
     await validar_cuadre(
         "movilidad", "primas", ct.Valores().model_dump()["primas"].keys(), p.mes_corte
     )
-
-    vaciar_directorios_test()

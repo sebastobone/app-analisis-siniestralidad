@@ -77,6 +77,13 @@ def client_2(test_session: Session):
     app.dependency_overrides.clear()
 
 
+@pytest.fixture(autouse=True)
+def limpiar_directorios():
+    vaciar_directorios_test()
+    yield
+    vaciar_directorios_test()
+
+
 def assert_igual(
     df1: pl.DataFrame, df2: pl.DataFrame, col1: str, col2: str | None = None
 ) -> None:

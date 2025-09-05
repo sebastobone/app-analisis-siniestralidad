@@ -17,7 +17,6 @@ from tests.conftest import (
     assert_diferente,
     assert_igual,
     correr_queries,
-    vaciar_directorios_test,
 )
 
 
@@ -25,8 +24,6 @@ from tests.conftest import (
 def test_actualizar_resultados(
     client: TestClient, client_2: TestClient, rango_meses: tuple[date, date]
 ):
-    vaciar_directorios_test()
-
     apertura = "01_001_A_D"
     atributo = "bruto"
     apertura_2 = "01_001_A_E"
@@ -144,5 +141,3 @@ def test_actualizar_resultados(
     os.remove(f"plantillas/{p2.nombre_plantilla}.xlsm")
     wb_res.close()
     os.remove("output/resultados.xlsx")
-
-    vaciar_directorios_test()

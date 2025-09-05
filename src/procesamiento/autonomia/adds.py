@@ -1,4 +1,3 @@
-import os
 from datetime import date
 
 import polars as pl
@@ -21,8 +20,7 @@ async def cantidades_sap(hojas_afo: list[str], mes_corte: date) -> pl.DataFrame:
 def crear_hoja_segmentacion(
     df: pl.DataFrame, nombre_hoja: str, hoja_anterior: str
 ) -> None:
-    xw.Book(f"{os.getcwd()}/data/segmentacion_autonomia.xlsx").set_mock_caller()
-    wb = xw.Book.caller()
+    wb = xw.Book("data/segmentacion_autonomia.xlsx")
 
     try:
         wb.sheets.add(name=nombre_hoja, after=hoja_anterior)

@@ -1,5 +1,5 @@
-import os
 from datetime import date
+from pathlib import Path
 
 import polars as pl
 import pytest
@@ -81,9 +81,9 @@ def test_indexacion_ocurrencia(client: TestClient, params: Parametros):
         data={"apertura": "01_002_A_D", "atributo": "bruto", "plantilla": "severidad"},
     )
 
-    assert os.path.exists(
+    assert Path(
         "data/db/wb_test.xlsm_01_002_A_D_bruto_Severidad_UNIDAD_INDEXACION.parquet"
-    )
+    ).exists()
 
     _ = client.post(
         "/traer-apertura",
@@ -131,9 +131,9 @@ def test_indexacion_movimiento(client: TestClient, params: Parametros):
         data={"apertura": "01_002_A_E", "atributo": "bruto", "plantilla": "severidad"},
     )
 
-    assert os.path.exists(
+    assert Path(
         "data/db/wb_test.xlsm_01_002_A_E_bruto_Severidad_UNIDAD_INDEXACION.parquet"
-    )
+    ).exists()
 
     _ = client.post(
         "/traer-apertura",

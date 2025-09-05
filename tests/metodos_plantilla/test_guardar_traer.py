@@ -1,5 +1,5 @@
-import os
 from datetime import date
+from pathlib import Path
 
 import pytest
 from fastapi import status
@@ -134,7 +134,7 @@ def guardar_traer_apertura(
     )
     assert response.status_code == status.HTTP_200_OK
     for archivo in archivos_guardados:
-        assert os.path.exists(f"data/db/{archivo}.parquet")
+        assert Path(f"data/db/{archivo}.parquet").exists()
 
     response = client.post(
         "/traer-apertura",

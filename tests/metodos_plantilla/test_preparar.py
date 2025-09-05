@@ -1,5 +1,5 @@
-import os
 from datetime import date
+from pathlib import Path
 
 import polars as pl
 import pytest
@@ -36,7 +36,7 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
     response = client.post("/preparar-plantilla")
 
     assert response.status_code == status.HTTP_200_OK
-    assert os.path.exists(f"plantillas/{p.nombre_plantilla}.xlsm")
+    assert Path(f"plantillas/{p.nombre_plantilla}.xlsm").exists()
 
     assert not wb_test.sheets["Entremes"].visible
     assert wb_test.sheets["Frecuencia"].visible

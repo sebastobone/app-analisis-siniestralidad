@@ -2,6 +2,7 @@ import csv
 import io
 import zipfile
 from datetime import date
+from pathlib import Path
 
 import polars as pl
 import xlsxwriter
@@ -28,18 +29,24 @@ def procesar_archivos_cantidades(archivos: ArchivosCantidades, p: Parametros) ->
 
 
 def procesar_archivo_segmentacion(
-    archivo_segmentacion: UploadFile, negocio: str
+    archivo_segmentacion: UploadFile | None, negocio: str
 ) -> None:
-    contenido = archivo_segmentacion.file.read()
-    hojas = pl.read_excel(io.BytesIO(contenido), sheet_id=0)
+    if archivo_segmentacion:
+        contenido = archivo_segmentacion.file.read()
+        hojas = pl.read_excel(io.BytesIO(contenido), sheet_id=0)
 
-    segmentacion.validar_archivo_segmentacion(hojas)
+        segmentacion.validar_archivo_segmentacion(hojas)
 
-    with xlsxwriter.Workbook(f"data/segmentacion_{negocio}.xlsx") as writer:
-        for hoja in hojas.keys():
-            hojas[hoja].write_excel(writer, worksheet=hoja)
+        with xlsxwriter.Workbook(f"data/segmentacion_{negocio}.xlsx") as writer:
+            for hoja in hojas.keys():
+                hojas[hoja].write_excel(writer, worksheet=hoja)
 
-    logger.success("Archivo de segmentacion procesado y guardado exitosamente.")
+        logger.success("Archivo de segmentacion procesado y guardado exitosamente.")
+
+    elif not Path(f"data/segmentacion_{negocio}.xlsx").exists():
+        raise FileNotFoundError(
+            f"No se encontro archivo de segmentacion para el negocio {negocio}"
+        )
 
 
 def procesar_archivo_cantidad(

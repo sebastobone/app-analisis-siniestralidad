@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Annotated, Any, Literal
 from uuid import uuid4
 
@@ -37,6 +36,25 @@ def eliminar_parametros_anteriores(
         pass
 
 
+def guardar_parametros(
+    session: SessionDep, session_id: str, parametros: Annotated[Parametros, Query()]
+) -> Parametros:
+    p = Parametros.model_validate(parametros)
+    p.session_id = session_id
+
+    if p.mes_corte < p.mes_inicio:
+        raise ValueError("El mes de corte debe ser posterior al mes de inicio.")
+
+    eliminar_parametros_anteriores(session, session_id)
+    session.add(p)
+    session.commit()
+    session.refresh(p)
+
+    logger.info(f"Parametros ingresados: {p.model_dump()}")
+
+    return p
+
+
 @router.post("/ingresar-parametros")
 @atrapar_excepciones
 async def ingresar_parametros(
@@ -50,38 +68,14 @@ async def ingresar_parametros(
         session_id = str(uuid4())
         response.set_cookie(key="session_id", value=session_id)
 
-    p = Parametros.model_validate(parametros)
-    p.session_id = session_id
+    p = guardar_parametros(session, session_id, parametros)
 
-    if p.mes_corte < p.mes_inicio:
-        raise ValueError("El mes de corte debe ser posterior al mes de inicio.")
-
-    eliminar_parametros_anteriores(session, session_id)
-
-    session.add(p)
-    session.commit()
-    session.refresh(p)
-
-    logger.info(f"Parametros ingresados: {p.model_dump()}")
-
-    if archivo_segmentacion:
-        carga_manual.procesar_archivo_segmentacion(archivo_segmentacion, p.negocio)
-
-    if not Path(f"data/segmentacion_{p.negocio}.xlsx").exists():
-        raise FileNotFoundError(
-            f"No se encontro archivo de segmentacion para el negocio {p.negocio}"
-        )
+    carga_manual.procesar_archivo_segmentacion(archivo_segmentacion, p.negocio)
 
     if p.negocio == "demo":
         mocks.generar_mocks(p.mes_inicio, p.mes_corte)
 
-    aperturas = sorted(
-        utils.obtener_aperturas(p.negocio, "siniestros")
-        .get_column("apertura_reservas")
-        .unique()
-        .to_list()
-    )
-
+    aperturas = obtener_lista_aperturas(p)
     tipos_analisis_mes_anterior = obtener_tipos_analisis_mes_anterior(p)
 
     return {
@@ -108,6 +102,15 @@ async def traer_parametros(
     session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
 ) -> dict[str, Any]:
     return obtener_parametros_usuario(session, session_id).model_dump()
+
+
+def obtener_lista_aperturas(p: Parametros) -> list[str]:
+    return sorted(
+        utils.obtener_aperturas(p.negocio, "siniestros")
+        .get_column("apertura_reservas")
+        .unique()
+        .to_list()
+    )
 
 
 def obtener_tipos_analisis_mes_anterior(

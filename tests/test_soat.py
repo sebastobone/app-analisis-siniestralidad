@@ -1,26 +1,28 @@
+from datetime import date
+
 import polars as pl
 import pytest
 from fastapi.testclient import TestClient
 from src import constantes as ct
 from src.models import Parametros
 
-from tests.conftest import correr_queries, validar_cuadre
+from tests.conftest import correr_queries, ingresar_parametros, validar_cuadre
 
 
 @pytest.mark.asyncio
 @pytest.mark.soat
 @pytest.mark.teradata
 async def test_info_soat(client: TestClient):
-    params = {
-        "negocio": "soat",
-        "mes_inicio": "201901",
-        "mes_corte": "202401",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "plantilla_test_soat",
-    }
-
-    response = client.post("/ingresar-parametros", params=params)
-    p = Parametros.model_validate_json(response.read())
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="soat",
+            mes_inicio=date(2019, 1, 1),
+            mes_corte=date(2024, 12, 31),
+            tipo_analisis="triangulos",
+            nombre_plantilla="plantilla_soat",
+        ),
+    )
 
     correr_queries(client)
 

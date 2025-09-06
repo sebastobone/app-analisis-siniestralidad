@@ -66,34 +66,6 @@ def preparar_plantilla(
     logger.info("Evidencia SOX de consistencia de informacion generada.")
 
 
-def obtener_analisis_anteriores(mes_corte: int) -> pl.DataFrame:
-    resultados_anteriores = resultados.concatenar_archivos_resultados()
-    if resultados_anteriores.is_empty():
-        raise AnalisisAnterioresNoEncontradosError(
-            utils.limpiar_espacios_log(
-                """
-                No se encontraron resultados anteriores. Se necesitan
-                para hacer el analisis de entremes.
-                """
-            )
-        )
-    mes_corte_anterior = mes_anterior_corte(mes_corte)
-    resultados_mes_anterior = resultados_anteriores.filter(
-        pl.col("mes_corte") == mes_corte_anterior
-    )
-    if resultados_mes_anterior.is_empty():
-        raise AnalisisAnterioresNoEncontradosError(
-            utils.limpiar_espacios_log(
-                f"""
-                No se encontraron resultados anteriores
-                para el mes {mes_corte_anterior}. Se necesitan
-                para hacer el analisis de entremes.
-                """
-            )
-        )
-    return resultados_mes_anterior
-
-
 def obtener_resultados_mes_anterior(
     resultados_anteriores: pl.DataFrame,
     mes_corte: int,
@@ -339,8 +311,4 @@ def mes_anterior_corte(mes_corte: int) -> int:
 
 
 class PlantillaNoPreparadaError(Exception):
-    pass
-
-
-class AnalisisAnterioresNoEncontradosError(Exception):
     pass

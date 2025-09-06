@@ -1,6 +1,7 @@
 import { showToast } from "./toast.js";
 import { generarDropdownPlantillas } from "./dropdowns/generarPlantillas.js";
 import { generarDropdownAperturas } from "./dropdowns/generarAperturas.js";
+import { generarReferenciasEntremes } from "./dropdowns/generarReferenciasEntremes.js";
 
 async function enviarParametros(queryParams, formData) {
   const response = await fetch(
@@ -12,11 +13,12 @@ async function enviarParametros(queryParams, formData) {
   );
   if (!response.ok) throw new Error("Error al ingresar los parametros");
   showToast("Parametros ingresados correctamente", "success");
+  const data = await response.json();
+  return data;
 }
 
 async function mostrarFuncionalidades(tipoAnalisis, negocio) {
   if (tipoAnalisis === "entremes") {
-    await generarReferenciasEntremes();
     document.getElementById("referenciasEntremes").style.display = "block";
     document.getElementById("botonesEntremes").style.display = "block";
     document.getElementById("botonesGraficaFactores").style.display = "none";
@@ -38,39 +40,6 @@ async function mostrarFuncionalidades(tipoAnalisis, negocio) {
 
   document.getElementById("seccionPlantilla").style.display = "block";
   document.getElementById("resultados").style.display = "block";
-}
-
-async function generarReferenciasEntremes() {
-  const response = await fetch(
-    "http://127.0.0.1:8000/obtener-analisis-anteriores",
-  );
-
-  if (!response.ok) throw new Error("Error al obtener resultados anteriores");
-  showToast("Resultados anteriores obtenidos exitosamente", "success");
-
-  const data = await response.json();
-
-  const dropdownReferenciaActuarial = document.getElementById(
-    "referenciaActuarial",
-  );
-  dropdownReferenciaActuarial.innerHTML = "";
-  const dropdownReferenciaContable =
-    document.getElementById("referenciaContable");
-  dropdownReferenciaContable.innerHTML = "";
-
-  data.analisis_anteriores.forEach((analisis) => {
-    let option = document.createElement("option");
-    option.value = analisis;
-    option.text = analisis.charAt(0).toUpperCase() + analisis.slice(1);
-    dropdownReferenciaActuarial.appendChild(option);
-  });
-
-  data.analisis_anteriores.forEach((analisis) => {
-    let option = document.createElement("option");
-    option.value = analisis;
-    option.text = analisis.charAt(0).toUpperCase() + analisis.slice(1);
-    dropdownReferenciaContable.appendChild(option);
-  });
 }
 
 document
@@ -95,9 +64,14 @@ document
         formData.append("archivo_segmentacion", archivoSegmentacion[0]);
       }
 
-      await enviarParametros(queryParams, formData);
-      await generarDropdownAperturas(tipoAnalisis);
+      const data = await enviarParametros(queryParams, formData);
+      await generarDropdownAperturas(data.aperturas);
       await generarDropdownPlantillas(tipoAnalisis);
+
+      if (tipoAnalisis === "entremes") {
+        await generarReferenciasEntremes(data.tipos_analisis_mes_anterior);
+      }
+
       await mostrarFuncionalidades(tipoAnalisis, negocio);
     } catch (error) {
       showToast(error.message, "error");

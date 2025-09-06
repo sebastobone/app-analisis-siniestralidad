@@ -8,7 +8,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from src import constantes as ct
 from src import utils
-from src.metodos_plantilla import abrir, preparar
+from src.metodos_plantilla import abrir
 from src.metodos_plantilla.guardar_traer.rangos_parametros import (
     obtener_indice_en_rango,
 )
@@ -69,23 +69,21 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
         assert_igual(base_atipicos_original, base_atipicos_plantilla, columna)
 
 
-@pytest.mark.plantilla
+@pytest.mark.fast
 def test_preparar_entremes_sin_resultados_anteriores(
     client: TestClient, rango_meses: tuple[date, date]
 ):
-    _ = ingresar_parametros(
-        client,
-        Parametros(
-            negocio="demo",
-            mes_inicio=rango_meses[0],
-            mes_corte=rango_meses[1],
-            tipo_analisis="triangulos",
-            nombre_plantilla="wb_test",
-        ),
-    )
-
-    with pytest.raises(preparar.AnalisisAnterioresNoEncontradosError):
-        _ = client.get("/obtener-analisis-anteriores")
+    with pytest.raises(ValueError, match="No se encontraron resultados anteriores"):
+        _ = ingresar_parametros(
+            client,
+            Parametros(
+                negocio="demo",
+                mes_inicio=rango_meses[0],
+                mes_corte=rango_meses[1],
+                tipo_analisis="entremes",
+                nombre_plantilla="wb_test",
+            ),
+        )
 
 
 @pytest.mark.plantilla

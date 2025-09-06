@@ -17,7 +17,7 @@ def test_generar_base(client: TestClient):
 @pytest.mark.fast
 def test_ingresar_parametros(client: TestClient, test_session: Session):
     params_form = {
-        "negocio": "autonomia",
+        "negocio": "demo",
         "mes_inicio": "201001",
         "mes_corte": "203012",
         "tipo_analisis": "triangulos",

@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from src import utils
 from src.models import Parametros
 
-from tests.conftest import assert_igual, correr_queries
+from tests.conftest import assert_igual, correr_queries, ingresar_parametros
 
 
 def separar_meses_anteriores(
@@ -21,16 +21,16 @@ def separar_meses_anteriores(
 @pytest.mark.teradata
 @pytest.mark.asyncio
 async def test_info_autonomia(client: TestClient) -> None:
-    data = {
-        "negocio": "autonomia",
-        "mes_inicio": "202401",
-        "mes_corte": "202412",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "plantilla_autonomia",
-    }
-
-    response = client.post("/ingresar-parametros", params=data).json()
-    p = Parametros.model_validate(response)
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="autonomia",
+            mes_inicio=date(2024, 1, 1),
+            mes_corte=date(2024, 12, 31),
+            tipo_analisis="triangulos",
+            nombre_plantilla="plantilla_autonomia",
+        ),
+    )
 
     correr_queries(client)
 

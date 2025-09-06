@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import uuid4
 
+import polars as pl
 from fastapi import APIRouter, Cookie, Query, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from sqlmodel import select
@@ -10,7 +11,7 @@ from src import utils
 from src.dependencias import SessionDep, atrapar_excepciones
 from src.informacion import carga_manual, mocks
 from src.logger_config import logger
-from src.metodos_plantilla import preparar
+from src.metodos_plantilla import preparar, resultados
 from src.models import Parametros
 
 router = APIRouter()
@@ -44,7 +45,7 @@ async def ingresar_parametros(
     parametros: Annotated[Parametros, Query()],
     archivo_segmentacion: UploadFile | None = None,
     session_id: Annotated[str | None, Cookie()] = None,
-) -> Parametros:
+):
     if not session_id:
         session_id = str(uuid4())
         response.set_cookie(key="session_id", value=session_id)
@@ -74,7 +75,20 @@ async def ingresar_parametros(
     if p.negocio == "demo":
         mocks.generar_mocks(p.mes_inicio, p.mes_corte)
 
-    return p
+    aperturas = sorted(
+        utils.obtener_aperturas(p.negocio, "siniestros")
+        .get_column("apertura_reservas")
+        .unique()
+        .to_list()
+    )
+
+    tipos_analisis_mes_anterior = obtener_tipos_analisis_mes_anterior(p)
+
+    return {
+        "parametros": p,
+        "aperturas": aperturas,
+        "tipos_analisis_mes_anterior": tipos_analisis_mes_anterior,
+    }
 
 
 @router.get("/descargar-ejemplo-segmentacion")
@@ -96,32 +110,36 @@ async def traer_parametros(
     return obtener_parametros_usuario(session, session_id).model_dump()
 
 
-@router.get("/obtener-analisis-anteriores")
-@atrapar_excepciones
-async def obtener_analisis_anteriores(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-):
-    p = obtener_parametros_usuario(session, session_id)
-    resultados_mes_anterior = preparar.obtener_analisis_anteriores(
-        utils.date_to_yyyymm(p.mes_corte)
-    )
-    return {
-        "analisis_anteriores": resultados_mes_anterior.get_column("tipo_analisis")
-        .unique()
-        .to_list()
-    }
-
-
-@router.get("/generar-aperturas")
-@atrapar_excepciones
-async def generar_aperturas(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-):
-    params = obtener_parametros_usuario(session, session_id)
-    aperturas = sorted(
-        utils.obtener_aperturas(params.negocio, "siniestros")
-        .get_column("apertura_reservas")
-        .unique()
-        .to_list()
-    )
-    return {"aperturas": aperturas}
+def obtener_tipos_analisis_mes_anterior(
+    p: Parametros,
+) -> list[Literal["triangulos", "entremes"]]:
+    resultados_anteriores = resultados.concatenar_archivos_resultados()
+    if p.tipo_analisis == "entremes":
+        if resultados_anteriores.is_empty():
+            raise ValueError(
+                utils.limpiar_espacios_log(
+                    """
+                    No se encontraron resultados anteriores. Se necesitan
+                    para hacer el analisis de entremes.
+                    """
+                )
+            )
+        mes_corte_anterior = preparar.mes_anterior_corte(
+            utils.date_to_yyyymm(p.mes_corte)
+        )
+        resultados_mes_anterior = resultados_anteriores.filter(
+            pl.col("mes_corte") == mes_corte_anterior
+        )
+        if resultados_mes_anterior.is_empty():
+            raise ValueError(
+                utils.limpiar_espacios_log(
+                    f"""
+                    No se encontraron resultados anteriores
+                    para el mes {mes_corte_anterior}. Se necesitan
+                    para hacer el analisis de entremes.
+                    """
+                )
+            )
+        return resultados_mes_anterior.get_column("tipo_analisis").unique().to_list()
+    else:
+        return []

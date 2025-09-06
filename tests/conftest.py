@@ -188,18 +188,16 @@ def ingresar_parametros(
     p: Parametros,
     files: Mapping[str, tuple[str, io.BytesIO | io.BufferedReader, str]] | None = None,
 ) -> Parametros:
-    params_form = {
+    params = {
         "negocio": p.negocio,
         "tipo_analisis": p.tipo_analisis,
         "nombre_plantilla": p.nombre_plantilla,
     }
-    params_form.update(
+    params.update(
         {
             "mes_inicio": str(utils.date_to_yyyymm(p.mes_inicio)),
             "mes_corte": str(utils.date_to_yyyymm(p.mes_corte)),
         }
     )
-
-    return Parametros.model_validate(
-        client.post("/ingresar-parametros", params=params_form, files=files).json()
-    )
+    response = client.post("/ingresar-parametros", params=params, files=files).json()
+    return Parametros.model_validate(response["parametros"])

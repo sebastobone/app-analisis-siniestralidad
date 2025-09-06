@@ -1,25 +1,27 @@
+from datetime import date
+
 import pytest
 from fastapi.testclient import TestClient
 from src import constantes as ct
 from src.models import Parametros
 
-from tests.conftest import correr_queries, validar_cuadre
+from tests.conftest import correr_queries, ingresar_parametros, validar_cuadre
 
 
 @pytest.mark.asyncio
 @pytest.mark.movilidad
 @pytest.mark.teradata
 async def test_info_movilidad(client: TestClient):
-    params = {
-        "negocio": "movilidad",
-        "mes_inicio": "201401",
-        "mes_corte": "202412",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "plantilla_test_movilidad",
-    }
-
-    response = client.post("/ingresar-parametros", params=params)
-    p = Parametros.model_validate_json(response.read())
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="movilidad",
+            mes_inicio=date(2014, 1, 1),
+            mes_corte=date(2024, 12, 31),
+            tipo_analisis="triangulos",
+            nombre_plantilla="plantilla_movilidad",
+        ),
+    )
 
     correr_queries(client)
 

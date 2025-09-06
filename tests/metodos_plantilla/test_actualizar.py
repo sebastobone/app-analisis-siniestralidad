@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from src.metodos_plantilla import abrir, actualizar
 from src.models import Parametros
-from tests.conftest import correr_queries, ingresar_parametros
+from tests.conftest import ingresar_parametros
 
 
 @pytest.fixture(autouse=True)
@@ -23,7 +23,6 @@ def params(client: TestClient, rango_meses: tuple[date, date]) -> Parametros:
 
 @pytest.mark.plantilla
 def test_actualizar_sin_generar(client: TestClient):
-    correr_queries(client)
     _ = client.post("/preparar-plantilla")
     with pytest.raises(actualizar.PlantillaNoGeneradaError):
         _ = client.post(
@@ -34,7 +33,6 @@ def test_actualizar_sin_generar(client: TestClient):
 
 @pytest.mark.plantilla
 def test_actualizar_diferentes_periodicidades(client: TestClient):
-    correr_queries(client)
     _ = client.post("/preparar-plantilla")
     _ = client.post(
         "/generar-plantilla",
@@ -52,7 +50,6 @@ def test_actualizar_diferentes_periodicidades(client: TestClient):
 def test_actualizar_severidad(client: TestClient, params: Parametros):
     wb = abrir.abrir_plantilla(f"plantillas/{params.nombre_plantilla}.xlsm")
 
-    correr_queries(client)
     _ = client.post("/preparar-plantilla")
 
     _ = client.post(

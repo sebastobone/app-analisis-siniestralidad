@@ -9,6 +9,14 @@ from src.logger_config import logger
 from src.validation import cantidades
 
 
+def generar_mocks(mes_inicio: dt.date, mes_corte: dt.date) -> None:
+    for cantidad in ct.LISTA_CANTIDADES:
+        df = generar_mock(
+            (mes_inicio, mes_corte), cantidad, ct.NUM_FILAS_DEMO[cantidad]
+        )
+        guardar_mock(df, cantidad)
+
+
 def guardar_mock(df: pl.DataFrame, cantidad: ct.CANTIDADES) -> None:
     df.write_parquet(f"data/raw/{cantidad}.parquet")
     logger.info(f"Datos ficticios de {cantidad} generados.")

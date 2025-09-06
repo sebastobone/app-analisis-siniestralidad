@@ -4,7 +4,7 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from src.models import Parametros
-from tests.conftest import correr_queries, ingresar_parametros
+from tests.conftest import ingresar_parametros
 
 
 @pytest.mark.plantilla
@@ -21,8 +21,6 @@ def test_actualizar_grafica_factores(
             nombre_plantilla="wb_test",
         ),
     )
-
-    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
     _ = client.post(

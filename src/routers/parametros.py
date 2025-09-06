@@ -8,7 +8,7 @@ from sqlmodel import select
 
 from src import utils
 from src.dependencias import SessionDep, atrapar_excepciones
-from src.informacion import carga_manual
+from src.informacion import carga_manual, mocks
 from src.logger_config import logger
 from src.metodos_plantilla import preparar
 from src.models import Parametros
@@ -70,6 +70,9 @@ async def ingresar_parametros(
         raise FileNotFoundError(
             f"No se encontro archivo de segmentacion para el negocio {p.negocio}"
         )
+
+    if p.negocio == "demo":
+        mocks.generar_mocks(p.mes_inicio, p.mes_corte)
 
     return p
 

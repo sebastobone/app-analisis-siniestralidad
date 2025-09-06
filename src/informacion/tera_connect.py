@@ -7,7 +7,6 @@ import teradatasql as td
 
 from src import constantes as ct
 from src import utils
-from src.informacion.mocks import generar_mock
 from src.logger_config import logger
 from src.models import CredencialesTeradata, Parametros
 from src.procesamiento.autonomia import adds as autonomia
@@ -41,35 +40,28 @@ async def correr_query(
     if p.negocio == "autonomia":
         await _preparar_auxiliares_autonomia(p, cantidad)
 
-    if p.negocio == "demo":
-        df = generar_mock(
-            (p.mes_inicio, p.mes_corte), cantidad, ct.NUM_FILAS_DEMO[cantidad]
-        )
-        df.write_parquet(f"data/raw/{cantidad}.parquet")
-        logger.info(f"Datos ficticios de {cantidad} generados.")
-    else:
-        segmentaciones = await _obtener_segmentaciones(p.negocio, cantidad)
+    segmentaciones = await _obtener_segmentaciones(p.negocio, cantidad)
 
-        particiones_fechas = _crear_particiones_fechas(p.mes_inicio, p.mes_corte)
+    particiones_fechas = _crear_particiones_fechas(p.mes_inicio, p.mes_corte)
 
-        file_path = f"data/queries/{p.negocio}/{cantidad}.sql"
-        queries = _reemplazar_parametros_queries(open(file_path).read(), p).split(";")
-        await adds.validar_numero_segmentaciones(
-            file_path, p.negocio, queries, segmentaciones
-        )
+    file_path = f"data/queries/{p.negocio}/{cantidad}.sql"
+    queries = _reemplazar_parametros_queries(open(file_path).read(), p).split(";")
+    await adds.validar_numero_segmentaciones(
+        file_path, p.negocio, queries, segmentaciones
+    )
 
-        logger.info(f"Ejecutando query {file_path}...")
-        df = await _ejecutar_queries(
-            queries, particiones_fechas, segmentaciones, credenciales
-        )
+    logger.info(f"Ejecutando query {file_path}...")
+    df = await _ejecutar_queries(
+        queries, particiones_fechas, segmentaciones, credenciales
+    )
 
-        cantidades.validar_archivo(p.negocio, df, cantidad, cantidad)
-        df = cantidades.organizar_archivo(
-            df, p.negocio, (p.mes_inicio, p.mes_corte), cantidad, cantidad
-        )
+    cantidades.validar_archivo(p.negocio, df, cantidad, cantidad)
+    df = cantidades.organizar_archivo(
+        df, p.negocio, (p.mes_inicio, p.mes_corte), cantidad, cantidad
+    )
 
-        _guardar_resultados(df, cantidad)
-        logger.success(f"{df.height} registros almacenados en data/raw/{cantidad}.csv.")
+    _guardar_resultados(df, cantidad)
+    logger.success(f"{df.height} registros almacenados en data/raw/{cantidad}.csv.")
 
 
 async def _preparar_auxiliares_autonomia(

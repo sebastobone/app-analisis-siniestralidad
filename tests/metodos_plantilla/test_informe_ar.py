@@ -7,7 +7,7 @@ from src import utils
 from src.metodos_plantilla import abrir
 from src.metodos_plantilla.resultados import concatenar_archivos_resultados
 from src.models import Parametros
-from tests.conftest import assert_igual, correr_queries, ingresar_parametros
+from tests.conftest import assert_igual, ingresar_parametros
 
 
 @pytest.mark.plantilla
@@ -22,8 +22,6 @@ def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
             nombre_plantilla="wb_test",
         ),
     )
-
-    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")

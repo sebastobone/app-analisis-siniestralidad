@@ -13,7 +13,7 @@ from src.metodos_plantilla.guardar_traer.rangos_parametros import (
     obtener_indice_en_rango,
 )
 from src.models import Parametros
-from tests.conftest import assert_igual, correr_queries, ingresar_parametros
+from tests.conftest import assert_igual, ingresar_parametros
 
 
 @pytest.mark.plantilla
@@ -28,8 +28,6 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
             nombre_plantilla="wb_test",
         ),
     )
-
-    correr_queries(client)
 
     wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
@@ -103,8 +101,6 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
         ),
     )
 
-    correr_queries(client)
-
     _ = client.post("/preparar-plantilla")
     _ = client.post(
         "/guardar-todo",
@@ -124,8 +120,6 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
         ),
     )
     wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-
-    correr_queries(client)
 
     _ = client.post(
         "/preparar-plantilla",
@@ -156,8 +150,6 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
                 nombre_plantilla="wb_test",
             ),
         )
-
-        correr_queries(client)
         _ = client.post("/preparar-plantilla")
         _ = client.post("/almacenar-analisis")
 
@@ -172,7 +164,6 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
         ),
     )
 
-    correr_queries(client)
     _ = client.post("/preparar-plantilla")
     _ = client.post("/guardar-todo")
     _ = client.post("/almacenar-analisis")
@@ -187,8 +178,6 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
             nombre_plantilla="wb_test",
         ),
     )
-
-    correr_queries(client)
 
     _ = client.post(
         "/preparar-plantilla",

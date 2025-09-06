@@ -5,7 +5,7 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from src.models import Parametros
-from tests.conftest import correr_queries, ingresar_parametros
+from tests.conftest import ingresar_parametros
 
 
 @pytest.mark.plantilla
@@ -20,7 +20,6 @@ def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, d
             nombre_plantilla="wb_test",
         ),
     )
-    correr_queries(client)
     _ = client.post("/preparar-plantilla")
 
     rangos = [
@@ -65,7 +64,6 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
             nombre_plantilla="wb_test",
         ),
     )
-    correr_queries(client)
     _ = client.post("/preparar-plantilla")
     guardar_traer_apertura(client, rangos, apertura, atributo, "plata")
     _ = client.post("/almacenar-analisis")
@@ -80,7 +78,6 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
             nombre_plantilla="wb_test",
         ),
     )
-    correr_queries(client)
     _ = client.post(
         "/preparar-plantilla",
         data={

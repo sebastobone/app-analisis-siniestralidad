@@ -10,7 +10,7 @@ from src.informacion.mocks import generar_mock
 from src.metodos_plantilla import abrir, actualizar, generar, preparar
 from src.models import Parametros
 from src.procesamiento import base_siniestros
-from tests.conftest import correr_queries, ingresar_parametros
+from tests.conftest import ingresar_parametros
 
 
 @pytest.fixture(autouse=True)
@@ -85,8 +85,6 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
     )
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
-    correr_queries(client)
-
     with pytest.raises(preparar.PlantillaNoPreparadaError):
         _ = client.post(
             "/generar-plantilla",
@@ -100,8 +98,6 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
 @pytest.mark.plantilla
 def test_generar_severidad(client: TestClient, params: Parametros):
     wb = abrir.abrir_plantilla(f"plantillas/{params.nombre_plantilla}.xlsm")
-
-    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
 

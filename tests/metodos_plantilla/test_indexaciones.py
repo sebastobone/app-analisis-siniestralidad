@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from src import utils
 from src.metodos_plantilla import abrir, actualizar
 from src.models import Parametros
-from tests.conftest import correr_queries, ingresar_parametros
+from tests.conftest import ingresar_parametros
 
 ERROR_MEDIDA_NO_ENCONTRADA = utils.limpiar_espacios_log(
     """
@@ -55,8 +55,6 @@ def params(client: TestClient, rango_meses: tuple[date, date]) -> Parametros:
 def test_indexacion_ocurrencia(client: TestClient, params: Parametros):
     wb = abrir.abrir_plantilla(f"plantillas/{params.nombre_plantilla}.xlsm")
 
-    correr_queries(client)
-
     _ = client.post("/preparar-plantilla")
 
     wb.sheets["Indexaciones"].clear()
@@ -94,8 +92,6 @@ def test_indexacion_ocurrencia(client: TestClient, params: Parametros):
 @pytest.mark.plantilla
 def test_indexacion_movimiento(client: TestClient, params: Parametros):
     wb = abrir.abrir_plantilla(f"plantillas/{params.nombre_plantilla}.xlsm")
-
-    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
 
@@ -144,8 +140,6 @@ def test_indexacion_movimiento(client: TestClient, params: Parametros):
 @pytest.mark.plantilla
 def test_actualizar_indexacion_diferente(client: TestClient, params: Parametros):
     wb = abrir.abrir_plantilla(f"plantillas/{params.nombre_plantilla}.xlsm")
-
-    correr_queries(client)
 
     _ = client.post("/preparar-plantilla")
 

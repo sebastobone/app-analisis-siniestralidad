@@ -12,12 +12,7 @@ from src.metodos_plantilla.guardar_traer.rangos_parametros import (
     obtener_indice_en_rango,
 )
 from src.models import Parametros
-from tests.conftest import (
-    assert_diferente,
-    assert_igual,
-    correr_queries,
-    ingresar_parametros,
-)
+from tests.conftest import assert_diferente, assert_igual, ingresar_parametros
 
 
 @pytest.mark.plantilla
@@ -48,8 +43,6 @@ def test_actualizar_resultados(
             nombre_plantilla="wb_test_u2",
         ),
     )
-
-    correr_queries(client)
 
     # Usuario 1 estima apertura 1
     _ = client.post("/preparar-plantilla")

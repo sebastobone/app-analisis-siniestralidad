@@ -3,9 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, Cookie, Depends, Form
 from fastapi.responses import StreamingResponse
 
-from src import constantes as ct
 from src.dependencias import SessionDep, atrapar_excepciones
-from src.informacion import carga_manual, mocks, tera_connect
+from src.informacion import carga_manual, tera_connect
 from src.models import ArchivosCantidades, CredencialesTeradata
 from src.routers.parametros import obtener_parametros_usuario
 
@@ -46,19 +45,6 @@ async def correr_query_expuestos(
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "expuestos", credenciales)
     return {"message": "Query de expuestos ejecutado exitosamente"}
-
-
-@router.post("/generar-mocks")
-@atrapar_excepciones
-async def generar_mocks(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> None:
-    p = obtener_parametros_usuario(session, session_id)
-    for cantidad in ct.LISTA_CANTIDADES:
-        df = mocks.generar_mock(
-            (p.mes_inicio, p.mes_corte), cantidad, ct.NUM_FILAS_DEMO[cantidad]
-        )
-        mocks.guardar_mock(df, cantidad)
 
 
 @router.get("/descargar-ejemplos-cantidades")

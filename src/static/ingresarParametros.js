@@ -27,9 +27,6 @@ async function mostrarFuncionalidades(tipoAnalisis, negocio) {
   }
 
   if (negocio === "demo") {
-    await fetch("http://127.0.0.1:8000/generar-mocks", {
-      method: "POST",
-    });
     document.getElementById("extraccion").style.display = "none";
     document.getElementById("cargaManual").style.display = "none";
     document.getElementById("controles").style.display = "none";

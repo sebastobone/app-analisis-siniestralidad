@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import polars as pl
-from sqlmodel import or_, select
+from sqlmodel import col, select
 
 from src import constantes as ct
 from src.dependencias import SessionDep
@@ -58,10 +58,7 @@ def obtener_cantidatos_controles(
         MetadataCantidades.origen,
     ).where(
         MetadataCantidades.cantidad == cantidad,
-        or_(
-            MetadataCantidades.origen == "extraccion",
-            MetadataCantidades.origen == "carga_manual",
-        ),
+        col(MetadataCantidades.origen).in_(["extraccion", "carga_manual"]),
     )
     resultados = session.exec(query).all()
     return [

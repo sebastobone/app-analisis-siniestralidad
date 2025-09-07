@@ -102,6 +102,8 @@ def assert_diferente(
 
 def vaciar_directorios_test() -> None:
     utils.vaciar_directorio("data/raw")
+    utils.vaciar_directorio("data/pre_cuadre_contable")
+    utils.vaciar_directorio("data/post_cuadre_contable")
     utils.vaciar_directorio("data/processed")
     utils.vaciar_directorio("data/db")
     utils.vaciar_directorio("output/resultados")

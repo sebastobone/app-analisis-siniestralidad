@@ -73,6 +73,7 @@ async def ingresar_parametros(
 
     carga_manual.procesar_archivo_segmentacion(archivo_segmentacion, p.negocio)
 
+    mocks.eliminar_mocks(session)
     if p.negocio == "demo":
         mocks.generar_mocks(p.mes_inicio, p.mes_corte, session)
 

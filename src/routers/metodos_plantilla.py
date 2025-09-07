@@ -43,7 +43,7 @@ async def preparar_plantilla(
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     p = obtener_parametros_usuario(session, session_id)
-    bases.generar_bases_plantilla(p)
+    bases.generar_bases_plantilla(p, session)
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
     preparar.preparar_plantilla(wb, p, referencias_entremes)
     return {"message": "Plantilla preparada exitosamente"}

@@ -1,12 +1,13 @@
 import datetime as dt
 from calendar import monthrange
+from pathlib import Path
 
 import numpy as np
 import polars as pl
 
 from src import constantes as ct
 from src.dependencias import SessionDep
-from src.informacion.almacenamiento import guardar_archivo
+from src.informacion import almacenamiento as alm
 from src.models import MetadataCantidades
 from src.validation import cantidades
 
@@ -16,7 +17,7 @@ def generar_mocks(mes_inicio: dt.date, mes_corte: dt.date, session: SessionDep) 
         generar_mock(
             (mes_inicio, mes_corte), cantidad, ct.NUM_FILAS_DEMO[cantidad]
         ).pipe(
-            guardar_archivo,
+            alm.guardar_archivo,
             session,
             MetadataCantidades(
                 ruta=f"data/raw/{cantidad}.parquet",
@@ -138,3 +139,10 @@ def generar_mock_expuestos(
         )
         .mean()
     )
+
+
+def eliminar_mocks(session: SessionDep):
+    for cantidad in ct.LISTA_CANTIDADES:
+        ruta = f"data/raw/{cantidad}.parquet"
+        Path(ruta).unlink(missing_ok=True)
+        alm.eliminar_metadata_archivo(session, ruta)

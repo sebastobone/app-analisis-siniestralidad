@@ -103,7 +103,7 @@ async def generar_controles_cantidad(
         if cantidad in [
             "siniestros",
             "primas",
-        ] and cuadre.debe_realizar_cuadre_contable(p.negocio, cantidad):
+        ] and cuadre.debe_realizar_cuadre_contable(p, cantidad):
             meses_a_cuadrar = pl.read_excel(
                 f"data/segmentacion_{p.negocio}.xlsx",
                 sheet_name=f"Meses_cuadre_{cantidad}",

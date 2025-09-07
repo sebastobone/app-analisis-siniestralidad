@@ -3,13 +3,34 @@ import polars as pl
 from src import constantes as ct
 from src import utils
 from src.logger_config import logger
+from src.models import Parametros
+from src.validation import segmentacion
 
 
-def debe_realizar_cuadre_contable(negocio: str, file: ct.CANTIDADES_CUADRE) -> bool:
-    return (
-        pl.read_excel(
-            f"data/segmentacion_{negocio}.xlsx", sheet_name=f"Meses_cuadre_{file}"
+def debe_realizar_cuadre_contable(
+    p: Parametros, cantidad: ct.CANTIDADES_CUADRE
+) -> bool:
+    hojas_segmentacion = pl.read_excel(
+        f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0
+    )
+    if not {f"Meses_cuadre_{cantidad}", f"Cuadre_{cantidad.capitalize()}"}.issubset(
+        set(hojas_segmentacion.keys())
+    ):
+        logger.warning(
+            utils.limpiar_espacios_log(
+                f"""
+                En el archivo segmentacion no se encontraron las hojas necesarias
+                para realizar el cuadre contable: "Meses_cuadre_{cantidad}" y 
+                "Cuadre_{cantidad.capitalize()}". Si desea realizar el cuadre, agregue 
+                estas hojas y vuelva a cargar el archivo.
+                """
+            )
         )
+        return False
+
+    segmentacion.validar_aptitud_cuadre_contable(hojas_segmentacion, p, cantidad)
+    return (
+        hojas_segmentacion[f"Meses_cuadre_{cantidad}"]
         .drop("fecha_registro")
         .sum()
         .sum_horizontal()
@@ -49,22 +70,10 @@ async def realizar_cuadre_contable(
 def obtener_aperturas_para_asignar_diferencia(
     negocio: str, file: ct.CANTIDADES_CUADRE
 ) -> pl.DataFrame:
-    try:
-        aperturas = pl.read_excel(
-            f"data/segmentacion_{negocio}.xlsx",
-            sheet_name=f"Cuadre_{file.capitalize()}",
-        )
-    except ValueError as exc:
-        raise ValueError(
-            utils.limpiar_espacios_log(
-                """
-                Definio hacer el cuadre contable, pero no se encontraron
-                las hojas con las aperturas donde se va a repartir la
-                diferencia.
-                """
-            )
-        ) from exc
-    return aperturas
+    return pl.read_excel(
+        f"data/segmentacion_{negocio}.xlsx",
+        sheet_name=f"Cuadre_{file.capitalize()}",
+    )
 
 
 def calcular_pesos_aperturas(

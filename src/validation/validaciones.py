@@ -7,8 +7,8 @@ from src.utils import limpiar_espacios_log
 
 
 def validar_subconjunto(
-    subconjunto: list[str],
-    conjunto: list[str],
+    subconjunto: list[Any],
+    conjunto: list[Any],
     mensaje_error: str,
     variables_mensaje: dict[str, str | list[str]] | None,
     severidad: Literal["error", "alerta"],

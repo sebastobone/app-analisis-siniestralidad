@@ -4,6 +4,7 @@ from fastapi import APIRouter, Cookie, Depends, Form
 from fastapi.responses import StreamingResponse
 
 from src.dependencias import SessionDep, atrapar_excepciones
+from src.informacion import almacenamiento as alm
 from src.informacion import carga_manual, tera_connect
 from src.models import ArchivosCantidades, CredencialesTeradata
 from src.routers.parametros import obtener_parametros_usuario
@@ -20,7 +21,11 @@ async def correr_query_siniestros(
 ):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "siniestros", credenciales, session)
-    return {"message": "Query de siniestros ejecutado exitosamente"}
+    candidatos_siniestros = alm.obtener_cantidatos_cuadre(session, "siniestros")
+    return {
+        "message": "Query de siniestros ejecutado exitosamente",
+        "candidatos": candidatos_siniestros,
+    }
 
 
 @router.post("/correr-query-primas")
@@ -32,7 +37,11 @@ async def correr_query_primas(
 ):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "primas", credenciales, session)
-    return {"message": "Query de primas ejecutado exitosamente"}
+    candidatos_primas = alm.obtener_cantidatos_cuadre(session, "primas")
+    return {
+        "message": "Query de primas ejecutado exitosamente",
+        "candidatos": candidatos_primas,
+    }
 
 
 @router.post("/correr-query-expuestos")
@@ -67,11 +76,23 @@ async def cargar_archivos(
 ):
     p = obtener_parametros_usuario(session, session_id)
     carga_manual.procesar_archivos_cantidades(archivos, p, session)
-    return {"message": "Archivos cargados exitosamente"}
+    candidatos_siniestros = alm.obtener_cantidatos_cuadre(session, "siniestros")
+    candidatos_primas = alm.obtener_cantidatos_cuadre(session, "primas")
+    return {
+        "message": "Archivos cargados exitosamente",
+        "candidatos_siniestros": candidatos_siniestros,
+        "candidatos_primas": candidatos_primas,
+    }
 
 
 @router.post("/eliminar-archivos-cargados")
 @atrapar_excepciones
-async def eliminar_archivos_cargados():
-    carga_manual.eliminar_archivos()
-    return {"message": "Archivos eliminados exitosamente"}
+async def eliminar_archivos_cargados(session: SessionDep):
+    carga_manual.eliminar_archivos(session)
+    candidatos_siniestros = alm.obtener_cantidatos_cuadre(session, "siniestros")
+    candidatos_primas = alm.obtener_cantidatos_cuadre(session, "primas")
+    return {
+        "message": "Archivos eliminados exitosamente",
+        "candidatos_siniestros": candidatos_siniestros,
+        "candidatos_primas": candidatos_primas,
+    }

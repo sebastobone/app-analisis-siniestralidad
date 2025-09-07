@@ -105,3 +105,8 @@ class MetadataCantidades(SQLModel, table=True):
     cantidad: ct.CANTIDADES = Field(sa_type=String)
     numero_filas: int | None = None
     rutas_padres: list[str] | None = Field(sa_column=Column(JSON))
+
+
+class SeleccionadosCuadre(BaseModel):
+    siniestros: list[str]
+    primas: list[str]

@@ -8,6 +8,7 @@ from sqlmodel import select
 
 from src import utils
 from src.dependencias import SessionDep, atrapar_excepciones
+from src.informacion import almacenamiento as alm
 from src.informacion import carga_manual, mocks
 from src.logger_config import logger
 from src.metodos_plantilla import preparar, resultados
@@ -77,11 +78,15 @@ async def ingresar_parametros(
 
     aperturas = obtener_lista_aperturas(p)
     tipos_analisis_mes_anterior = obtener_tipos_analisis_mes_anterior(p)
+    candidatos_siniestros = alm.obtener_cantidatos_cuadre(session, "siniestros")
+    candidatos_primas = alm.obtener_cantidatos_cuadre(session, "primas")
 
     return {
         "parametros": p,
         "aperturas": aperturas,
         "tipos_analisis_mes_anterior": tipos_analisis_mes_anterior,
+        "candidatos_siniestros": candidatos_siniestros,
+        "candidatos_primas": candidatos_primas,
     }
 
 

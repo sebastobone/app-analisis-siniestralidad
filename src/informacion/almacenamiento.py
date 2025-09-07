@@ -1,8 +1,9 @@
 from pathlib import Path
 
 import polars as pl
-from sqlmodel import select
+from sqlmodel import or_, select
 
+from src import constantes as ct
 from src.dependencias import SessionDep
 from src.logger_config import logger
 from src.models import MetadataCantidades
@@ -46,3 +47,17 @@ def obtener_metadata_archivo(session: SessionDep, ruta: str) -> MetadataCantidad
     return session.exec(
         select(MetadataCantidades).where(MetadataCantidades.ruta == ruta)
     ).all()[0]
+
+
+def obtener_cantidatos_cuadre(
+    session: SessionDep, cantidad: ct.CANTIDADES
+) -> list[dict[str, str]]:
+    query = select(MetadataCantidades.nombre_original, MetadataCantidades.origen).where(
+        MetadataCantidades.cantidad == cantidad,
+        or_(
+            MetadataCantidades.origen == "extraccion",
+            MetadataCantidades.origen == "carga_manual",
+        ),
+    )
+    resultados = session.exec(query).all()
+    return [{"nombre": nombre, "origen": origen} for nombre, origen in resultados]

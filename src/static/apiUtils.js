@@ -2,7 +2,7 @@ import { showToast } from "./toast.js";
 
 const BASE_URL = "http://127.0.0.1:8000";
 
-async function handleRequest(request, errorMsg) {
+export async function handleRequest(request, errorMsg) {
   try {
     const response = await request();
 
@@ -44,4 +44,36 @@ export function fetchSimple(endpoint, errorMsg) {
       }),
     errorMsg,
   );
+}
+
+export function actualizarCheckboxesCandidatos(candidatos, cantidad) {
+  const container = document.getElementById(`candidatos_${cantidad}`);
+
+  container.innerHTML = "";
+
+  candidatos.forEach((candidato, index) => {
+    const { nombre, origen } = candidato;
+
+    const label = document.createElement("label");
+    label.classList.add("checkbox-group");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.name = "opciones";
+    checkbox.value = nombre;
+    checkbox.id = `opcion-${cantidad}-${index}`;
+
+    const customBox = document.createElement("span");
+    customBox.classList.add("checkbox-custom");
+
+    const text = document.createTextNode(`${nombre} - Origen: ${origen}`);
+
+    label.appendChild(checkbox);
+    label.appendChild(customBox);
+    label.appendChild(text);
+
+    container.appendChild(label);
+
+    container.appendChild(document.createElement("br"));
+  });
 }

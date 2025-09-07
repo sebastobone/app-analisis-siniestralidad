@@ -2,6 +2,7 @@ import { showToast } from "./toast.js";
 import { generarDropdownPlantillas } from "./dropdowns/generarPlantillas.js";
 import { generarDropdownAperturas } from "./dropdowns/generarAperturas.js";
 import { generarReferenciasEntremes } from "./dropdowns/generarReferenciasEntremes.js";
+import { actualizarCheckboxesCandidatos } from "./apiUtils.js";
 
 async function enviarParametros(queryParams, formData) {
   const response = await fetch(
@@ -67,6 +68,8 @@ document
       const data = await enviarParametros(queryParams, formData);
       await generarDropdownAperturas(data.aperturas);
       await generarDropdownPlantillas(tipoAnalisis);
+      actualizarCheckboxesCandidatos(data.candidatos_siniestros, "siniestros");
+      actualizarCheckboxesCandidatos(data.candidatos_primas, "primas");
 
       if (tipoAnalisis === "entremes") {
         await generarReferenciasEntremes(data.tipos_analisis_mes_anterior);

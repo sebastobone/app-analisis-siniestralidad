@@ -1,7 +1,9 @@
 import { showToast } from "./toast.js";
+import { actualizarCheckboxesCandidatos, fetchSimple } from "./apiUtils.js";
 
-document.querySelectorAll(".cargaManual").forEach((button) => {
-  button.addEventListener("click", async function (event) {
+document
+  .getElementById("cargarArchivos")
+  .addEventListener("click", async function (event) {
     event.preventDefault();
 
     try {
@@ -9,8 +11,8 @@ document.querySelectorAll(".cargaManual").forEach((button) => {
 
       const formData = new FormData();
       var siniestros = document.getElementById("archivosSiniestros").files;
-      var primas = document.getElementById("archivosSiniestros").files;
-      var expuestos = document.getElementById("archivosSiniestros").files;
+      var primas = document.getElementById("archivosPrimas").files;
+      var expuestos = document.getElementById("archivosExpuestos").files;
 
       if (siniestros.length > 0) {
         for (let i = 0; i < siniestros.length; i++) {
@@ -30,8 +32,7 @@ document.querySelectorAll(".cargaManual").forEach((button) => {
         }
       }
 
-      const endpoint = button.getAttribute("endpoint");
-      const response = await fetch(`http://127.0.0.1:8000/${endpoint}`, {
+      const response = await fetch(`http://127.0.0.1:8000/cargar-archivos`, {
         method: "POST",
         body: formData,
       });
@@ -40,9 +41,24 @@ document.querySelectorAll(".cargaManual").forEach((button) => {
 
       const data = await response.json();
       showToast(data.message, "success");
+
+      actualizarCheckboxesCandidatos(data.candidatos_siniestros, "siniestros");
+      actualizarCheckboxesCandidatos(data.candidatos_primas, "primas");
     } catch (error) {
       showToast(error.message, "error");
       throw error;
     }
   });
-});
+
+document
+  .getElementById("eliminarArchivosCargados")
+  .addEventListener("click", async (event) => {
+    event.preventDefault();
+    showToast("Eliminando archivos...");
+    const data = await fetchSimple(
+      "eliminar-archivos-cargados",
+      "Error al eliminar los archivos",
+    );
+    actualizarCheckboxesCandidatos(data.candidatos_siniestros, "siniestros");
+    actualizarCheckboxesCandidatos(data.candidatos_primas, "primas");
+  });

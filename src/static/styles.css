@@ -171,3 +171,56 @@ input[type="file"] {
   font-size: 14px;
   margin-bottom: 10px;
 }
+
+/* Wrapper for checkbox + label */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+}
+
+/* Hide default checkbox */
+.checkbox-group input[type="checkbox"] {
+  display: none;
+}
+
+/* Custom checkbox */
+.checkbox-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #0033a0;
+  border-radius: 4px;
+  margin-right: 10px;
+  display: inline-block;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* When checked */
+.checkbox-group input[type="checkbox"]:checked + .checkbox-custom {
+  background-color: #00aec7;
+  border-color: #00aec7;
+}
+
+/* Checkmark (appears when checked) */
+.checkbox-custom::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 0px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.checkbox-group input[type="checkbox"]:checked + .checkbox-custom::after {
+  opacity: 1;
+}

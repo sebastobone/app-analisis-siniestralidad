@@ -7,11 +7,12 @@ from pathlib import Path
 import polars as pl
 import xlsxwriter
 from fastapi import UploadFile
+from sqlmodel import select
 
 from src import constantes as ct
 from src import utils
 from src.dependencias import SessionDep
-from src.informacion.almacenamiento import guardar_archivo
+from src.informacion import almacenamiento as alm
 from src.informacion.mocks import generar_mock
 from src.logger_config import logger
 from src.models import ArchivosCantidades, MetadataCantidades, Parametros
@@ -29,6 +30,8 @@ def procesar_archivos_cantidades(
         if archivos_cantidad:
             validar_unicidad_nombres(archivos_cantidad, cantidad)
             for archivo in archivos_cantidad:
+                print(cantidad)
+                print(archivo.filename)
                 procesar_archivo_cantidad(archivo, p, cantidad, session)
 
 
@@ -71,7 +74,7 @@ def procesar_archivo_cantidad(
         cantidad,
         filename,
     ).pipe(
-        guardar_archivo,
+        alm.guardar_archivo,
         session,
         MetadataCantidades(
             ruta=f"data/carga_manual/{cantidad}/{filename_parquet}",
@@ -166,12 +169,21 @@ def validar_unicidad_excel(filename: str, contenido_bytes: io.BytesIO):
         raise ValueError(f"El archivo {filename} tiene mas de una hoja.")
 
 
-def eliminar_archivos() -> None:
+def eliminar_archivos(session: SessionDep) -> None:
+    metadata_carga_manual = session.exec(
+        select(MetadataCantidades).where(MetadataCantidades.origen == "carga_manual")
+    ).all()
+
+    for item in metadata_carga_manual:
+        session.delete(item)
+
+    session.commit()
+
     utils.vaciar_directorio("data/carga_manual/siniestros")
     utils.vaciar_directorio("data/carga_manual/primas")
     utils.vaciar_directorio("data/carga_manual/expuestos")
 
-    logger.info("Archivos de siniestros, primas, y expuestos cargados eliminados.")
+    logger.success("Archivos cargados de siniestros, primas, y expuestos eliminados.")
 
 
 def descargar_ejemplos_cantidades() -> io.BytesIO:

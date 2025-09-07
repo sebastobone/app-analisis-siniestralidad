@@ -106,13 +106,25 @@
         <input type="password" id="password" name="password" required />
       </form>
 
-      <button class="extraccion" endpoint="correr-query-siniestros">
+      <button
+        class="extraccion"
+        endpoint="correr-query-siniestros"
+        cantidad="siniestros"
+      >
         Correr query siniestros
       </button>
-      <button class="extraccion" endpoint="correr-query-primas">
+      <button
+        class="extraccion"
+        endpoint="correr-query-primas"
+        cantidad="primas"
+      >
         Correr query primas
       </button>
-      <button class="extraccion" endpoint="correr-query-expuestos">
+      <button
+        class="extraccion"
+        endpoint="correr-query-expuestos"
+        cantidad="expuestos"
+      >
         Correr query expuestos
       </button>
     </div>
@@ -161,12 +173,12 @@
         />
       </div>
 
-      <button class="cargaManual" endpoint="cargar-archivos">
+      <button id="cargarArchivos" endpoint="cargar-archivos">
         Cargar archivos
       </button>
 
       <button
-        class="apiButton"
+        id="eliminarArchivosCargados"
         style="background-color: darkred"
         endpoint="eliminar-archivos-cargados"
       >
@@ -176,7 +188,14 @@
 
     <div class="form-section" id="controles" style="display: none">
       <h2>Controles de informacion</h2>
-      <button class="apiButton" endpoint="generar-controles">
+
+      <h3>Archivos para incluir en el cuadre de siniestros:</h3>
+      <div id="candidatos_siniestros"></div>
+
+      <h3>Archivos para incluir en el cuadre de primas:</h3>
+      <div id="candidatos_primas"></div>
+
+      <button id="generarControles" endpoint="generar-controles">
         Generar controles
       </button>
     </div>
@@ -297,7 +316,8 @@
     <script src="static/logViewer.js"></script>
     <script type="module" src="static/ingresarParametros.js"></script>
     <script type="module" src="static/traerParametros.js"></script>
-    <script type="module" src="static/dropdowns/generarAperturas.js"></script>
+    <script type="module" src="static/extraccion.js"></script>
+    <script type="module" src="static/controles.js"></script>
     <script src="static/dropdowns/generarAtributos.js"></script>
     <script type="module" src="static/descargarEjemplos.js"></script>
     <script type="module" src="static/cargaManual.js"></script>

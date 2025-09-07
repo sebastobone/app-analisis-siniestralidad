@@ -1,7 +1,7 @@
 import { showToast } from "./toast.js";
 import { fetchForm, fetchSimple } from "./apiUtils.js";
 
-function bindApiButton(selector, handler) {
+export function bindApiButton(selector, handler) {
   document.querySelectorAll(selector).forEach((button) => {
     button.addEventListener("click", async (event) => {
       event.preventDefault();
@@ -20,12 +20,6 @@ bindApiButton(".apiButton", async (button) => {
   showToast("Ejecutando...");
   const endpoint = button.getAttribute("endpoint");
   await fetchSimple(endpoint, "Ocurrio un error");
-});
-
-bindApiButton(".extraccion", async (button) => {
-  showToast("Corriendo query...");
-  const endpoint = button.getAttribute("endpoint");
-  await fetchForm("credencialesTeradata", endpoint, "Error al correr el query");
 });
 
 document

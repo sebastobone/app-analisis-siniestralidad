@@ -37,9 +37,8 @@ def procesar_archivo_segmentacion(
 
         segmentacion.validar_archivo_segmentacion(hojas)
 
-        with xlsxwriter.Workbook(f"data/segmentacion_{negocio}.xlsx") as writer:
-            for hoja in hojas.keys():
-                hojas[hoja].write_excel(writer, worksheet=hoja)
+        with open(f"data/segmentacion_{negocio}.xlsx", "wb") as file:
+            file.write(contenido)
 
         logger.success("Archivo de segmentacion procesado y guardado exitosamente.")
 

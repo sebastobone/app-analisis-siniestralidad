@@ -4,9 +4,8 @@ from uuid import uuid4
 import polars as pl
 from fastapi import APIRouter, Cookie, Query, UploadFile
 from fastapi.responses import Response, StreamingResponse
-from sqlmodel import select
 
-from src import utils
+from src import db, utils
 from src.dependencias import SessionDep, atrapar_excepciones
 from src.informacion import almacenamiento as alm
 from src.informacion import carga_manual, mocks
@@ -17,24 +16,11 @@ from src.models import Parametros
 router = APIRouter()
 
 
-def obtener_parametros_usuario(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> Parametros:
-    return session.exec(
-        select(Parametros).where(Parametros.session_id == session_id)
-    ).all()[0]
-
-
-def eliminar_parametros_anteriores(
-    session: SessionDep, session_id: Annotated[str | None, Cookie()] = None
-) -> None:
-    try:
-        existing_data = obtener_parametros_usuario(session, session_id)
-        if existing_data:
-            session.delete(existing_data)
-            session.commit()
-    except IndexError:
-        pass
+def obtener_parametros_usuario(session: SessionDep, session_id: str | None):
+    parametros = db.obtener_fila(session, Parametros, Parametros.session_id, session_id)
+    if not parametros:
+        raise ValueError("No se encontraron parametros ingresados.")
+    return parametros
 
 
 def guardar_parametros(
@@ -46,10 +32,8 @@ def guardar_parametros(
     if p.mes_corte < p.mes_inicio:
         raise ValueError("El mes de corte debe ser posterior al mes de inicio.")
 
-    eliminar_parametros_anteriores(session, session_id)
-    session.add(p)
-    session.commit()
-    session.refresh(p)
+    db.eliminar_fila(session, Parametros, Parametros.session_id, session_id)
+    db.guardar_fila(session, p)
 
     logger.info(f"Parametros ingresados: {p.model_dump()}")
 

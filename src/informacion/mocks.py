@@ -6,6 +6,7 @@ import numpy as np
 import polars as pl
 
 from src import constantes as ct
+from src import db
 from src.dependencias import SessionDep
 from src.informacion import almacenamiento as alm
 from src.models import MetadataCantidades
@@ -145,4 +146,4 @@ def eliminar_mocks(session: SessionDep):
     for cantidad in ct.LISTA_CANTIDADES:
         ruta = f"data/raw/{cantidad}.parquet"
         Path(ruta).unlink(missing_ok=True)
-        alm.eliminar_metadata_archivo(session, ruta)
+        db.eliminar_fila(session, MetadataCantidades, MetadataCantidades.ruta, ruta)

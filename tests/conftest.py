@@ -102,6 +102,8 @@ def assert_diferente(
 
 def vaciar_directorios_test() -> None:
     utils.vaciar_directorio("data/raw")
+    utils.vaciar_directorio("data/demo")
+    utils.vaciar_directorio("data/consolidado")
     utils.vaciar_directorio("data/pre_cuadre_contable")
     utils.vaciar_directorio("data/post_cuadre_contable")
     utils.vaciar_directorio("data/processed")
@@ -167,9 +169,9 @@ async def validar_cuadre(
         [pl.col(f"cuadrar_{col}").cast(pl.Boolean) for col in columnas_cantidades]
     )
 
-    base_post_cuadre = pl.read_parquet(f"data/raw/{file}.parquet").join(
-        meses_cuadre, on="fecha_registro"
-    )
+    base_post_cuadre = pl.read_parquet(
+        f"data/post_cuadre_contable/{file}.parquet"
+    ).join(meses_cuadre, on="fecha_registro")
 
     sap = (
         await obtener_sap_negocio(negocio, file, columnas_cantidades, mes_corte)

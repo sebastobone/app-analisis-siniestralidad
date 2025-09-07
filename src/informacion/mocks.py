@@ -1,12 +1,12 @@
 import datetime as dt
 from calendar import monthrange
-from pathlib import Path
 
 import numpy as np
 import polars as pl
+from sqlmodel import select
 
 from src import constantes as ct
-from src import db
+from src import utils
 from src.dependencias import SessionDep
 from src.informacion import almacenamiento as alm
 from src.models import MetadataCantidades
@@ -21,7 +21,7 @@ def generar_mocks(mes_inicio: dt.date, mes_corte: dt.date, session: SessionDep) 
             alm.guardar_archivo,
             session,
             MetadataCantidades(
-                ruta=f"data/raw/{cantidad}.parquet",
+                ruta=f"data/demo/{cantidad}.parquet",
                 nombre_original=f"{cantidad}.parquet",
                 origen="demo",
                 cantidad=cantidad,
@@ -143,7 +143,9 @@ def generar_mock_expuestos(
 
 
 def eliminar_mocks(session: SessionDep):
-    for cantidad in ct.LISTA_CANTIDADES:
-        ruta = f"data/raw/{cantidad}.parquet"
-        Path(ruta).unlink(missing_ok=True)
-        db.eliminar_fila(session, MetadataCantidades, MetadataCantidades.ruta, ruta)
+    utils.vaciar_directorio("data/demo")
+    query = select(MetadataCantidades).where(MetadataCantidades.origen == "demo")
+    rutas = session.exec(query).all()
+    for item in rutas:
+        session.delete(item)
+    session.commit()

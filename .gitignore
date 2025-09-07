@@ -192,6 +192,12 @@ data/processed/*
 data/raw/*
 !data/raw/.gitkeep
 
+data/demo/*
+!data/demo/.gitkeep
+
+data/consolidado/*
+!data/consolidado/.gitkeep
+
 data/post_cuadre_contable/*
 !data/post_cuadre_contable/.gitkeep
 

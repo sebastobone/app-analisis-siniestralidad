@@ -105,9 +105,10 @@ class MetadataCantidades(SQLModel, table=True):
         "pre_cuadre_contable",
         "post_cuadre_contable",
         "demo",
+        "consolidacion",
     ] = Field(sa_type=String)
     cantidad: ct.CANTIDADES = Field(sa_type=String)
-    numero_filas: int | None = None
+    numero_filas: int | None
     rutas_padres: list[str] | None = Field(sa_column=Column(JSON))
 
 

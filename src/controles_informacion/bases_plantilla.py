@@ -33,7 +33,7 @@ def validar_base_siniestros(
     aperturas = ["apertura_reservas", "atipico"]
 
     original = (
-        pl.read_parquet("data/raw/siniestros.parquet")
+        pl.read_parquet("data/consolidado/siniestros.parquet")
         .group_by(aperturas)
         .agg([pl.sum(qty_column) for qty_column in ct.VALORES["siniestros"].keys()])
         .with_columns(
@@ -76,7 +76,9 @@ def validar_base_primas_expuestos(
 ) -> pl.DataFrame:
     aperturas = utils.obtener_nombres_aperturas(negocio, qty)
 
-    original_group = pl.read_parquet(f"data/raw/{qty}.parquet").group_by(aperturas)
+    original_group = pl.read_parquet(f"data/consolidado/{qty}.parquet").group_by(
+        aperturas
+    )
     base_group = resumen.group_by(aperturas)
 
     if qty == "primas":

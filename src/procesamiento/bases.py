@@ -4,6 +4,7 @@ from sqlmodel import col, select
 from src import constantes as ct
 from src import utils
 from src.dependencias import SessionDep
+from src.informacion import almacenamiento as alm
 from src.logger_config import logger
 from src.models import MetadataCantidades, Parametros
 from src.procesamiento import base_primas_expuestos as bpdn
@@ -82,14 +83,24 @@ def consolidar_archivos_cantidades(
 
     dfs = [pl.read_parquet(ruta) for ruta in sorted(candidatos_iniciales)]
 
-    return (
-        pl.DataFrame(pl.concat(dfs))
-        .pipe(
-            cantidades.organizar_archivo,
-            p.negocio,
-            (p.mes_inicio, p.mes_corte),
-            cantidad,
-            cantidad,
-        )
-        .lazy()
+    df_consolidado = pl.DataFrame(pl.concat(dfs)).pipe(
+        cantidades.organizar_archivo,
+        p.negocio,
+        (p.mes_inicio, p.mes_corte),
+        cantidad,
+        cantidad,
     )
+
+    alm.guardar_archivo(
+        df_consolidado,
+        session,
+        MetadataCantidades(
+            ruta=f"data/consolidado/{cantidad}.parquet",
+            nombre_original=f"{cantidad}.parquet",
+            origen="consolidado",
+            cantidad=cantidad,
+            rutas_padres=list(candidatos_finales),
+        ),
+    )
+
+    return df_consolidado.lazy()

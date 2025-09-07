@@ -77,10 +77,9 @@ async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) ->
             }
         ).with_columns(utils.crear_columna_apertura_reservas("demo", "siniestros"))
 
-        with patch("src.controles_informacion.cuadre_contable.guardar_archivos"):
-            df_cuadre = await cuadre_contable.realizar_cuadre_contable(
-                "demo", "siniestros", mock_soat, dif_sap_vs_tera, meses_a_cuadrar
-            )
+        df_cuadre = await cuadre_contable.realizar_cuadre_contable(
+            "demo", "siniestros", mock_soat, dif_sap_vs_tera, meses_a_cuadrar
+        )
 
     cifra_sap_meses_a_cuadrar = df_sap.filter(
         pl.col("fecha_registro").is_in([meses_prueba[0], meses_prueba[1]])

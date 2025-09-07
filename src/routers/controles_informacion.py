@@ -18,5 +18,5 @@ async def generar_controles(
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     params = obtener_parametros_usuario(session, session_id)
-    await generacion.generar_controles(params)
+    await generacion.generar_controles(params, archivos_cuadre, session)
     return {"message": "Controles generados exitosamente"}

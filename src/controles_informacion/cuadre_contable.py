@@ -42,10 +42,7 @@ async def realizar_cuadre_contable(
     )
 
     base_cuadrada = agregar_diferencias(base, diferencias)
-
-    await guardar_archivos(file, base_cuadrada)
-    logger.success(f"Cuadre contable para {file} realizado exitosamente.")
-
+    logger.success("Cuadre contable realizado exitosamente.")
     return base_cuadrada
 
 
@@ -139,8 +136,3 @@ def agregar_diferencias(df: pl.DataFrame, diferencias: pl.DataFrame) -> pl.DataF
         .sum()
         .sort(columns[: columns.index("fecha_registro") + 1])
     )
-
-
-async def guardar_archivos(file: ct.CANTIDADES_CUADRE, df_cuadre: pl.DataFrame) -> None:
-    df_cuadre.write_csv(f"data/raw/{file}.csv", separator="\t")
-    df_cuadre.write_parquet(f"data/raw/{file}.parquet")

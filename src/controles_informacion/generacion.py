@@ -1,5 +1,4 @@
 import asyncio
-import shutil
 from datetime import date
 from pathlib import Path
 from typing import Literal
@@ -10,8 +9,11 @@ from src import constantes as ct
 from src import utils
 from src.controles_informacion import cuadre_contable as cuadre
 from src.controles_informacion import evidencias, sap
+from src.dependencias import SessionDep
+from src.informacion import almacenamiento as alm
 from src.logger_config import logger
-from src.models import Parametros
+from src.models import MetadataCantidades, Parametros, SeleccionadosCuadre
+from src.validation import cantidades
 
 ARCHIVOS_PERMANENTES = [
     "siniestros.parquet",
@@ -29,33 +31,18 @@ ARCHIVOS_PERMANENTES = [
 ]
 
 
-async def generar_controles(p: Parametros) -> None:
-    await restablecer_salidas_queries("data/raw")
-
+async def generar_controles(
+    p: Parametros, archivos_cuadre: SeleccionadosCuadre, session: SessionDep
+) -> None:
     await verificar_existencia_afos(p.negocio)
 
-    await generar_controles_cantidad("siniestros", p)
-    await generar_controles_cantidad("primas", p)
-    await generar_controles_cantidad("expuestos", p)
+    await generar_controles_cantidad("siniestros", p, archivos_cuadre, session)
+    await generar_controles_cantidad("primas", p, archivos_cuadre, session)
+    await generar_controles_cantidad("expuestos", p, archivos_cuadre, session)
 
     await evidencias.generar_evidencias_parametros(
         p.negocio, utils.date_to_yyyymm(p.mes_corte)
     )
-
-
-async def restablecer_salidas_queries(path_salidas_queries: str) -> None:
-    logger.info("Restableciendo las salidas de los queries...")
-    data_raw = Path(path_salidas_queries)
-    archivos_removibles: list[Path] = []
-
-    for file in data_raw.iterdir():
-        if "teradata" in file.name:
-            shutil.copyfile(file, data_raw / file.name.replace("_teradata", ""))
-        if file.name not in ARCHIVOS_PERMANENTES:
-            archivos_removibles.append(file)
-
-    for file in archivos_removibles:
-        file.unlink()
 
 
 async def verificar_existencia_afos(negocio: str):
@@ -73,56 +60,108 @@ async def verificar_existencia_afos(negocio: str):
             )
 
 
-async def generar_controles_cantidad(cantidad: ct.CANTIDADES, p: Parametros) -> None:
-    df = await asyncio.to_thread(pl.read_parquet, f"data/raw/{cantidad}.parquet")
+async def generar_controles_cantidad(
+    cantidad: ct.CANTIDADES,
+    p: Parametros,
+    archivos_cuadre: SeleccionadosCuadre,
+    session: SessionDep,
+) -> None:
+    lista_archivos_cuadre = archivos_cuadre.model_dump()[cantidad]
+    if lista_archivos_cuadre:
+        dfs_cuadre = []
+        for ruta in lista_archivos_cuadre:
+            dfs_cuadre.append(pl.read_parquet(ruta))
 
-    difs_sap_tera_pre_cuadre = await generar_controles_estado_cuadre(
-        df,
-        p.negocio,
-        cantidad,
-        p.mes_corte,
-        estado_cuadre="pre_cuadre_contable",
-    )
+        df_pre_cuadre = pl.DataFrame(pl.concat(dfs_cuadre)).pipe(
+            cantidades.organizar_archivo,
+            p.negocio,
+            (p.mes_inicio, p.mes_corte),
+            cantidad,
+            cantidad,
+        )
 
-    if cantidad != "expuestos" and cuadre.debe_realizar_cuadre_contable(
-        p.negocio, cantidad
-    ):
-        await asyncio.to_thread(
-            df.write_csv, f"data/raw/{cantidad}_pre_cuadre.csv", separator="\t"
+        alm.guardar_archivo(
+            df_pre_cuadre,
+            session,
+            MetadataCantidades(
+                ruta=f"data/pre_cuadre_contable/{cantidad}.parquet",
+                nombre_original=f"{cantidad}.parquet",
+                origen="pre_cuadre_contable",
+                cantidad=cantidad,
+                rutas_padres=lista_archivos_cuadre,
+            ),
         )
-        await asyncio.to_thread(
-            df.write_parquet, f"data/raw/{cantidad}_pre_cuadre.parquet"
-        )
-        meses_a_cuadrar = pl.read_excel(
-            f"data/segmentacion_{p.negocio}.xlsx", sheet_name=f"Meses_cuadre_{cantidad}"
-        )
-        df = await cuadre.realizar_cuadre_contable(
-            p.negocio, cantidad, df, difs_sap_tera_pre_cuadre, meses_a_cuadrar
-        )
-        _ = await generar_controles_estado_cuadre(
-            df,
+
+        difs_sap_tera_pre_cuadre = await generar_controles_estado_cuadre(
+            df_pre_cuadre,
             p.negocio,
             cantidad,
             p.mes_corte,
-            estado_cuadre="post_cuadre_contable",
+            estado_cuadre="pre_cuadre_contable",
         )
 
-    if p.negocio == "soat" and cantidad == "siniestros":
-        await asyncio.to_thread(
-            df.write_csv,
-            "data/raw/siniestros_post_cuadre.csv",
-            separator="\t",
-        )
-        await asyncio.to_thread(
-            df.write_parquet, "data/raw/siniestros_post_cuadre.parquet"
-        )
-        df = await ajustar_fraude(df, p.mes_corte)
-        _ = await generar_controles_estado_cuadre(
-            df,
-            p.negocio,
-            cantidad,
-            p.mes_corte,
-            estado_cuadre="post_ajustes_fraude",
+        if cantidad in [
+            "siniestros",
+            "primas",
+        ] and cuadre.debe_realizar_cuadre_contable(p.negocio, cantidad):
+            meses_a_cuadrar = pl.read_excel(
+                f"data/segmentacion_{p.negocio}.xlsx",
+                sheet_name=f"Meses_cuadre_{cantidad}",
+            )
+            df_post_cuadre = await cuadre.realizar_cuadre_contable(
+                p.negocio,
+                cantidad,
+                df_pre_cuadre,
+                difs_sap_tera_pre_cuadre,
+                meses_a_cuadrar,
+            )
+            alm.guardar_archivo(
+                df_post_cuadre,
+                session,
+                MetadataCantidades(
+                    ruta=f"data/post_cuadre_contable/{cantidad}.parquet",
+                    nombre_original=f"{cantidad}.parquet",
+                    origen="post_cuadre_contable",
+                    cantidad=cantidad,
+                    rutas_padres=lista_archivos_cuadre,
+                ),
+            )
+
+            _ = await generar_controles_estado_cuadre(
+                df_post_cuadre,
+                p.negocio,
+                cantidad,
+                p.mes_corte,
+                estado_cuadre="post_cuadre_contable",
+            )
+
+            # if p.negocio == "soat" and cantidad == "siniestros":
+            #     df_post_fraude = await ajustar_fraude(df_post_cuadre, p.mes_corte)
+            #     alm.guardar_archivo(
+            #         df_post_fraude,
+            #         session,
+            #         MetadataCantidades(
+            #             ruta=f"data/post_ajustes_fraude/{cantidad}.parquet",
+            #             nombre_original=f"{cantidad}.parquet",
+            #             origen="post_ajustes_fraude",
+            #             cantidad=cantidad,
+            #         ),
+            #     )
+            #     _ = await generar_controles_estado_cuadre(
+            #         df_post_fraude,
+            #         p.negocio,
+            #         cantidad,
+            #         p.mes_corte,
+            #         estado_cuadre="post_ajustes_fraude",
+            #     )
+    else:
+        logger.warning(
+            utils.limpiar_espacios_log(
+                f"""
+                No se seleccionaron archivos para la cantidad {cantidad},
+                por lo cual no le generaron controles.
+                """
+            )
         )
 
 
@@ -131,9 +170,7 @@ async def generar_controles_estado_cuadre(
     negocio: str,
     file: ct.CANTIDADES,
     mes_corte: date,
-    estado_cuadre: Literal[
-        "pre_cuadre_contable", "post_cuadre_contable", "post_ajustes_fraude"
-    ],
+    estado_cuadre: Literal["pre_cuadre_contable", "post_cuadre_contable"],
 ) -> pl.DataFrame:
     logger.info(
         utils.limpiar_espacios_log(

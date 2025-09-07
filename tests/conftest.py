@@ -9,7 +9,7 @@ import numpy as np
 import polars as pl
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, text
 from sqlmodel.pool import StaticPool
 from src import constantes as ct
 from src import utils
@@ -117,6 +117,14 @@ def vaciar_directorios_test() -> None:
     archivo_segmentacion_manual = Path("data/segmentacion_test.xlsx")
     if archivo_segmentacion_manual.exists():
         archivo_segmentacion_manual.unlink()
+
+    # Como borramos todos los archivos, debemos borrar tambien los metadatos
+    engine = create_engine(
+        "sqlite:///data/database.db", connect_args={"check_same_thread": False}
+    )
+    with engine.connect() as connection:
+        connection.execute(text("DROP TABLE IF EXISTS metadatacantidades"))
+        connection.commit()
 
 
 def correr_queries(client: TestClient) -> None:

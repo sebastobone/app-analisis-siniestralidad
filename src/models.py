@@ -99,9 +99,13 @@ class ArchivosCantidades:
 class MetadataCantidades(SQLModel, table=True):
     ruta: str = Field(primary_key=True)
     nombre_original: str
-    origen: Literal["extraccion", "carga_manual", "cuadre_contable", "demo"] = Field(
-        sa_type=String
-    )
+    origen: Literal[
+        "extraccion",
+        "carga_manual",
+        "pre_cuadre_contable",
+        "post_cuadre_contable",
+        "demo",
+    ] = Field(sa_type=String)
     cantidad: ct.CANTIDADES = Field(sa_type=String)
     numero_filas: int | None = None
     rutas_padres: list[str] | None = Field(sa_column=Column(JSON))
@@ -110,3 +114,4 @@ class MetadataCantidades(SQLModel, table=True):
 class SeleccionadosCuadre(BaseModel):
     siniestros: list[str]
     primas: list[str]
+    expuestos: list[str]

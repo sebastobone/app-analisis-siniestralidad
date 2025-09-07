@@ -1,6 +1,4 @@
-import tempfile
 from datetime import date
-from pathlib import Path
 
 import numpy as np
 import polars as pl
@@ -8,7 +6,6 @@ import pytest
 from src import constantes as ct
 from src.controles_informacion import generacion as gen
 from src.controles_informacion import sap
-from src.informacion.mocks import generar_mock
 
 
 @pytest.mark.fast
@@ -117,41 +114,3 @@ async def test_consolidar_sap(
 async def test_verificar_existencia_afos():
     with pytest.raises(FileNotFoundError):
         await gen.verificar_existencia_afos("demo")
-
-
-@pytest.mark.asyncio
-@pytest.mark.fast
-async def test_restablecer_archivos_queries():
-    dates = (date(2020, 1, 1), date(2024, 12, 31))
-
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_dir_path = Path(tmp_dir)
-
-        siniestros = generar_mock(dates, "siniestros")
-        primas = generar_mock(dates, "primas")
-        expuestos = generar_mock(dates, "expuestos")
-
-        await gen.restablecer_salidas_queries(tmp_dir)
-
-        for sufijo in ["", "_teradata"]:
-            siniestros.write_parquet(tmp_dir_path / f"siniestros{sufijo}.parquet")
-            siniestros.write_parquet(tmp_dir_path / f"siniestros{sufijo}.csv")
-            primas.write_parquet(tmp_dir_path / f"primas{sufijo}.parquet")
-            primas.write_parquet(tmp_dir_path / f"primas{sufijo}.csv")
-            expuestos.write_parquet(tmp_dir_path / f"expuestos{sufijo}.parquet")
-            expuestos.write_parquet(tmp_dir_path / f"expuestos{sufijo}.csv")
-
-        await gen.restablecer_salidas_queries(tmp_dir)
-
-        archivos_guardados = sorted([file.name for file in tmp_dir_path.iterdir()])
-        assert archivos_guardados == sorted(gen.ARCHIVOS_PERMANENTES)
-
-        for base in ["siniestros", "primas"]:
-            for suffix in ["_pre_cuadre", "_post_cuadre"]:
-                for ext in [".parquet", ".csv"]:
-                    siniestros.write_parquet(tmp_dir_path / f"{base}{suffix}{ext}")
-
-        await gen.restablecer_salidas_queries(tmp_dir)
-
-        archivos_guardados = sorted([file.name for file in tmp_dir_path.iterdir()])
-        assert archivos_guardados == sorted(gen.ARCHIVOS_PERMANENTES)

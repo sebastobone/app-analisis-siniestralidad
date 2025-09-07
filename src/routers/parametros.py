@@ -78,8 +78,8 @@ async def ingresar_parametros(
 
     aperturas = obtener_lista_aperturas(p)
     tipos_analisis_mes_anterior = obtener_tipos_analisis_mes_anterior(p)
-    candidatos_siniestros = alm.obtener_cantidatos_cuadre(session, "siniestros")
-    candidatos_primas = alm.obtener_cantidatos_cuadre(session, "primas")
+    candidatos_siniestros = alm.obtener_cantidatos_controles(session, "siniestros")
+    candidatos_primas = alm.obtener_cantidatos_controles(session, "primas")
 
     return {
         "parametros": p,

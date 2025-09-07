@@ -21,7 +21,7 @@ async def correr_query_siniestros(
 ):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "siniestros", credenciales, session)
-    candidatos_siniestros = alm.obtener_cantidatos_cuadre(session, "siniestros")
+    candidatos_siniestros = alm.obtener_cantidatos_controles(session, "siniestros")
     return {
         "message": "Query de siniestros ejecutado exitosamente",
         "candidatos": candidatos_siniestros,
@@ -37,7 +37,7 @@ async def correr_query_primas(
 ):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "primas", credenciales, session)
-    candidatos_primas = alm.obtener_cantidatos_cuadre(session, "primas")
+    candidatos_primas = alm.obtener_cantidatos_controles(session, "primas")
     return {
         "message": "Query de primas ejecutado exitosamente",
         "candidatos": candidatos_primas,
@@ -53,7 +53,11 @@ async def correr_query_expuestos(
 ):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "expuestos", credenciales, session)
-    return {"message": "Query de expuestos ejecutado exitosamente"}
+    candidatos_expuestos = alm.obtener_cantidatos_controles(session, "expuestos")
+    return {
+        "message": "Query de expuestos ejecutado exitosamente",
+        "candidatos": candidatos_expuestos,
+    }
 
 
 @router.get("/descargar-ejemplos-cantidades")
@@ -76,12 +80,14 @@ async def cargar_archivos(
 ):
     p = obtener_parametros_usuario(session, session_id)
     carga_manual.procesar_archivos_cantidades(archivos, p, session)
-    candidatos_siniestros = alm.obtener_cantidatos_cuadre(session, "siniestros")
-    candidatos_primas = alm.obtener_cantidatos_cuadre(session, "primas")
+    candidatos_siniestros = alm.obtener_cantidatos_controles(session, "siniestros")
+    candidatos_primas = alm.obtener_cantidatos_controles(session, "primas")
+    candidatos_expuestos = alm.obtener_cantidatos_controles(session, "expuestos")
     return {
         "message": "Archivos cargados exitosamente",
         "candidatos_siniestros": candidatos_siniestros,
         "candidatos_primas": candidatos_primas,
+        "candidatos_expuestos": candidatos_expuestos,
     }
 
 
@@ -89,10 +95,12 @@ async def cargar_archivos(
 @atrapar_excepciones
 async def eliminar_archivos_cargados(session: SessionDep):
     carga_manual.eliminar_archivos(session)
-    candidatos_siniestros = alm.obtener_cantidatos_cuadre(session, "siniestros")
-    candidatos_primas = alm.obtener_cantidatos_cuadre(session, "primas")
+    candidatos_siniestros = alm.obtener_cantidatos_controles(session, "siniestros")
+    candidatos_primas = alm.obtener_cantidatos_controles(session, "primas")
+    candidatos_expuestos = alm.obtener_cantidatos_controles(session, "expuestos")
     return {
         "message": "Archivos eliminados exitosamente",
         "candidatos_siniestros": candidatos_siniestros,
         "candidatos_primas": candidatos_primas,
+        "candidatos_expuestos": candidatos_expuestos,
     }

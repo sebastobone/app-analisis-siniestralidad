@@ -192,6 +192,12 @@ data/processed/*
 data/raw/*
 !data/raw/.gitkeep
 
+data/post_cuadre_contable/*
+!data/post_cuadre_contable/.gitkeep
+
+data/pre_cuadre_contable/*
+!data/pre_cuadre_contable/.gitkeep
+
 data/carga_manual/siniestros/*
 !data/carga_manual/siniestros/.gitkeep
 data/carga_manual/primas/*

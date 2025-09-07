@@ -49,10 +49,14 @@ def obtener_metadata_archivo(session: SessionDep, ruta: str) -> MetadataCantidad
     ).all()[0]
 
 
-def obtener_cantidatos_cuadre(
+def obtener_cantidatos_controles(
     session: SessionDep, cantidad: ct.CANTIDADES
 ) -> list[dict[str, str]]:
-    query = select(MetadataCantidades.nombre_original, MetadataCantidades.origen).where(
+    query = select(
+        MetadataCantidades.ruta,
+        MetadataCantidades.nombre_original,
+        MetadataCantidades.origen,
+    ).where(
         MetadataCantidades.cantidad == cantidad,
         or_(
             MetadataCantidades.origen == "extraccion",
@@ -60,4 +64,7 @@ def obtener_cantidatos_cuadre(
         ),
     )
     resultados = session.exec(query).all()
-    return [{"nombre": nombre, "origen": origen} for nombre, origen in resultados]
+    return [
+        {"ruta": ruta, "nombre": nombre, "origen": origen}
+        for ruta, nombre, origen in resultados
+    ]

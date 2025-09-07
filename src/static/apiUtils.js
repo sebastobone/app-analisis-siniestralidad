@@ -51,8 +51,8 @@ export function actualizarCheckboxesCandidatos(candidatos, cantidad) {
 
   container.innerHTML = "";
 
-  candidatos.forEach((candidato, index) => {
-    const { nombre, origen } = candidato;
+  candidatos.forEach((candidato) => {
+    const { ruta, nombre, origen } = candidato;
 
     const label = document.createElement("label");
     label.classList.add("checkbox-group");
@@ -60,8 +60,11 @@ export function actualizarCheckboxesCandidatos(candidatos, cantidad) {
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.name = "opciones";
-    checkbox.value = nombre;
-    checkbox.id = `opcion-${cantidad}-${index}`;
+    checkbox.value = ruta;
+
+    if (origen === "extraccion") {
+      checkbox.checked = true;
+    }
 
     const customBox = document.createElement("span");
     customBox.classList.add("checkbox-custom");

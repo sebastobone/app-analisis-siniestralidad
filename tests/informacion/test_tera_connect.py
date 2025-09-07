@@ -3,6 +3,7 @@ from datetime import timedelta
 import polars as pl
 import pytest
 from src import constantes as ct
+from src import utils
 from src.informacion import tera_connect
 from src.models import Parametros
 from src.validation import adds
@@ -34,8 +35,8 @@ def test_reemplazar_parametros_queries(params: Parametros):
 
     correct_result = f"""
         SELECT
-            {params.mes_inicio}
-            , {params.mes_corte}
+            {utils.date_to_yyyymm(params.mes_inicio)}
+            , {utils.date_to_yyyymm(params.mes_corte)}
             , {params.mes_inicio}
             , {params.mes_corte}
         FROM TABLE1

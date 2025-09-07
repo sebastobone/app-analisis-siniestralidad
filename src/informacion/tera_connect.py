@@ -113,8 +113,8 @@ async def _obtener_segmentaciones(
 
 def _reemplazar_parametros_queries(queries: str, p: Parametros) -> str:
     return queries.format(
-        mes_primera_ocurrencia=p.mes_inicio,
-        mes_corte=p.mes_corte,
+        mes_primera_ocurrencia=utils.date_to_yyyymm(p.mes_inicio),
+        mes_corte=utils.date_to_yyyymm(p.mes_corte),
         fecha_primera_ocurrencia=p.mes_inicio,
         fecha_mes_corte=p.mes_corte,
     )

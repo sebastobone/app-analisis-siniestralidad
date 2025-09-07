@@ -27,19 +27,20 @@ async def traer_y_guardar_todas_las_aperturas(
 
     num_apertura = 0
     for apertura in aperturas:
-        modos_actual = modos.model_copy()
-        modos_actual.apertura = apertura
+        modos_actual = modos.model_copy(update={"apertura": apertura})
 
         try:
-            actualizar.actualizar_plantillas(wb, p, modos_actual)
+            await asyncio.to_thread(
+                actualizar.actualizar_plantillas, wb, p, modos_actual
+            )
         except (
             actualizar.PlantillaNoGeneradaError,
             actualizar.PeriodicidadDiferenteError,
         ):
-            generar.generar_plantillas(wb, p, modos_actual)
+            await asyncio.to_thread(generar.generar_plantillas, wb, p, modos_actual)
         if traer:
-            traer_apertura(wb, p, modos_actual)
-        guardar_apertura(wb, p, modos_actual)
+            await asyncio.to_thread(traer_apertura, wb, p, modos_actual)
+        await asyncio.to_thread(guardar_apertura, wb, p, modos_actual)
 
         await asyncio.sleep(0)
 

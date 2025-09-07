@@ -17,11 +17,8 @@ def guardar_archivo(
     guardar_metadata_archivo(session, metadata)
 
     # En csv para poder visualizarlo facil, en caso de ser necesario
-    if metadata.origen == "extraccion":
-        ruta_csv = Path(metadata.ruta).with_suffix(".csv")
-        metadata_csv = metadata.model_copy(update={"ruta": str(ruta_csv)})
-        df.write_csv(ruta_csv, separator="\t")
-        guardar_metadata_archivo(session, metadata_csv)
+    ruta_csv = Path(metadata.ruta).with_suffix(".csv")
+    df.write_csv(ruta_csv, separator="\t")
 
     logger.info(f"{metadata.numero_filas} registros almacenados en {metadata.ruta}.")
 

@@ -5,21 +5,26 @@ import numpy as np
 import polars as pl
 
 from src import constantes as ct
-from src.logger_config import logger
+from src.dependencias import SessionDep
+from src.informacion.almacenamiento import guardar_archivo
+from src.models import MetadataCantidades
 from src.validation import cantidades
 
 
-def generar_mocks(mes_inicio: dt.date, mes_corte: dt.date) -> None:
+def generar_mocks(mes_inicio: dt.date, mes_corte: dt.date, session: SessionDep) -> None:
     for cantidad in ct.LISTA_CANTIDADES:
-        df = generar_mock(
+        generar_mock(
             (mes_inicio, mes_corte), cantidad, ct.NUM_FILAS_DEMO[cantidad]
+        ).pipe(
+            guardar_archivo,
+            session,
+            MetadataCantidades(
+                ruta=f"data/raw/{cantidad}.parquet",
+                nombre_original=f"{cantidad}.parquet",
+                origen="demo",
+                cantidad=cantidad,
+            ),
         )
-        guardar_mock(df, cantidad)
-
-
-def guardar_mock(df: pl.DataFrame, cantidad: ct.CANTIDADES) -> None:
-    df.write_parquet(f"data/raw/{cantidad}.parquet")
-    logger.info(f"Datos ficticios de {cantidad} generados.")
 
 
 def generar_mock(

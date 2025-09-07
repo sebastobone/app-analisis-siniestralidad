@@ -10,13 +10,17 @@ from fastapi import UploadFile
 
 from src import constantes as ct
 from src import utils
+from src.dependencias import SessionDep
+from src.informacion.almacenamiento import guardar_archivo
 from src.informacion.mocks import generar_mock
 from src.logger_config import logger
-from src.models import ArchivosCantidades, Parametros
+from src.models import ArchivosCantidades, MetadataCantidades, Parametros
 from src.validation import cantidades, segmentacion
 
 
-def procesar_archivos_cantidades(archivos: ArchivosCantidades, p: Parametros) -> None:
+def procesar_archivos_cantidades(
+    archivos: ArchivosCantidades, p: Parametros, session: SessionDep
+) -> None:
     for cantidad, archivos_cantidad in {
         "siniestros": archivos.siniestros,
         "primas": archivos.primas,
@@ -25,7 +29,7 @@ def procesar_archivos_cantidades(archivos: ArchivosCantidades, p: Parametros) ->
         if archivos_cantidad:
             validar_unicidad_nombres(archivos_cantidad, cantidad)
             for archivo in archivos_cantidad:
-                procesar_archivo_cantidad(archivo, p, cantidad)
+                procesar_archivo_cantidad(archivo, p, cantidad, session)
 
 
 def procesar_archivo_segmentacion(
@@ -49,23 +53,32 @@ def procesar_archivo_segmentacion(
 
 
 def procesar_archivo_cantidad(
-    archivo_cantidad: UploadFile, p: Parametros, cantidad: ct.CANTIDADES
+    archivo_cantidad: UploadFile,
+    p: Parametros,
+    cantidad: ct.CANTIDADES,
+    session: SessionDep,
 ) -> None:
     filename = str(archivo_cantidad.filename)
     extension = filename.split(".")[-1]
+    filename_parquet = filename.replace(extension, "parquet")
 
-    df = leer_archivo_cantidad(
+    leer_archivo_cantidad(
         filename, archivo_cantidad.file.read(), extension, cantidad
-    )
-    cantidades.validar_archivo(p.negocio, df, filename, cantidad)
-    df = cantidades.organizar_archivo(
-        df, p.negocio, (p.mes_inicio, p.mes_corte), cantidad, filename
-    )
-
-    print(df)
-
-    df.write_parquet(
-        f"data/carga_manual/{cantidad}/{filename.replace(extension, 'parquet')}"
+    ).pipe(cantidades.validar_archivo, p.negocio, filename, cantidad).pipe(
+        cantidades.organizar_archivo,
+        p.negocio,
+        (p.mes_inicio, p.mes_corte),
+        cantidad,
+        filename,
+    ).pipe(
+        guardar_archivo,
+        session,
+        MetadataCantidades(
+            ruta=f"data/carga_manual/{cantidad}/{filename_parquet}",
+            nombre_original=filename,
+            origen="carga_manual",
+            cantidad=cantidad,
+        ),
     )
 
     logger.success(f"Archivo {filename} procesado y guardado exitosamente.")

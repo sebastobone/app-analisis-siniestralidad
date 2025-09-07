@@ -19,7 +19,7 @@ async def correr_query_siniestros(
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     params = obtener_parametros_usuario(session, session_id)
-    await tera_connect.correr_query(params, "siniestros", credenciales)
+    await tera_connect.correr_query(params, "siniestros", credenciales, session)
     return {"message": "Query de siniestros ejecutado exitosamente"}
 
 
@@ -31,7 +31,7 @@ async def correr_query_primas(
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     params = obtener_parametros_usuario(session, session_id)
-    await tera_connect.correr_query(params, "primas", credenciales)
+    await tera_connect.correr_query(params, "primas", credenciales, session)
     return {"message": "Query de primas ejecutado exitosamente"}
 
 
@@ -43,7 +43,7 @@ async def correr_query_expuestos(
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     params = obtener_parametros_usuario(session, session_id)
-    await tera_connect.correr_query(params, "expuestos", credenciales)
+    await tera_connect.correr_query(params, "expuestos", credenciales, session)
     return {"message": "Query de expuestos ejecutado exitosamente"}
 
 
@@ -66,7 +66,7 @@ async def cargar_archivos(
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     p = obtener_parametros_usuario(session, session_id)
-    carga_manual.procesar_archivos_cantidades(archivos, p)
+    carga_manual.procesar_archivos_cantidades(archivos, p, session)
     return {"message": "Archivos cargados exitosamente"}
 
 

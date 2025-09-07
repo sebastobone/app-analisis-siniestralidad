@@ -7,8 +7,10 @@ import teradatasql as td
 
 from src import constantes as ct
 from src import utils
+from src.dependencias import SessionDep
+from src.informacion.almacenamiento import guardar_archivo
 from src.logger_config import logger
-from src.models import CredencialesTeradata, Parametros
+from src.models import CredencialesTeradata, MetadataCantidades, Parametros
 from src.procesamiento.autonomia import adds as autonomia
 from src.validation import adds, cantidades, segmentacion
 
@@ -31,7 +33,10 @@ ERROR_TIPOS_DATOS = """
 
 
 async def correr_query(
-    p: Parametros, cantidad: ct.CANTIDADES, credenciales: CredencialesTeradata
+    p: Parametros,
+    cantidad: ct.CANTIDADES,
+    credenciales: CredencialesTeradata,
+    session: SessionDep,
 ) -> None:
     segmentacion.validar_archivo_segmentacion(
         pl.read_excel(f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0)
@@ -55,13 +60,24 @@ async def correr_query(
         queries, particiones_fechas, segmentaciones, credenciales
     )
 
-    cantidades.validar_archivo(p.negocio, df, cantidad, cantidad)
-    df = cantidades.organizar_archivo(
-        df, p.negocio, (p.mes_inicio, p.mes_corte), cantidad, cantidad
+    df.pipe(cantidades.validar_archivo, p.negocio, cantidad, cantidad).pipe(
+        cantidades.organizar_archivo,
+        p.negocio,
+        (p.mes_inicio, p.mes_corte),
+        cantidad,
+        cantidad,
+    ).pipe(
+        guardar_archivo,
+        session,
+        MetadataCantidades(
+            ruta=f"data/raw/{cantidad}.parquet",
+            nombre_original=f"{cantidad}.parquet",
+            origen="extraccion",
+            cantidad=cantidad,
+        ),
     )
 
-    _guardar_resultados(df, cantidad)
-    logger.success(f"{df.height} registros almacenados en data/raw/{cantidad}.csv.")
+    logger.success(f"Query de {cantidad} ejecutado exitosamente.")
 
 
 async def _preparar_auxiliares_autonomia(
@@ -174,10 +190,3 @@ def _crear_particiones_fechas(
     inicios_mes = pl.date_range(mes_inicio, mes_corte, interval="1mo", eager=True)
     fines_mes = inicios_mes.dt.month_end()
     return list(zip(inicios_mes, fines_mes, strict=False))
-
-
-def _guardar_resultados(df: pl.DataFrame, cantidad: ct.CANTIDADES) -> None:
-    # En csv para poder visualizarlo facil, en caso de ser necesario
-    for sufijo in ["_teradata", ""]:
-        df.write_csv(f"data/raw/{cantidad}{sufijo}.csv", separator="\t")
-        df.write_parquet(f"data/raw/{cantidad}{sufijo}.parquet")

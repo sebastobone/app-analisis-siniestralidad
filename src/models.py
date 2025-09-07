@@ -3,7 +3,9 @@ from typing import Literal
 
 from fastapi import UploadFile
 from pydantic import BaseModel, field_serializer, field_validator
-from sqlmodel import Field, SQLModel, String
+from sqlmodel import JSON, Column, Field, SQLModel, String
+
+from src import constantes as ct
 
 
 class Parametros(SQLModel, table=True):
@@ -92,3 +94,14 @@ class ArchivosCantidades:
         self.siniestros = siniestros
         self.primas = primas
         self.expuestos = expuestos
+
+
+class MetadataCantidades(SQLModel, table=True):
+    ruta: str = Field(primary_key=True)
+    nombre_original: str
+    origen: Literal["extraccion", "carga_manual", "cuadre_contable", "demo"] = Field(
+        sa_type=String
+    )
+    cantidad: ct.CANTIDADES = Field(sa_type=String)
+    numero_filas: int | None = None
+    rutas_padres: list[str] | None = Field(sa_column=Column(JSON))

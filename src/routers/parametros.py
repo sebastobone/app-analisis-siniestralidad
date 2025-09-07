@@ -73,7 +73,7 @@ async def ingresar_parametros(
     carga_manual.procesar_archivo_segmentacion(archivo_segmentacion, p.negocio)
 
     if p.negocio == "demo":
-        mocks.generar_mocks(p.mes_inicio, p.mes_corte)
+        mocks.generar_mocks(p.mes_inicio, p.mes_corte, session)
 
     aperturas = obtener_lista_aperturas(p)
     tipos_analisis_mes_anterior = obtener_tipos_analisis_mes_anterior(p)

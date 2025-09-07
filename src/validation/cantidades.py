@@ -25,8 +25,8 @@ MENSAJE_APERTURAS_SOBRANTES = """
 
 
 def validar_archivo(
-    negocio: str, df: pl.DataFrame, filename: str, cantidad: ct.CANTIDADES
-) -> None:
+    df: pl.DataFrame, negocio: str, filename: str, cantidad: ct.CANTIDADES
+) -> pl.DataFrame:
     valid.validar_subconjunto(
         list(ct.DESCRIPTORES[cantidad].keys()) + list(ct.VALORES[cantidad].keys()),
         df.collect_schema().names(),
@@ -73,6 +73,8 @@ def validar_archivo(
     )
 
     logger.info(f"Archivo {filename} validado exitosamente.")
+
+    return df
 
 
 def _validar_descriptores_no_nulos(

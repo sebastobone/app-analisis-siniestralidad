@@ -112,7 +112,10 @@ class MetadataCantidades(SQLModel, table=True):
     rutas_padres: list[str] | None = Field(sa_column=Column(JSON))
 
 
-class SeleccionadosCuadre(BaseModel):
-    siniestros: list[str]
-    primas: list[str]
-    expuestos: list[str]
+class Controles(BaseModel):
+    cuadrar_siniestros: bool
+    cuadrar_primas: bool
+    cuadrar_expuestos: bool = False
+    archivos_siniestros: list[str]
+    archivos_primas: list[str]
+    archivos_expuestos: list[str]

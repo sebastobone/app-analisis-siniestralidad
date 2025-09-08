@@ -12,8 +12,8 @@ from src.controles_informacion import evidencias, sap
 from src.dependencias import SessionDep
 from src.informacion import almacenamiento as alm
 from src.logger_config import logger
-from src.models import MetadataCantidades, Parametros, SeleccionadosCuadre
-from src.validation import cantidades
+from src.models import Controles, MetadataCantidades, Parametros
+from src.validation import cantidades, segmentacion
 
 ARCHIVOS_PERMANENTES = [
     "siniestros.parquet",
@@ -32,13 +32,15 @@ ARCHIVOS_PERMANENTES = [
 
 
 async def generar_controles(
-    p: Parametros, archivos_cuadre: SeleccionadosCuadre, session: SessionDep
+    p: Parametros,
+    controles: Controles,
+    session: SessionDep,
 ) -> None:
     await verificar_existencia_afos(p.negocio)
 
-    await generar_controles_cantidad("siniestros", p, archivos_cuadre, session)
-    await generar_controles_cantidad("primas", p, archivos_cuadre, session)
-    await generar_controles_cantidad("expuestos", p, archivos_cuadre, session)
+    await generar_controles_cantidad("siniestros", p, controles, session)
+    await generar_controles_cantidad("primas", p, controles, session)
+    await generar_controles_cantidad("expuestos", p, controles, session)
 
     await evidencias.generar_evidencias_parametros(
         p.negocio, utils.date_to_yyyymm(p.mes_corte)
@@ -63,10 +65,10 @@ async def verificar_existencia_afos(negocio: str):
 async def generar_controles_cantidad(
     cantidad: ct.CANTIDADES,
     p: Parametros,
-    archivos_cuadre: SeleccionadosCuadre,
+    controles: Controles,
     session: SessionDep,
 ) -> None:
-    lista_archivos_cuadre = archivos_cuadre.model_dump()[cantidad]
+    lista_archivos_cuadre = controles.model_dump()[f"archivos_{cantidad}"]
     if lista_archivos_cuadre:
         dfs_cuadre = []
         for ruta in lista_archivos_cuadre:
@@ -100,20 +102,19 @@ async def generar_controles_cantidad(
             estado_cuadre="pre_cuadre_contable",
         )
 
-        if cantidad in [
-            "siniestros",
-            "primas",
-        ] and cuadre.debe_realizar_cuadre_contable(p, cantidad):
-            meses_a_cuadrar = pl.read_excel(
-                f"data/segmentacion_{p.negocio}.xlsx",
-                sheet_name=f"Meses_cuadre_{cantidad}",
+        if controles.model_dump()[f"cuadrar_{cantidad}"]:
+            hojas_segmentacion = pl.read_excel(
+                f"data/segmentacion_{p.negocio}.xlsx", sheet_id=0
+            )
+            segmentacion.validar_aptitud_cuadre_contable(
+                hojas_segmentacion, p, cantidad
             )
             df_post_cuadre = await cuadre.realizar_cuadre_contable(
                 p.negocio,
                 cantidad,
                 df_pre_cuadre,
                 difs_sap_tera_pre_cuadre,
-                meses_a_cuadrar,
+                hojas_segmentacion[f"Meses_cuadre_{cantidad}"],
             )
             alm.guardar_archivo(
                 df_post_cuadre,
@@ -134,26 +135,6 @@ async def generar_controles_cantidad(
                 p.mes_corte,
                 estado_cuadre="post_cuadre_contable",
             )
-
-            # if p.negocio == "soat" and cantidad == "siniestros":
-            #     df_post_fraude = await ajustar_fraude(df_post_cuadre, p.mes_corte)
-            #     alm.guardar_archivo(
-            #         df_post_fraude,
-            #         session,
-            #         MetadataCantidades(
-            #             ruta=f"data/post_ajustes_fraude/{cantidad}.parquet",
-            #             nombre_original=f"{cantidad}.parquet",
-            #             origen="post_ajustes_fraude",
-            #             cantidad=cantidad,
-            #         ),
-            #     )
-            #     _ = await generar_controles_estado_cuadre(
-            #         df_post_fraude,
-            #         p.negocio,
-            #         cantidad,
-            #         p.mes_corte,
-            #         estado_cuadre="post_ajustes_fraude",
-            #     )
     else:
         logger.warning(
             utils.limpiar_espacios_log(
@@ -369,28 +350,6 @@ def agrupar_tera(
     df: pl.DataFrame, group_cols: list[str], qtys: list[str]
 ) -> pl.DataFrame:
     return df.select(group_cols + qtys).group_by(group_cols).sum().sort(group_cols)
-
-
-async def ajustar_fraude(df: pl.DataFrame, mes_corte: date) -> pl.DataFrame:
-    fraude = (
-        pl.read_excel("data/segmentacion_soat.xlsx", sheet_name="Ajustes_Fraude")
-        .drop("tipo_ajuste")
-        .filter(pl.col("fecha_registro") <= mes_corte)
-    )
-
-    df = (
-        pl.concat([df, fraude], how="vertical_relaxed")
-        .group_by(
-            df.collect_schema().names()[
-                : df.collect_schema().names().index("fecha_registro") + 1
-            ]
-        )
-        .sum()
-    )
-    df.write_csv("data/raw/siniestros.csv", separator="\t")
-    df.write_parquet("data/raw/siniestros.parquet")
-
-    return df
 
 
 def generar_integridad_exactitud(

@@ -76,7 +76,5 @@ export function actualizarCheckboxesCandidatos(candidatos, cantidad) {
     label.appendChild(text);
 
     container.appendChild(label);
-
-    container.appendChild(document.createElement("br"));
   });
 }

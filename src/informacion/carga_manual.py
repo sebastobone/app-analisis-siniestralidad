@@ -30,8 +30,6 @@ def procesar_archivos_cantidades(
         if archivos_cantidad:
             validar_unicidad_nombres(archivos_cantidad, cantidad)
             for archivo in archivos_cantidad:
-                print(cantidad)
-                print(archivo.filename)
                 procesar_archivo_cantidad(archivo, p, cantidad, session)
 
 

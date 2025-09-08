@@ -102,7 +102,7 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     _ = client.post("/preparar-plantilla")
     _ = client.post(
         "/guardar-todo",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
 
     _ = client.post("/almacenar-analisis")

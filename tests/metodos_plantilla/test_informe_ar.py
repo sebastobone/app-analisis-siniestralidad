@@ -28,11 +28,11 @@ def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
 
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
     _ = client.post(
         "/guardar-apertura",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
 
     _ = client.post("/almacenar-analisis")

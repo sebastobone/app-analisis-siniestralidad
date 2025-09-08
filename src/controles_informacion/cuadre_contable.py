@@ -56,7 +56,9 @@ def calcular_pesos_aperturas(
         .agg([pl.sum(col) for col in columnas_cantidades])
         .with_columns(
             [
-                (pl.col(col) / pl.col(col).sum()).fill_nan(0).alias(f"peso_{col}")
+                (pl.col(col) / pl.col(col).sum().over(["codigo_op", "codigo_ramo_op"]))
+                .fill_nan(0)
+                .alias(f"peso_{col}")
                 for col in columnas_cantidades
             ]
         )

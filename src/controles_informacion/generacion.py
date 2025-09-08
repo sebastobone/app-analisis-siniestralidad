@@ -139,8 +139,8 @@ async def generar_controles_cantidad(
         logger.warning(
             utils.limpiar_espacios_log(
                 f"""
-                No se seleccionaron archivos para la cantidad {cantidad},
-                por lo cual no le generaron controles.
+                No se seleccionaron archivos para la cantidad {cantidad}, por lo cual
+                no se le generaron controles ni se realizaron cuadres.
                 """
             )
         )
@@ -235,7 +235,7 @@ def definir_cantidades_control(
         group_cols = ["apertura_reservas", "fecha_siniestro", "fecha_registro"]
 
     elif file == "primas":
-        qtys = ct.Valores().model_dump()["primas"].keys()
+        qtys = list(ct.VALORES["primas"].keys())
         group_cols = utils.obtener_aperturas(
             negocio, "primas"
         ).collect_schema().names() + ["fecha_registro"]

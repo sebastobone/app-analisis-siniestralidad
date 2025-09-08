@@ -25,11 +25,11 @@ def test_actualizar_grafica_factores(
     _ = client.post("/preparar-plantilla")
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
     response = client.post(
         "/ajustar-grafica-factores",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
 
     assert response.status_code == status.HTTP_200_OK

@@ -116,6 +116,6 @@ class Controles(BaseModel):
     cuadrar_siniestros: bool
     cuadrar_primas: bool
     cuadrar_expuestos: bool = False
-    archivos_siniestros: list[str]
-    archivos_primas: list[str]
-    archivos_expuestos: list[str]
+    archivos_siniestros: list[str] | None
+    archivos_primas: list[str] | None
+    archivos_expuestos: list[str] | None

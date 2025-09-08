@@ -58,18 +58,18 @@ def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
-                "apertura_reservas": ["01_001"],
+                "apertura_reservas": ["01_040"],
                 "codigo_op": ["01"],
-                "codigo_ramo_op": ["001"],
+                "codigo_ramo_op": ["040"],
                 "periodicidad_ocurrencia": ["Mensual"],
                 "medida_indexacion_severidad": ["Ninguna"],
             }
         ),
         "Aperturas_Primas": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
         "Aperturas_Expuestos": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
     }
     validar_excepciones(
@@ -85,19 +85,19 @@ def test_aperturas_duplicadas(client: TestClient, rango_meses: tuple[date, date]
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
-                "apertura_reservas": ["01_001", "01_001"],
+                "apertura_reservas": ["01_040", "01_040"],
                 "codigo_op": ["01", "01"],
-                "codigo_ramo_op": ["001", "001"],
+                "codigo_ramo_op": ["040", "040"],
                 "periodicidad_ocurrencia": ["Mensual", "Mensual"],
                 "tipo_indexacion_severidad": ["Ninguna", "Ninguna"],
                 "medida_indexacion_severidad": ["Ninguna", "Ninguna"],
             }
         ),
         "Aperturas_Primas": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
         "Aperturas_Expuestos": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
     }
     validar_excepciones(client, rango_meses, hojas, ["aperturas duplicadas"])
@@ -108,19 +108,19 @@ def test_periodicidades_invalidas(client: TestClient, rango_meses: tuple[date, d
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
-                "apertura_reservas": ["01_001"],
+                "apertura_reservas": ["01_040"],
                 "codigo_op": ["01"],
-                "codigo_ramo_op": ["001"],
+                "codigo_ramo_op": ["040"],
                 "periodicidad_ocurrencia": ["Otro"],
                 "tipo_indexacion_severidad": ["Ninguna"],
                 "medida_indexacion_severidad": ["Ninguna"],
             }
         ),
         "Aperturas_Primas": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
         "Aperturas_Expuestos": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
     }
     validar_excepciones(
@@ -133,19 +133,19 @@ def test_tipos_indexacion_invalidos(client: TestClient, rango_meses: tuple[date,
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
-                "apertura_reservas": ["01_001"],
+                "apertura_reservas": ["01_040"],
                 "codigo_op": ["01"],
-                "codigo_ramo_op": ["001"],
+                "codigo_ramo_op": ["040"],
                 "periodicidad_ocurrencia": ["Mensual"],
                 "tipo_indexacion_severidad": ["Por fecha de atencion"],
                 "medida_indexacion_severidad": ["Ninguna"],
             }
         ),
         "Aperturas_Primas": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
         "Aperturas_Expuestos": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
     }
     validar_excepciones(
@@ -163,19 +163,19 @@ def test_medidas_indexacion_invalidas(
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
-                "apertura_reservas": ["01_001"],
+                "apertura_reservas": ["01_040"],
                 "codigo_op": ["01"],
-                "codigo_ramo_op": ["001"],
+                "codigo_ramo_op": ["040"],
                 "periodicidad_ocurrencia": ["Mensual"],
                 "tipo_indexacion_severidad": ["Por fecha de ocurrencia"],
                 "medida_indexacion_severidad": ["Ninguna"],
             }
         ),
         "Aperturas_Primas": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
         "Aperturas_Expuestos": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
     }
     validar_excepciones(
@@ -193,19 +193,19 @@ def test_variables_apertura_sobrantes(
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
-                "apertura_reservas": ["01_001"],
+                "apertura_reservas": ["01_040"],
                 "codigo_op": ["01"],
-                "codigo_ramo_op": ["001"],
+                "codigo_ramo_op": ["040"],
                 "periodicidad_ocurrencia": ["Mensual"],
                 "tipo_indexacion_severidad": ["Ninguna"],
                 "medida_indexacion_severidad": ["Ninguna"],
             }
         ),
         "Aperturas_Primas": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"], "apertura_1": ["A"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"], "apertura_1": ["A"]}
         ),
         "Aperturas_Expuestos": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
     }
     validar_excepciones(
@@ -221,9 +221,9 @@ def test_cruces_nulos_aperturas(client: TestClient, rango_meses: tuple[date, dat
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(
             {
-                "apertura_reservas": ["01_001_A", "01_002_A"],
+                "apertura_reservas": ["01_040_A", "01_041_A"],
                 "codigo_op": ["01", "01"],
-                "codigo_ramo_op": ["001", "002"],
+                "codigo_ramo_op": ["040", "041"],
                 "apertura_1": ["A", "A"],
                 "periodicidad_ocurrencia": ["Mensual", "Mensual"],
                 "tipo_indexacion_severidad": ["Ninguna", "Ninguna"],
@@ -231,10 +231,10 @@ def test_cruces_nulos_aperturas(client: TestClient, rango_meses: tuple[date, dat
             }
         ),
         "Aperturas_Primas": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
         "Aperturas_Expuestos": pl.DataFrame(
-            {"codigo_op": ["01"], "codigo_ramo_op": ["001"]}
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
         ),
     }
     validar_excepciones(

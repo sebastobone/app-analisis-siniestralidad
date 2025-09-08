@@ -52,11 +52,11 @@ def test_forma_triangulo(
 
     df = generar.crear_triangulo_base_plantilla(
         base_triangulos.lazy(),
-        "01_001_A_D",
+        "01_040_A_D",
         "bruto",
         pl.DataFrame(
             {
-                "apertura_reservas": ["01_001_A_D"],
+                "apertura_reservas": ["01_040_A_D"],
                 "periodicidad_ocurrencia": [periodicidad_ocurrencia],
             }
         ),
@@ -88,7 +88,7 @@ def test_plantilla_no_preparada(client: TestClient, rango_meses: tuple[date, dat
     with pytest.raises(preparar.PlantillaNoPreparadaError):
         _ = client.post(
             "/generar-plantilla",
-            data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+            data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
         )
 
     wb.close()
@@ -103,7 +103,7 @@ def test_generar_severidad(client: TestClient, params: Parametros):
 
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "severidad"},
     )
 
     apertura_en_frecuencia = actualizar.obtener_apertura_actual(wb, "frecuencia")

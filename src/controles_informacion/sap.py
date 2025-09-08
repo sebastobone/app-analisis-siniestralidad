@@ -36,14 +36,12 @@ async def consolidar_sap(
 async def transformar_hoja_afo(
     df: pl.DataFrame, cia: str, qty: str, mes_corte: date
 ) -> pl.DataFrame:
-    if (
-        f"{ct.NOMBRE_MES[mes_corte.month]} {mes_corte.year}"
-        not in df.get_column("Ejercicio/Período").unique()
-    ):
+    mes_corte_afo = f"{ct.NOMBRE_MES[mes_corte.month]} {mes_corte.year}"
+    if mes_corte_afo not in df.get_column("Ejercicio/Período").unique():
         raise ValueError(
             utils.limpiar_espacios_log(
                 f"""
-                ¡Error! No se pudo encontrar el mes {mes_corte}
+                ¡Error! No se pudo encontrar el mes {mes_corte_afo}
                 en la hoja {qty} del AFO de {cia}. Actualizar el AFO.
                 """
             )

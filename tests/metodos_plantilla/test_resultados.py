@@ -19,9 +19,9 @@ from tests.conftest import assert_diferente, assert_igual, ingresar_parametros
 def test_actualizar_resultados(
     client: TestClient, client_2: TestClient, rango_meses: tuple[date, date]
 ):
-    apertura = "01_001_A_D"
+    apertura = "01_040_A_D"
     atributo = "bruto"
-    apertura_2 = "01_001_A_E"
+    apertura_2 = "01_040_A_E"
 
     p1 = ingresar_parametros(
         client,
@@ -106,7 +106,7 @@ def test_actualizar_resultados(
         .get_column("apertura_reservas")
         .unique()
         .to_list()
-    ) == ["01_001_A_D", "01_001_A_E"]
+    ) == ["01_040_A_D", "01_040_A_E"]
 
     # Verificamos que, en caso de aperturas guardadas por dos usuarios,
     # se lea solamente el archivo mas reciente
@@ -119,7 +119,7 @@ def test_actualizar_resultados(
         f"output/resultados/{p2.nombre_plantilla}_{mes_corte_int}_{p2.tipo_analisis}.parquet"
     )
 
-    filtro_apertura = pl.col("apertura_reservas") == "01_001_A_D"
+    filtro_apertura = pl.col("apertura_reservas") == "01_040_A_D"
 
     assert_diferente(
         info_u1.filter(filtro_apertura),

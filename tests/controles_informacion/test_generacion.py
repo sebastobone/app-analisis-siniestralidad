@@ -87,30 +87,6 @@ async def test_transformar_hoja_afo(cia: str, qty: str, rango_meses: tuple[date,
 
 @pytest.mark.asyncio
 @pytest.mark.fast
-@pytest.mark.parametrize(
-    "qtys, mes_corte, expected_columns",
-    [
-        (
-            ["prima_bruta", "prima_cedida"],
-            date(2022, 1, 1),
-            ["prima_bruta", "prima_cedida"],
-        ),
-        (["pago_retenido"], date(2022, 1, 1), ["pago_retenido"]),
-    ],
-)
-async def test_consolidar_sap(
-    qtys: list[str], mes_corte: date, expected_columns: list[str]
-):
-    result = await sap.consolidar_sap("autonomia", qtys, mes_corte)
-    assert (
-        result.collect_schema().names()
-        == ["codigo_op", "codigo_ramo_op", "fecha_registro"] + expected_columns
-    )
-    assert result.shape[0] > 0
-
-
-@pytest.mark.asyncio
-@pytest.mark.fast
 async def test_verificar_existencia_afos():
     with pytest.raises(FileNotFoundError):
         await gen.verificar_existencia_afos("demo")

@@ -27,7 +27,7 @@ def test_actualizar_sin_generar(client: TestClient):
     with pytest.raises(actualizar.PlantillaNoGeneradaError):
         _ = client.post(
             "/actualizar-plantilla",
-            data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+            data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
         )
 
 
@@ -36,13 +36,13 @@ def test_actualizar_diferentes_periodicidades(client: TestClient):
     _ = client.post("/preparar-plantilla")
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
 
     with pytest.raises(actualizar.PeriodicidadDiferenteError):
         _ = client.post(
             "/actualizar-plantilla",
-            data={"apertura": "01_002_A_D", "atributo": "bruto", "plantilla": "plata"},
+            data={"apertura": "01_041_A_D", "atributo": "bruto", "plantilla": "plata"},
         )
 
 
@@ -54,12 +54,12 @@ def test_actualizar_severidad(client: TestClient, params: Parametros):
 
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "severidad"},
     )
 
     _ = client.post(
         "/actualizar-plantilla",
-        data={"apertura": "01_001_A_E", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_040_A_E", "atributo": "bruto", "plantilla": "severidad"},
     )
 
     apertura_en_frecuencia = actualizar.obtener_apertura_actual(wb, "frecuencia")

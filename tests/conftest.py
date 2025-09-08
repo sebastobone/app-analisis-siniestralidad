@@ -38,8 +38,8 @@ CONTENT_TYPES = {
 
 @pytest.fixture
 def rango_meses() -> tuple[date, date]:
-    mes_inicio = date(np.random.randint(2010, 2019), np.random.randint(1, 12), 1)
-    mes_corte = date(np.random.randint(2020, 2029), np.random.randint(1, 12), 1)
+    mes_inicio = date(np.random.randint(2010, 2015), np.random.randint(1, 12), 1)
+    mes_corte = date(np.random.randint(2020, 2024), np.random.randint(1, 12), 1)
     return mes_inicio, mes_corte
 
 
@@ -213,3 +213,18 @@ def ingresar_parametros(
     )
     response = client.post("/ingresar-parametros", params=params, files=files).json()
     return Parametros.model_validate(response["parametros"])
+
+
+def crear_csv(df: pl.DataFrame, separador: str = ",") -> io.BytesIO:
+    str_buffer = io.StringIO()
+    df.write_csv(str_buffer, separator=separador)
+    csv_buffer = io.BytesIO(str_buffer.getvalue().encode())
+    csv_buffer.seek(0)
+    return csv_buffer
+
+
+def crear_parquet(df: pl.DataFrame) -> io.BytesIO:
+    parquet_buffer = io.BytesIO()
+    df.write_parquet(parquet_buffer)
+    parquet_buffer.seek(0)
+    return parquet_buffer

@@ -69,7 +69,7 @@ def generar_mock_siniestros(
     return pl.DataFrame(
         {
             "codigo_op": np.random.choice(["01"], size=num_rows),
-            "codigo_ramo_op": np.random.choice(["001", "002"], size=num_rows),
+            "codigo_ramo_op": np.random.choice(["040", "041"], size=num_rows),
             "apertura_1": np.random.choice(["A", "B"], size=num_rows),
             "apertura_2": np.random.choice(["D", "E"], size=num_rows),
             "atipico": np.random.choice([0, 1], size=num_rows, p=[0.95, 0.05]),
@@ -92,7 +92,7 @@ def generar_mock_primas(
     return pl.DataFrame(
         {
             "codigo_op": np.random.choice(["01"], size=num_rows),
-            "codigo_ramo_op": np.random.choice(["001", "002"], size=num_rows),
+            "codigo_ramo_op": np.random.choice(["040", "041"], size=num_rows),
             "apertura_1": np.random.choice(["A", "B"], size=num_rows),
             "apertura_2": np.random.choice(["D", "E"], size=num_rows),
             "fecha_registro": np.random.choice(
@@ -116,7 +116,7 @@ def generar_mock_expuestos(
         pl.DataFrame(
             {
                 "codigo_op": np.random.choice(["01"], size=num_rows),
-                "codigo_ramo_op": np.random.choice(["001", "002"], size=num_rows),
+                "codigo_ramo_op": np.random.choice(["040", "041"], size=num_rows),
                 "apertura_1": np.random.choice(["A", "B"], size=num_rows),
                 "apertura_2": np.random.choice(["D", "E"], size=num_rows),
                 "fecha_registro": np.random.choice(

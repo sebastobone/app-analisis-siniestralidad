@@ -20,7 +20,7 @@ ERROR_MEDIDA_NO_ENCONTRADA = utils.limpiar_espacios_log(
 ERROR_FRECUENCIA_NO_ENCONTRADA = utils.limpiar_espacios_log(
     """
     No se han guardado resultados de frecuencia para la apertura
-    01_002_A_E. Para generar la plantilla de severidad
+    01_041_A_E. Para generar la plantilla de severidad
     con indexacion por fecha de movimiento, se necesitan resultados
     almacenados de frecuencia.
     """
@@ -62,7 +62,7 @@ def test_indexacion_ocurrencia(client: TestClient, params: Parametros):
         _ = client.post(
             "/generar-plantilla",
             data={
-                "apertura": "01_002_A_D",
+                "apertura": "01_041_A_D",
                 "atributo": "bruto",
                 "plantilla": "severidad",
             },
@@ -71,21 +71,20 @@ def test_indexacion_ocurrencia(client: TestClient, params: Parametros):
     wb.sheets["Indexaciones"].cells(1, 1).value = MEDIDAS
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_002_A_D", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_041_A_D", "atributo": "bruto", "plantilla": "severidad"},
     )
-
     _ = client.post(
         "/guardar-apertura",
-        data={"apertura": "01_002_A_D", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_041_A_D", "atributo": "bruto", "plantilla": "severidad"},
     )
 
     assert Path(
-        "data/db/wb_test.xlsm_01_002_A_D_bruto_Severidad_UNIDAD_INDEXACION.parquet"
+        "data/db/wb_test.xlsm_01_041_A_D_bruto_Severidad_UNIDAD_INDEXACION.parquet"
     ).exists()
 
     _ = client.post(
         "/traer-apertura",
-        data={"apertura": "01_002_A_D", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_041_A_D", "atributo": "bruto", "plantilla": "severidad"},
     )
 
 
@@ -102,7 +101,7 @@ def test_indexacion_movimiento(client: TestClient, params: Parametros):
         _ = client.post(
             "/generar-plantilla",
             data={
-                "apertura": "01_002_A_E",
+                "apertura": "01_041_A_E",
                 "atributo": "bruto",
                 "plantilla": "severidad",
             },
@@ -110,30 +109,29 @@ def test_indexacion_movimiento(client: TestClient, params: Parametros):
 
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_002_A_E", "atributo": "bruto", "plantilla": "frecuencia"},
+        data={"apertura": "01_041_A_E", "atributo": "bruto", "plantilla": "frecuencia"},
     )
     _ = client.post(
         "/guardar-apertura",
-        data={"apertura": "01_002_A_E", "atributo": "bruto", "plantilla": "frecuencia"},
+        data={"apertura": "01_041_A_E", "atributo": "bruto", "plantilla": "frecuencia"},
     )
 
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_002_A_E", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_041_A_E", "atributo": "bruto", "plantilla": "severidad"},
     )
-
     _ = client.post(
         "/guardar-apertura",
-        data={"apertura": "01_002_A_E", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_041_A_E", "atributo": "bruto", "plantilla": "severidad"},
     )
 
     assert Path(
-        "data/db/wb_test.xlsm_01_002_A_E_bruto_Severidad_UNIDAD_INDEXACION.parquet"
+        "data/db/wb_test.xlsm_01_041_A_E_bruto_Severidad_UNIDAD_INDEXACION.parquet"
     ).exists()
 
     _ = client.post(
         "/traer-apertura",
-        data={"apertura": "01_002_A_E", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_041_A_E", "atributo": "bruto", "plantilla": "severidad"},
     )
 
 
@@ -148,23 +146,23 @@ def test_actualizar_indexacion_diferente(client: TestClient, params: Parametros)
 
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_002_A_E", "atributo": "bruto", "plantilla": "frecuencia"},
+        data={"apertura": "01_041_A_E", "atributo": "bruto", "plantilla": "frecuencia"},
     )
     _ = client.post(
         "/guardar-apertura",
-        data={"apertura": "01_002_A_E", "atributo": "bruto", "plantilla": "frecuencia"},
+        data={"apertura": "01_041_A_E", "atributo": "bruto", "plantilla": "frecuencia"},
     )
 
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_002_A_D", "atributo": "bruto", "plantilla": "severidad"},
+        data={"apertura": "01_041_A_D", "atributo": "bruto", "plantilla": "severidad"},
     )
 
     with pytest.raises(actualizar.IndexacionDiferenteError):
         _ = client.post(
             "/actualizar-plantilla",
             data={
-                "apertura": "01_002_A_E",
+                "apertura": "01_041_A_E",
                 "atributo": "bruto",
                 "plantilla": "severidad",
             },

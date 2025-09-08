@@ -253,9 +253,11 @@ def validar_aptitud_cuadre_contable(
     hoja_meses = hojas[f"Meses_cuadre_{cantidad}"]
 
     if cantidad == "siniestros":
-        columnas_cantidades = ct.COLUMNAS_SINIESTROS_CUADRE
+        columnas_cantidades = [
+            f"cuadrar_{col}" for col in ct.COLUMNAS_SINIESTROS_CUADRE
+        ]
     else:
-        columnas_cantidades = list(ct.Valores().model_dump()[cantidad].keys())
+        columnas_cantidades = [f"cuadrar_{col}" for col in ct.VALORES[cantidad].keys()]
 
     valid.validar_subconjunto(
         ["fecha_registro"] + columnas_cantidades,

@@ -35,7 +35,7 @@ def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, d
         "COMENTARIOS",
     ]
 
-    apertura = "01_001_A_D"
+    apertura = "01_040_A_D"
     atributo = "bruto"
     for plantilla in ["frecuencia", "severidad", "plata"]:
         guardar_traer_apertura(client, rangos, apertura, atributo, plantilla)
@@ -43,7 +43,7 @@ def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, d
 
 @pytest.mark.plantilla
 def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, date]):
-    apertura = "01_001_A_D"
+    apertura = "01_040_A_D"
     atributo = "bruto"
     plantilla = "completar_diagonal"
 

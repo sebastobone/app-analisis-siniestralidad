@@ -152,6 +152,7 @@ AFOS_NECESARIOS = {
     "soat": ["Generales"],
     "empresariales": ["Generales"],
     "demo": ["AFO_Inexistente"],
+    "test": ["Generales"],
 }
 
 NUM_FILAS_DEMO = {"siniestros": 100000, "primas": 10000, "expuestos": 10000}

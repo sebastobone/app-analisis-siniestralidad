@@ -1,4 +1,3 @@
-import io
 from datetime import date
 from pathlib import Path
 from typing import Literal
@@ -11,25 +10,16 @@ from src import constantes as ct
 from src.informacion.carga_manual import crear_excel
 from src.informacion.mocks import generar_mock
 from src.models import Parametros
-from tests.conftest import CONTENT_TYPES, assert_igual, ingresar_parametros
+from tests.conftest import (
+    CONTENT_TYPES,
+    assert_igual,
+    crear_csv,
+    crear_parquet,
+    ingresar_parametros,
+)
 
-SINIESTROS_BASICO = pl.DataFrame(
-    {
-        "codigo_op": ["01"],
-        "codigo_ramo_op": ["001"],
-        "apertura_1": ["A"],
-        "apertura_2": ["D"],
-        "atipico": [0],
-        "fecha_siniestro": [date(2024, 1, 1)],
-        "fecha_registro": [date(2024, 1, 1)],
-        "pago_bruto": [1.0],
-        "pago_retenido": [1.0],
-        "aviso_bruto": [1.0],
-        "aviso_retenido": [1.0],
-        "conteo_pago": [1],
-        "conteo_incurrido": [1],
-        "conteo_desistido": [1],
-    }
+SINIESTROS_BASICO = generar_mock(
+    (date(2015, 1, 1), date(2024, 12, 31)), "siniestros", 1000
 )
 
 
@@ -52,21 +42,6 @@ def params(client: TestClient, rango_meses: tuple[date, date]) -> Parametros:
             ),
         },
     )
-
-
-def crear_csv(df: pl.DataFrame, separador: str = ",") -> io.BytesIO:
-    str_buffer = io.StringIO()
-    df.write_csv(str_buffer, separator=separador)
-    csv_buffer = io.BytesIO(str_buffer.getvalue().encode())
-    csv_buffer.seek(0)
-    return csv_buffer
-
-
-def crear_parquet(df: pl.DataFrame) -> io.BytesIO:
-    parquet_buffer = io.BytesIO()
-    df.write_parquet(parquet_buffer)
-    parquet_buffer.seek(0)
-    return parquet_buffer
 
 
 def validar_carga(
@@ -104,7 +79,7 @@ def test_cargar_multiples(
     rango_meses: tuple[date, date],
     separador: Literal[";", ",", "\t", "|"],
 ):
-    df = generar_mock(rango_meses, "siniestros", 1000)
+    df = SINIESTROS_BASICO
     hojas = {"Siniestros": df}
 
     _ = client.post(
@@ -240,10 +215,8 @@ def test_tipos_datos_malos(client: TestClient, columna_mod: pl.Expr):
 
 
 @pytest.mark.fast
-def test_agrupar_columnas_relevantes(
-    client: TestClient, rango_meses: tuple[date, date]
-):
-    df = generar_mock(rango_meses, "siniestros", 1000).with_columns(pj=pl.lit("Si"))
+def test_agrupar_columnas_relevantes(client: TestClient):
+    df = SINIESTROS_BASICO.with_columns(pj=pl.lit("Si"))
 
     _ = client.post(
         "/cargar-archivos",

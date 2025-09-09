@@ -81,7 +81,7 @@ def consolidar_archivos_cantidades(
         )
     )
 
-    dfs = [pl.read_parquet(ruta) for ruta in sorted(candidatos_iniciales)]
+    dfs = [pl.read_parquet(ruta) for ruta in sorted(candidatos_finales)]
 
     df_consolidado = pl.DataFrame(pl.concat(dfs)).pipe(
         cantidades.organizar_archivo,

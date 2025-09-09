@@ -33,7 +33,7 @@ Contiene la misma información que la hoja **Resumen**: pagos, incurridos, conte
 
 ### Ultimates anteriores
 
-Incluye la frecuencia, severidad y siniestralidad última (actuarial y contable) del periodo anterior. Las cifras de plata dependen de los ultimates de referencia seleccionados en la sección ["Referencias entremés"](https://sebastobone.github.io/app-analisis-siniestralidad/uso/inicio/) del frontend.
+Incluye la frecuencia, severidad y siniestralidad última (actuarial y contable) del periodo anterior. Las cifras de plata dependen de los ultimates de referencia seleccionados en la sección ["Referencias entremés"](../uso/inicio.md) del frontend.
 
 ### Metodologías de estimación
 
@@ -47,7 +47,7 @@ Por defecto, se utiliza un **promedio ponderado ventana de 4 periodos** para cal
 
 Esta hoja funciona como los triángulos tradicionales, pero limitada hasta la sección de estadísticos, y con una tabla resumen adaptada.
 
-Para más información sobre su uso, consulte la [documentación de triángulos](https://sebastobone.github.io/app-analisis-siniestralidad/uso/triangulos/).
+Para más información sobre su uso, consulte la [documentación de triángulos](triangulos.md).
 
 ![Triángulo entremés.](assets/entremes/triangulo.png)
 

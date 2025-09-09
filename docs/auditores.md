@@ -6,8 +6,8 @@
 
 Para su revisión, el negocio le entregará:
 
-- La carpeta donde desarrolló el análisis. La estructura de esta carpeta se describe en la [guía de estructura](https://sebastobone.github.io/app-analisis-siniestralidad/estructura).
-- Los [parámetros utilizados](https://sebastobone.github.io/app-analisis-siniestralidad/uso/parametros).
+- La carpeta donde desarrolló el análisis. La estructura de esta carpeta se describe en la [guía de estructura](estructura.md).
+- Los [parámetros utilizados](uso/parametros.md)
 - En caso de análisis de triángulos, el tipo de estimación realizada (**Frecuencia y Severidad** o **Plata**).
 
 ## Ejecutar la app
@@ -55,7 +55,7 @@ El negocio puede haber aplicado una de estas dos metodologías:
 El procedimiento es análogo en ambos casos. Si el negocio utilizó **Frecuencia y Severidad**, las hojas de análisis relevantes serán **"Frecuencia"** y **"Severidad"**, y si utilizó **Plata**, será **"Plata"**.
 
 !!! tip
-    Para entender la estructura de las hojas de análisis, consulte la [guía de uso de triángulos](https://sebastobone.github.io/app-analisis-siniestralidad/uso/triangulos).
+    Para entender la estructura de las hojas de análisis, consulte la [guía de uso de triángulos](uso/triangulos.md).
 
 ### Revisión de apertura
 
@@ -100,6 +100,6 @@ En la hoja **“Resumen”** encontrará los resultados consolidados de siniestr
 ## Análisis de entremés
 
 Este análisis está en las hojas **"Entremés"** y **"Completar_diagonal"**.
-La estructura de ambas hojas se detalla en la [guía de uso de entremés](https://sebastobone.github.io/app-analisis-siniestralidad/uso/entremes).
+La estructura de ambas hojas se detalla en la [guía de uso de entremés](uso/entremes.md).
 
 En la hoja **"Entremés"**, las columnas con los criterios definidos por el negocio están sombreadas en **gris**.

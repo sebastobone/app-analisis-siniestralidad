@@ -7,7 +7,7 @@
 Para su revisión, el negocio le entregará:
 
 - La carpeta donde desarrolló el análisis. La estructura de esta carpeta se describe en la [guía de estructura](https://sebastobone.github.io/app-analisis-siniestralidad/estructura).
-- Los [parámetros utilizados](https://sebastobone.github.io/app-analisis-siniestralidad/parametros).
+- Los [parámetros utilizados](https://sebastobone.github.io/app-analisis-siniestralidad/uso/parametros).
 - En caso de análisis de triángulos, el tipo de estimación realizada (**Frecuencia y Severidad** o **Plata**).
 
 ## Ejecutar la app

@@ -1,26 +1,25 @@
-import os
 from datetime import date
+from pathlib import Path
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from tests.conftest import agregar_meses_params, correr_queries, vaciar_directorios_test
+from src.models import Parametros
+from tests.conftest import ingresar_parametros
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-
-    _ = client.post("/ingresar-parametros", data=params_form)
-    correr_queries(client)
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
     _ = client.post("/preparar-plantilla")
 
     rangos = [
@@ -36,20 +35,15 @@ def test_guardar_traer_triangulos(client: TestClient, rango_meses: tuple[date, d
         "COMENTARIOS",
     ]
 
-    apertura = "01_001_A_D"
+    apertura = "01_040_A_D"
     atributo = "bruto"
     for plantilla in ["frecuencia", "severidad", "plata"]:
         guardar_traer_apertura(client, rangos, apertura, atributo, plantilla)
 
-    vaciar_directorios_test()
-
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
-    apertura = "01_001_A_D"
+    apertura = "01_040_A_D"
     atributo = "bruto"
     plantilla = "completar_diagonal"
 
@@ -60,30 +54,30 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
         "FACTORES_SELECCIONADOS",
     ]
 
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-    params_form.update({"mes_corte": "202412"})
-
-    _ = client.post("/ingresar-parametros", data=params_form)
-    correr_queries(client)
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=date(2024, 12, 1),
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
     _ = client.post("/preparar-plantilla")
     guardar_traer_apertura(client, rangos, apertura, atributo, "plata")
     _ = client.post("/almacenar-analisis")
 
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "entremes",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-    params_form.update({"mes_corte": "202501"})
-
-    _ = client.post("/ingresar-parametros", data=params_form)
-    correr_queries(client)
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=date(2025, 1, 1),
+            tipo_analisis="entremes",
+            nombre_plantilla="wb_test",
+        ),
+    )
     _ = client.post(
         "/preparar-plantilla",
         data={
@@ -102,7 +96,6 @@ def test_guardar_traer_entremes(client: TestClient, rango_meses: tuple[date, dat
     assert response.status_code == status.HTTP_200_OK
 
     guardar_traer_apertura(client, rangos, apertura, atributo, plantilla)
-    vaciar_directorios_test()
 
 
 def guardar_traer_apertura(
@@ -138,7 +131,7 @@ def guardar_traer_apertura(
     )
     assert response.status_code == status.HTTP_200_OK
     for archivo in archivos_guardados:
-        assert os.path.exists(f"data/db/{archivo}.parquet")
+        assert Path(f"data/db/{archivo}.parquet").exists()
 
     response = client.post(
         "/traer-apertura",

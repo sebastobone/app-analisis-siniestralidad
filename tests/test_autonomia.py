@@ -1,43 +1,38 @@
+from datetime import date
+
 import polars as pl
 import pytest
 from fastapi.testclient import TestClient
 from src import utils
 from src.models import Parametros
 
-from tests.conftest import assert_igual, vaciar_directorios_test
+from tests.conftest import assert_igual, correr_queries, ingresar_parametros
 
 
 def separar_meses_anteriores(
-    df: pl.DataFrame, mes_corte: int
+    df: pl.DataFrame, mes_corte: date
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
-    mes_corte_dt = utils.yyyymm_to_date(mes_corte)
-    df_ant = df.filter(pl.col("fecha_registro").dt.month_start() < mes_corte_dt)
-    df_ult = df.filter(pl.col("fecha_registro").dt.month_start() == mes_corte_dt)
+    df_ant = df.filter(pl.col("fecha_registro").dt.month_start() < mes_corte)
+    df_ult = df.filter(pl.col("fecha_registro").dt.month_start() == mes_corte)
     return df_ant, df_ult
 
 
-@pytest.mark.integration
 @pytest.mark.autonomia
 @pytest.mark.teradata
 @pytest.mark.asyncio
 async def test_info_autonomia(client: TestClient) -> None:
-    vaciar_directorios_test()
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="autonomia",
+            mes_inicio=date(2024, 1, 1),
+            mes_corte=date(2024, 12, 31),
+            tipo_analisis="triangulos",
+            nombre_plantilla="plantilla_autonomia",
+        ),
+    )
 
-    data = {
-        "negocio": "autonomia",
-        "mes_inicio": "202401",
-        "mes_corte": "202412",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "plantilla_autonomia",
-        "aproximar_reaseguro": "True",
-    }
-
-    response = client.post("/ingresar-parametros", data=data).json()
-    p = Parametros.model_validate(response)
-
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    correr_queries(client)
 
     base_siniestros = pl.read_parquet("data/raw/siniestros.parquet").with_columns(
         pago_cedido=pl.col("pago_bruto") - pl.col("pago_retenido"),
@@ -64,5 +59,3 @@ async def test_info_autonomia(client: TestClient) -> None:
             col,
         )
         assert_igual(siniestros_ultimo_mes, siniestros_cedidos_sap, col)
-
-    vaciar_directorios_test()

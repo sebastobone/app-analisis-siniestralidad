@@ -1,10 +1,14 @@
+from datetime import date
+
 import polars as pl
 
 from src import constantes as ct
 from src import utils
 
 
-async def consolidar_sap(negocio: str, qtys: list[str], mes_corte: int) -> pl.DataFrame:
+async def consolidar_sap(
+    negocio: str, qtys: list[str], mes_corte: date
+) -> pl.DataFrame:
     dfs_sap = []
     for cia in ct.AFOS_NECESARIOS[negocio]:
         for hoja_afo in definir_hojas_afo(qtys):
@@ -30,16 +34,14 @@ async def consolidar_sap(negocio: str, qtys: list[str], mes_corte: int) -> pl.Da
 
 
 async def transformar_hoja_afo(
-    df: pl.DataFrame, cia: str, qty: str, mes_corte: int
+    df: pl.DataFrame, cia: str, qty: str, mes_corte: date
 ) -> pl.DataFrame:
-    if (
-        f"{ct.NOMBRE_MES[mes_corte % 100]} {mes_corte // 100}"
-        not in df.get_column("Ejercicio/Período").unique()
-    ):
+    mes_corte_afo = f"{ct.NOMBRE_MES[mes_corte.month]} {mes_corte.year}"
+    if mes_corte_afo not in df.get_column("Ejercicio/Período").unique():
         raise ValueError(
             utils.limpiar_espacios_log(
                 f"""
-                ¡Error! No se pudo encontrar el mes {mes_corte}
+                ¡Error! No se pudo encontrar el mes {mes_corte_afo}
                 en la hoja {qty} del AFO de {cia}. Actualizar el AFO.
                 """
             )
@@ -80,10 +82,7 @@ async def transformar_hoja_afo(
             fecha_registro=pl.date(pl.col("Anno"), pl.col("Mes"), 1),
         )
         .fill_null(0)
-        .filter(
-            (pl.col("fecha_registro") <= utils.yyyymm_to_date(mes_corte))
-            & (pl.col(qty) != 0)
-        )
+        .filter((pl.col("fecha_registro") <= mes_corte) & (pl.col(qty) != 0))
         .select(["codigo_op", "codigo_ramo_op", "fecha_registro", qty])
         .collect()
     )

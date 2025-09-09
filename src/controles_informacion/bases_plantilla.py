@@ -15,8 +15,12 @@ def generar_evidencia_info_plantilla(
     primas = validar_base_primas_expuestos(p.negocio, resumen, "primas")
     expuestos = validar_base_primas_expuestos(p.negocio, resumen, "expuestos")
 
+    mes_corte_int = utils.date_to_yyyymm(p.mes_corte)
+
     carpeta = "data/controles_informacion/"
-    wb_name = f"{p.mes_corte}_{p.tipo_analisis}_consistencia_informacion_plantilla.xlsx"
+    wb_name = (
+        f"{mes_corte_int}_{p.tipo_analisis}_consistencia_informacion_plantilla.xlsx"
+    )
     with xlsxwriter.Workbook(carpeta + wb_name) as wb:
         siniestros.write_excel(wb, "Siniestros")
         primas.write_excel(wb, "Primas")
@@ -29,14 +33,9 @@ def validar_base_siniestros(
     aperturas = ["apertura_reservas", "atipico"]
 
     original = (
-        pl.read_parquet("data/raw/siniestros.parquet")
+        pl.read_parquet("data/consolidado/siniestros.parquet")
         .group_by(aperturas)
-        .agg(
-            [
-                pl.sum(qty_column)
-                for qty_column in ct.COLUMNAS_VALORES_TERADATA["siniestros"]
-            ]
-        )
+        .agg([pl.sum(qty_column) for qty_column in ct.VALORES["siniestros"].keys()])
         .with_columns(
             conteo_incurrido=pl.col("conteo_incurrido") - pl.col("conteo_desistido")
         )
@@ -59,20 +58,15 @@ def validar_base_siniestros(
             ]
         )
         .group_by(aperturas)
-        .agg(
-            [
-                pl.sum(qty_column)
-                for qty_column in ct.COLUMNAS_VALORES_TERADATA["siniestros"]
-            ]
-        )
+        .agg([pl.sum(qty_column) for qty_column in ct.VALORES["siniestros"].keys()])
     )
 
     return base_plantilla.join(
-        original, on=aperturas, how="full", suffix="_teradata", coalesce=True
+        original, on=aperturas, how="full", suffix="_original", coalesce=True
     ).with_columns(
         [
-            (pl.col(col) - pl.col(f"{col}_teradata")).alias(f"diferencia_{col}")
-            for col in ct.COLUMNAS_VALORES_TERADATA["siniestros"]
+            (pl.col(col) - pl.col(f"{col}_original")).alias(f"diferencia_{col}")
+            for col in ct.VALORES["siniestros"].keys()
         ]
     )
 
@@ -82,11 +76,13 @@ def validar_base_primas_expuestos(
 ) -> pl.DataFrame:
     aperturas = utils.obtener_nombres_aperturas(negocio, qty)
 
-    original_group = pl.read_parquet(f"data/raw/{qty}.parquet").group_by(aperturas)
+    original_group = pl.read_parquet(f"data/consolidado/{qty}.parquet").group_by(
+        aperturas
+    )
     base_group = resumen.group_by(aperturas)
 
     if qty == "primas":
-        columnas_valores = ct.COLUMNAS_VALORES_TERADATA[qty]
+        columnas_valores = ct.VALORES[qty].keys()
         original = original_group.agg(
             [pl.sum(columna_valor) for columna_valor in columnas_valores]
         )

@@ -1,5 +1,5 @@
-import os
 from datetime import date
+from pathlib import Path
 
 import polars as pl
 import pytest
@@ -8,42 +8,33 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from src import constantes as ct
 from src import utils
-from src.metodos_plantilla import abrir, preparar
+from src.metodos_plantilla import abrir
 from src.metodos_plantilla.guardar_traer.rangos_parametros import (
     obtener_indice_en_rango,
 )
 from src.models import Parametros
-from tests.conftest import (
-    agregar_meses_params,
-    assert_igual,
-    correr_queries,
-    vaciar_directorios_test,
-)
+from tests.conftest import assert_igual, ingresar_parametros
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-
-    response = client.post("/ingresar-parametros", data=params_form).json()
-    p = Parametros.model_validate(response)
-
-    correr_queries(client)
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
 
     wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     response = client.post("/preparar-plantilla")
 
     assert response.status_code == status.HTTP_200_OK
-    assert os.path.exists(f"plantillas/{p.nombre_plantilla}.xlsm")
+    assert Path(f"plantillas/{p.nombre_plantilla}.xlsm").exists()
 
     assert not wb_test.sheets["Entremes"].visible
     assert wb_test.sheets["Frecuencia"].visible
@@ -77,62 +68,56 @@ def test_preparar_triangulos(client: TestClient, rango_meses: tuple[date, date])
     for columna in ct.COLUMNAS_QTYS:
         assert_igual(base_atipicos_original, base_atipicos_plantilla, columna)
 
-    vaciar_directorios_test()
 
-
-@pytest.mark.plantilla
-@pytest.mark.integration
+@pytest.mark.fast
 def test_preparar_entremes_sin_resultados_anteriores(
     client: TestClient, rango_meses: tuple[date, date]
 ):
-    vaciar_directorios_test()
-
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "entremes",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-
-    _ = client.post("/ingresar-parametros", data=params_form)
-
-    with pytest.raises(preparar.AnalisisAnterioresNoEncontradosError):
-        _ = client.get("/obtener-analisis-anteriores")
-
-    vaciar_directorios_test()
+    with pytest.raises(ValueError, match="No se encontraron resultados anteriores"):
+        _ = ingresar_parametros(
+            client,
+            Parametros(
+                negocio="demo",
+                mes_inicio=rango_meses[0],
+                mes_corte=rango_meses[1],
+                tipo_analisis="entremes",
+                nombre_plantilla="wb_test",
+            ),
+        )
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    agregar_meses_params(params_form, rango_meses)
-    params_form.update({"mes_corte": "202412"})
-
-    _ = client.post("/ingresar-parametros", data=params_form)
-
-    correr_queries(client)
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=date(2024, 12, 1),
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
 
     _ = client.post("/preparar-plantilla")
     _ = client.post(
         "/guardar-todo",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
 
     _ = client.post("/almacenar-analisis")
 
-    params_form.update({"tipo_analisis": "entremes", "mes_corte": "202501"})
-    response = client.post("/ingresar-parametros", data=params_form).json()
-    p = Parametros.model_validate(response)
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=date(2025, 1, 1),
+            tipo_analisis="entremes",
+            nombre_plantilla="wb_test",
+        ),
+    )
     wb_test = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
-
-    correr_queries(client)
 
     _ = client.post(
         "/preparar-plantilla",
@@ -152,23 +137,45 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
 
     _ = client.post("/almacenar-analisis")
 
-    for siguiente_mes in ["202502", "202503"]:
-        params_form.update({"tipo_analisis": "entremes", "mes_corte": siguiente_mes})
-        _ = client.post("/ingresar-parametros", data=params_form)
-        correr_queries(client)
+    for siguiente_mes in [date(2025, 2, 1), date(2025, 3, 1)]:
+        p = ingresar_parametros(
+            client,
+            Parametros(
+                negocio="demo",
+                mes_inicio=rango_meses[0],
+                mes_corte=siguiente_mes,
+                tipo_analisis="entremes",
+                nombre_plantilla="wb_test",
+            ),
+        )
         _ = client.post("/preparar-plantilla")
         _ = client.post("/almacenar-analisis")
 
-    params_form.update({"tipo_analisis": "triangulos", "mes_corte": "202503"})
-    _ = client.post("/ingresar-parametros", data=params_form)
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=date(2025, 3, 1),
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
+
     _ = client.post("/preparar-plantilla")
     _ = client.post("/guardar-todo")
     _ = client.post("/almacenar-analisis")
 
-    params_form.update({"tipo_analisis": "entremes", "mes_corte": "202504"})
-    _ = client.post("/ingresar-parametros", data=params_form)
-
-    correr_queries(client)
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=date(2025, 4, 1),
+            tipo_analisis="entremes",
+            nombre_plantilla="wb_test",
+        ),
+    )
 
     _ = client.post(
         "/preparar-plantilla",
@@ -176,8 +183,6 @@ def test_preparar_entremes(client: TestClient, rango_meses: tuple[date, date]):
     )
 
     _ = client.post("/almacenar-analisis")
-
-    vaciar_directorios_test()
 
 
 def validar_formulas_no_textuales(client: TestClient, wb_test: xw.Book) -> None:

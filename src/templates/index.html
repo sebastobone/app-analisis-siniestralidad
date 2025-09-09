@@ -4,12 +4,13 @@
     <title>Plantilla Seguimiento Reservas</title>
     <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}" />
   </head>
-  <nav>
-    <h1>Plantilla Seguimiento Reservas</h1>
-    <img src="static/logo_sura.png" alt="Logo-SURA" width="200" height="74" />
-  </nav>
 
   <body>
+    <nav>
+      <h1>Plantilla Seguimiento Reservas</h1>
+      <img src="static/logo_sura.png" alt="Logo-SURA" width="200" height="74" />
+    </nav>
+
     <div class="form-section">
       <a
         href="https://sebastobone.github.io/app-analisis-siniestralidad/"
@@ -25,7 +26,7 @@
 
     <div class="form-section">
       <h2>Parametros</h2>
-      <form id="ingresarParametros">
+      <form id="parametrosForm">
         <label for="negocio">Negocio:</label>
         <select id="negocio" name="negocio">
           <option value="arl">ARL</option>
@@ -35,101 +36,208 @@
           <option value="salud">Salud</option>
           <option value="soat">SOAT</option>
           <option value="demo">Demo</option>
+          <option value="custom">Custom</option>
         </select>
 
-        <label for="mesInicio">Mes de la primera ocurrencia:</label>
+        <label for="mes_inicio">Mes de la primera ocurrencia:</label>
         <input
           type="text"
-          id="mesInicio"
-          name="mesInicio"
+          id="mes_inicio"
+          name="mes_inicio"
           placeholder="AAAAMM"
           required
         />
 
-        <label for="mesCorte">Mes de corte:</label>
+        <label for="mes_corte">Mes de corte:</label>
         <input
           type="text"
-          id="mesCorte"
-          name="mesCorte"
+          id="mes_corte"
+          name="mes_corte"
           placeholder="AAAAMM"
           required
         />
 
-        <label for="tipoAnalisis">Tipo de analisis:</label>
-        <select id="tipoAnalisis" name="tipoAnalisis">
+        <label for="tipo_analisis">Tipo de analisis:</label>
+        <select id="tipo_analisis" name="tipo_analisis">
           <option value="triangulos">Triangulos</option>
           <option value="entremes">Entremes</option>
         </select>
 
-        <label for="aproximarReaseguro">Aproximar reaseguro:</label>
-        <select id="aproximarReaseguro" name="aproximarReaseguro">
-          <option value="false">No</option>
-          <option value="true">Si</option>
-        </select>
-
-        <label for="addFraudeSoat">Añadir fraude a siniestros (SOAT)</label>
-        <select id="addFraudeSoat" name="addFraudeSoat">
-          <option value="false">No</option>
-          <option value="true">Si</option>
-        </select>
-
-        <label for="nombrePlantilla">Nombre de la plantilla:</label>
+        <label for="nombre_plantilla">Nombre de la plantilla:</label>
         <input
           type="text"
-          id="nombrePlantilla"
-          name="nombrePlantilla"
+          id="nombre_plantilla"
+          name="nombre_plantilla"
           placeholder="Plantilla_Reservas"
           required
         />
-
-        <button id="guardarParametros">Guardar parametros</button>
-        <button id="traerParametros">Traer parametros</button>
       </form>
+
+      <div class="input-group">
+        <label for="archivoSegmentacion" class="custom-file-upload"
+          >Cargar archivo de segmentacion:</label
+        >
+        <input
+          type="file"
+          id="archivoSegmentacion"
+          name="archivoSegmentacion"
+          accept=".xlsx"
+        />
+
+        <button
+          style="background-color: gray"
+          id="descargarEjemploSegmentacion"
+        >
+          Descargar ejemplo
+        </button>
+      </div>
+
+      <button id="guardarParametros">Guardar parametros</button>
+      <button id="traerParametros">Traer parametros</button>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" id="extraccion" style="display: none">
       <h2>Extraccion de informacion</h2>
 
-      <button class="apiButton" endpoint="correr-query-siniestros">
+      <form id="credencialesTeradata">
+        <label for="user">Usuario Teradata:</label>
+        <input type="text" id="user" name="user" required />
+
+        <label for="password">Contrasena Teradata:</label>
+        <input type="password" id="password" name="password" required />
+      </form>
+
+      <button
+        class="extraccion"
+        endpoint="correr-query-siniestros"
+        cantidad="siniestros"
+      >
         Correr query siniestros
       </button>
-      <button class="apiButton" endpoint="correr-query-primas">
+      <button
+        class="extraccion"
+        endpoint="correr-query-primas"
+        cantidad="primas"
+      >
         Correr query primas
       </button>
-      <button class="apiButton" endpoint="correr-query-expuestos">
+      <button
+        class="extraccion"
+        endpoint="correr-query-expuestos"
+        cantidad="expuestos"
+      >
         Correr query expuestos
       </button>
     </div>
 
-    <div class="form-section">
-      <h2>Controles de informacion</h2>
-      <button class="apiButton" endpoint="generar-controles">
-        Generar controles
+    <div class="form-section" id="cargaManual" style="display: none">
+      <h2>Carga manual de informacion</h2>
+
+      <button id="descargarEjemplosCantidades">Descargar ejemplos</button>
+
+      <div class="input-group">
+        <label for="archivosSiniestros" class="custom-file-upload"
+          >Cargar archivos de siniestros:</label
+        >
+        <input
+          type="file"
+          id="archivosSiniestros"
+          name="archivosSiniestros"
+          accept=".csv, .parquet, .xlsx, .txt"
+          multiple
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="archivosPrimas" class="custom-file-upload"
+          >Cargar archivos de primas:</label
+        >
+        <input
+          type="file"
+          id="archivosPrimas"
+          name="archivosPrimas"
+          accept=".csv, .parquet, .xlsx, .txt"
+          multiple
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="archivosExpuestos" class="custom-file-upload"
+          >Cargar archivos de expuestos:</label
+        >
+        <input
+          type="file"
+          id="archivosExpuestos"
+          name="archivosExpuestos"
+          accept=".csv, .parquet, .xlsx, .txt"
+          multiple
+        />
+      </div>
+
+      <button id="cargarArchivos" endpoint="cargar-archivos">
+        Cargar archivos
+      </button>
+
+      <button
+        id="eliminarArchivosCargados"
+        style="background-color: darkred"
+        endpoint="eliminar-archivos-cargados"
+      >
+        Eliminar archivos cargados
+      </button>
+    </div>
+
+    <div class="form-section" id="controles" style="display: none">
+      <h2>Controles y cuadre de informacion</h2>
+
+      <label class="checkbox-group">
+        <input type="checkbox" id="cuadrarSiniestros" checked />
+        <span class="checkbox-custom"></span>
+        Realizar cuadre de siniestros
+      </label>
+
+      <label class="checkbox-group">
+        <input type="checkbox" id="cuadrarPrimas" checked />
+        <span class="checkbox-custom"></span>
+        Realizar cuadre de primas
+      </label>
+
+      <h3>Archivos para incluir en controles y cuadre de siniestros:</h3>
+      <div id="candidatos_siniestros"></div>
+
+      <h3>Archivos para incluir en controles y cuadre de primas:</h3>
+      <div id="candidatos_primas"></div>
+
+      <h3>Archivos para incluir en controles de expuestos:</h3>
+      <div id="candidatos_expuestos"></div>
+
+      <button id="generarControles" endpoint="generar-controles">
+        Generar controles y cuadre
       </button>
     </div>
 
     <div class="form-section" id="referenciasEntremes" style="display: none">
       <h2>Referencias para entremes</h2>
 
-      <label>Referencia para ultimate actuarial:</label>
-      <select id="referenciaActuarial">
-        <option value="entremes">Entremes</option>
-      </select>
+      <form id="referenciasEntremesForm">
+        <label>Referencia para ultimate actuarial:</label>
+        <select id="referenciaActuarial">
+          <option value="entremes">Entremes</option>
+        </select>
 
-      <label>Referencia para ultimate contable:</label>
-      <select id="referenciaContable">
-        <option value="entremes">Entremes</option>
-      </select>
+        <label>Referencia para ultimate contable:</label>
+        <select id="referenciaContable">
+          <option value="entremes">Entremes</option>
+        </select>
+      </form>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" id="seccionPlantilla" style="display: none">
       <h2>Plantilla</h2>
       <button class="apiButton" endpoint="abrir-plantilla">
         Abrir plantilla
       </button>
       <button id="prepararPlantilla">Preparar plantilla</button>
-
-      <button id="generarAperturas">Generar aperturas</button>
 
       <form id="modosPlantilla">
         <label for="apertura">Apertura:</label>
@@ -211,7 +319,7 @@
       </div>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" id="resultados" style="display: none">
       <h2>Resultados</h2>
       <button class="apiButton" endpoint="actualizar-wb-resultados">
         Actualizar y abrir archivo resultados
@@ -224,12 +332,11 @@
     <script src="static/logViewer.js"></script>
     <script type="module" src="static/ingresarParametros.js"></script>
     <script type="module" src="static/traerParametros.js"></script>
-    <script src="static/dropdowns/generarAperturas.js"></script>
+    <script type="module" src="static/extraccion.js"></script>
+    <script type="module" src="static/controles.js"></script>
     <script src="static/dropdowns/generarAtributos.js"></script>
-    <script type="module" src="static/apiButtons.js"></script>
+    <script type="module" src="static/descargarEjemplos.js"></script>
+    <script type="module" src="static/cargaManual.js"></script>
     <script type="module" src="static/modosPlantilla.js"></script>
-    <script type="module" src="static/prepararPlantilla.js"></script>
-    <script type="module" src="static/traerGuardarTodo.js"></script>
-    <script type="module" src="static/traerEntremes.js"></script>
   </body>
 </html>

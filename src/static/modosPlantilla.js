@@ -1,30 +1,74 @@
 import { showToast } from "./toast.js";
+import { fetchForm, fetchSimple } from "./apiUtils.js";
 
-document.querySelectorAll(".modo").forEach((button) => {
-  button.addEventListener("click", async function (event) {
+export function bindApiButton(selector, handler) {
+  document.querySelectorAll(selector).forEach((button) => {
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+      await handler(button);
+    });
+  });
+}
+
+bindApiButton(".modo", async (button) => {
+  showToast("Ejecutando...");
+  const endpoint = button.getAttribute("endpoint");
+  await fetchForm("modosPlantilla", endpoint, "Error en la ejecucion");
+});
+
+bindApiButton(".apiButton", async (button) => {
+  showToast("Ejecutando...");
+  const endpoint = button.getAttribute("endpoint");
+  await fetchSimple(endpoint, "Ocurrio un error");
+});
+
+document
+  .getElementById("prepararPlantilla")
+  .addEventListener("click", async (event) => {
+    event.preventDefault();
+    showToast("Preparando plantilla...");
+    await fetchForm(
+      "referenciasEntremesForm",
+      "preparar-plantilla",
+      "Error al preparar la plantilla",
+    );
+  });
+
+document
+  .getElementById("traerEntremes")
+  .addEventListener("click", async (event) => {
     event.preventDefault();
 
-    showToast("Ejecutando...");
+    showToast("Preparando plantilla...");
+    await fetchForm(
+      "referenciasEntremesForm",
+      "preparar-plantilla",
+      "Error al preparar la plantilla",
+    );
 
-    const formData = new URLSearchParams({
-      apertura: document.getElementById("apertura").value,
-      atributo: document.getElementById("atributo").value,
-      plantilla: document.getElementById("plantilla").value,
-    });
-
-    const endpoint = button.getAttribute("endpoint");
-    const response = await fetch(`http://127.0.0.1:8000/${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: formData.toString(),
-    });
-
-    if (response.ok) {
-      showToast("Ejecucion exitosa", "success");
-    } else {
-      showToast("Error en la ejecucion", "error");
-    }
+    showToast("Trayendo formulas de la hoja Entremes...");
+    await fetchSimple(
+      "traer-entremes",
+      "Error al traer formulas de la hoja Entremes",
+    );
   });
-});
+
+document
+  .getElementById("traerGuardarTodo")
+  .addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    showToast("Preparando plantilla...");
+    await fetchForm(
+      "referenciasEntremesForm",
+      "preparar-plantilla",
+      "Error al preparar la plantilla",
+    );
+
+    showToast("Trayendo y guardando todo...");
+    await fetchForm(
+      "modosPlantilla",
+      "traer-guardar-todo",
+      "Error en la ejecucion",
+    );
+  });

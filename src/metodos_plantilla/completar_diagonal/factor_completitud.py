@@ -1,3 +1,5 @@
+from datetime import date
+
 import polars as pl
 
 from src import constantes as ct
@@ -7,7 +9,7 @@ from . import chainladder as cl
 
 
 def calcular_factores_completitud(
-    aperturas: pl.LazyFrame, mes_corte: int
+    aperturas: pl.LazyFrame, mes_corte: date
 ) -> pl.DataFrame:
     base_triangulos = (
         pl.scan_parquet("data/processed/base_triangulos.parquet")
@@ -88,7 +90,7 @@ def calcular_factor_completitud(
     factor_seleccionado: str,
     meses_entre_triangulos: int,
     cantidad: str,
-    mes_corte: int,
+    mes_corte: date,
 ) -> pl.DataFrame:
     tabla_factor_seleccionado = factores_acumulados.select(
         ["altura", factor_seleccionado]
@@ -122,9 +124,7 @@ def calcular_factor_completitud(
         )
         .filter(
             pl.col("mes_del_periodo")
-            == utils.mes_del_periodo(
-                utils.yyyymm_to_date(mes_corte), 1, meses_entre_triangulos
-            )
+            == utils.mes_del_periodo(mes_corte, 1, meses_entre_triangulos)
         )
         .select(
             [

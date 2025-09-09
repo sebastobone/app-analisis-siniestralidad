@@ -51,6 +51,25 @@ select:focus {
   box-shadow: 0 0 5px rgba(0, 51, 160, 0.5);
 }
 
+input[type="password"],
+select {
+  width: 80%;
+  display: block;
+  padding: 10px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+input[type="password"]:focus,
+select:focus {
+  border-color: #0033a0;
+  box-shadow: 0 0 5px rgba(0, 51, 160, 0.5);
+}
+
 button {
   padding: 10px 15px;
   margin-bottom: 10px;
@@ -139,4 +158,69 @@ h2 {
 
 .toast.hide {
   opacity: 0;
+}
+
+.input-group {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+input[type="file"] {
+  display: block;
+  padding: 5px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* Wrapper for checkbox + label */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+}
+
+/* Hide default checkbox */
+.checkbox-group input[type="checkbox"] {
+  display: none;
+}
+
+/* Custom checkbox */
+.checkbox-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #0033a0;
+  border-radius: 4px;
+  margin-right: 10px;
+  display: inline-block;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* When checked */
+.checkbox-group input[type="checkbox"]:checked + .checkbox-custom {
+  background-color: #00aec7;
+  border-color: #00aec7;
+}
+
+/* Checkmark (appears when checked) */
+.checkbox-custom::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 0px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.checkbox-group input[type="checkbox"]:checked + .checkbox-custom::after {
+  opacity: 1;
 }

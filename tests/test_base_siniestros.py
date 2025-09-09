@@ -4,6 +4,7 @@ from typing import Literal
 import polars as pl
 import pytest
 from src import utils
+from src.informacion.mocks import generar_mock
 from src.procesamiento import base_siniestros as base
 
 from tests.conftest import assert_igual
@@ -24,7 +25,7 @@ def filtrar_fechas(
     )
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "mes_corte, origin_grain, expected",
     [
@@ -45,7 +46,7 @@ def test_mes_ult_ocurr_triangulos(
     assert base.mes_ult_ocurr_triangulos(mes_corte, origin_grain) == expected
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "mes_corte, origin_grain, expected",
     [
@@ -66,7 +67,7 @@ def test_mes_prim_ocurr_periodo_act(
     assert base.mes_prim_ocurr_periodo_act(mes_corte, origin_grain) == expected
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "periodicidad_ocurrencia",
     ["Mensual", "Trimestral", "Semestral", "Anual"],
@@ -75,7 +76,7 @@ def test_analisis_triangulos(
     periodicidad_ocurrencia: Literal["Mensual", "Trimestral", "Semestral", "Anual"],
     rango_meses: tuple[date, date],
 ):
-    mock_siniestros = utils.generar_mock_siniestros(rango_meses)
+    mock_siniestros = generar_mock(rango_meses, "siniestros")
     base_triangulos, _ = base.generar_bases_siniestros(
         mock_siniestros.lazy(), "triangulos", *rango_meses
     )
@@ -106,7 +107,7 @@ def test_analisis_triangulos(
     assert_igual(plata_procesada, plata_original, "pago_bruto")
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "periodicidad_ocurrencia",
     ["Trimestral", "Semestral", "Anual"],
@@ -115,7 +116,7 @@ def test_analisis_entremes(
     periodicidad_ocurrencia: Literal["Trimestral", "Semestral", "Anual"],
     rango_meses: tuple[date, date],
 ):
-    mock_siniestros = utils.generar_mock_siniestros(rango_meses)
+    mock_siniestros = generar_mock(rango_meses, "siniestros")
     base_triangulos, base_ult_ocurr = base.generar_bases_siniestros(
         mock_siniestros.lazy(), "entremes", *rango_meses
     )

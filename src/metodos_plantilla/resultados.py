@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from typing import Literal
 
 import polars as pl
@@ -17,14 +17,12 @@ def concatenar_archivos_resultados() -> pl.DataFrame:
         "tipo_analisis",
     ]
 
-    files = [file for file in os.listdir("output/resultados") if ".parquet" in file]
-    sorted_files = sorted(
-        files, key=lambda f: os.path.getmtime(os.path.join("output/resultados", f))
-    )
+    files = [f for f in Path("output/resultados").iterdir() if f.suffix == ".parquet"]
+    sorted_files = sorted(files, key=lambda f: f.stat().st_mtime)
 
     dfs = []
     for file in sorted_files:
-        df = pl.read_parquet(f"output/resultados/{file}").filter(
+        df = pl.read_parquet(f"output/resultados/{file.name}").filter(
             pl.col("plata_ultimate_bruto").sum().over(columnas_distintivas) != 0
         )
         dfs.append(utils.generalizar_tipos_columnas_resultados(df))
@@ -84,7 +82,7 @@ def agregar_periodo_granular(
 
 
 def actualizar_wb_resultados() -> xw.Book:
-    if not os.path.exists("output/resultados.xlsx"):
+    if not Path("output/resultados.xlsx").exists():
         wb = xw.Book()
         wb.sheets.add("Resultados")
         wb.save("output/resultados.xlsx")

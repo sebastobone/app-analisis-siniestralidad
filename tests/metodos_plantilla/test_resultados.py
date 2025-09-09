@@ -1,5 +1,5 @@
-import os
 from datetime import date
+from pathlib import Path
 
 import polars as pl
 import pytest
@@ -12,52 +12,40 @@ from src.metodos_plantilla.guardar_traer.rangos_parametros import (
     obtener_indice_en_rango,
 )
 from src.models import Parametros
-from tests.conftest import (
-    agregar_meses_params,
-    assert_diferente,
-    assert_igual,
-    vaciar_directorios_test,
-)
+from tests.conftest import assert_diferente, assert_igual, ingresar_parametros
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_actualizar_resultados(
     client: TestClient, client_2: TestClient, rango_meses: tuple[date, date]
 ):
-    vaciar_directorios_test()
-
-    apertura = "01_001_A_D"
+    apertura = "01_040_A_D"
     atributo = "bruto"
-    apertura_2 = "01_001_A_E"
+    apertura_2 = "01_040_A_E"
 
-    params_form_usuario_1 = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-    params_form_usuario_2 = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test_u2",
-    }
-
-    agregar_meses_params(params_form_usuario_1, rango_meses)
-    agregar_meses_params(params_form_usuario_2, rango_meses)
-
-    response1 = client.post("/ingresar-parametros", data=params_form_usuario_1).json()
-    response2 = client_2.post("/ingresar-parametros", data=params_form_usuario_2).json()
-
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
-
-    p1 = Parametros.model_validate(response1)
-    p2 = Parametros.model_validate(response2)
+    p1 = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
+    p2 = ingresar_parametros(
+        client_2,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test_u2",
+        ),
+    )
 
     # Usuario 1 estima apertura 1
     _ = client.post("/preparar-plantilla")
-
     wb_u1 = abrir.abrir_plantilla(f"plantillas/{p1.nombre_plantilla}.xlsm")
 
     _ = client.post(
@@ -118,17 +106,20 @@ def test_actualizar_resultados(
         .get_column("apertura_reservas")
         .unique()
         .to_list()
-    ) == ["01_001_A_D", "01_001_A_E"]
+    ) == ["01_040_A_D", "01_040_A_E"]
 
     # Verificamos que, en caso de aperturas guardadas por dos usuarios,
     # se lea solamente el archivo mas reciente
+    mes_corte_int = utils.date_to_yyyymm(p1.mes_corte)
+
     info_u1 = pl.read_parquet(
-        f"output/resultados/{p1.nombre_plantilla}_{p1.mes_corte}_{p1.tipo_analisis}.parquet"
+        f"output/resultados/{p1.nombre_plantilla}_{mes_corte_int}_{p1.tipo_analisis}.parquet"
     )
     info_u2 = pl.read_parquet(
-        f"output/resultados/{p2.nombre_plantilla}_{p2.mes_corte}_{p2.tipo_analisis}.parquet"
+        f"output/resultados/{p2.nombre_plantilla}_{mes_corte_int}_{p2.tipo_analisis}.parquet"
     )
-    filtro_apertura = pl.col("apertura_reservas") == "01_001_A_D"
+
+    filtro_apertura = pl.col("apertura_reservas") == "01_040_A_D"
 
     assert_diferente(
         info_u1.filter(filtro_apertura),
@@ -136,13 +127,11 @@ def test_actualizar_resultados(
         "plata_ultimate_bruto",
     )
     assert_igual(
-        info_wb_res.filter((filtro_apertura) & (pl.col("mes_corte") == p2.mes_corte)),
+        info_wb_res.filter((filtro_apertura) & (pl.col("mes_corte") == mes_corte_int)),
         info_u2.filter(filtro_apertura),
         "plata_ultimate_bruto",
     )
 
-    os.remove(f"plantillas/{p2.nombre_plantilla}.xlsm")
+    Path(f"plantillas/{p2.nombre_plantilla}.xlsm").unlink()
     wb_res.close()
-    os.remove("output/resultados.xlsx")
-
-    vaciar_directorios_test()
+    Path("output/resultados.xlsx").unlink()

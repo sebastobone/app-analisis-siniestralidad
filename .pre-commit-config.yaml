@@ -8,11 +8,11 @@ repos:
         entry: uv lock --locked
         always_run: true
         pass_filenames: false
-      - id: mypy
-        name: mypy => type checking
+      - id: ty
+        name: ty => type checking
         stages: [pre-commit]
         language: system
-        entry: uv run mypy
+        entry: uv run ty check
         always_run: true
         pass_filenames: false
       - id: ruff-formatting
@@ -41,6 +41,13 @@ repos:
         stages: [pre-commit]
         language: system
         entry: markdownlint --fix docs --disable MD013
+        always_run: true
+        pass_filenames: false
+      - id: pytest fast
+        name: pytest => fast tests
+        stages: [pre-commit]
+        language: system
+        entry: uv run pytest -m fast
         always_run: true
         pass_filenames: false
       - id: sqlfluff-linting

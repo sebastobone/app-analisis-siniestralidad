@@ -1,91 +1,141 @@
 from datetime import date
-from unittest.mock import patch
 
-import numpy as np
 import polars as pl
 import pytest
-from src import utils
-from src.controles_informacion import cuadre_contable, sap
-from src.controles_informacion import generacion as ctrl
-from tests.conftest import assert_diferente, assert_igual
-from tests.controles_informacion.test_generacion import mock_hoja_afo
+from fastapi.testclient import TestClient
+from src import constantes as ct
+from src.controles_informacion import sap
+from src.informacion.carga_manual import crear_excel
+from src.informacion.mocks import generar_mock
+from src.models import Parametros
+from tests.conftest import (
+    CONTENT_TYPES,
+    assert_diferente,
+    assert_igual,
+    crear_parquet,
+    ingresar_parametros,
+)
+
+
+@pytest.fixture(autouse=True)
+def hojas_segmentacion() -> dict[str, pl.DataFrame]:
+    hojas = pl.read_excel("data/segmentacion_demo.xlsx", sheet_id=0)
+    hojas["Meses_cuadre_siniestros"] = hojas["Meses_cuadre_siniestros"].with_columns(
+        cuadrar_pago_bruto=1, cuadrar_aviso_retenido=1
+    )
+    hojas["Meses_cuadre_primas"] = hojas["Meses_cuadre_primas"].with_columns(
+        cuadrar_prima_bruta=1, cuadrar_prima_retenida_devengada=1
+    )
+    return hojas
+
+
+@pytest.fixture(autouse=True)
+def parametros(
+    client: TestClient,
+    rango_meses: tuple[date, date],
+    hojas_segmentacion: dict[str, pl.DataFrame],
+):
+    return ingresar_parametros(
+        client,
+        Parametros(
+            negocio="test",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+        {
+            "archivo_segmentacion": (
+                "segmentacion_test.xlsx",
+                crear_excel(hojas_segmentacion),
+                CONTENT_TYPES["xlsx"],
+            )
+        },
+    )
+
+
+@pytest.fixture(autouse=True)
+def cargar_archivos(client: TestClient, parametros: Parametros):
+    rango_meses = parametros.mes_inicio, parametros.mes_corte
+
+    df_siniestros = generar_mock(rango_meses, "siniestros", 1000)
+    df_primas = generar_mock(rango_meses, "primas", 500)
+    df_expuestos = generar_mock(rango_meses, "expuestos", 500)
+
+    client.post(
+        "/cargar-archivos",
+        files=[
+            (
+                "siniestros",
+                (
+                    "siniestros.parquet",
+                    crear_parquet(df_siniestros),
+                    CONTENT_TYPES["parquet"],
+                ),
+            ),
+            (
+                "primas",
+                ("primas.parquet", crear_parquet(df_primas), CONTENT_TYPES["parquet"]),
+            ),
+            (
+                "expuestos",
+                (
+                    "expuestos.parquet",
+                    crear_parquet(df_expuestos),
+                    CONTENT_TYPES["parquet"],
+                ),
+            ),
+        ],
+    )
+    return df_siniestros, df_primas, df_expuestos
+
+
+@pytest.fixture(autouse=True)
+def generar_controles(client: TestClient):
+    client.post(
+        "/generar-controles",
+        json={
+            "cuadrar_siniestros": True,
+            "cuadrar_primas": True,
+            "archivos_siniestros": ["data/carga_manual/siniestros/siniestros.parquet"],
+            "archivos_primas": ["data/carga_manual/primas/primas.parquet"],
+            "archivos_expuestos": ["data/carga_manual/expuestos/expuestos.parquet"],
+        },
+    )
+
+
+async def obtener_sap(
+    df: pl.DataFrame, cantidades: list[str], rango_meses: tuple[date, date]
+) -> pl.DataFrame:
+    periodos_cuadrados = df.select(
+        ["codigo_op", "codigo_ramo_op", "fecha_registro"]
+    ).unique()
+    return (await sap.consolidar_sap("test", cantidades, rango_meses[1])).join(
+        periodos_cuadrados, on=["codigo_op", "codigo_ramo_op", "fecha_registro"]
+    )
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("qty", ["pago_bruto", "aviso_bruto"])
-async def test_cuadre_contable_soat(rango_meses: tuple[date, date], qty: str) -> None:
-    mes_inicio, mes_corte = rango_meses
-    mes_corte_int = utils.date_to_yyyymm(mes_corte)
-
-    with patch("src.controles_informacion.sap.pl.read_excel") as mock_read_excel:
-        mock_read_excel.return_value = mock_hoja_afo(mes_corte_int, "pago_bruto")
-
-        df_sap = (
-            (
-                await sap.consolidar_sap(
-                    "soat", ["pago_bruto", "pago_retenido"], mes_corte_int
-                )
-            )
-            .with_columns(
-                aviso_bruto=pl.col("pago_bruto") * np.random.random(),
-                aviso_retenido=pl.col("pago_retenido") * np.random.random(),
-            )
-            .filter((pl.col("codigo_ramo_op") == "001") & (pl.col("codigo_op") == "01"))
-        )
-
-    mock_siniestros = utils.generar_mock_siniestros(rango_meses)
-
-    mock_soat = mock_siniestros.filter(
-        (pl.col("codigo_ramo_op") == "001") & (pl.col("codigo_op") == "01")
+@pytest.mark.fast
+async def test_cuadre_contable(rango_meses: tuple[date, date]) -> None:
+    df_cuadrado_siniestros = pl.read_parquet(
+        "data/post_cuadre_contable/siniestros.parquet"
+    )
+    df_sap_siniestros = await obtener_sap(
+        df_cuadrado_siniestros, ct.COLUMNAS_SINIESTROS_CUADRE, rango_meses
     )
 
-    qtys = ["pago_bruto", "pago_retenido", "aviso_bruto", "aviso_retenido"]
-    df_tera = ctrl.agrupar_tera(
-        mock_soat, ["codigo_op", "codigo_ramo_op", "fecha_registro"], qtys
+    assert_igual(df_cuadrado_siniestros, df_sap_siniestros, "pago_bruto")
+    assert_diferente(df_cuadrado_siniestros, df_sap_siniestros, "pago_retenido")
+    assert_diferente(df_cuadrado_siniestros, df_sap_siniestros, "aviso_bruto")
+    assert_igual(df_cuadrado_siniestros, df_sap_siniestros, "aviso_retenido")
+
+    df_cuadrado_primas = pl.read_parquet("data/post_cuadre_contable/primas.parquet")
+    df_sap_primas = await obtener_sap(
+        df_cuadrado_primas, list(ct.VALORES["primas"].keys()), rango_meses
     )
 
-    dif_sap_vs_tera = await ctrl.comparar_sap_tera(df_tera, df_sap, mes_corte_int, qtys)
-
-    meses_a_cuadrar = pl.DataFrame(
-        {
-            "fecha_registro": [mes_inicio, mes_corte],
-            "cuadrar_pago_bruto": [1, 1],
-            "cuadrar_pago_retenido": [1, 1],
-            "cuadrar_aviso_bruto": [1, 1],
-            "cuadrar_aviso_retenido": [1, 1],
-        }
-    )
-
-    with patch(
-        "src.controles_informacion.cuadre_contable.obtener_aperturas_para_asignar_diferencia"
-    ) as mock_apertura_dif_soat:
-        mock_apertura_dif_soat.return_value = pl.DataFrame(
-            {
-                "codigo_op": ["01"],
-                "codigo_ramo_op": ["001"],
-                "apertura_1": ["A"],
-                "apertura_2": ["D"],
-            }
-        ).with_columns(utils.crear_columna_apertura_reservas("demo"))
-
-        with patch("src.controles_informacion.cuadre_contable.guardar_archivos"):
-            df_cuadre = await cuadre_contable.realizar_cuadre_contable(
-                "demo", "siniestros", mock_soat, dif_sap_vs_tera, meses_a_cuadrar
-            )
-
-    cifra_sap_meses_a_cuadrar = df_sap.filter(
-        pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
-    )
-    cifra_final_meses_a_cuadrar = df_cuadre.filter(
-        pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
-    )
-
-    cifra_sap_meses_sin_cuadre = df_sap.filter(
-        ~pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
-    )
-    cifra_final_meses_sin_cuadre = df_cuadre.filter(
-        ~pl.col("fecha_registro").is_in([mes_inicio, mes_corte])
-    )
-
-    assert_igual(cifra_sap_meses_a_cuadrar, cifra_final_meses_a_cuadrar, qty)
-    assert_diferente(cifra_sap_meses_sin_cuadre, cifra_final_meses_sin_cuadre, qty)
+    assert_igual(df_cuadrado_primas, df_sap_primas, "prima_bruta")
+    assert_diferente(df_cuadrado_primas, df_sap_primas, "prima_retenida")
+    assert_diferente(df_cuadrado_primas, df_sap_primas, "prima_bruta_devengada")
+    assert_igual(df_cuadrado_primas, df_sap_primas, "prima_retenida_devengada")

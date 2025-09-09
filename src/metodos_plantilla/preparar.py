@@ -42,7 +42,9 @@ def preparar_plantilla(
 
     if p.tipo_analisis == "entremes":
         resultados_mes_anterior = obtener_resultados_mes_anterior(
-            resultados_anteriores, p.mes_corte, referencias_entremes
+            resultados_anteriores,
+            utils.date_to_yyyymm(p.mes_corte),
+            referencias_entremes,
         )
         comparar_aperturas_mes_anterior(resumen, resultados_mes_anterior)
         factores_completitud = compl.calcular_factores_completitud(
@@ -53,7 +55,7 @@ def preparar_plantilla(
             resultados_anteriores,
             resultados_mes_anterior,
             factores_completitud,
-            p.mes_corte,
+            utils.date_to_yyyymm(p.mes_corte),
         )
         generar_hoja_entremes(wb, entremes)
 
@@ -64,40 +66,12 @@ def preparar_plantilla(
     logger.info("Evidencia SOX de consistencia de informacion generada.")
 
 
-def obtener_analisis_anteriores(mes_corte: int) -> pl.DataFrame:
-    resultados_anteriores = resultados.concatenar_archivos_resultados()
-    if resultados_anteriores.is_empty():
-        raise AnalisisAnterioresNoEncontradosError(
-            utils.limpiar_espacios_log(
-                """
-                No se encontraron resultados anteriores. Se necesitan
-                para hacer el analisis de entremes.
-                """
-            )
-        )
-    mes_corte_anterior = utils.mes_anterior_corte(mes_corte)
-    resultados_mes_anterior = resultados_anteriores.filter(
-        pl.col("mes_corte") == mes_corte_anterior
-    )
-    if resultados_mes_anterior.is_empty():
-        raise AnalisisAnterioresNoEncontradosError(
-            utils.limpiar_espacios_log(
-                f"""
-                No se encontraron resultados anteriores
-                para el mes {mes_corte_anterior}. Se necesitan
-                para hacer el analisis de entremes.
-                """
-            )
-        )
-    return resultados_mes_anterior
-
-
 def obtener_resultados_mes_anterior(
     resultados_anteriores: pl.DataFrame,
     mes_corte: int,
     referencias_entremes: ReferenciasEntremes,
 ) -> pl.DataFrame:
-    mes_corte_anterior = utils.mes_anterior_corte(mes_corte)
+    mes_corte_anterior = mes_anterior_corte(mes_corte)
     resultados_mes_anterior = resultados_anteriores.filter(
         pl.col("mes_corte") == mes_corte_anterior
     )
@@ -330,9 +304,11 @@ def verificar_plantilla_preparada(wb: xw.Book):
         )
 
 
+def mes_anterior_corte(mes_corte: int) -> int:
+    return (
+        mes_corte - 1 if mes_corte % 100 != 1 else ((mes_corte // 100) - 1) * 100 + 12
+    )
+
+
 class PlantillaNoPreparadaError(Exception):
-    pass
-
-
-class AnalisisAnterioresNoEncontradosError(Exception):
     pass

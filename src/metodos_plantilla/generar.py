@@ -1,5 +1,4 @@
 import time
-from math import ceil
 
 import polars as pl
 import xlwings as xw
@@ -7,7 +6,7 @@ import xlwings as xw
 import src.constantes as ct
 from src import utils
 from src.logger_config import logger
-from src.metodos_plantilla import actualizar, resultados
+from src.metodos_plantilla import actualizar, indexaciones, resultados
 from src.models import ModosPlantilla, Parametros
 
 
@@ -23,6 +22,12 @@ def generar_plantillas(wb: xw.Book, p: Parametros, modos: ModosPlantilla):
             actualizar.PeriodicidadDiferenteError,
         ):
             generar_plantilla(wb, p, modos_frec)
+
+        tipo_indexacion, _ = utils.obtener_parametros_indexacion(
+            p.negocio, modos.apertura
+        )
+        if tipo_indexacion == "Por fecha de movimiento":
+            indexaciones.traer_frecuencia_indexacion_movimiento(wb, p, modos_frec)
 
     generar_plantilla(wb, p, modos)
 
@@ -53,11 +58,25 @@ def generar_plantilla(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> None
 
     num_ocurrencias = triangulo.shape[0]
     num_alturas = triangulo.shape[1] // len(cantidades)
-    mes_del_periodo = utils.mes_del_periodo(
-        utils.yyyymm_to_date(p.mes_corte), num_ocurrencias, num_alturas
+    mes_del_periodo = utils.mes_del_periodo(p.mes_corte, num_ocurrencias, num_alturas)
+    periodicidad_apertura = (
+        aperturas.filter(pl.col("apertura_reservas") == modos.apertura)
+        .get_column("periodicidad_ocurrencia")
+        .item(0)
     )
+    num_meses_periodo = ct.PERIODICIDADES[periodicidad_apertura]
 
     mes_ultimos_resultados = obtener_mes_ultimos_resultados(modos.apertura)
+
+    if modos.plantilla == "severidad":
+        tipo_indexacion, medida_indexacion = utils.obtener_parametros_indexacion(
+            p.negocio, modos.apertura
+        )
+        indexaciones.validar_medida_indexacion(
+            wb.sheets["Indexaciones"], tipo_indexacion, medida_indexacion
+        )
+    else:
+        tipo_indexacion, medida_indexacion = "Ninguna", "Ninguna"
 
     wb.macro(f"Generar{hoja.name}")(
         num_ocurrencias,
@@ -69,8 +88,10 @@ def generar_plantilla(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> None
         modos.apertura,
         modos.atributo,
         mes_del_periodo,
-        ceil(num_alturas / num_ocurrencias),
+        num_meses_periodo,
         mes_ultimos_resultados,
+        tipo_indexacion,
+        medida_indexacion,
     )
 
     logger.success(

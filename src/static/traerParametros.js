@@ -10,19 +10,16 @@ document
       const parametros = await response.json();
 
       document.getElementById("negocio").value = parametros.negocio;
-      document.getElementById("mesInicio").value = parametros.mes_inicio;
-      document.getElementById("mesCorte").value = parametros.mes_corte;
-      document.getElementById("tipoAnalisis").value = parametros.tipo_analisis;
-      document.getElementById("aproximarReaseguro").value =
-        parametros.aproximar_reaseguro;
-      document.getElementById("addFraudeSoat").value =
-        parametros.add_fraude_soat;
-      document.getElementById("nombrePlantilla").value =
+      document.getElementById("mes_inicio").value = parametros.mes_inicio;
+      document.getElementById("mes_corte").value = parametros.mes_corte;
+      document.getElementById("tipo_analisis").value = parametros.tipo_analisis;
+      document.getElementById("nombre_plantilla").value =
         parametros.nombre_plantilla;
 
       if (!response.ok) throw new Error("Error al traer los parametros");
       showToast("Parametros traidos correctamente", "success");
     } catch (error) {
       showToast(error.message, "error");
+      throw error;
     }
   });

@@ -1,5 +1,3 @@
-<!--markdownlint-disable MD046-->
-
 # Instalación
 
 ## Prerrequisitos
@@ -17,24 +15,6 @@ Para instalar la aplicación y empezarla a usar en un nuevo análisis, debe tene
       cd app-analisis-siniestralidad
       uv sync
       ```
-
-Para hacer la extraccion de queries, se creará un archivo para almacenar sus credenciales de Teradata. Pegue lo siguiente en la terminal:
-
-=== "Windows"
-
-      ```powershell
-      Set-Content -Path ".\.env.private" -Value 'TERADATA_USER="___"' -NoNewLine
-      Add-Content -Path ".\.env.private" -Value "`nTERADATA_PASSWORD=""___"""
-      ```
-
-=== "MacOS"
-
-      ```sh
-      echo 'TERADATA_USER="___"' > .env.private
-      echo 'TERADATA_PASSWORD="___"' >> .env.private
-      ```
-
-Este archivo queda almacenado dentro de la carpeta principal. Si necesita editarlo, puede abrirlo en el bloc de notas.
 
 Para hacer la comparación entre las cifras de Teradata y SAP, se deben descargar los archivos de Excel que permiten conectarse con SAP a través del complemento Analysis for Office (AFO). [Descargue los archivos](https://suramericana-my.sharepoint.com/:f:/g/personal/sebastiantobon_sura_com_co/ErrqzjH-aIRMsAgGij4ptPABWbknTTpJMxfBjFJPU6YIWQ?e=1dPTF6) y péguelos en la carpeta :material-folder: `data/afo`.
 

@@ -2,33 +2,43 @@ import time
 
 import polars as pl
 import xlwings as xw
+from src import constantes as ct
 from src import utils
 from src.logger_config import logger
-from src.models import ModosPlantilla, RangeDimension
+from src.models import ModosPlantilla, Parametros, RangeDimension
 
 from .rangos_parametros import obtener_rangos_parametros
 
 
-def traer_apertura(wb: xw.Book, modos: ModosPlantilla) -> None:
+def traer_apertura(wb: xw.Book, p: Parametros, modos: ModosPlantilla) -> None:
     s = time.time()
 
     hoja_plantilla = modos.plantilla.capitalize()
     dimensiones_triangulo = utils.obtener_dimensiones_triangulo(
         wb.sheets[hoja_plantilla]
     )
+    tipo_indexacion, _ = utils.obtener_parametros_indexacion(p.negocio, modos.apertura)
 
     traer_parametros(
-        wb.sheets[hoja_plantilla], modos.apertura, modos.atributo, dimensiones_triangulo
+        wb.sheets[hoja_plantilla],
+        modos.apertura,
+        modos.atributo,
+        tipo_indexacion,
+        dimensiones_triangulo,
     )
 
     logger.info(f"Tiempo de traida: {round(time.time() - s, 2)} segundos.")
 
 
 def traer_parametros(
-    hoja: xw.Sheet, apertura: str, atributo: str, dimensiones_triangulo: RangeDimension
+    hoja: xw.Sheet,
+    apertura: str,
+    atributo: str,
+    tipo_indexacion: ct.TIPOS_INDEXACION,
+    dimensiones_triangulo: RangeDimension,
 ) -> None:
     for range_name, range_values in obtener_rangos_parametros(
-        hoja, dimensiones_triangulo, "Ninguna"
+        hoja, dimensiones_triangulo, tipo_indexacion
     ).items():
         try:
             range_values.formula = pl.read_parquet(

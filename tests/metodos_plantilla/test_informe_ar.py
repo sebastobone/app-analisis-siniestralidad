@@ -7,39 +7,32 @@ from src import utils
 from src.metodos_plantilla import abrir
 from src.metodos_plantilla.resultados import concatenar_archivos_resultados
 from src.models import Parametros
-from tests.conftest import agregar_meses_params, assert_igual, vaciar_directorios_test
+from tests.conftest import assert_igual, ingresar_parametros
 
 
 @pytest.mark.plantilla
-@pytest.mark.integration
 def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
-    vaciar_directorios_test()
-
-    params_form = {
-        "negocio": "demo",
-        "tipo_analisis": "triangulos",
-        "nombre_plantilla": "wb_test",
-    }
-
-    agregar_meses_params(params_form, rango_meses)
-
-    response = client.post("/ingresar-parametros", data=params_form).json()
-    p = Parametros.model_validate(response)
-
-    _ = client.post("/correr-query-siniestros")
-    _ = client.post("/correr-query-primas")
-    _ = client.post("/correr-query-expuestos")
+    p = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
 
     _ = client.post("/preparar-plantilla")
     wb = abrir.abrir_plantilla(f"plantillas/{p.nombre_plantilla}.xlsm")
 
     _ = client.post(
         "/generar-plantilla",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
     _ = client.post(
         "/guardar-apertura",
-        data={"apertura": "01_001_A_D", "atributo": "bruto", "plantilla": "plata"},
+        data={"apertura": "01_040_A_D", "atributo": "bruto", "plantilla": "plata"},
     )
 
     _ = client.post("/almacenar-analisis")
@@ -77,5 +70,3 @@ def test_generar_informe_ar(client: TestClient, rango_meses: tuple[date, date]):
                 )
 
     wb.close()
-
-    vaciar_directorios_test()

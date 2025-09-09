@@ -745,6 +745,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Versionamiento">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#notificaciones-de-nuevas-versiones" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notificaciones de nuevas versiones
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -931,6 +946,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Versionamiento">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#notificaciones-de-nuevas-versiones" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notificaciones de nuevas versiones
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -963,17 +993,26 @@
 
 <h1 id="actualizacion-de-la-aplicacion">Actualización de la aplicación</h1>
 <h2 id="versionamiento">Versionamiento</h2>
-<p>En <a href="https://github.com/sebastobone/app-analisis-siniestralidad/tags">este link</a> puede encontrar la lista completa de versiones, junto con la lista completa de cambios por versión.</p>
-<p>Para verificar en qué versión se encuentra su aplicación, abra la carpeta en una terminal, copie lo siguiente y presione <em>enter</em>:</p>
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>tag
+<p>En <a href="https://github.com/sebastobone/app-analisis-siniestralidad/releases">este enlace</a> encontrará el historial completo de versiones, junto con el detalle de cambios de cada una.</p>
+<p>Para comprobar qué versión tiene instalada en su aplicación, abra la carpeta en una terminal, ejecute el siguiente comando y presione <em>enter</em>:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>describe<span class="w"> </span>--tags
 </span></code></pre></div>
+<h3 id="notificaciones-de-nuevas-versiones">Notificaciones de nuevas versiones</h3>
+<p>Si desea recibir un correo cada vez que se publique una nueva versión, siga estos pasos:</p>
+<ol>
+<li>Ingrese al <a href="https://github.com/sebastobone/app-analisis-siniestralidad">repositorio</a>.</li>
+<li>Presione el botón <strong>"Watch"</strong>.</li>
+<li>En el menú desplegable, seleccione <strong>"Custom"</strong>.</li>
+<li>Marque la opción <strong>"Releases"</strong> y luego haga clic en <strong>"Apply"</strong>.</li>
+</ol>
+<p>¡Esto es todo! A partir de ahora recibirá un correo electrónico cada vez que se cree una nueva versión.</p>
 <h2 id="pasos-para-actualizar">Pasos para actualizar</h2>
 <p>Para actualizar la aplicación a la versión más reciente, abra la carpeta en una terminal, copie lo siguiente y presione <em>enter</em>:</p>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>git<span class="w"> </span>pull
 </span></code></pre></div>
 <p>Si tiene una instancia de la aplicación abierta en la terminal, debe cerrarla y volver a ejecutar la aplicación para que los cambios tomen efecto.</p>
-<p>¡Eso es todo! Ahora la aplicación quedará actualizada. Tenga en cuenta que esto sobrescribe todos los archivos que se encuentren dentro del repositorio de GitHub, por lo que se recomienda guardar una copia de su archivo de segmentación y pegarlo nuevamente en la ruta después de que termine la actualización.</p>
+<p>¡Eso es todo! Ahora la aplicación quedará actualizada. Tenga en cuenta que esto sobrescribe todos los archivos que se encuentren dentro del repositorio de GitHub, por lo que se recomienda guardar una copia de su archivo de segmentación <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code> y pegarlo nuevamente en la ruta después de que termine la actualización.</p>
 
 
 

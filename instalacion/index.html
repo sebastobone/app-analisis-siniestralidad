@@ -961,8 +961,6 @@
   
 
 
-<!--markdownlint-disable MD046-->
-
 <h1 id="instalacion">Instalación</h1>
 <h2 id="prerrequisitos">Prerrequisitos</h2>
 <p>Para instalar la aplicación y empezarla a usar en un nuevo análisis, debe tener instalado previamente en su equipo <a href="https://git-scm.com/">Git</a>, <a href="https://docs.astral.sh/uv/getting-started/installation/">uv</a>, y Excel.</p>
@@ -978,22 +976,6 @@
 </span></code></pre></div>
 </li>
 </ol>
-<p>Para hacer la extraccion de queries, se creará un archivo para almacenar sus credenciales de Teradata. Pegue lo siguiente en la terminal:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Windows</label><label for="__tabbed_1_2">MacOS</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">Set-Content</span> <span class="n">-Path</span> <span class="s2">&quot;.\.env.private&quot;</span> <span class="n">-Value</span> <span class="s1">&#39;TERADATA_USER=&quot;___&quot;&#39;</span> <span class="n">-NoNewLine</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">Add-Content</span> <span class="n">-Path</span> <span class="s2">&quot;.\.env.private&quot;</span> <span class="n">-Value</span> <span class="s2">&quot;</span><span class="se">`n</span><span class="s2">TERADATA_PASSWORD=&quot;&quot;___&quot;&quot;&quot;</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;TERADATA_USER=&quot;___&quot;&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>.env.private
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;TERADATA_PASSWORD=&quot;___&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>.env.private
-</span></code></pre></div>
-</div>
-</div>
-</div>
-<p>Este archivo queda almacenado dentro de la carpeta principal. Si necesita editarlo, puede abrirlo en el bloc de notas.</p>
 <p>Para hacer la comparación entre las cifras de Teradata y SAP, se deben descargar los archivos de Excel que permiten conectarse con SAP a través del complemento Analysis for Office (AFO). <a href="https://suramericana-my.sharepoint.com/:f:/g/personal/sebastiantobon_sura_com_co/ErrqzjH-aIRMsAgGij4ptPABWbknTTpJMxfBjFJPU6YIWQ?e=1dPTF6">Descargue los archivos</a> y péguelos en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/afo</code>.</p>
 <p>¡Eso es todo! Ahora puede proceder con la configuración del análisis. No cierre la terminal, la usará para ejecutar el proceso después.</p>
 

@@ -879,9 +879,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pruebas-rapidas" class="md-nav__link">
+  <a href="#pruebas-sin-conexion-a-teradata" class="md-nav__link">
     <span class="md-ellipsis">
-      Pruebas rápidas
+      Pruebas sin conexión a Teradata
     </span>
   </a>
   
@@ -977,9 +977,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pruebas-rapidas" class="md-nav__link">
+  <a href="#pruebas-sin-conexion-a-teradata" class="md-nav__link">
     <span class="md-ellipsis">
-      Pruebas rápidas
+      Pruebas sin conexión a Teradata
     </span>
   </a>
   
@@ -1010,6 +1010,7 @@
 
 
 <!--markdownlint-disable MD007-->
+<!--markdownlint-disable MD046-->
 
 <h1 id="pruebas-de-funcionamiento">Pruebas de funcionamiento</h1>
 <p>La aplicación cuenta con pruebas automatizadas ubicadas en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>tests</code>. Estas pruebas se ejecutan automáticamente antes del lanzamiento de cualquier nueva versión, con el objetivo de garantizar el correcto funcionamiento de la aplicación y preservar la integridad y exactitud de la información a lo largo de todo el proceso.</p>
@@ -1041,12 +1042,28 @@
 <p>Para ejecutar las pruebas, primero debe instalar las librerías de desarrollo. Abra una terminal en la carpeta del proyecto y ejecute:</p>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--all-groups
 </span></code></pre></div>
-<p>Una vez instaladas las dependencias, puede correr todas las pruebas con el siguiente comando:</p>
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pytest
+<p>Para hacer la extraccion de queries, se creará un archivo para almacenar sus credenciales de Teradata. Pegue lo siguiente en la terminal:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Windows</label><label for="__tabbed_1_2">MacOS</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">Set-Content</span> <span class="n">-Path</span> <span class="s2">&quot;.\.env.private&quot;</span> <span class="n">-Value</span> <span class="s1">&#39;TERADATA_USER=&quot;___&quot;&#39;</span> <span class="n">-NoNewLine</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">Add-Content</span> <span class="n">-Path</span> <span class="s2">&quot;.\.env.private&quot;</span> <span class="n">-Value</span> <span class="s2">&quot;</span><span class="se">`n</span><span class="s2">TERADATA_PASSWORD=&quot;&quot;___&quot;&quot;&quot;</span>
 </span></code></pre></div>
-<h3 id="pruebas-rapidas">Pruebas rápidas</h3>
+</div>
+<div class="tabbed-block">
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;TERADATA_USER=&quot;___&quot;&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>.env.private
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;TERADATA_PASSWORD=&quot;___&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>.env.private
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p>El archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>.env.private</code> queda almacenado dentro de la carpeta principal. Para editarlo, ábralo en el bloc de notas.</p>
+<p>Para correr todas las pruebas, ejecute el siguiente comando:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest
+</span></code></pre></div>
+<h3 id="pruebas-sin-conexion-a-teradata">Pruebas sin conexión a Teradata</h3>
 <p>Si desea ejecutar únicamente las pruebas que <strong>no requieren extracción de información</strong> (es decir, que no dependen de conexión a Teradata), utilice el siguiente comando:</p>
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not teradata&quot;</span>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not teradata&quot;</span>
 </span></code></pre></div>
 
 

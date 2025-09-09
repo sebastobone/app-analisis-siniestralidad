@@ -877,6 +877,63 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="1. Error de hardlink">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#descripcion-del-problema" class="md-nav__link">
+    <span class="md-ellipsis">
+      Descripción del problema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pasos-para-resolverlo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pasos para resolverlo
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-error-de-onedrivesharepoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Error de OneDrive/Sharepoint
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Error de OneDrive/Sharepoint">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#descripcion-del-problema_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Descripción del problema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pasos-para-resolverlo_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pasos para resolverlo
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -920,6 +977,63 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="1. Error de hardlink">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#descripcion-del-problema" class="md-nav__link">
+    <span class="md-ellipsis">
+      Descripción del problema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pasos-para-resolverlo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pasos para resolverlo
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-error-de-onedrivesharepoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Error de OneDrive/Sharepoint
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Error de OneDrive/Sharepoint">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#descripcion-del-problema_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Descripción del problema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pasos-para-resolverlo_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pasos para resolverlo
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -941,14 +1055,33 @@
   
 
 
+<!--markdownlint-disable MD024-->
+
 <h1 id="preguntas-frecuentes">Preguntas frecuentes</h1>
 <h2 id="1-error-de-hardlink">1. Error de <em>hardlink</em></h2>
 <p><img alt="Error de hardlink" src="../assets/hardlink.png" /></p>
+<h3 id="descripcion-del-problema">Descripción del problema</h3>
 <p>Este error ocurre porque los requisitos de paquetes para la instalación de la aplicación en la nube no coinciden con los que quedaron almacenados en la memoria del sistema a partir de instalaciones anteriores.</p>
-<p>Para resolverlo, limpie la memoria caché del administrador de paquetes ejecutando el siguiente comando:</p>
+<h3 id="pasos-para-resolverlo">Pasos para resolverlo</h3>
+<p>Limpie la memoria caché del administrador de paquetes ejecutando el siguiente comando:</p>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>cache<span class="w"> </span>clean
 </span></code></pre></div>
 <p>Una vez limpia la memoria, intente ejecutar nuevamente el comando que le generó el error.</p>
+<h2 id="2-error-de-onedrivesharepoint">2. Error de OneDrive/Sharepoint</h2>
+<p><img alt="Error de Onedrive/Sharepoint" src="../assets/onedrive.png" /></p>
+<h3 id="descripcion-del-problema_1">Descripción del problema</h3>
+<p>Este error ocurre cuando el <strong>autoguardado</strong> está activado en una plantilla de Excel almacenada en OneDrive o SharePoint. Las funcionalidades de la aplicación dependen en gran medida de la <strong>ruta local del archivo</strong>, pero al activarse el autoguardado, dicha ruta se transforma en una <strong>URL</strong>, lo que puede generar conflictos con ciertos comandos.</p>
+<h3 id="pasos-para-resolverlo_1">Pasos para resolverlo</h3>
+<ol>
+<li>Desactive el autoguardado en la barra superior de Excel.</li>
+<li>Presione el botón "guardar" en esta misma ubicación.</li>
+<li>Cierre el archivo.</li>
+</ol>
+<p>Una vez realizados estos pasos, intente ejecutar nuevamente el comando que estaba utilizando.</p>
+<div class="admonition warning">
+<p class="admonition-title">Advertencia</p>
+<p>Recuerde guardar manualmente el archivo cada vez que realice cambios importantes en la estructura de la plantilla.</p>
+</div>
 
 
 

@@ -21,16 +21,14 @@ async def consolidar_sap(
                 )
             )
 
-    df_sap_full = (
-        pl.concat(dfs_sap, how="diagonal")
+    return (
+        pl.DataFrame(pl.concat(dfs_sap, how="diagonal"))
         .group_by(["codigo_op", "codigo_ramo_op", "fecha_registro"])
         .sum()
         .sort(["codigo_op", "codigo_ramo_op", "fecha_registro"])
+        .pipe(crear_columnas_faltantes_sap)
+        .select(["codigo_op", "codigo_ramo_op", "fecha_registro"] + qtys)
     )
-
-    df_sap_full = crear_columnas_faltantes_sap(df_sap_full)
-
-    return df_sap_full.select(["codigo_op", "codigo_ramo_op", "fecha_registro"] + qtys)
 
 
 async def transformar_hoja_afo(
@@ -63,19 +61,8 @@ async def transformar_hoja_afo(
             pl.col("Nombre_Mes").str.replace_many({"PE2": "DIC", "PE1": "DIC"})
         )
         .join(ct.MONTH_MAP.lazy(), on="Nombre_Mes")
-        .drop(
-            [
-                "column_1",
-                columna_ramo_sap(qty),
-                "Resultado total",
-                "Nombre_Mes",
-            ]
-        )
-        .unpivot(
-            index=["Anno", "Mes"],
-            variable_name="codigo_ramo_op",
-            value_name=qty,
-        )
+        .drop(["column_1", columna_ramo_sap(qty), "Resultado total", "Nombre_Mes"])
+        .unpivot(index=["Anno", "Mes"], variable_name="codigo_ramo_op", value_name=qty)
         .with_columns(
             pl.col(qty).cast(pl.Float64) * signo_sap(qty),
             codigo_op=pl.lit("01") if cia == "Generales" else pl.lit("02"),

@@ -30,6 +30,7 @@ nav:
     - SOAT: particularidades/soat.md
   - Pruebas de funcionamiento: pruebas.md
   - Preguntas frecuentes: faq/faq.md
+  - Guía para auditores: auditores.md
 
 theme:
   name: material

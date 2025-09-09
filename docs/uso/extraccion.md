@@ -6,7 +6,7 @@ Las consultas que se ejecutan están almacenadas en la carpeta :material-folder:
 
 Si las consultas utilizan **tablas de segmentación**, estas serán leídas desde el archivo :material-file: `data/segmentacion_{negocio}.xlsx`. El sistema realiza automáticamente las siguientes validaciones:
 
-- Que las tablas estén correctamente nombradas, según el estándar descrito en [esta documentación](https://sebastobone.github.io/app-analisis-siniestralidad/config/aperturas/).
+- Que las tablas estén correctamente nombradas, según el estándar descrito en [esta documentación](../config/aperturas.md).
 - Que haya el número adecuado de tablas requeridas por la consulta.
 - Que cada tabla tenga el número correcto de columnas.
 - Que las columnas cumplan con los tipos de datos definidos en la consulta.
@@ -21,7 +21,7 @@ Las consultas deben utilizar los valores definidos en los parámetros **"Mes de 
 
 Al ejecutar una consulta, el estado del proceso se mostrará en tiempo real en la sección **“Estado”**. Una vez finalizada la ejecución, el sistema valida lo siguiente:
 
-- Que el resultado contenga las [columnas mínimas requeridas](https://sebastobone.github.io/app-analisis-siniestralidad/config/queries/), según el tipo de consulta.
+- Que el resultado contenga las [columnas mínimas requeridas](../config/queries.md), según el tipo de consulta.
 - Que las columnas de fechas estén en formato correcto.
 - Que el rango de fechas obtenido coincida con los valores definidos en los parámetros mencionados. Si esta validación falla, deberá revisar la parametrización de fechas dentro de la consulta.
 - Que las columnas de apertura no contengan valores vacíos ni valores -1.

@@ -18,7 +18,7 @@ Partiendo de un negocio ficticio, se valida que:
     - :material-folder: `output/resultados`
     - :material-file: `output/resultados.xlsx`
     - :material-file: `output/informe_ar.xlsx`
-- Todas las funciones de la plantilla cumplan con los comportamientos explicados en la [documentación](https://sebastobone.github.io/app-analisis-siniestralidad/uso/funciones_plantilla/).
+- Todas las funciones de la plantilla cumplan con los comportamientos explicados en la [documentación](uso/funciones_plantilla.md).
 
 ## Pruebas por negocio
 

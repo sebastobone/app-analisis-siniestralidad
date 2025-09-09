@@ -8,6 +8,7 @@ repos:
         entry: uv lock --locked
         always_run: true
         pass_filenames: false
+
       - id: ty
         name: ty => type checking
         stages: [pre-commit]
@@ -15,6 +16,7 @@ repos:
         entry: uv run ty check
         always_run: true
         pass_filenames: false
+
       - id: ruff-formatting
         name: ruff => code formatting
         stages: [pre-commit]
@@ -22,6 +24,7 @@ repos:
         entry: uv run ruff format
         always_run: true
         pass_filenames: false
+
       - id: ruff-linting
         name: ruff => linting
         stages: [pre-commit]
@@ -29,6 +32,7 @@ repos:
         entry: uv run ruff check .
         always_run: true
         pass_filenames: false
+
       - id: prettier-formatting
         name: prettier => code formatting
         stages: [pre-commit]
@@ -36,6 +40,7 @@ repos:
         entry: npx prettier --write src
         always_run: true
         pass_filenames: false
+
       - id: documentation-formatting
         name: markdownlint => markdown formatting
         stages: [pre-commit]
@@ -43,6 +48,15 @@ repos:
         entry: markdownlint --fix docs --disable MD013
         always_run: true
         pass_filenames: false
+
+      - id: mkdocs-strict
+        name: mkdocs => strict internal link check
+        stages: [pre-commit]
+        language: system
+        entry: uv run mkdocs build --strict
+        always_run: true
+        pass_filenames: false
+
       - id: pytest fast
         name: pytest => fast tests
         stages: [pre-commit]
@@ -50,6 +64,7 @@ repos:
         entry: uv run pytest -m fast
         always_run: true
         pass_filenames: false
+
       - id: sqlfluff-linting
         name: sqlfluff => SQL linting
         stages: [pre-push]
@@ -57,6 +72,7 @@ repos:
         entry: uv run sqlfluff lint .
         always_run: true
         pass_filenames: false
+
       - id: sqlfluff-formatting
         name: sqlfluff => SQL formatting
         stages: [pre-push]
@@ -64,6 +80,7 @@ repos:
         entry: uv run sqlfluff format .
         always_run: true
         pass_filenames: false
+
       - id: pip-audit
         name: pip-audit => vulnerability checking
         stages: [pre-push]
@@ -71,6 +88,7 @@ repos:
         entry: uv run pip-audit --ignore-vuln GHSA-c33w-24p9-8m24
         always_run: true
         pass_filenames: false
+
       - id: pytest
         name: pytest => testing
         stages: [pre-push]
@@ -78,6 +96,7 @@ repos:
         entry: uv run pytest --cov -m "not teradata"
         always_run: true
         pass_filenames: false
+
       - id: coverage
         name: coverage => testing coverage
         stages: [pre-push]

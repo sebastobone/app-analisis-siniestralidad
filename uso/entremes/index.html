@@ -1346,14 +1346,14 @@
 <h3 id="informacion-real">Información real</h3>
 <p>Contiene la misma información que la hoja <strong>Resumen</strong>: pagos, incurridos, conteos, expuestos y primas para todas las aperturas y periodos de ocurrencia.</p>
 <h3 id="ultimates-anteriores">Ultimates anteriores</h3>
-<p>Incluye la frecuencia, severidad y siniestralidad última (actuarial y contable) del periodo anterior. Las cifras de plata dependen de los ultimates de referencia seleccionados en la sección <a href="https://sebastobone.github.io/app-analisis-siniestralidad/uso/inicio/">"Referencias entremés"</a> del frontend.</p>
+<p>Incluye la frecuencia, severidad y siniestralidad última (actuarial y contable) del periodo anterior. Las cifras de plata dependen de los ultimates de referencia seleccionados en la sección <a href="../inicio/">"Referencias entremés"</a> del frontend.</p>
 <h3 id="metodologias-de-estimacion">Metodologías de estimación</h3>
 <h4 id="1-completar-diagonal-violeta">1. Completar diagonal (violeta)</h4>
 <p>Aplica únicamente para <strong>ocurrencias anteriores</strong>. Consiste en calcular un <strong>factor de completitud</strong> que estima cuánto falta para completar la diagonal en cada ocurrencia, usando como referencia triángulos con desarrollo mensual y ocurrencias con la granularidad de la apertura. Una vez se completa la diagonal, se aplica la misma velocidad de desarrollo calculada en los triángulos más recientes para la ocurrencia correspondiente.</p>
 <p>Por defecto, se utiliza un <strong>promedio ponderado ventana de 4 periodos</strong> para calcular el factor de completitud. Puede revisar y ajustar esta estimación desde la hoja <strong>"Completar_diagonal"</strong>.</p>
 <h5 id="la-hoja-completar_diagonal">La hoja "Completar_diagonal"</h5>
 <p>Esta hoja funciona como los triángulos tradicionales, pero limitada hasta la sección de estadísticos, y con una tabla resumen adaptada.</p>
-<p>Para más información sobre su uso, consulte la <a href="https://sebastobone.github.io/app-analisis-siniestralidad/uso/triangulos/">documentación de triángulos</a>.</p>
+<p>Para más información sobre su uso, consulte la <a href="../triangulos/">documentación de triángulos</a>.</p>
 <p><img alt="Triángulo entremés." src="../assets/entremes/triangulo.png" /></p>
 <p>En la tabla resumen de esta hoja encontrará:</p>
 <ul>

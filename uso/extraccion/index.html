@@ -1008,7 +1008,7 @@
 <h2 id="verificacion-de-tablas-de-segmentacion">Verificación de tablas de segmentación</h2>
 <p>Si las consultas utilizan <strong>tablas de segmentación</strong>, estas serán leídas desde el archivo <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9V3.5L18.5 9M6 2c-1.11 0-2 .89-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg></span> <code>data/segmentacion_{negocio}.xlsx</code>. El sistema realiza automáticamente las siguientes validaciones:</p>
 <ul>
-<li>Que las tablas estén correctamente nombradas, según el estándar descrito en <a href="https://sebastobone.github.io/app-analisis-siniestralidad/config/aperturas/">esta documentación</a>.</li>
+<li>Que las tablas estén correctamente nombradas, según el estándar descrito en <a href="../../config/aperturas/">esta documentación</a>.</li>
 <li>Que haya el número adecuado de tablas requeridas por la consulta.</li>
 <li>Que cada tabla tenga el número correcto de columnas.</li>
 <li>Que las columnas cumplan con los tipos de datos definidos en la consulta.</li>
@@ -1020,7 +1020,7 @@
 <p>Las consultas deben utilizar los valores definidos en los parámetros <strong>"Mes de la primera ocurrencia"</strong> y <strong>"Mes de corte"</strong> para parametrizar los filtros de fechas.</p>
 <p>Al ejecutar una consulta, el estado del proceso se mostrará en tiempo real en la sección <strong>“Estado”</strong>. Una vez finalizada la ejecución, el sistema valida lo siguiente:</p>
 <ul>
-<li>Que el resultado contenga las <a href="https://sebastobone.github.io/app-analisis-siniestralidad/config/queries/">columnas mínimas requeridas</a>, según el tipo de consulta.</li>
+<li>Que el resultado contenga las <a href="../../config/queries/">columnas mínimas requeridas</a>, según el tipo de consulta.</li>
 <li>Que las columnas de fechas estén en formato correcto.</li>
 <li>Que el rango de fechas obtenido coincida con los valores definidos en los parámetros mencionados. Si esta validación falla, deberá revisar la parametrización de fechas dentro de la consulta.</li>
 <li>Que las columnas de apertura no contengan valores vacíos ni valores -1.</li>

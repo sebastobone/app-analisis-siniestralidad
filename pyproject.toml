@@ -19,6 +19,7 @@ dependencies = [
     "loguru>=0.7.3",
     "sse-starlette>=2.2.1",
     "numpy>=2.3.2",
+    "mss>=10.1.0",
 ]
 
 [dependency-groups]

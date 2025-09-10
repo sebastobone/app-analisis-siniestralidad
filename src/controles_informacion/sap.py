@@ -1,25 +1,96 @@
 from datetime import date
+from pathlib import Path
 
 import polars as pl
 
 from src import constantes as ct
 from src import utils
+from src.logger_config import logger
+from src.models import Afos, Parametros
+
+CANTIDADES_NECESARIAS = ct.COLUMNAS_SINIESTROS_CUADRE + list(
+    ct.VALORES["primas"].keys()
+)
+
+
+async def procesar_afos(afos: Afos, p: Parametros) -> None:
+    if afos.generales:
+        contenido = await afos.generales.read()
+        guardar_afo(contenido, "Generales")
+
+    if afos.vida:
+        contenido = await afos.vida.read()
+        guardar_afo(contenido, "Vida")
+
+    afos_necesarios = determinar_afos_necesarios(p.negocio)
+    await validar_existencia_afos(afos_necesarios)
+
+    for afo in afos_necesarios:
+        hojas_necesarias = {
+            hoja: pl.read_excel(f"data/afo/{afo}.xlsx", sheet_name=hoja)
+            for hoja in definir_hojas_afo(CANTIDADES_NECESARIAS)
+        }
+        validar_mes_corte_afo(hojas_necesarias, p.mes_corte, afo)
+
+
+def guardar_afo(contenido: bytes, cia: str) -> None:
+    with open(f"data/afo/{cia}.xlsx", "wb") as f:
+        f.write(contenido)
+    logger.info(f"AFO de {cia} guardado en data/afo/{cia}.xlsx")
+
+
+async def validar_existencia_afos(afos_necesarios: list[str]) -> None:
+    for afo in afos_necesarios:
+        if not Path(f"data/afo/{afo}.xlsx").exists():
+            raise FileNotFoundError(
+                utils.limpiar_espacios_log(
+                    f"""
+                    El AFO de {afo} no ha sido almacenado. Carguelo
+                    y vuelva a intentar.
+                    """
+                )
+            )
+
+
+def validar_mes_corte_afo(hojas: dict[str, pl.DataFrame], mes_corte: date, cia: str):
+    mes_corte_afo = f"{ct.NOMBRE_MES[mes_corte.month]} {mes_corte.year}"
+
+    for qty, df in hojas.items():
+        if mes_corte_afo not in df.get_column("Ejercicio/Período").unique().to_list():
+            raise ValueError(
+                utils.limpiar_espacios_log(
+                    f"""
+                    ¡Error! No se pudo encontrar el mes {mes_corte_afo}
+                    en la hoja {qty} del AFO de {cia}. Actualice el AFO
+                    y carguelo de nuevo.
+                    """
+                )
+            )
+
+
+def determinar_afos_necesarios(negocio: str) -> list[str]:
+    companias = (
+        utils.obtener_aperturas(negocio, "siniestros")
+        .get_column("codigo_op")
+        .unique()
+        .to_list()
+    )
+    afos = []
+    if "01" in companias:
+        afos.append("Generales")
+    if "02" in companias:
+        afos.append("Vida")
+    return afos
 
 
 async def consolidar_sap(
     negocio: str, qtys: list[str], mes_corte: date
 ) -> pl.DataFrame:
     dfs_sap = []
-    for cia in ct.AFOS_NECESARIOS[negocio]:
+    for cia in determinar_afos_necesarios(negocio):
         for hoja_afo in definir_hojas_afo(qtys):
-            dfs_sap.append(
-                await transformar_hoja_afo(
-                    pl.read_excel(f"data/afo/{cia}.xlsx", sheet_name=hoja_afo),
-                    cia,
-                    hoja_afo,
-                    mes_corte,
-                )
-            )
+            df = pl.read_excel(f"data/afo/{cia}.xlsx", sheet_name=hoja_afo)
+            dfs_sap.append(await transformar_hoja_afo(df, cia, hoja_afo, mes_corte))
 
     return (
         pl.DataFrame(pl.concat(dfs_sap, how="diagonal"))
@@ -34,17 +105,6 @@ async def consolidar_sap(
 async def transformar_hoja_afo(
     df: pl.DataFrame, cia: str, qty: str, mes_corte: date
 ) -> pl.DataFrame:
-    mes_corte_afo = f"{ct.NOMBRE_MES[mes_corte.month]} {mes_corte.year}"
-    if mes_corte_afo not in df.get_column("Ejercicio/Período").unique():
-        raise ValueError(
-            utils.limpiar_espacios_log(
-                f"""
-                ¡Error! No se pudo encontrar el mes {mes_corte_afo}
-                en la hoja {qty} del AFO de {cia}. Actualizar el AFO.
-                """
-            )
-        )
-
     return (
         df.lazy()
         .fill_null(0)
@@ -79,16 +139,7 @@ def definir_hojas_afo(qtys: list[str]) -> set[str]:
     hojas_afo = set()
     for qty in qtys:
         if "prima" in qty:
-            hojas_afo.update(
-                set(
-                    (
-                        "prima_bruta",
-                        "prima_retenida",
-                        "prima_bruta_devengada",
-                        "prima_retenida_devengada",
-                    )
-                )
-            )
+            hojas_afo.update(set(ct.VALORES["primas"].keys()))
         elif "pago" in qty:
             hojas_afo.update(set(("pago_bruto", "pago_cedido")))
         elif "aviso" in qty:
@@ -99,21 +150,21 @@ def definir_hojas_afo(qtys: list[str]) -> set[str]:
 
 
 def crear_columnas_faltantes_sap(df: pl.DataFrame) -> pl.DataFrame:
+    new_cols = []
     for qty in df.collect_schema().names():
         if "retenid" in qty:
-            df = df.with_columns(
+            new_cols.append(
                 (pl.col(qty.replace("retenid", "brut")) - pl.col(qty)).alias(
                     qty.replace("retenid", "cedid")
                 )
             )
         elif "cedid" in qty:
-            df = df.with_columns(
+            new_cols.append(
                 (pl.col(qty.replace("cedid", "brut")) - pl.col(qty)).alias(
                     qty.replace("cedid", "retenid")
                 )
             )
-
-    return df
+    return df.with_columns(new_cols)
 
 
 def columna_ramo_sap(qty: str) -> str:

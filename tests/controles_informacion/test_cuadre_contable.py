@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 import polars as pl
@@ -118,16 +119,15 @@ def cargar_archivos(client: TestClient, parametros: Parametros):
 
 @pytest.fixture(autouse=True)
 def generar_controles(client: TestClient):
-    client.post(
-        "/generar-controles",
-        json={
-            "cuadrar_siniestros": True,
-            "cuadrar_primas": True,
-            "archivos_siniestros": ["data/carga_manual/siniestros/siniestros.parquet"],
-            "archivos_primas": ["data/carga_manual/primas/primas.parquet"],
-            "archivos_expuestos": ["data/carga_manual/expuestos/expuestos.parquet"],
-        },
-    )
+    controles = {
+        "cuadrar_siniestros": True,
+        "cuadrar_primas": True,
+        "archivos_siniestros": ["data/carga_manual/siniestros/siniestros.parquet"],
+        "archivos_primas": ["data/carga_manual/primas/primas.parquet"],
+        "archivos_expuestos": ["data/carga_manual/expuestos/expuestos.parquet"],
+    }
+
+    _ = client.post("/generar-controles", data={"controles": json.dumps(controles)})
 
 
 async def obtener_sap(

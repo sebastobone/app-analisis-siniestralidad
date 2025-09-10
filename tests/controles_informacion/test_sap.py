@@ -1,11 +1,63 @@
+import json
 from datetime import date
 
 import numpy as np
 import polars as pl
 import pytest
+from fastapi.testclient import TestClient
 from src import constantes as ct
-from src.controles_informacion import generacion as gen
 from src.controles_informacion import sap
+from src.models import Parametros
+from tests.conftest import CONTENT_TYPES, ingresar_parametros
+
+
+@pytest.mark.fast
+def test_afo_desactualizado(client: TestClient):
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio="demo",
+            mes_inicio=date(2010, 1, 1),
+            mes_corte=date(2035, 1, 1),
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+        {
+            "archivo_segmentacion": (
+                "segmentacion_test.xlsx",
+                open("data/segmentacion_demo.xlsx", "rb"),
+                CONTENT_TYPES["xlsx"],
+            )
+        },
+    )
+
+    controles = {
+        "cuadrar_siniestros": True,
+        "cuadrar_primas": True,
+        "archivos_siniestros": None,
+        "archivos_primas": None,
+        "archivos_expuestos": None,
+    }
+
+    afos = [
+        (
+            "generales",
+            (
+                "Generales.xlsx",
+                open("data/afo/Generales.xlsx", "rb"),
+                CONTENT_TYPES["xlsx"],
+            ),
+        ),
+        (
+            "vida",
+            ("Vida.xlsx", open("data/afo/Vida.xlsx", "rb"), CONTENT_TYPES["xlsx"]),
+        ),
+    ]
+
+    with pytest.raises(ValueError, match="No se pudo encontrar el mes"):
+        _ = client.post(
+            "/generar-controles", data={"controles": json.dumps(controles)}, files=afos
+        )
 
 
 @pytest.mark.fast
@@ -79,14 +131,3 @@ async def test_transformar_hoja_afo(cia: str, qty: str, rango_meses: tuple[date,
     sum_processed = df_processed.get_column(qty).sum()
 
     assert abs(sum_original - sum_processed) < 100
-
-    hoja_afo_incompleta = df_original.slice(0, df_original.shape[0] - 1)
-    with pytest.raises(ValueError):
-        await sap.transformar_hoja_afo(hoja_afo_incompleta, cia, qty, rango_meses[1])
-
-
-@pytest.mark.asyncio
-@pytest.mark.fast
-async def test_verificar_existencia_afos():
-    with pytest.raises(FileNotFoundError):
-        await gen.verificar_existencia_afos("demo")

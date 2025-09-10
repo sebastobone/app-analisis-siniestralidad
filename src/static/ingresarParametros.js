@@ -43,6 +43,34 @@ async function mostrarFuncionalidades(tipoAnalisis, negocio) {
   document.getElementById("resultados").style.display = "block";
 }
 
+function crearCargaAfos(afos) {
+  const container = document.getElementById("cargarAfos");
+
+  container.innerHTML = "";
+
+  afos.forEach((afo) => {
+    const divAfo = document.createElement("div");
+    divAfo.classList.add("input-group");
+
+    const label = document.createElement("label");
+    label.classList.add("custom-file-upload");
+    const text = document.createTextNode(`Cargar AFO de ${afo}:`);
+    label.appendChild(text);
+
+    divAfo.appendChild(label);
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.id = `afo${afo}`;
+    fileInput.name = `afo${afo}`;
+    fileInput.accept = ".xlsx";
+
+    divAfo.appendChild(fileInput);
+
+    container.appendChild(divAfo);
+  });
+}
+
 document
   .getElementById("guardarParametros")
   .addEventListener("click", async function (event) {
@@ -68,6 +96,9 @@ document
       const data = await enviarParametros(queryParams, formData);
       await generarDropdownAperturas(data.aperturas);
       await generarDropdownPlantillas(tipoAnalisis);
+
+      crearCargaAfos(data.afos);
+
       actualizarCheckboxesCandidatos(data.candidatos_siniestros, "siniestros");
       actualizarCheckboxesCandidatos(data.candidatos_primas, "primas");
 

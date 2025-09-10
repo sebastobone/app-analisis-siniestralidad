@@ -6,12 +6,18 @@ from datetime import datetime
 import openpyxl as xl
 import pyautogui
 
+from src import utils
 from src.logger_config import logger
+from src.models import Parametros
 
 
-async def generar_evidencias_parametros(negocio: str, mes_corte: int) -> None:
-    original_file = f"data/segmentacion_{negocio}.xlsx"
-    stored_file = f"data/controles_informacion/{mes_corte}_segmentacion_{negocio}.xlsx"
+async def generar_evidencias_parametros(p: Parametros) -> None:
+    mes_corte = utils.date_to_yyyymm(p.mes_corte)
+
+    original_file = f"data/segmentacion_{p.negocio}.xlsx"
+    stored_file = (
+        f"data/controles_informacion/{mes_corte}_segmentacion_{p.negocio}.xlsx"
+    )
 
     shutil.copyfile(original_file, stored_file)
 

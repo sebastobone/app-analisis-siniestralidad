@@ -25,18 +25,32 @@ document
       "candidatos_expuestos",
     );
 
+    const controles = {
+      cuadrar_siniestros,
+      cuadrar_primas,
+      archivos_siniestros,
+      archivos_primas,
+      archivos_expuestos,
+    };
+
+    const formData = new FormData();
+    formData.append("controles", JSON.stringify(controles));
+
+    const afoGenerales = document.getElementById("afoGenerales");
+    const afoVida = document.getElementById("afoVida");
+
+    if (afoGenerales && afoGenerales.files.length > 0) {
+      formData.append("generales", afoGenerales.files[0]);
+    }
+    if (afoVida && afoVida.files.length > 0) {
+      formData.append("vida", afoVida.files[0]);
+    }
+
     await handleRequest(
       () =>
         fetch("http://127.0.0.1:8000/generar-controles", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            cuadrar_siniestros,
-            cuadrar_primas,
-            archivos_siniestros,
-            archivos_primas,
-            archivos_expuestos,
-          }),
+          body: formData,
         }),
       "Error al generar controles",
     );

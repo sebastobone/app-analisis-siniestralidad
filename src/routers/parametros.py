@@ -6,6 +6,7 @@ from fastapi import APIRouter, Cookie, Query, UploadFile
 from fastapi.responses import Response, StreamingResponse
 
 from src import db, utils
+from src.controles_informacion import sap
 from src.dependencias import SessionDep, atrapar_excepciones
 from src.informacion import almacenamiento as alm
 from src.informacion import carga_manual, mocks
@@ -65,6 +66,7 @@ async def ingresar_parametros(
     tipos_analisis_mes_anterior = obtener_tipos_analisis_mes_anterior(p)
     candidatos_siniestros = alm.obtener_cantidatos_controles(session, "siniestros")
     candidatos_primas = alm.obtener_cantidatos_controles(session, "primas")
+    afos = sap.determinar_afos_necesarios(p.negocio)
 
     return {
         "parametros": p,
@@ -72,6 +74,7 @@ async def ingresar_parametros(
         "tipos_analisis_mes_anterior": tipos_analisis_mes_anterior,
         "candidatos_siniestros": candidatos_siniestros,
         "candidatos_primas": candidatos_primas,
+        "afos": afos,
     }
 
 

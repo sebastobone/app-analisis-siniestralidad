@@ -8,65 +8,24 @@ import polars as pl
 from src import constantes as ct
 from src import utils
 from src.controles_informacion import cuadre_contable as cuadre
-from src.controles_informacion import evidencias, sap
+from src.controles_informacion import sap
 from src.dependencias import SessionDep
 from src.informacion import almacenamiento as alm
 from src.logger_config import logger
 from src.models import Controles, MetadataCantidades, Parametros
 from src.validation import cantidades, segmentacion
 
-ARCHIVOS_PERMANENTES = [
-    "siniestros.parquet",
-    "siniestros.csv",
-    "siniestros_teradata.parquet",
-    "siniestros_teradata.csv",
-    "primas.parquet",
-    "primas.csv",
-    "primas_teradata.parquet",
-    "primas_teradata.csv",
-    "expuestos.parquet",
-    "expuestos.csv",
-    "expuestos_teradata.parquet",
-    "expuestos_teradata.csv",
-]
-
 
 async def generar_controles(
-    p: Parametros,
-    controles: Controles,
-    session: SessionDep,
+    p: Parametros, controles: Controles, session: SessionDep
 ) -> None:
-    await verificar_existencia_afos(p.negocio)
-
     await generar_controles_cantidad("siniestros", p, controles, session)
     await generar_controles_cantidad("primas", p, controles, session)
     await generar_controles_cantidad("expuestos", p, controles, session)
 
-    await evidencias.generar_evidencias_parametros(
-        p.negocio, utils.date_to_yyyymm(p.mes_corte)
-    )
-
-
-async def verificar_existencia_afos(negocio: str):
-    logger.info("Verificando existencia de AFOS...")
-    afos_necesarios = ct.AFOS_NECESARIOS[negocio]
-    for afo in afos_necesarios:
-        if not Path(f"data/afo/{afo}.xlsx").exists():
-            raise FileNotFoundError(
-                utils.limpiar_espacios_log(
-                    f"""
-                    El AFO no se encuentra en la ruta data/afo/{afo}.xlsx,
-                    por favor agregarlo en la carpeta.
-                    """
-                )
-            )
-
 
 async def generar_controles_cantidad(
-    cantidad: ct.CANTIDADES,
-    p: Parametros,
-    controles: Controles,
-    session: SessionDep,
+    cantidad: ct.CANTIDADES, p: Parametros, controles: Controles, session: SessionDep
 ) -> None:
     lista_archivos_cuadre = controles.model_dump()[f"archivos_{cantidad}"]
     if lista_archivos_cuadre:

@@ -143,16 +143,4 @@ COLORES_LOGS = {
     "CRITICAL": "red",
 }
 
-AFOS_NECESARIOS = {
-    "movilidad": ["Generales"],
-    "autonomia": ["Generales", "Vida"],
-    "salud": ["Vida"],
-    "eps": ["EPS"],
-    "arl": ["Vida"],
-    "soat": ["Generales"],
-    "empresariales": ["Generales"],
-    "demo": ["AFO_Inexistente"],
-    "test": ["Generales"],
-}
-
 NUM_FILAS_DEMO = {"siniestros": 100000, "primas": 10000, "expuestos": 10000}

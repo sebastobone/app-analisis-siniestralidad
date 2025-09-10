@@ -119,3 +119,11 @@ class Controles(BaseModel):
     archivos_siniestros: list[str] | None
     archivos_primas: list[str] | None
     archivos_expuestos: list[str] | None
+
+
+class Afos:
+    def __init__(
+        self, generales: UploadFile | None = None, vida: UploadFile | None = None
+    ):
+        self.generales = generales
+        self.vida = vida

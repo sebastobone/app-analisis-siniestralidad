@@ -1,38 +1,37 @@
-import asyncio
-import os
 import shutil
 from datetime import datetime
 
-import openpyxl as xl
-import pyautogui
+import mss
+import xlwings as xw
 
+from src import utils
 from src.logger_config import logger
+from src.models import Parametros
 
 
-async def generar_evidencias_parametros(negocio: str, mes_corte: int) -> None:
-    original_file = f"data/segmentacion_{negocio}.xlsx"
-    stored_file = f"data/controles_informacion/{mes_corte}_segmentacion_{negocio}.xlsx"
+async def generar_evidencias_parametros(p: Parametros) -> None:
+    mes_corte = utils.date_to_yyyymm(p.mes_corte)
+
+    original_file = f"data/segmentacion_{p.negocio}.xlsx"
+    stored_file = (
+        f"data/controles_informacion/{mes_corte}_segmentacion_{p.negocio}.xlsx"
+    )
 
     shutil.copyfile(original_file, stored_file)
 
-    wb = xl.load_workbook(stored_file)
-    sheet_name = "CONTROL_EXTRACCION"
-    wb.create_sheet(title=sheet_name)
+    with xw.App(visible=False) as xl_app:
+        wb = xl_app.books.open(stored_file)
 
-    wb[sheet_name]["A1"] = "Fecha y hora del fin de la extraccion"
-    wb[sheet_name]["A2"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        sheet_name = "CONTROL_EXTRACCION"
+        sheet = wb.sheets.add(name=sheet_name)
 
-    wb.save(stored_file)
-    wb.close()
+        sheet["A1"].value = "Fecha y hora del fin de la extraccion"
+        sheet["A2"].value = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Reloj
-    if os.name == "nt":
-        pyautogui.hotkey("winleft", "n")
-        await asyncio.sleep(0.5)
+        wb.save(stored_file)
+        wb.close()
 
-    pyautogui.screenshot(f"data/controles_informacion/{mes_corte}_extraccion.png")
-
-    if os.name == "nt":
-        pyautogui.hotkey("winleft", "n")
+    with mss.mss() as sct:
+        sct.shot(output=f"data/controles_informacion/{mes_corte}_extraccion.png")
 
     logger.success("Evidencias de controles generadas exitosamente.")

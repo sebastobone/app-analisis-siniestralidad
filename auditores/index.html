@@ -46,6 +46,8 @@
       
     
     
+      <link rel="stylesheet" href="../styles.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -61,7 +63,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="cyan">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -949,6 +951,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#ejemplo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ejemplo
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#factores-excluidos" class="md-nav__link">
     <span class="md-ellipsis">
       Factores excluidos
@@ -1094,6 +1105,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#ejemplo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ejemplo
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#factores-excluidos" class="md-nav__link">
     <span class="md-ellipsis">
       Factores excluidos
@@ -1174,26 +1194,36 @@
 <p>Para su revisión, el negocio le entregará:</p>
 <ul>
 <li>La carpeta donde desarrolló el análisis. La estructura de esta carpeta se describe en la <a href="../estructura/">guía de estructura</a>.</li>
-<li>Los <a href="../uso/parametros/">parámetros utilizados</a></li>
+<li>Los <a href="../uso/parametros/">parámetros utilizados</a>.</li>
 <li>En caso de análisis de triángulos, el tipo de estimación realizada (<strong>Frecuencia y Severidad</strong> o <strong>Plata</strong>).</li>
 </ul>
 <h2 id="ejecutar-la-app">Ejecutar la app</h2>
 <p>Para ejecutar la app, siga los siguientes pasos:</p>
 <ol>
 <li>Asegúrese de tener instalado en su equipo <a href="https://docs.astral.sh/uv/getting-started/installation/">uv</a> y Microsoft Excel.</li>
-<li>En el explorador de archivos, haga clic derecho sobre la carpeta del análisis y seleccione <strong>“Abrir en terminal”</strong>.</li>
 <li>
-<p>Ejecute los siguientes comandos:</p>
+<p>En el explorador de archivos, haga clic derecho sobre la carpeta del análisis y seleccione <strong>“Abrir en terminal”</strong>.</p>
+<p><img alt="Abrir terminal" src="../assets/terminal.png" /></p>
+</li>
+<li>
+<p>Ejecute los siguientes comandos en la terminal:</p>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>sync
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>uv<span class="w"> </span>run<span class="w"> </span>run.py
 </span></code></pre></div>
+<p>Una vez terminen de ejecutar, la terminal se verá así:</p>
+<p><img alt="Terminal" src="../assets/terminal_run.png" /></p>
 </li>
 <li>
-<p>Abra su navegador e ingrese al <a href="http://127.0.0.1:8000">localhost</a>.</p>
+<p>Abra su navegador e ingrese a la URL indicada en la terminal (<em>INFO: Uvicorn running on...</em>). Debería ver una página como esta:</p>
+<p><img alt="Interfaz web" src="../uso/assets/frontend/interfaz.png" /></p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Esta URL es propia de su computador, por lo tanto, sólo usted puede acceder.</p>
+</div>
 </li>
 </ol>
 <h2 id="ingresar-parametros-de-negocio">Ingresar parámetros de negocio</h2>
-<p>En el navegador verá la siguiente interfaz:</p>
+<p>En la página verá la siguiente sección:</p>
 <p><img alt="Ingreso de parámetros" src="../uso/assets/frontend/parametros_auditoria.png" /></p>
 <ol>
 <li>Ingrese los parámetros comunicados por el negocio.</li>
@@ -1210,14 +1240,18 @@
 </li>
 <li>Presione <strong>"Abrir plantilla"</strong>.</li>
 </ol>
-<p>A partir de aquí, podrá acceder a los análisis realizados (triángulos o entremés).</p>
+<p>Esto abrirá una copia de la plantilla de Excel donde el negocio realizó sus estimaciones. A partir de aquí, podrá acceder a los criterios de estimación empleados.</p>
 <h2 id="analisis-de-triangulos">Análisis de triángulos</h2>
 <p>El negocio puede haber aplicado una de estas dos metodologías:</p>
 <ul>
 <li><strong>Frecuencia y Severidad</strong>: la siniestralidad última se obtiene como el producto de ambas.</li>
 <li><strong>Plata</strong>: la siniestralidad última se calcula directamente.</li>
 </ul>
-<p>El procedimiento es análogo en ambos casos. Si el negocio utilizó <strong>Frecuencia y Severidad</strong>, las hojas de análisis relevantes serán <strong>"Frecuencia"</strong> y <strong>"Severidad"</strong>, y si utilizó <strong>Plata</strong>, será <strong>"Plata"</strong>.</p>
+<p>El procedimiento de revisión es el mismo en ambos casos:</p>
+<ul>
+<li>Si se utilizó <strong>Frecuencia y Severidad</strong>, las hojas relevantes serán <strong>"Frecuencia"</strong> y <strong>"Severidad"</strong>.</li>
+<li>Si se utilizó <strong>Plata</strong>, la hoja relevante será <strong>"Plata"</strong>.</li>
+</ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>Para entender la estructura de las hojas de análisis, consulte la <a href="../uso/triangulos/">guía de uso de triángulos</a>.</p>
@@ -1226,9 +1260,12 @@
 <p>En la interfaz web:</p>
 <ol>
 <li>Seleccione la <strong>apertura</strong> y el <strong>atributo</strong> que desea revisar.</li>
-<li>Seleccione la <strong>plantilla</strong> que corresponda según la metodología que aplicó el negocio.</li>
+<li>Seleccione la <strong>plantilla</strong> que corresponda a la metodología aplicada.</li>
 <li>Presione <strong>“Traer”</strong>.</li>
 </ol>
+<h4 id="ejemplo">Ejemplo</h4>
+<p>El negocio <strong>Movilidad</strong> comunicó que utilizó la metodología de <strong>Plata</strong>. Como auditor, iniciaré la revisión en la apertura <strong>01_040_MOTOS RESTO_MOTOS RESTO</strong> para el atributo <strong>bruto</strong>. Debo seleccionar lo siguiente y luego presionar <strong>"Traer"</strong>:</p>
+<p><img alt="Ejemplo auditor" src="../assets/ejemplo_auditor.png" /></p>
 <p>Los criterios de estimación del negocio están en:</p>
 <h4 id="factores-excluidos">Factores excluidos</h4>
 <p><img alt="Exclusiones" src="../uso/assets/triangulos/exclusiones.png" /></p>
@@ -1252,12 +1289,19 @@
 <p>En la hoja <strong>“Resumen”</strong> encontrará los resultados consolidados de siniestralidad para todas las aperturas.</p>
 <div class="admonition note">
 <p class="admonition-title">Nota</p>
-<p>Para cambiar de apertura, repita el proceso: seleccione en los menús desplegables y presione <strong>"Traer"</strong>.</p>
+<p>Para cambiar de apertura, repita el proceso: seleccione la nueva apertura en los menús desplegables y presione <strong>"Traer"</strong>.</p>
 </div>
 <h2 id="analisis-de-entremes">Análisis de entremés</h2>
-<p>Este análisis está en las hojas <strong>"Entremés"</strong> y <strong>"Completar_diagonal"</strong>.
-La estructura de ambas hojas se detalla en la <a href="../uso/entremes/">guía de uso de entremés</a>.</p>
-<p>En la hoja <strong>"Entremés"</strong>, las columnas con los criterios definidos por el negocio están sombreadas en <strong>gris</strong>.</p>
+<p>El análisis de entremés está en la hoja <strong>"Entremés"</strong>. Las columnas con los criterios definidos por el negocio están sombreadas en <strong>gris</strong>.</p>
+<p>Si el negocio utilizó la metodología <strong>"Completar diagonal"</strong> en alguna apertura, podrá revisar los parámetros y criterios correspondientes en la hoja <strong>"Completar_diagonal"</strong>. Para ello:</p>
+<ol>
+<li>Seleccione en la interfaz web la <strong>apertura</strong> y el <strong>atributo</strong> correspondientes.</li>
+<li>Presione el botón <strong>"Traer"</strong>.</li>
+</ol>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Para entender las estructuras de las hojas <strong>"Entremés"</strong> y <strong>"Completar_diagonal"</strong>, consulte la <a href="../uso/entremes/">guía de uso de entremés</a>.</p>
+</div>
 
 
 

@@ -1,0 +1,24 @@
+:root > * {
+  --md-primary-fg-color: #0033a0;
+  --md-accent-fg-color: #00aec7;
+}
+
+.md-typeset h1 {
+  color: var(--md-primary-fg-color);
+  font-weight: bold;
+}
+
+.md-typeset h2 {
+  color: var(--md-accent-fg-color);
+  font-weight: bold;
+}
+
+.md-typeset h3 {
+  color: #3a4349;
+  font-weight: bold;
+}
+
+.md-typeset h4 {
+  color: #768692;
+  font-weight: bold;
+}

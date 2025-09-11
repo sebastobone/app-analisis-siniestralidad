@@ -1,5 +1,7 @@
 # Ingreso de parámetros
 
+![Ingreso de parametros](assets/frontend/parametros.png)
+
 - **Negocio**: Permite identificar cuál archivo de segmentación y cuáles queries utilizar.
 - **Mes de la primera ocurrencia**: Determina el mes que corresponde a la primera fila de los triángulos. Los meses anteriores se agruparán en esta primera fila, de modo que los movimientos de estos meses también quedan recogidos aquí, facilitando la comparación contra SAP.
 - **Mes de corte**: Mes de corte de la información.

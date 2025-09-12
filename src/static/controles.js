@@ -1,5 +1,5 @@
 import { showToast } from "./toast.js";
-import { handleRequest } from "./apiUtils.js";
+import { handleRequest, appendFileIfExists } from "./apiUtils.js";
 
 function obtenerArchivosSeleccionados(containerId) {
   return Array.from(
@@ -36,15 +36,8 @@ document
     const formData = new FormData();
     formData.append("controles", JSON.stringify(controles));
 
-    const afoGenerales = document.getElementById("afoGenerales");
-    const afoVida = document.getElementById("afoVida");
-
-    if (afoGenerales && afoGenerales.files.length > 0) {
-      formData.append("generales", afoGenerales.files[0]);
-    }
-    if (afoVida && afoVida.files.length > 0) {
-      formData.append("vida", afoVida.files[0]);
-    }
+    appendFileIfExists(formData, "afoGenerales", "generales");
+    appendFileIfExists(formData, "afoVida", "vida");
 
     await handleRequest(
       () =>

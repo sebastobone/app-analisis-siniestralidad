@@ -78,3 +78,10 @@ export function actualizarCheckboxesCandidatos(candidatos, cantidad) {
     container.appendChild(label);
   });
 }
+
+export function appendFileIfExists(formData, inputId, key) {
+  const fileInput = document.getElementById(inputId);
+  if (fileInput?.files?.length > 0) {
+    formData.append(key, fileInput.files[0]);
+  }
+}

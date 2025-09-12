@@ -6,7 +6,7 @@ from src import constantes as ct
 from src import utils
 from src.informacion import tera_connect
 from src.models import Parametros
-from src.validation import adds
+from src.validation import queries as valid_query
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ async def test_cargar_segmentaciones(cantidad: ct.CANTIDADES):
     df = pl.read_excel("data/segmentacion_demo.xlsx", sheet_id=0)
     hojas_segm = [i for i in list(df.keys()) if str(i).startswith("add")]
 
-    result = await tera_connect._obtener_segmentaciones("demo", cantidad)
+    result = await tera_connect._obtener_segmentaciones(df, cantidad)
 
     assert len(hojas_segm) == len(result)
 
@@ -73,12 +73,12 @@ async def test_cargar_segmentaciones(cantidad: ct.CANTIDADES):
 @pytest.mark.fast
 async def test_nombres_adds():
     with pytest.raises(ValueError):
-        await adds.validar_nombre_hojas_segmentacion(["add_d_Siniestros"])
+        await valid_query.validar_nombre_hojas_segmentacion(["add_d_Siniestros"])
 
     with pytest.raises(ValueError):
-        await adds.validar_nombre_hojas_segmentacion(["add_Siniestros"])
+        await valid_query.validar_nombre_hojas_segmentacion(["add_Siniestros"])
 
-    await adds.validar_nombre_hojas_segmentacion(["add_s_Siniestros"])
+    await valid_query.validar_nombre_hojas_segmentacion(["add_s_Siniestros"])
 
 
 @pytest.mark.asyncio
@@ -91,9 +91,13 @@ async def test_suficiencia_adds():
     ]
 
     with pytest.raises(ValueError):
-        await adds.validar_numero_segmentaciones("_", "demo", queries, [pl.DataFrame()])
+        await valid_query.validar_numero_segmentaciones(
+            "_", "demo", queries, [pl.DataFrame()]
+        )
 
-    await adds.validar_numero_segmentaciones("_", "demo", queries, [pl.DataFrame()] * 3)
+    await valid_query.validar_numero_segmentaciones(
+        "_", "demo", queries, [pl.DataFrame()] * 3
+    )
 
 
 @pytest.mark.asyncio
@@ -104,6 +108,8 @@ async def test_numero_columnas_add():
     mock_add_bueno = pl.DataFrame({"datos": [1, 1, 2], "otro": [1, 1, 2]})
 
     with pytest.raises(ValueError):
-        await adds.validar_numero_columnas_segmentacion(mock_query, mock_add_malo)
+        await valid_query.validar_numero_columnas_segmentacion(
+            mock_query, mock_add_malo
+        )
 
-    await adds.validar_numero_columnas_segmentacion(mock_query, mock_add_bueno)
+    await valid_query.validar_numero_columnas_segmentacion(mock_query, mock_add_bueno)

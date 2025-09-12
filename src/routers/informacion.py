@@ -1,3 +1,4 @@
+import json
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, Form
@@ -6,20 +7,28 @@ from fastapi.responses import StreamingResponse
 from src.dependencias import SessionDep, atrapar_excepciones
 from src.informacion import almacenamiento as alm
 from src.informacion import carga_manual, tera_connect
-from src.models import ArchivosCantidades, CredencialesTeradata
+from src.models import ArchivosCantidades, CredencialesTeradata, Queries
 from src.routers.parametros import obtener_parametros_usuario
 
 router = APIRouter()
 
 
+def procesar_json_credenciales(
+    credenciales: Annotated[str, Form()],
+) -> CredencialesTeradata:
+    return CredencialesTeradata.model_validate(json.loads(credenciales))
+
+
 @router.post("/correr-query-siniestros")
 @atrapar_excepciones
 async def correr_query_siniestros(
-    credenciales: Annotated[CredencialesTeradata, Form()],
+    credenciales: Annotated[CredencialesTeradata, Depends(procesar_json_credenciales)],
+    queries: Annotated[Queries, Depends()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     params = obtener_parametros_usuario(session, session_id)
+    await tera_connect.procesar_queries(queries, params)
     await tera_connect.correr_query(params, "siniestros", credenciales, session)
     candidatos_siniestros = alm.obtener_cantidatos_controles(session, "siniestros")
     return {
@@ -31,12 +40,14 @@ async def correr_query_siniestros(
 @router.post("/correr-query-primas")
 @atrapar_excepciones
 async def correr_query_primas(
-    credenciales: Annotated[CredencialesTeradata, Form()],
+    credenciales: Annotated[CredencialesTeradata, Depends(procesar_json_credenciales)],
+    queries: Annotated[Queries, Depends()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "primas", credenciales, session)
+    await tera_connect.procesar_queries(queries, params)
     candidatos_primas = alm.obtener_cantidatos_controles(session, "primas")
     return {
         "message": "Query de primas ejecutado exitosamente",
@@ -47,12 +58,14 @@ async def correr_query_primas(
 @router.post("/correr-query-expuestos")
 @atrapar_excepciones
 async def correr_query_expuestos(
-    credenciales: Annotated[CredencialesTeradata, Form()],
+    credenciales: Annotated[CredencialesTeradata, Depends(procesar_json_credenciales)],
+    queries: Annotated[Queries, Depends()],
     session: SessionDep,
     session_id: Annotated[str | None, Cookie()] = None,
 ):
     params = obtener_parametros_usuario(session, session_id)
     await tera_connect.correr_query(params, "expuestos", credenciales, session)
+    await tera_connect.procesar_queries(queries, params)
     candidatos_expuestos = alm.obtener_cantidatos_controles(session, "expuestos")
     return {
         "message": "Query de expuestos ejecutado exitosamente",

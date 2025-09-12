@@ -99,6 +99,37 @@
     <div class="form-section" id="extraccion" style="display: none">
       <h2>Extraccion de informacion</h2>
 
+      <div class="input-group">
+        <label for="querySiniestros" class="custom-file-upload"
+          >Cargar query de siniestros:</label
+        >
+        <input
+          type="file"
+          id="querySiniestros"
+          name="querySiniestros"
+          accept=".sql"
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="queryPrimas" class="custom-file-upload"
+          >Cargar query de primas:</label
+        >
+        <input type="file" id="queryPrimas" name="queryPrimas" accept=".sql" />
+      </div>
+
+      <div class="input-group">
+        <label for="queryExpuestos" class="custom-file-upload"
+          >Cargar query de expuestos:</label
+        >
+        <input
+          type="file"
+          id="queryExpuestos"
+          name="queryExpuestos"
+          accept=".sql"
+        />
+      </div>
+
       <form id="credencialesTeradata">
         <label for="user">Usuario Teradata:</label>
         <input type="text" id="user" name="user" required />

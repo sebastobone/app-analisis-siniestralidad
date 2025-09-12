@@ -84,6 +84,18 @@ class CredencialesTeradata(BaseModel):
     password: str
 
 
+class Queries:
+    def __init__(
+        self,
+        siniestros: UploadFile | None = None,
+        primas: UploadFile | None = None,
+        expuestos: UploadFile | None = None,
+    ):
+        self.siniestros = siniestros
+        self.primas = primas
+        self.expuestos = expuestos
+
+
 class ArchivosCantidades:
     def __init__(
         self,

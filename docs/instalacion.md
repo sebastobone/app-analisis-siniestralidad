@@ -6,8 +6,11 @@ Para instalar la aplicación y empezarla a usar en un nuevo análisis, debe tene
 
 ## Instrucciones
 
-1. Entre a la carpeta donde va a almacenar el análisis.
+1. Cree una carpeta para almacenar el análisis.
 2. Abra una terminal en esta carpeta. Para ello, seleccione la carpeta, presione click derecho, y seleccione abrir nueva terminal.
+
+      ![Abrir terminal](assets/terminal.png)
+
 3. En la terminal, copie lo siguiente y presione enter:
 
       ```sh

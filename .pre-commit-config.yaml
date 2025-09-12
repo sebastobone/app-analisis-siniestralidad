@@ -37,7 +37,7 @@ repos:
         name: prettier => code formatting
         stages: [pre-commit]
         language: system
-        entry: npx prettier --write src
+        entry: npx prettier --write src/ docs/styles.css
         always_run: true
         pass_filenames: false
 

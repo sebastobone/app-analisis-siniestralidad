@@ -145,7 +145,9 @@ async def generar_controles_estado_cuadre(
 
     if file in ("siniestros", "primas"):
         df_sap = (await sap.consolidar_sap(negocio, qtys, mes_corte)).filter(
-            pl.col("codigo_ramo_op").is_in(df.get_column("codigo_ramo_op").unique())
+            pl.col("codigo_ramo_op").is_in(
+                df.get_column("codigo_ramo_op").unique().to_list()
+            )
         )
         await asyncio.to_thread(
             df_sap.write_excel,

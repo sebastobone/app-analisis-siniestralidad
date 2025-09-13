@@ -15,7 +15,7 @@ def traer_frecuencia_indexacion_movimiento(
         mensaje_error = utils.limpiar_espacios_log(
             f"""
             No se han guardado resultados de frecuencia para la apertura
-            {modos.apertura}. Para generar la plantilla de severidad
+            {modos.apertura}. Para generar o actualizar la plantilla de severidad
             con indexacion por fecha de movimiento, se necesitan resultados
             almacenados de frecuencia.
             """

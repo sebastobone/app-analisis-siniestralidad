@@ -5,31 +5,28 @@ repo_url: https://github.com/sebastobone/app-analisis-siniestralidad
 
 nav:
   - Introducción: index.md
-  - Instalación: instalacion.md
   - Estructura: estructura.md
   - Configuración:
-    - Fuentes de información y permisos: config/fuentes.md
-    - Consultas: config/queries.md
-    - Definición de aperturas: config/aperturas.md
-    - Actualización de estados financieros (SAP): config/sap.md
-    - Cuadre contable: config/cuadre_contable.md
+    - Archivo segmentación: config/segmentacion.md
+    - Construcción de queries: config/queries.md
   - Uso:
-    - Inicio: uso/inicio.md
-    - Ingreso de parámetros: uso/parametros.md
-    - Extracción de información: uso/extraccion.md
-    - Generación de controles: uso/controles.md
-    - Descripción de la plantilla: uso/plantilla.md
-    - Funciones de la plantilla: uso/funciones_plantilla.md
-    - Análisis de triángulos: uso/triangulos.md
-    - Análisis de entremés: uso/entremes.md
-    - Consolidación de resultados: uso/resultados.md
-    - Generación de informes: uso/informes.md
+    - Ingresar parámetros: uso/parametros.md
+    - Generar información:
+      - Extracción: uso/informacion/extraccion.md
+      - Carga manual: uso/informacion/carga_manual.md
+      - Validaciones: uso/informacion/validaciones.md
+    - Generar controles y cuadrar contablemente: uso/controles.md
+    - Preparar la plantilla: uso/preparacion_plantilla.md
+    - Analizar triángulos: uso/triangulos.md
+    - Analizar entremés: uso/entremes.md
+    - Consolidar resultados y generar informes: uso/resultados.md
   - Actualización: actualizacion.md
   - Diccionario: diccionario.md
-  - Particularidades por negocio:
-    - SOAT: particularidades/soat.md
+  - Cierres contables:
+    - Configuraciones: cierre/configuraciones.md
+    - Particularidades por negocio: cierre/particularidades.md
   - Pruebas de funcionamiento: pruebas.md
-  - Preguntas frecuentes: faq/faq.md
+  - Preguntas y problemas frecuentes: faq.md
   - Guía para auditores: auditores.md
 
 theme:

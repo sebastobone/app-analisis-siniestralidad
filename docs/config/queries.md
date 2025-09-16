@@ -1,20 +1,20 @@
-# Consultas o _queries_
+# Construcción de _queries_
 
-Para realizar un análisis de triángulos o entremés y calcular una siniestralidad última, necesitamos contar con información de siniestros, primas, y expuestos. La principal forma de obtener esta información es a través de consultas de Teradata, las cuales serán almacenadas en la carpeta `data/queries`.
+Para realizar un análisis de siniestralidad, necesitamos información de siniestros, primas, y expuestos. Uno de los mecanismos provistos por la aplicación para obtener esta información es a través de consultas de Teradata.
 
-Los queries contenidos por defecto en esta carpeta son los que utiliza actualmente cada negocio para su proceso mensual de cierre de reservas, pero se pueden modificar libremente en caso de que se quiera realizar un análisis diferente.
+A continuación, se describe:
 
-A continuación, se presenta una descripción general de la lógica de funcionamiento de cada consulta, así como la estructura mínima que cada una debe contener. Sin embargo, pueden existir particularidades en el entendimiento de cada negocio que modifiquen la lógica de sus consultas.
+- La estructura mínima que deben tener las salidas de los _queries_.
+- Cómo definir las aperturas dentro de sus consultas.
 
-## Siniestros
+!!! example "Ejemplos"
+    Consulte ejemplos reales de [queries utilizados para los cierres contables](https://github.com/sebastobone/app-analisis-siniestralidad/tree/main/data/queries/).
 
-Esta consulta recupera la información de los siniestros pagados y avisados (retenidos y brutos) por cada agrupación de reservas (según corresponda en cada negocio) con su respectiva fecha de siniestro y fecha de registro, así como el conteo incurrido, bruto y desistido.
+## Estructuras mínimas
 
-Existen diferentes modelos de datos para las áreas de Seguros, ARL y EPS, así como un modelo de datos particular para la póliza de salud. En las tablas de Seguros, los insumos principales son las vistas MDB_SEGUROS_COLOMBIA.V_EVENTO_SINIESTRO_COBERTURA (para información bruta) y MDB_SEGUROS_COLOMBIA.V_EVENTO_REASEGURO_SINI_COB (para información cedida), las cuales traen un registro para cada movimiento que se hace por siniestro, sea de pago o de reserva de aviso.
+Las salidas de las consultas que construya deben contener, como mínimo, las columnas detalladas a continuación.
 
-El conteo de siniestros se realiza considerando la primera fecha de movimiento, sea de pago o de aviso. En ese orden de ideas, para el conteo de pagos se utiliza la primera fecha de pago, mientras que para el conteo incurrido se utiliza la fecha mínima entre el primer pago y el primer movimiento de aviso. Para el caso del conteo de desistidos, se consideran los siniestros que tuvieron reserva de aviso en algún momento del tiempo, pero para los cuales nunca se realizó un pago. La fecha de desistimiento se considera como la fecha en la que se libera completamente la reserva de aviso. Cabe destacar que el conteo de siniestros es el mismo para el bruto y el retenido.
-
-### Estructura siniestros
+### Siniestros
 
 | **Nombre de la columna** | **Descripción**                                                   |
 | ------------------------ | ----------------------------------------------------------------- |
@@ -32,11 +32,7 @@ El conteo de siniestros se realiza considerando la primera fecha de movimiento, 
 | aviso_bruto              | Valor del aviso bruto (movimiento, no saldo).                     |
 | aviso_retenido           | Valor del aviso retenido (movimiento, no saldo.)                  |
 
-## Primas
-
-Esta consulta recupera la información de la producción de la compañía. Esto es las primas tanto brutas como retenidas (emitidas y devengadas) por cada agrupación de reservas (según corresponda en cada negocio) con su respectiva fecha de registro. En el modelo de datos de Seguros, el insumo principal es la vista MDB_SEGUROS_COLOMBIA.V_RT_DETALLE_COBERTURA, la cual trae la información de todos los rubros del PyG que conforman el resultado técnico, desglosado a nivel de póliza certificado y amparo.
-
-### Estructura primas
+### Primas
 
 | **Nombre de la columna** | **Descripción**                                                        |
 | ------------------------ | ---------------------------------------------------------------------- |
@@ -49,13 +45,7 @@ Esta consulta recupera la información de la producción de la compañía. Esto 
 | prima_bruta_devengada    | Valor de la prima bruta devengada.                                     |
 | prima_retenida_devengada | Valor de la prima retenida devengada.                                  |
 
-## Expuestos
-
-Esta consulta recupera la información de los expuestos y vigentes por cada agrupación de reservas, según corresponda en cada negocio. Para ello, parte de una tabla de meses con días iniciales y días finales, y de una tabla con la información de las pólizas y amparos suscritos en el rango temporal deseado, con sus fechas de inicio y fin de vigencia. Estas dos tablas se comparan a través de un CROSS JOIN simplificado a través de un INNER JOIN, para encontrar la exposición de cada póliza-amparo en cada uno de los meses necesarios. Finalmente, la información se agrupa a nivel de apertura de reservas, para hallar la suma total de expuestos y vigentes en cada mes de la ventana temporal.
-
-En el modelo de datos de Seguros, los insumos principales son las vistas MDB_SEGUROS_COLOMBIA.V_HIST_POLCERT_COBERTURA (si se necesita a nivel de amparo) y MDB_SEGUROS_COLOMBIA.V_POLIZA_CERTIFICADO (si no se necesita a nivel de amparo).
-
-### Estructura expuestos
+### Expuestos
 
 | **Nombre de la columna** | **Descripción**                                                     |
 | ------------------------ | ------------------------------------------------------------------- |
@@ -65,3 +55,83 @@ En el modelo de datos de Seguros, los insumos principales son las vistas MDB_SEG
 | fecha_registro           | Fecha de exposición.                                                |
 | expuestos                | Número de expuestos del periodo.                                    |
 | vigentes                 | Número de vigentes del periodo.                                     |
+
+## Definición de aperturas
+
+### Desde el query (camino sencillo)
+
+Se recomienda si la apertura es sencilla y no depende de otras aperturas. Por ejemplo:
+
+```sql
+CASE
+    WHEN fas.clase_tarifa_cd IN (2, 3) THEN 'MOTOS'
+    WHEN fas.clase_tarifa_cd IN (4, 5, 6) THEN 'UTILITARIOS'
+    ELSE 'LIVIANOS'
+END AS tipo_vehiculo_desc
+```
+
+### Desde el archivo segmentación (camino complejo)
+
+Se recomienda si la apertura tiene una lógica compleja o depende de otras aperturas.
+
+1. Cree una hoja en el archivo de segmentación:
+
+    - El nombre de la hoja debe seguir el siguiente formato: `add_{indicador_cantidad}_{alias_apertura}`.
+    - `indicador_cantidad` admite tres posibles valores: `s` para siniestros, `p` para primas, y `e` para expuestos.
+
+    !!! example "Ejemplo"
+        Si los siniestros se van a aperturar por amparo, el nombre de la hoja sería `add_s_Amparos`. Si tanto siniestros como primas y expuestos se van a aperturar por esta variable, el nombre sería `add_spe_Amparos`.
+
+2. Cree la tabla con la definicion de la apertura. Ejemplo:
+
+    ![Ejemplo Segmentacion](assets/ejemplo_segmentacion.png)
+
+    !!! note "Nota"
+        Las columnas grises de la imagen corresponden a las columnas como aparecen en Teradata, mientras que la columna azul oscura representa la definición de la apertura creada por el usuario.
+
+3. En el query, cree una tabla volátil para recibir la tabla de apertura:
+
+    ```sql
+    CREATE MULTISET VOLATILE TABLE canal_poliza
+    (
+        compania_id SMALLINT NOT NULL
+        , codigo_op VARCHAR(100) NOT NULL
+        , ramo_id INTEGER NOT NULL
+        , codigo_ramo_op VARCHAR(100) NOT NULL
+        , poliza_id BIGINT NOT NULL
+        , numero_poliza VARCHAR(100) NOT NULL
+        , apertura_canal_desc VARCHAR(100) NOT NULL
+    ) PRIMARY INDEX (
+        poliza_id, codigo_ramo_op, compania_id
+    ) ON COMMIT PRESERVE ROWS;
+
+    INSERT INTO CANAL_POLIZA VALUES (?, ?, ?, ?, ?, ?, ?);
+
+    COLLECT STATISTICS ON canal_poliza INDEX (
+        poliza_id, codigo_ramo_op, compania_id
+    );
+    ```
+
+    !!! tip
+        Siempre defina índices primarios y ejecute `COLLECT STATISTICS` para que Teradata optimice el query.
+
+4. Utilice la tabla en el resto de consultas para definir la apertura.
+
+    ```sql
+    SELECT
+        ...
+        , COALESCE(p.apertura_canal_desc, 'RESTO') AS apertura_canal_desc
+        ...
+
+    FROM mdb_seguros_colombia.v_hist_polcert_cobertura AS vpc
+    ...
+    LEFT JOIN
+        canal_poliza AS p
+        ON
+            vpc.poliza_id = p.poliza_id
+            AND ramo.codigo_ramo_op = p.codigo_ramo_op
+            AND cia.compania_id = p.compania_id
+
+    WHERE ...
+    GROUP BY ...
+    ```

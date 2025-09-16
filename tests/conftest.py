@@ -36,7 +36,7 @@ CONTENT_TYPES = {
 }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def rango_meses() -> tuple[date, date]:
     mes_inicio = date(np.random.randint(2010, 2015), np.random.randint(1, 12), 1)
     mes_corte = date(np.random.randint(2020, 2024), np.random.randint(1, 12), 1)

@@ -82,6 +82,11 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
         Se encontro {faltantes}, pero los valores permitidos son {permitidos}.
     """
 
+    mensaje_aperturas_nulas = """
+        La hoja {nombre_hoja} contiene aperturas con valores nulos: {nulos}.
+        Corrija estos valores y vuelva a cargar el archivo.
+    """
+
     mensaje_aperturas_duplicadas = """
         La hoja {nombre_hoja} contiene aperturas duplicadas.
     """
@@ -104,6 +109,11 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
         mensaje_columnas_faltantes,
         {"nombre_hoja": "Aperturas_Siniestros"},
         "error",
+    )
+    valid.validar_no_nulos(
+        hojas["Aperturas_Siniestros"],
+        mensaje_aperturas_nulas,
+        {"nombre_hoja": "Aperturas_Siniestros"},
     )
     valid.validar_unicidad(
         hojas["Aperturas_Siniestros"].drop(
@@ -182,6 +192,9 @@ def validar_archivo_segmentacion(hojas: dict[str, pl.DataFrame]) -> None:
             {"nombre_hoja": nombre_hoja},
             "error",
         )
+        valid.validar_no_nulos(
+            hojas[nombre_hoja], mensaje_aperturas_nulas, {"nombre_hoja": nombre_hoja}
+        )
         valid.validar_unicidad(
             hojas[nombre_hoja],
             mensaje_aperturas_duplicadas,
@@ -232,6 +245,11 @@ def validar_aptitud_cuadre_contable(
             "aperturas": columnas_aperturas,
         },
         "error",
+    )
+    valid.validar_no_nulos(
+        hojas[f"Cuadre_{cantidad.capitalize()}"],
+        "La hoja {nombre_hoja} contiene aperturas con valores nulos: {nulos}",
+        {"nombre_hoja": f"Cuadre_{cantidad.capitalize()}"},
     )
     valid.validar_unicidad(
         hojas[f"Cuadre_{cantidad.capitalize()}"].select(columnas_aperturas),

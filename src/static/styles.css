@@ -33,24 +33,6 @@ label {
 }
 
 input[type="text"],
-select {
-  width: 80%;
-  display: block;
-  padding: 10px;
-  font-size: 14px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  outline: none;
-  transition: border-color 0.3s;
-}
-
-input[type="text"]:focus,
-select:focus {
-  border-color: #0033a0;
-  box-shadow: 0 0 5px rgba(0, 51, 160, 0.5);
-}
-
 input[type="password"],
 select {
   width: 80%;
@@ -64,6 +46,7 @@ select {
   transition: border-color 0.3s;
 }
 
+input[type="text"]:focus,
 input[type="password"]:focus,
 select:focus {
   border-color: #0033a0;

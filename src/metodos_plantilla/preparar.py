@@ -7,8 +7,8 @@ from src import constantes as ct
 from src import utils
 from src.controles_informacion import bases_plantilla as bpl
 from src.logger_config import logger
-from src.metodos_plantilla import resultados, tablas_resumen
-from src.models import Parametros, ReferenciasEntremes
+from src.metodos_plantilla import actualizar, generar, resultados, tablas_resumen
+from src.models import ModosPlantilla, Parametros, ReferenciasEntremes
 
 from .completar_diagonal import factor_completitud as compl
 
@@ -58,6 +58,8 @@ def preparar_plantilla(
             utils.date_to_yyyymm(p.mes_corte),
         )
         generar_hoja_entremes(wb, entremes)
+
+    actualizar_plantillas_generadas(wb, p)
 
     logger.success("Plantilla preparada.")
     logger.info(f"Tiempo de preparacion: {round(time.time() - s, 2)} segundos.")
@@ -295,6 +297,26 @@ def obtener_resultados_ultimo_triangulo(
             ]
         )
     )
+
+
+def actualizar_plantillas_generadas(wb: xw.Book, p: Parametros):
+    if p.tipo_analisis == "triangulos":
+        hojas_analisis = ["Frecuencia", "Severidad", "Plata"]
+    else:
+        hojas_analisis = ["Completar_diagonal"]
+
+    for nombre_hoja in hojas_analisis:
+        hoja: xw.Sheet = wb.sheets[nombre_hoja]
+        if hoja.range("A1").value:
+            modos = {
+                "apertura": hoja.range("A1").value,
+                "atributo": hoja.range("A2").value,
+                "plantilla": nombre_hoja.lower(),
+            }
+            try:
+                actualizar.actualizar_plantillas(wb, p, ModosPlantilla(**modos))  # type: ignore
+            except actualizar.PeriodicidadDiferenteError:
+                generar.generar_plantillas(wb, p, ModosPlantilla(**modos))  # type: ignore
 
 
 def verificar_plantilla_preparada(wb: xw.Book):

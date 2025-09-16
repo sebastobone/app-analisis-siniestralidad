@@ -75,8 +75,12 @@ async def correr_query_expuestos(
 
 @router.get("/descargar-ejemplos-cantidades")
 @atrapar_excepciones
-async def descargar_ejemplos_cantidades() -> StreamingResponse:
-    zip_buffer = carga_manual.descargar_ejemplos_cantidades()
+async def descargar_ejemplos_cantidades(
+    session: SessionDep,
+    session_id: Annotated[str | None, Cookie()] = None,
+) -> StreamingResponse:
+    params = obtener_parametros_usuario(session, session_id)
+    zip_buffer = carga_manual.descargar_ejemplos_cantidades(params.negocio)
     return StreamingResponse(
         zip_buffer,
         media_type="application/x-zip-compressed",

@@ -1,10 +1,11 @@
 export async function generarReferenciasEntremes(tipos_analisis_mes_anterior) {
   const dropdownReferenciaActuarial = document.getElementById(
-    "referenciaActuarial",
+    "referencia_actuarial",
   );
   dropdownReferenciaActuarial.innerHTML = "";
-  const dropdownReferenciaContable =
-    document.getElementById("referenciaContable");
+  const dropdownReferenciaContable = document.getElementById(
+    "referencia_contable",
+  );
   dropdownReferenciaContable.innerHTML = "";
 
   tipos_analisis_mes_anterior.forEach((tipo_analisis) => {

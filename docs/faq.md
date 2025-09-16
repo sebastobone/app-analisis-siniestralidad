@@ -23,9 +23,9 @@ Una vez limpia la memoria, intente ejecutar nuevamente el comando que le generó
 !!! tip
     Independientemente de que se genere este error o no, limpiar la memoria caché del administrador de paquetes es una buena práctica para borrar información obsoleta.
 
-## 2. Error de OneDrive/Sharepoint
+## 2. Error de OneDrive/SharePoint
 
-![Error de Onedrive/Sharepoint](assets/faq/onedrive.png)
+![Error de Onedrive/SharePoint](assets/faq/onedrive.png)
 
 ### Descripción del problema
 
@@ -40,7 +40,7 @@ Este error ocurre cuando el **autoguardado** está activado en una plantilla de 
 Una vez realizados estos pasos, intente ejecutar nuevamente el comando que estaba utilizando.
 
 !!! warning "Advertencia"
-    Recuerde guardar manualmente el archivo cada vez que realice cambios importantes en la estructura de la plantilla.
+    Ahora que el autoguardado está desactivado, **recuerde guardar manualmente el archivo** cada vez que realice cambios importantes en la estructura de la plantilla.
 
 ## 3. Error de módulo no encontrado
 

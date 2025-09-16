@@ -28,7 +28,10 @@ nav:
     - Particularidades por negocio: cierre/particularidades.md
   - Pruebas de funcionamiento: pruebas.md
   - Preguntas y problemas frecuentes: faq.md
-  - Guía para auditores: auditores.md
+  - Guía para auditores:
+    - Inicio: auditores/inicio.md
+    - Revisar triángulos: auditores/triangulos.md
+    - Revisar entremés: auditores/entremes.md
 
 theme:
   name: material

@@ -245,6 +245,19 @@ def test_eliminar_archivos(client: TestClient):
 
 
 @pytest.mark.fast
-def test_descargar_ejemplos(client: TestClient):
+@pytest.mark.parametrize("negocio", ["movilidad", "soat"])
+def test_descargar_ejemplos(
+    client: TestClient, rango_meses: tuple[date, date], negocio: str
+):
+    _ = ingresar_parametros(
+        client,
+        Parametros(
+            negocio=negocio,
+            mes_inicio=rango_meses[0],
+            mes_corte=rango_meses[1],
+            tipo_analisis="triangulos",
+            nombre_plantilla="wb_test",
+        ),
+    )
     response = client.get("/descargar-ejemplos-cantidades")
     assert response.status_code == status.HTTP_200_OK

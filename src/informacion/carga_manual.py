@@ -184,13 +184,16 @@ def eliminar_archivos(session: SessionDep) -> None:
     logger.success("Archivos cargados de siniestros, primas, y expuestos eliminados.")
 
 
-def descargar_ejemplos_cantidades() -> io.BytesIO:
+def descargar_ejemplos_cantidades(negocio: str) -> io.BytesIO:
     zip_buffer = io.BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for cantidad in ct.LISTA_CANTIDADES:
             df = generar_mock(
-                (date(2020, 1, 1), date(2025, 12, 31)), cantidad, num_rows=1000
+                (date(2020, 1, 1), date(2025, 12, 31)),
+                cantidad,
+                num_rows=1000,
+                negocio=negocio,
             )
 
             if cantidad == "siniestros":

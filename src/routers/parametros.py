@@ -60,7 +60,7 @@ async def ingresar_parametros(
 
     mocks.eliminar_mocks(session)
     if p.negocio == "demo":
-        mocks.generar_mocks(p.mes_inicio, p.mes_corte, session)
+        mocks.generar_mocks(p, session)
 
     aperturas = obtener_lista_aperturas(p)
     tipos_analisis_mes_anterior = obtener_tipos_analisis_mes_anterior(p)

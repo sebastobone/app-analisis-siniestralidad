@@ -26,33 +26,20 @@ Esta aplicación permite realizar **análisis de siniestralidad última** median
 !!! tip
     Git y uv no requieren permisos de administrador para ser instalados.
 
-## Ejecutar la app
+## Descargar la app
 
-1. Elija una carpeta para almacenar el análisis. Haga clic derecho sobre ella y seleccione **Abrir en Terminal**:
+1. Elija una **carpeta de trabajo** donde quiera guardar los análisis. Haga clic derecho sobre ella y seleccione **Abrir en Terminal**:
 
-    ![Abrir terminal](docs/assets/terminal.png)
+    ![Abrir terminal](docs/assets/abrir_terminal.png)
 
-2. En la terminal, copie y ejecute los siguientes comandos:
+2. En la terminal, copie y ejecute el siguiente comando:
 
     ```sh
     git clone https://github.com/sebastobone/app-analisis-siniestralidad.git
-    cd app-analisis-siniestralidad
-    uv sync
-    uv run run.py
     ```
 
-    Una vez finalicen, la terminal se verá así:
+    Se descargará una nueva carpeta llamada `app-analisis-siniestralidad`, que es la **carpeta de la aplicación**.
 
-    ![Terminal](docs/assets/terminal_run.png)
+3. Cierre la terminal.
 
-3. Abra su navegador e ingrese la URL que aparece en la terminal (_INFO: Uvicorn running on..._). Debería ver una página como esta:
-
-    ![Interfaz web](docs/assets/frontend/interfaz.png)
-
-    !!! info
-        Esta URL es local a su computador, por lo tanto, sólo usted puede acceder.
-
-¡Eso es todo! Ahora puede proceder con la [**configuración del análisis**](docs/config/segmentacion.md).
-
-!!! note "Nota"
-    Mantenga la terminal abierta mientras utiliza la aplicación.
+¡Eso es todo! Consulte ahora la [guía de configuración de análisis](docs/config/segmentacion.md) y la [guía de uso de la app](docs/uso/ejecutar_app.md).

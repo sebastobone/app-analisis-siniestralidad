@@ -11,7 +11,7 @@ En [el repositorio oficial](https://github.com/sebastobone/app-analisis-siniestr
 
 ### ¿Cómo verifico mi versión actual?
 
-1. Abra la carpeta en una terminal.
+1. Abra la **carpeta de la aplicación** en una terminal.
 2. Escriba el siguiente comando y presione _enter_:
 
 ```sh
@@ -28,9 +28,7 @@ git describe --tags
 
 ## Pasos para actualizar
 
-Para actualizar a la versión más reciente:
-
-1. Abra la carpeta en una terminal.
+1. Abra la **carpeta de la aplicación** en una terminal.
 2. Copie estos comandos y presione _enter_:
 
     ```sh
@@ -38,8 +36,7 @@ Para actualizar a la versión más reciente:
     git pull
     ```
 
-3. Si tenía la aplicación corriendo en alguna terminal, ciérrela.
-4. Vuelva a ejecutar la app.
+3. Si tenía la aplicación corriendo en alguna terminal, cierre esa terminal y [vuelva a ejecutar la app](uso/ejecutar_app.md) para que los cambios tomen efecto.
 
 !!! warning "Advertencia"
     La actualización **sobrescribe todos los archivos** que se encuentren dentro del repositorio. Antes de actualizar, asegúrese de guardar una copia de:

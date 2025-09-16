@@ -30,34 +30,11 @@ Para su revisión, el negocio le entregará:
 Para ejecutar la app, siga los siguientes pasos:
 
 1. Asegúrese de tener instalado en su equipo [uv](https://docs.astral.sh/uv/getting-started/installation/) y Microsoft Excel.
-2. En el explorador de archivos, haga clic derecho sobre la carpeta del análisis y seleccione **“Abrir en terminal”**.
-
-    ![Abrir terminal](assets/terminal.png)
-
-3. Ejecute los siguientes comandos en la terminal:
-
-    ```sh
-    uv sync
-    uv run run.py
-    ```
-
-    Una vez terminen de ejecutar, la terminal se verá así:
-
-    ![Terminal](assets/terminal_run.png)
-
-    !!! tip
-        Si le sale un error al ejecutar estos comandos, consulte la solución en la [guía de problemas frecuentes](faq.md).
-
-4. Abra su navegador e ingrese a la URL indicada en la terminal (_INFO: Uvicorn running on..._). Debería ver una página como esta:
-
-    ![Interfaz web](assets/frontend/interfaz.png)
-
-    !!! info
-        Esta URL es propia de su computador, por lo tanto, sólo usted puede acceder.
+2. Siga la [guía de ejecución](uso/ejecutar_app.md).
 
 ## Ingresar parámetros de negocio
 
-En la página verá la siguiente sección:
+En la interfaz web verá la siguiente sección:
 
 ![Ingreso de parámetros](assets/frontend/parametros_auditoria.png)
 

@@ -10,6 +10,7 @@ nav:
     - Archivo segmentación: config/segmentacion.md
     - Construcción de queries: config/queries.md
   - Uso:
+    - Ejecutar la app: uso/ejecutar_app.md
     - Ingresar parámetros: uso/parametros.md
     - Generar información:
       - Extracción: uso/informacion/extraccion.md

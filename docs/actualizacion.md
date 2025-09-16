@@ -14,9 +14,9 @@ En [el repositorio oficial](https://github.com/sebastobone/app-analisis-siniestr
 1. Abra la **carpeta de la aplicación** en una terminal.
 2. Escriba el siguiente comando y presione _enter_:
 
-```sh
-git describe --tags
-```
+    ```sh
+    git describe --tags
+    ```
 
 !!! tip "Recibir notificaciones de nuevas versiones"
     Si quiere recibir un correo cada vez que se publique una nueva versión:
@@ -38,7 +38,7 @@ git describe --tags
 
 3. Si tenía la aplicación corriendo en alguna terminal, cierre esa terminal y [vuelva a ejecutar la app](uso/ejecutar_app.md) para que los cambios tomen efecto.
 
-!!! warning "Advertencia"
+!!! danger "¡Cuidado!"
     La actualización **sobrescribe todos los archivos** que se encuentren dentro del repositorio. Antes de actualizar, asegúrese de guardar una copia de:
 
     - Su archivo de segmentación :material-file: `data/segmentacion_{negocio}.xlsx`

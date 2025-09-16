@@ -13,7 +13,7 @@ Después de la sección **"Controles y cuadre de información"**, verá la sigui
     - La creación y apertura de un nuevo archivo de Excel con el nombre que definió en los [parámetros](parametros.md).
     - La generación de una evidencia de consistencia entre los datos consolidados y los enviados a Excel, guardada en :material-folder: `data/controles_informacion`.
 
-!!! warning "Advertencia"
+!!! danger "¡Cuidado!"
     Si prepara una plantilla ya existente, los resultados de la hoja **Resumen** se borrarán. Para recuperar los resultados, use la función **Traer y guardar** o el versionamiento de OneDrive.
 
     Si solo desea abrir una plantilla existente sin modificarla, utilice la función **Abrir plantilla**.

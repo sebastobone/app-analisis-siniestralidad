@@ -4,7 +4,8 @@
 
 Cada vez que genera información de **siniestros, primas o expuestos** (ya sea por extracción desde Teradata o por carga manual), el sistema aplica automáticamente un conjunto de validaciones.
 
-Si algún archivo falla, verá un **mensaje de error**. En ese caso, corrija la consulta o el archivo y vuelva a intentarlo.
+!!! warning "Errores en validación"
+    Si algún archivo falla, el sistema mostrará un **mensaje de error**. Deberá corregir la consulta o el archivo y volver a intentarlo.
 
 ## Lista de validaciones
 

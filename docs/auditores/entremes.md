@@ -1,9 +1,6 @@
 # Revisar entremés
 
-Las hojas relevantes dentro de este análisis son las hojas de **"Entremés"** y **"Completar_diagonal"**.
-
-!!! tip
-    Para entender las estructuras de estas hojas, consulte la [guía de uso de entremés](../uso/entremes.md).
+Las hojas relevantes dentro de este análisis son las hojas de **"Entremés"** y **"Completar_diagonal"**. Para entender las estructuras de estas hojas, consulte la [guía de uso de entremés](../uso/entremes.md).
 
 ## La hoja Entremés
 
@@ -23,3 +20,6 @@ Si el negocio utilizó la metodología [**Completar diagonal**](../uso/entremes.
 1. Seleccione en la interfaz web la **apertura** y el **atributo** correspondientes.
 2. Seleccione la plantilla **Completar_diagonal** en la lista desplegable.
 3. Presione el botón **Traer**.
+
+!!! tip
+    Si le sale un error de OneDrive/SharePoint al presionar **Traer**, consulte la solución en la [guía de problemas frecuentes](../faq.md#2-error-de-onedrivesharepoint).

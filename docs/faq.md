@@ -21,7 +21,7 @@ uv cache clean
 Una vez limpia la memoria, intente ejecutar nuevamente el comando que le generó el error.
 
 !!! tip
-    Independientemente de que se genere este error o no, limpiar la memoria caché del administrador de paquetes es una buena práctica para borrar información obsoleta.
+    Limpiar la memoria caché del administrador de paquetes es una buena práctica para borrar información obsoleta.
 
 ## 2. Error de OneDrive/SharePoint
 
@@ -33,14 +33,14 @@ Este error ocurre cuando el **autoguardado** está activado en una plantilla de 
 
 ### Pasos para resolverlo
 
-1. Desactive el autoguardado en la barra superior de Excel.
-2. Presione el botón "guardar" en esta misma ubicación.
-3. Cierre el archivo.
+1. **Desactive el autoguardado** en la barra superior de Excel.
+2. **Guarde** el archivo.
+3. **Cierre** el archivo.
 
 Una vez realizados estos pasos, intente ejecutar nuevamente el comando que estaba utilizando.
 
-!!! warning "Advertencia"
-    Ahora que el autoguardado está desactivado, **recuerde guardar manualmente el archivo** cada vez que realice cambios importantes en la estructura de la plantilla.
+!!! warning "Autoguardado desactivado"
+    Recuerde guardar manualmente el archivo cada vez que realice cambios importantes en la estructura de la plantilla.
 
 ## 3. Error de módulo no encontrado
 

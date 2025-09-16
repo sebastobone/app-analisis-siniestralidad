@@ -10,8 +10,7 @@ El procedimiento de revisión es el mismo en ambos casos:
 - Si se utilizó **Frecuencia y Severidad**, las hojas relevantes serán **"Frecuencia"** y **"Severidad"**.
 - Si se utilizó **Plata**, la hoja relevante será **"Plata"**.
 
-!!! tip
-    Para entender la estructura de las hojas de análisis, consulte la [guía de uso de triángulos](../uso/triangulos.md#estructura-de-la-hoja-de-analisis).
+Para entender la estructura de las hojas de análisis, consulte la [guía de uso de triángulos](../uso/triangulos.md#estructura-de-la-hoja-de-analisis).
 
 ## Revisar una apertura
 
@@ -27,6 +26,8 @@ En la interfaz web:
 
 !!! tip
     Si le sale un error de OneDrive/SharePoint al presionar **Traer**, consulte la solución en la [guía de problemas frecuentes](../faq.md#2-error-de-onedrivesharepoint).
+
+Para cambiar de apertura, repita el proceso: seleccione la nueva apertura en los menús desplegables y presione **Traer**.
 
 ### Criterios de estimación
 
@@ -55,8 +56,6 @@ En la interfaz web:
 
 ![Triángulo base](../assets/plantilla/tabla_resumen.png)
 
-!!! note "Nota"
-    Para cambiar de apertura, repita el proceso: seleccione la nueva apertura en los menús desplegables y presione **Traer**.
+## Resultados consolidados
 
-!!! info
-    En la hoja **“Resumen”** encontrará los resultados consolidados de siniestralidad para todas las aperturas.
+En la hoja **“Resumen”** encontrará los resultados consolidados de siniestralidad para todas las aperturas.

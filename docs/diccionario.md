@@ -29,7 +29,7 @@
 - **Entremés:** Análisis simplificado que permite calcular el **Ultimate** para **Ocurrencias** nuevas que todavía no han cumplido la periodicidad suficiente para ser sometidas a **triángulos de desarrollo**.
 - **Completar diagonal:** Técnica usada en análisis de **Entremés** para proyectar la porción faltante del desarrollo de una ocurrencia para alcanzar la periodicidad del **triángulo de desarrollo**.
 
-    !!! example
+    !!! example "Ejemplo"
         Asumamos una apertura con periodicidad trimestral, que estamos analizando a corte de mayo de 2025. Esta metodología busca responder la siguiente pregunta:
 
-        Cuando estemos en junio de 2025, ¿cuál va a ser la cifra acumulada de pagos e incurrido para cada una de las ocurrencias de esta apertura?
+        Cuando estemos en junio de 2025, ¿cuál va a ser la cifra acumulada de pago e incurrido para cada una de las ocurrencias de esta apertura?

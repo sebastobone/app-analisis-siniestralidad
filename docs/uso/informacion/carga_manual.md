@@ -31,4 +31,6 @@ Aquí puede cargar manualmente información de **siniestros, primas, y expuestos
 
 ## Validaciones sobre los archivos cargados
 
-Cada archivo cargado se somete a las [validaciones comunes](validaciones.md) sobre insumos de siniestros, primas, y expuestos. Los datos quedan almacenados en :material-folder: `data/carga_manual`.
+Cada archivo cargado se somete a las [validaciones comunes](validaciones.md) sobre insumos de siniestros, primas, y expuestos.
+
+Los datos cargados manualmente se almacenan en :material-folder: `data/carga_manual`.

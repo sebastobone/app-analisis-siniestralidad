@@ -1084,9 +1084,10 @@
 <ol>
 <li>Verifique que esté conectado a la <strong>VPN o red +SURA</strong>.</li>
 <li>
-<p>Cargue las consultas que construyó según la <a href="../../../config/queries/">guía de construcción de consultas</a>.</p>
+<p><strong>(Opcional)</strong> Cargue las consultas que construyó según la <a href="../../../config/queries/">guía de construcción de consultas</a>.</p>
 <ul>
-<li>Una vez cargadas, las consultas quedarán almacenadas en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/queries/{negocio}</code>.</li>
+<li>Si no carga ninguna consulta, se usarán las más recientes que haya cargado, almacenadas en <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/queries/{negocio}</code>.</li>
+<li>Si nunca ha cargado, se usarán las consultas por defecto de la <a href="../../../cierre/configuraciones/">configuración del cierre contable</a>.</li>
 </ul>
 </li>
 <li>
@@ -1110,9 +1111,13 @@
 <li>Que no existan registros duplicados. Si los hay, se eliminan y se genera una alerta.</li>
 <li>Que no haya valores nulos.</li>
 </ul>
-<p>Si alguna validación falla, el sistema mostrará un mensaje de error. Tendrá que corregir la tabla correspondiente y volver a ejecutar la consulta.</p>
+<div class="admonition warning">
+<p class="admonition-title">Errores en validación</p>
+<p>Si alguna validación falla, el sistema generará un error y se lo mostrará en la sección <strong>Estado</strong>. Tendrá que corregir la tabla correspondiente y volver a ejecutar la consulta.</p>
+</div>
 <h2 id="validaciones-sobre-salidas">Validaciones sobre salidas</h2>
-<p>El resultado de cada consulta se somete a las <a href="../validaciones/">validaciones comunes</a> sobre insumos de siniestros, primas, y expuestos. Los datos quedan almacenados en <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/raw</code>.</p>
+<p>El resultado de cada consulta se somete a las <a href="../validaciones/">validaciones comunes</a> sobre insumos de siniestros, primas, y expuestos.</p>
+<p>Los datos extraídos de Teradata se almacenan en <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>data/raw</code>.</p>
 
 
 

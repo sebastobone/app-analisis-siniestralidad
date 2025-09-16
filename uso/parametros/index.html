@@ -1072,17 +1072,16 @@
 <p class="admonition-title">Negocios especiales</p>
 <p>Hay dos negocios especiales: <strong>"Demo"</strong> y <strong>"Custom"</strong>.</p>
 <ul>
-<li>El negocio <strong>"Demo"</strong> le permite hacer ejercicios de familiarización y exploración de las plantillas de Excel con información ficticia.</li>
-<li>El negocio <strong>"Custom"</strong> le permite hacer un ejercicio con un negocio diferente a las líneas de negocio tradicionales.</li>
+<li><strong>"Demo"</strong> permite hacer ejercicios de familiarización con información ficticia.</li>
+<li><strong>"Custom"</strong> permite hacer un ejercicio para un negocio diferente a las líneas tradicionales.</li>
 </ul>
 </div>
 </li>
 <li>
 <p>En <strong>Mes de la primera ocurrencia</strong>, escriba (en formato <strong>YYYYMM</strong>) el mes de la primera ocurrencia de los triángulos o entremés.</p>
-<div class="admonition note">
-<p class="admonition-title">Ocurrencias anteriores</p>
-<p>Si en la información de siniestros, primas, o expuestos se encuentran meses anteriores a este, las cifras se agruparán en este primer mes con el objetivo de garantizar una correcta comparación contra SAP.</p>
-</div>
+<ul>
+<li>Si en la información de siniestros, primas, o expuestos se encuentran meses anteriores a este, las cifras se agruparán en este primer mes con el objetivo de garantizar una correcta comparación contra SAP.</li>
+</ul>
 </li>
 <li>
 <p>En <strong>Mes de corte</strong>, escriba (en formato <strong>YYYYMM</strong>) el mes de corte de la información.</p>
@@ -1090,15 +1089,20 @@
 <li>En <strong>Tipo de análisis</strong>, elija entre <strong>Triángulos</strong> o <strong>Entremés</strong>.</li>
 <li>
 <p>En <strong>Nombre de la plantilla</strong>, escriba el nombre del archivo de Excel donde se hará el análisis.</p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>En un mismo análisis puede utilizar múltiples plantillas. Todas son almacenadas en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>plantillas</code>.</p>
-</div>
+<ul>
+<li>En un mismo análisis puede utilizar múltiples plantillas. Todas son almacenadas en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>plantillas</code>.</li>
+</ul>
 </li>
 <li>
-<p>En <strong>Cargar archivo de segmentación</strong>, cargue el <a href="../../config/segmentacion/">archivo de segmentación</a> que construyó. Si no tiene uno, presione el botón <strong>Descargar ejemplo</strong> para obtener un archivo guía.</p>
+<p><strong>(Opcional)</strong> En <strong>Cargar archivo de segmentación</strong>, cargue el <a href="../../config/segmentacion/">archivo de segmentación</a> que construyó. Si no tiene uno, presione el botón <strong>Descargar ejemplo</strong> para obtener un archivo guía.</p>
+<ul>
+<li>Si no ingresa ningún archivo, se usará el último que haya cargado.</li>
+<li>Si nunca ha cargado, se usará el archivo por defecto de la <a href="../../cierre/configuraciones/">configuración del cierre contable</a>.</li>
+</ul>
 </li>
-<li>Presione el botón <strong>Guardar parámetros</strong>.</li>
+<li>
+<p>Presione el botón <strong>Guardar parámetros</strong>.</p>
+</li>
 </ol>
 <h2 id="validaciones-sobre-el-archivo-de-segmentacion">Validaciones sobre el archivo de segmentación</h2>
 <p>Al presionar <strong>Guardar parámetros</strong>, la aplicación valida automáticamente:</p>
@@ -1106,11 +1110,15 @@
 <li>Que existan todas las hojas de aperturas.</li>
 <li>Que existan todas las columnas necesarias en las hojas de aperturas.</li>
 <li>Que no haya aperturas duplicadas.</li>
+<li>Que no hayan valores nulos en ninguna tabla.</li>
 <li>Que las periodicidades de ocurrencia y tipos de indexación de la severidad sean válidas.</li>
 <li>Que se haya definido una medida de indexación cuando corresponda.</li>
 <li>Que las aperturas de siniestros, primas, y expuestos sean consistentes entre sí.</li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Errores en validación</p>
 <p>Si alguna validación falla, el sistema generará un error y se lo mostrará en la sección <strong>Estado</strong>. Tendrá que corregir el archivo y volverlo a cargar.</p>
+</div>
 
 
 

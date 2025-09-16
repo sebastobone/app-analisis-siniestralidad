@@ -81,6 +81,29 @@ def test_columnas_faltantes(client: TestClient, rango_meses: tuple[date, date]):
 
 
 @pytest.mark.fast
+def test_valores_nulos(client: TestClient, rango_meses: tuple[date, date]):
+    hojas = {
+        "Aperturas_Siniestros": pl.DataFrame(
+            {
+                "apertura_reservas": ["01_040"],
+                "codigo_op": ["01"],
+                "codigo_ramo_op": [None],
+                "periodicidad_ocurrencia": ["Mensual"],
+                "tipo_indexacion_severidad": ["Ninguna"],
+                "medida_indexacion_severidad": ["Ninguna"],
+            }
+        ),
+        "Aperturas_Primas": pl.DataFrame(
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
+        ),
+        "Aperturas_Expuestos": pl.DataFrame(
+            {"codigo_op": ["01"], "codigo_ramo_op": ["040"]}
+        ),
+    }
+    validar_excepciones(client, rango_meses, hojas, ["valores nulos"])
+
+
+@pytest.mark.fast
 def test_aperturas_duplicadas(client: TestClient, rango_meses: tuple[date, date]):
     hojas = {
         "Aperturas_Siniestros": pl.DataFrame(

@@ -39,6 +39,7 @@ Al presionar **Guardar parámetros**, la aplicación valida automáticamente:
 - Que existan todas las hojas de aperturas.
 - Que existan todas las columnas necesarias en las hojas de aperturas.
 - Que no haya aperturas duplicadas.
+- Que no hayan valores nulos en ninguna tabla.
 - Que las periodicidades de ocurrencia y tipos de indexación de la severidad sean válidas.
 - Que se haya definido una medida de indexación cuando corresponda.
 - Que las aperturas de siniestros, primas, y expuestos sean consistentes entre sí.

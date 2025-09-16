@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../../config/queries/">
+        <link rel="prev" href="../../estructura/">
       
       
-        <link rel="next" href="../informacion/extraccion/">
+        <link rel="next" href="../queries/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Ingresar parámetros - App Análisis Siniestralidad</title>
+        <title>Archivo segmentación - App Análisis Siniestralidad</title>
       
     
     
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#ingresar-parametros" class="md-skip">
+        <a href="#el-archivo-segmentacion" class="md-skip">
           Saltar a contenido
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Ingresar parámetros
+              Archivo segmentación
             
           </span>
         </div>
@@ -231,18 +231,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -258,7 +260,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Configuración
@@ -269,10 +271,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../config/segmentacion/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Archivo segmentación
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -283,6 +307,110 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#definir-aperturas" class="md-nav__link">
+    <span class="md-ellipsis">
+      Definir aperturas
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Definir aperturas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#que-es-una-apertura" class="md-nav__link">
+    <span class="md-ellipsis">
+      ¿Qué es una apertura?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tablas-de-aperturas" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tablas de aperturas
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#propiedades-de-cada-apertura" class="md-nav__link">
+    <span class="md-ellipsis">
+      Propiedades de cada apertura
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parametrizar-el-cuadre-contable" class="md-nav__link">
+    <span class="md-ellipsis">
+      Parametrizar el cuadre contable
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parametrizar el cuadre contable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aperturas-para-repartir-diferencias" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aperturas para repartir diferencias
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#meses-y-cantidades-a-cuadrar" class="md-nav__link">
+    <span class="md-ellipsis">
+      Meses y cantidades a cuadrar
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tablas-para-cargar-en-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tablas para cargar en queries
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -295,7 +423,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../config/queries/" class="md-nav__link">
+      <a href="../queries/" class="md-nav__link">
         
   
   
@@ -322,20 +450,18 @@
       
   
   
-    
   
   
-  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -351,7 +477,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Uso
@@ -362,32 +488,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Ingresar parámetros
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../uso/parametros/" class="md-nav__link">
         
   
   
@@ -398,44 +502,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Tabla de contenidos
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pasos" class="md-nav__link">
-    <span class="md-ellipsis">
-      Pasos
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#validaciones-sobre-el-archivo-de-segmentacion" class="md-nav__link">
-    <span class="md-ellipsis">
-      Validaciones sobre el archivo de segmentación
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -486,7 +552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../informacion/extraccion/" class="md-nav__link">
+      <a href="../../uso/informacion/extraccion/" class="md-nav__link">
         
   
   
@@ -509,7 +575,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../informacion/carga_manual/" class="md-nav__link">
+      <a href="../../uso/informacion/carga_manual/" class="md-nav__link">
         
   
   
@@ -532,7 +598,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../informacion/validaciones/" class="md-nav__link">
+      <a href="../../uso/informacion/validaciones/" class="md-nav__link">
         
   
   
@@ -563,7 +629,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../controles/" class="md-nav__link">
+      <a href="../../uso/controles/" class="md-nav__link">
         
   
   
@@ -586,7 +652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../preparacion_plantilla/" class="md-nav__link">
+      <a href="../../uso/preparacion_plantilla/" class="md-nav__link">
         
   
   
@@ -609,7 +675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../triangulos/" class="md-nav__link">
+      <a href="../../uso/triangulos/" class="md-nav__link">
         
   
   
@@ -632,7 +698,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../entremes/" class="md-nav__link">
+      <a href="../../uso/entremes/" class="md-nav__link">
         
   
   
@@ -655,7 +721,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../resultados/" class="md-nav__link">
+      <a href="../../uso/resultados/" class="md-nav__link">
         
   
   
@@ -906,18 +972,84 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pasos" class="md-nav__link">
+  <a href="#definir-aperturas" class="md-nav__link">
     <span class="md-ellipsis">
-      Pasos
+      Definir aperturas
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Definir aperturas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#que-es-una-apertura" class="md-nav__link">
+    <span class="md-ellipsis">
+      ¿Qué es una apertura?
     </span>
   </a>
   
 </li>
+        
+          <li class="md-nav__item">
+  <a href="#tablas-de-aperturas" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tablas de aperturas
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#propiedades-de-cada-apertura" class="md-nav__link">
+    <span class="md-ellipsis">
+      Propiedades de cada apertura
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#validaciones-sobre-el-archivo-de-segmentacion" class="md-nav__link">
+  <a href="#parametrizar-el-cuadre-contable" class="md-nav__link">
     <span class="md-ellipsis">
-      Validaciones sobre el archivo de segmentación
+      Parametrizar el cuadre contable
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parametrizar el cuadre contable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aperturas-para-repartir-diferencias" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aperturas para repartir diferencias
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#meses-y-cantidades-a-cuadrar" class="md-nav__link">
+    <span class="md-ellipsis">
+      Meses y cantidades a cuadrar
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tablas-para-cargar-en-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tablas para cargar en queries
     </span>
   </a>
   
@@ -942,60 +1074,98 @@
   
 
 
-<h1 id="ingresar-parametros">Ingresar parámetros</h1>
-<p>En la interfaz web verá la sección <strong>"Parametros"</strong>:</p>
-<p><img alt="Ingreso de parametros" src="../../assets/frontend/parametros.png" /></p>
-<h2 id="pasos">Pasos</h2>
-<div class="admonition tip">
-<p class="admonition-title">¿Retomando un análisis que ya comenzó?</p>
-<p>Presione el botón <strong>Traer parámetros</strong> para no tener que ingresar cada parámetro otra vez.</p>
+<h1 id="el-archivo-segmentacion">El archivo segmentación</h1>
+<p>Este es un archivo de Excel con tres objetivos:</p>
+<ol>
+<li><strong>Definir las aperturas</strong> de siniestros, primas, y expuestos para el análisis.</li>
+<li><strong>Parametrizar el cuadre contable</strong> contra SAP (opcional).</li>
+<li><strong>Almacenar tablas de aperturas</strong> para cargar en <em>queries</em> de Teradata (opcional).</li>
+</ol>
+<div class="admonition example">
+<p class="admonition-title">Ejemplos</p>
+<p>Consulte ejemplos reales de <a href="https://github.com/sebastobone/app-analisis-siniestralidad/tree/main/data/">archivos de segmentación utilizados para los cierres contables</a>.</p>
 </div>
+<h2 id="definir-aperturas">Definir aperturas</h2>
+<h3 id="que-es-una-apertura">¿Qué es una apertura?</h3>
+<p>Una <strong>apertura</strong> es un nivel de desagregación del producto a analizar.</p>
+<div class="admonition example">
+<p class="admonition-title">Ejemplo</p>
+<p>En un seguro de salud, podría analizarse cada cobertura por separado (laboratorios, diagnósticos, cirugías) o agruparlas en categorías con comportamientos similares. En ese caso, decimos que estamos <strong>"aperturando"</strong> por cobertura.</p>
+</div>
+<h3 id="tablas-de-aperturas">Tablas de aperturas</h3>
+<p>En el archivo de segmentación, cree las siguientes hojas con sus respectivas tablas de aperturas:</p>
+<ul>
+<li><strong>Apertura_Siniestros</strong></li>
+<li><strong>Apertura_Primas</strong></li>
+<li><strong>Apertura_Expuestos</strong></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Advertencia</p>
+<p>Cada tabla debe incluir obligatoriamente las columnas:</p>
+<ul>
+<li><strong>codigo_op</strong> (código de la compañía)</li>
+<li><strong>codigo_ramo_op</strong> (código del ramo)</li>
+</ul>
+<p>Estas columnas son necesarias para realizar las comparaciones contra SAP.</p>
+</div>
+<h3 id="propiedades-de-cada-apertura">Propiedades de cada apertura</h3>
+<p>En <strong>Apertura_Siniestros</strong>, para cada apertura se debe definir:</p>
 <ol>
 <li>
-<p>En el campo <strong>Negocio</strong>, seleccione el negocio que desea analizar. Esto define qué archivo de segmentación y qué <em>queries</em> usar.</p>
-<div class="admonition info">
-<p class="admonition-title">Negocios especiales</p>
-<p>Hay dos negocios especiales: <strong>"Demo"</strong> y <strong>"Custom"</strong>.</p>
-<ul>
-<li>El negocio <strong>"Demo"</strong> le permite hacer ejercicios de familiarización y exploración de las plantillas de Excel con información ficticia.</li>
-<li>El negocio <strong>"Custom"</strong> le permite hacer un ejercicio con un negocio diferente a las líneas de negocio tradicionales.</li>
-</ul>
+<p><strong>Periodicidad de ocurrencia</strong>: Granularidad del triángulo y del entremés. Valores disponibles: Mensual, Trimestral, Semestral, o Anual.</p>
+</li>
+<li>
+<p><strong>Tipo de indexación de la severidad</strong>: Metodología de indexación que se utilizará para calcular la severidad. Puede tomar tres valores: Ninguna, Por fecha de ocurrencia, o Por fecha de movimiento</p>
+</li>
+<li>
+<p><strong>Medida de indexación de la severidad</strong>: Nombre del indicador a usar para la indexación (si aplica).</p>
+</li>
+</ol>
+<div class="admonition example">
+<p class="admonition-title">Ejemplo</p>
+<p><img alt="Ejemplo aperturas" src="../assets/ejemplo_aperturas.png" /></p>
 </div>
-</li>
-<li>
-<p>En <strong>Mes de la primera ocurrencia</strong>, escriba (en formato <strong>YYYYMM</strong>) el mes de la primera ocurrencia de los triángulos o entremés.</p>
-<div class="admonition note">
-<p class="admonition-title">Ocurrencias anteriores</p>
-<p>Si en la información de siniestros, primas, o expuestos se encuentran meses anteriores a este, las cifras se agruparán en este primer mes con el objetivo de garantizar una correcta comparación contra SAP.</p>
-</div>
-</li>
-<li>
-<p>En <strong>Mes de corte</strong>, escriba (en formato <strong>YYYYMM</strong>) el mes de corte de la información.</p>
-</li>
-<li>En <strong>Tipo de análisis</strong>, elija entre <strong>Triángulos</strong> o <strong>Entremés</strong>.</li>
-<li>
-<p>En <strong>Nombre de la plantilla</strong>, escriba el nombre del archivo de Excel donde se hará el análisis.</p>
+<h2 id="parametrizar-el-cuadre-contable">Parametrizar el cuadre contable</h2>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>En un mismo análisis puede utilizar múltiples plantillas. Todas son almacenadas en la carpeta <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg></span> <code>plantillas</code>.</p>
+<p>Si no realizará cuadre contable, puede omitir esta sección.</p>
 </div>
-</li>
-<li>
-<p>En <strong>Cargar archivo de segmentación</strong>, cargue el <a href="../../config/segmentacion/">archivo de segmentación</a> que construyó. Si no tiene uno, presione el botón <strong>Descargar ejemplo</strong> para obtener un archivo guía.</p>
-</li>
-<li>Presione el botón <strong>Guardar parámetros</strong>.</li>
+<h3 id="aperturas-para-repartir-diferencias">Aperturas para repartir diferencias</h3>
+<p>Cree dos hojas:</p>
+<ol>
+<li><strong>Cuadre_Siniestros</strong></li>
+<li><strong>Cuadre_Primas</strong></li>
 </ol>
-<h2 id="validaciones-sobre-el-archivo-de-segmentacion">Validaciones sobre el archivo de segmentación</h2>
-<p>Al presionar <strong>Guardar parámetros</strong>, la aplicación valida automáticamente:</p>
+<p>En cada una incluya una tabla con las aperturas donde se repartirán las diferencias detectadas.</p>
+<div class="admonition note">
+<p class="admonition-title">Nota</p>
+<p>Para entender la lógica de repartición, consulte la <a href="../../uso/controles/#reparticion-de-diferencias-contables">guía de cuadre contable</a>.</p>
+</div>
+<div class="admonition example">
+<p class="admonition-title">Ejemplo</p>
+<p><img alt="Ejemplo cuadre" src="../assets/ejemplo_cuadre.png" /></p>
+</div>
+<h3 id="meses-y-cantidades-a-cuadrar">Meses y cantidades a cuadrar</h3>
+<p>Agregue dos hojas:</p>
 <ul>
-<li>Que existan todas las hojas de aperturas.</li>
-<li>Que existan todas las columnas necesarias en las hojas de aperturas.</li>
-<li>Que no haya aperturas duplicadas.</li>
-<li>Que las periodicidades de ocurrencia y tipos de indexación de la severidad sean válidas.</li>
-<li>Que se haya definido una medida de indexación cuando corresponda.</li>
-<li>Que las aperturas de siniestros, primas, y expuestos sean consistentes entre sí.</li>
+<li><strong>Meses_cuadre_siniestros</strong>  </li>
+<li><strong>Meses_cuadre_primas</strong></li>
 </ul>
-<p>Si alguna validación falla, el sistema generará un error y se lo mostrará en la sección <strong>Estado</strong>. Tendrá que corregir el archivo y volverlo a cargar.</p>
+<p>Cada una debe tener una tabla con los todos los meses de movimiento esperados, y columnas para especificar si cada cantidad se va a cuadrar o no. En estas columnas indique con:</p>
+<ul>
+<li><strong>1</strong> → se ajusta a la cifra contable.  </li>
+<li><strong>0</strong> → no se ajusta.</li>
+</ul>
+<div class="admonition example">
+<p class="admonition-title">Ejemplo</p>
+<p><img alt="Ejemplo meses cuadre" src="../assets/ejemplo_meses_cuadre.png" /></p>
+</div>
+<h2 id="tablas-para-cargar-en-queries">Tablas para cargar en <em>queries</em></h2>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Si no va a extraer información de Teradata, omita esta sección.</p>
+</div>
+<p>Las tablas y el formato requerido se describen en la <a href="../queries/#desde-el-archivo-segmentacion-camino-complejo">guía de construcción de <em>queries</em></a>.</p>
 
 
 

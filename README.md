@@ -18,13 +18,12 @@ Esta aplicación permite realizar **análisis de siniestralidad última** median
 
 ## Requisitos
 
-- **[Git](https://git-scm.com/):** para descargar y actualizar la aplicación.
-- **[uv](https://docs.astral.sh/uv/getting-started/installation/):** para la gestión de librerías.
+- **[Git](https://git-scm.com/):** para descargar y actualizar la aplicación*.
+- **[uv](https://docs.astral.sh/uv/getting-started/installation/):** para la gestión de librerías*.
 - **Microsoft Excel:** para crear las plantillas y realizar los análisis.
 - **Acceso a Teradata:** necesario si se desea extraer información directamente de esta fuente.
 
-!!! tip
-    Git y uv no requieren permisos de administrador para ser instalados.
+*_Git y uv no requieren permisos de administrador para ser instalados._
 
 ## Descargar la app
 
@@ -42,4 +41,4 @@ Esta aplicación permite realizar **análisis de siniestralidad última** median
 
 3. Cierre la terminal.
 
-¡Eso es todo! Consulte ahora la [guía de configuración de análisis](docs/config/segmentacion.md) y la [guía de uso de la app](docs/uso/ejecutar_app.md).
+¡Eso es todo! Consulte ahora la [guía de configuración de análisis](https://sebastobone.github.io/app-analisis-siniestralidad/config/segmentacion/) y la [guía de uso de la app](https://sebastobone.github.io/app-analisis-siniestralidad/uso/ejecutar_app/).

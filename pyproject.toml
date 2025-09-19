@@ -16,6 +16,7 @@ dependencies = [
     "sse-starlette>=2.2.1",
     "numpy>=2.3.2",
     "mss>=10.1.0",
+    "openpyxl>=3.1.5",
 ]
 
 [dependency-groups]
@@ -25,6 +26,7 @@ lint = [
     "pip-audit>=2.9.0",
     "pre-commit>=4.2.0",
     "ty>=0.0.1a19",
+    "types-openpyxl>=3.1.5.20250919",
 ]
 tests = [
     "pytest>=8.4.1",

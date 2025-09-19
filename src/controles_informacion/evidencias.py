@@ -2,7 +2,7 @@ import shutil
 from datetime import datetime
 
 import mss
-import xlwings as xw
+import openpyxl as xl
 
 from src import utils
 from src.logger_config import logger
@@ -19,17 +19,15 @@ async def generar_evidencias_parametros(p: Parametros) -> None:
 
     shutil.copyfile(original_file, stored_file)
 
-    with xw.App(visible=False) as xl_app:
-        wb = xl_app.books.open(stored_file)
+    wb = xl.load_workbook(stored_file)
+    sheet_name = "CONTROL_EXTRACCION"
+    wb.create_sheet(title=sheet_name)
 
-        sheet_name = "CONTROL_EXTRACCION"
-        sheet = wb.sheets.add(name=sheet_name)
+    wb[sheet_name]["A1"] = "Fecha y hora del fin de la extraccion"
+    wb[sheet_name]["A2"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        sheet["A1"].value = "Fecha y hora del fin de la extraccion"
-        sheet["A2"].value = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        wb.save(stored_file)
-        wb.close()
+    wb.save(stored_file)
+    wb.close()
 
     with mss.mss() as sct:
         sct.shot(output=f"data/controles_informacion/{mes_corte}_extraccion.png")

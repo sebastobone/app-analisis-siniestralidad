@@ -101,6 +101,7 @@ document
 
       actualizarCheckboxesCandidatos(data.candidatos_siniestros, "siniestros");
       actualizarCheckboxesCandidatos(data.candidatos_primas, "primas");
+      actualizarCheckboxesCandidatos(data.candidatos_expuestos, "expuestos");
 
       if (tipoAnalisis === "entremes") {
         await generarReferenciasEntremes(data.tipos_analisis_mes_anterior);

@@ -66,6 +66,7 @@ async def ingresar_parametros(
     tipos_analisis_mes_anterior = obtener_tipos_analisis_mes_anterior(p)
     candidatos_siniestros = alm.obtener_cantidatos_controles(session, "siniestros")
     candidatos_primas = alm.obtener_cantidatos_controles(session, "primas")
+    candidatos_expuestos = alm.obtener_cantidatos_controles(session, "expuestos")
     afos = sap.determinar_afos_necesarios(p.negocio)
 
     return {
@@ -74,6 +75,7 @@ async def ingresar_parametros(
         "tipos_analisis_mes_anterior": tipos_analisis_mes_anterior,
         "candidatos_siniestros": candidatos_siniestros,
         "candidatos_primas": candidatos_primas,
+        "candidatos_expuestos": candidatos_expuestos,
         "afos": afos,
     }
 
